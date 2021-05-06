@@ -4,7 +4,8 @@ pragma solidity >=0.5.0;
 import { Comp } from "../vendor/compound/Comp.sol";
 
 contract ZeroToken is Comp {
-  string public override name = "ZeroDAO";
-  string public override symbol = "ZERO";
-  constructor(address account) public Comp(account) {}
+  constructor(address account) public Comp(account) {
+    name = "ZeroDAO";
+    symbol = "ZERO";
+  }
 }
