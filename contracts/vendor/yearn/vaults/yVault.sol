@@ -23,11 +23,11 @@ contract yVault is ERC20 {
     address public governance;
     address public controller;
 
-    constructor(address _token, address _controller)
+    constructor(address _token, address _controller, string memory _name, string memory _symbol)
         public
         ERC20(
-            string(abi.encodePacked("yearn ", ERC20(_token).name())),
-            string(abi.encodePacked("y", ERC20(_token).symbol()))
+            _name,
+            _symbol
         )
     {
         _setupDecimals(ERC20(_token).decimals());
