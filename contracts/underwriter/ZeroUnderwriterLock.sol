@@ -50,7 +50,7 @@ contract ZeroUnderwriterLock is Ownable, Initializable {
     require(vault.transfer(receiver, vault.balanceOf(address(this))), "failed to transfer vault token to receiver");;
     selfdestruct(msg.sender);
   }
-  function trackOut(uint256 amount) public {
+  function trackOut(address module, uint256 amount) public {
     require(msg.sender == address(controller), "!controller");
     uint256 loanedAfter = uint256(_balanceSheet.loaned).add(amount);
     uint256 _owed = owed();

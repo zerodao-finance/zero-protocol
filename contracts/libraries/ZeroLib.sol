@@ -9,6 +9,23 @@ import { ZeroUnderwriterLock } from "../underwriter/ZeroUnderwriterLock.sol";
 @author raymondpulver
 */
 library ZeroLib {
+   enum LoanStatusCode {
+     UNINITIALIZED,
+     UNPAID,
+     PAID
+   }
+   struct LoanParams {
+     address to;
+     address asset;
+     uint256 amount;
+     uint256 nonce;
+     address module,
+     bytes data;
+   }
+   struct LoanStatus {
+     address underwriter;
+     LoanStatusCode status;
+   }
    struct BalanceSheet {
      uint128 loaned;
      uint128 required;
