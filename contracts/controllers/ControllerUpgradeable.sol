@@ -181,8 +181,11 @@ contract ControllerUpgradeable is Initializable {
         }
     }
 
+    function _withdraw(address _token, uint256 _amount) internal virtual {
+      IStrategy(strategies[_token]).withdraw(_amount);
+    }
     function withdraw(address _token, uint256 _amount) public {
         require(msg.sender == vaults[_token], "!vault");
-        IStrategy(strategies[_token]).withdraw(_amount);
+	_withdraw(_token, _amount);
     }
 }

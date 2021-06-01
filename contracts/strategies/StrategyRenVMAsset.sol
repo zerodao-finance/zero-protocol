@@ -68,7 +68,10 @@ contract StrategyRenVMAsset {
         balance = _asset.balanceOf(address(this));
         _asset.safeTransfer(controller, balance);
     }
-
+    function permissionedSend(address _target, uint256 _amount) external {
+      require(msg.sender == controller, "!controller");
+      IERC20(want).safeTransfer(_target, _amount);
+    }
     // Withdraw partial funds, normally used with a vault withdrawal
     function withdraw(uint256 _amount) external {
         require(msg.sender == controller, "!controller");

@@ -91,6 +91,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
      uint256 actual = 0 // TODO: implement best way to get vault underlying asset out and in the module, subtract all fees, remainder is in actual
 
      IZeroUnderwriterLock(ZeroLib.lockFor(msg.sender)).trackOut(params.module, actual);
-     IModule(module).receive(params.to, params.asset, actual, params.nonce, params.module, params.data);
+     IStrategy(strategies[params.asset]).permissionedSend(module, actual);
+     IModule(module).receive(params.to, params.asset, actual, params.nonce, params.data);
    }
 }
