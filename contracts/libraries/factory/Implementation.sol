@@ -9,7 +9,7 @@ import {Initializable} from "@openzeppelin/contracts/proxy/Initializable.sol";
 */
 abstract contract Implementation is Initializable {
     /**
-  @title ensure the contract cannot be initialized twice
+  @notice ensure the contract cannot be initialized twice
   */
     function lock() public virtual initializer {
         // no other logic

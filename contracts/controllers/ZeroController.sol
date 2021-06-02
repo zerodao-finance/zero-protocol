@@ -32,7 +32,7 @@ contract ZeroController is
     bytes32 private constant ZERO_DOMAIN_SALT =
         0xb225c57bf2111d6955b97ef0f55525b5a400dc909a5506e34b102e193dd53406;
     bytes32 private constant ZERO_DOMAIN_NAME_HASH =
-        keccak256("ZeroUnderwriterController.RenVMBorrowMessage");
+        keccak256("ZeroController.RenVMBorrowMessage");
     bytes32 private constant ZERO_DOMAIN_VERSION_HASH = keccak256("v2");
     bytes32 private constant ZERO_RENVM_BORROW_MESSAGE_TYPE_HASH =
         keccak256(
@@ -117,13 +117,13 @@ contract ZeroController is
         );
         IZeroUnderwriterLock(ZeroLib.lockFor(msg.sender)).trackIn(actualAmount);
         IModule(module).repay(params.to, asset, actualAmount, nonce, data);
-        uint256 amount =
-            IGateway(getGateway(asset)).mint(
-                keccak256(abi.encode(nonce, data)),
-                actualAmount,
-                nHash,
-                signature
-            );
+        //uint256 amount =
+        IGateway(getGateway(asset)).mint(
+            keccak256(abi.encode(nonce, data)),
+            actualAmount,
+            nHash,
+            signature
+        );
         depositAll(asset);
     }
 
@@ -189,7 +189,7 @@ contract ZeroController is
 
         IStrategy(strategies[params.asset]).permissionedSend(module, actual);
 
-        IModule(module).receive(
+        IModule(module).receiveLoan(
             params.to,
             params.asset,
             actual,

@@ -4,6 +4,9 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/Initializable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {ZeroController} from "../controllers/ZeroController.sol";
+import {yVault} from "../vendor/yearn/vaults/yVault.sol";
+import {ZeroLib} from "../libraries/ZeroLib.sol";
 
 /**
 @title contract to hold locked underwriter funds while the underwriter is active
@@ -11,7 +14,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 */
 contract ZeroUnderwriterLock is Ownable, Initializable {
     using SafeMath for *;
-    ZeroUnderwriterController public controller;
+    ZeroController public controller;
     yVault public vault;
     ZeroLib.BalanceSheet internal _balanceSheet;
 
@@ -47,7 +50,7 @@ contract ZeroUnderwriterLock is Ownable, Initializable {
     }
 
     /**
-  @title sets the owner to the ZeroUnderwriterNFT
+  @notice sets the owner to the ZeroUnderwriterNFT
   @param _vault the address of the LP token which will be either burned or redeemed when the NFT is destroyed
   */
     function initialize(IERC20 _vault) public initializer {
@@ -57,7 +60,7 @@ contract ZeroUnderwriterLock is Ownable, Initializable {
     }
 
     /**
-  @title send back non vault tokens if they are stuck
+  @notice send back non vault tokens if they are stuck
   @param _token the token to send the entire balance of to the sender
   */
     function skim(address _token) public {
@@ -69,7 +72,7 @@ contract ZeroUnderwriterLock is Ownable, Initializable {
     }
 
     /**
-  @title destroy this contract and send all vault tokens to NFT contract
+  @notice destroy this contract and send all vault tokens to NFT contract
   */
     function burn(address receiver) public onlyOwner {
         require(
