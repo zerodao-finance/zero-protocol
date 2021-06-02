@@ -1,12 +1,14 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity >=0.5.0;
 
 import { ERC721Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-import { ZeroUnderwriterLock } from "./ZeroUnderwriterLock.sol";
+import { ZeroUnderwriterLock } from "../underwriter/ZeroUnderwriterLock.sol";
 import { ZeroLib } from "../libraries/ZeroLib.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { ControllerUpgradeable } from "./ControllerUpgradeable.sol";
-import { EIP712 } from "eip712-helpers/EIP712.sol";
-import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { EIP712 } from "eip712-helpers/contracts/EIP712.sol";
+import { ECDSA } from "@openzeppelin/contracts/cryptography/ECDSA.sol";
 
 /**
 @title upgradeable contract which determines the authority of a given address to sign off on loans

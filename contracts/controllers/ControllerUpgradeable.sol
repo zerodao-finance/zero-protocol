@@ -6,11 +6,11 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/proxy/Initializable.sol";
 
-import "../interfaces/yearn/IConverter.sol";
-import "../interfaces/yearn/IOneSplitAudit.sol";
-import "../interfaces/yearn/IStrategy.sol";
+import "../vendor/yearn/interfaces/yearn/IConverter.sol";
+import "../vendor/yearn/interfaces/yearn/IOneSplitAudit.sol";
+import "../vendor/yearn/interfaces/yearn/IStrategy.sol";
 
 contract ControllerUpgradeable is Initializable {
     using SafeERC20 for IERC20;
@@ -30,7 +30,7 @@ contract ControllerUpgradeable is Initializable {
 
     uint256 public split = 500;
     uint256 public constant max = 10000;
- 
+
     function __Controller_init(address _rewards) internal initializer {
         __Controller_init_unchained(_rewards);
     }
@@ -72,7 +72,10 @@ contract ControllerUpgradeable is Initializable {
     }
 
     function setVault(address _token, address _vault) public {
-        require(msg.sender == strategist || msg.sender == governance, "!strategist");
+        require(
+            msg.sender == strategist || msg.sender == governance,
+            "!strategist"
+        );
         require(vaults[_token] == address(0), "vault");
         vaults[_token] = _vault;
     }
@@ -92,12 +95,18 @@ contract ControllerUpgradeable is Initializable {
         address _output,
         address _converter
     ) public {
-        require(msg.sender == strategist || msg.sender == governance, "!strategist");
+        require(
+            msg.sender == strategist || msg.sender == governance,
+            "!strategist"
+        );
         converters[_input][_output] = _converter;
     }
 
     function setStrategy(address _token, address _strategy) public {
-        require(msg.sender == strategist || msg.sender == governance, "!strategist");
+        require(
+            msg.sender == strategist || msg.sender == governance,
+            "!strategist"
+        );
         require(approvedStrategies[_token][_strategy] == true, "!approved");
 
         address _current = strategies[_token];
@@ -126,17 +135,28 @@ contract ControllerUpgradeable is Initializable {
     }
 
     function withdrawAll(address _token) public {
-        require(msg.sender == strategist || msg.sender == governance, "!strategist");
+        require(
+            msg.sender == strategist || msg.sender == governance,
+            "!strategist"
+        );
         IStrategy(strategies[_token]).withdrawAll();
     }
 
     function inCaseTokensGetStuck(address _token, uint256 _amount) public {
-        require(msg.sender == strategist || msg.sender == governance, "!governance");
+        require(
+            msg.sender == strategist || msg.sender == governance,
+            "!governance"
+        );
         IERC20(_token).safeTransfer(msg.sender, _amount);
     }
 
-    function inCaseStrategyTokenGetStuck(address _strategy, address _token) public {
-        require(msg.sender == strategist || msg.sender == governance, "!governance");
+    function inCaseStrategyTokenGetStuck(address _strategy, address _token)
+        public
+    {
+        require(
+            msg.sender == strategist || msg.sender == governance,
+            "!governance"
+        );
         IStrategy(_strategy).withdraw(_token);
     }
 
@@ -147,7 +167,13 @@ contract ControllerUpgradeable is Initializable {
     ) public view returns (uint256 expected) {
         uint256 _balance = IERC20(_token).balanceOf(_strategy);
         address _want = IStrategy(_strategy).want();
-        (expected, ) = IOneSplitAudit(onesplit).getExpectedReturn(_token, _want, _balance, parts, 0);
+        (expected, ) = IOneSplitAudit(onesplit).getExpectedReturn(
+            _token,
+            _want,
+            _balance,
+            parts,
+            0
+        );
     }
 
     // Only allows to withdraw non-core strategy tokens ~ this is over and above normal yield
@@ -156,7 +182,10 @@ contract ControllerUpgradeable is Initializable {
         address _token,
         uint256 parts
     ) public {
-        require(msg.sender == strategist || msg.sender == governance, "!governance");
+        require(
+            msg.sender == strategist || msg.sender == governance,
+            "!governance"
+        );
         // This contract should never have value in it, but just incase since this is a public call
         uint256 _before = IERC20(_token).balanceOf(address(this));
         IStrategy(_strategy).withdraw(_token);
@@ -169,8 +198,16 @@ contract ControllerUpgradeable is Initializable {
             _before = IERC20(_want).balanceOf(address(this));
             IERC20(_token).safeApprove(onesplit, 0);
             IERC20(_token).safeApprove(onesplit, _amount);
-            (_expected, _distribution) = IOneSplitAudit(onesplit).getExpectedReturn(_token, _want, _amount, parts, 0);
-            IOneSplitAudit(onesplit).swap(_token, _want, _amount, _expected, _distribution, 0);
+            (_expected, _distribution) = IOneSplitAudit(onesplit)
+                .getExpectedReturn(_token, _want, _amount, parts, 0);
+            IOneSplitAudit(onesplit).swap(
+                _token,
+                _want,
+                _amount,
+                _expected,
+                _distribution,
+                0
+            );
             _after = IERC20(_want).balanceOf(address(this));
             if (_after > _before) {
                 _amount = _after.sub(_before);
@@ -182,10 +219,11 @@ contract ControllerUpgradeable is Initializable {
     }
 
     function _withdraw(address _token, uint256 _amount) internal virtual {
-      IStrategy(strategies[_token]).withdraw(_amount);
+        IStrategy(strategies[_token]).withdraw(_amount);
     }
+
     function withdraw(address _token, uint256 _amount) public {
         require(msg.sender == vaults[_token], "!vault");
-	_withdraw(_token, _amount);
+        _withdraw(_token, _amount);
     }
 }

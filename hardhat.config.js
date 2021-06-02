@@ -4,11 +4,28 @@ require('hardhat-gas-reporter');
 
 module.exports = {
   solidity: {
-    version: '0.6.12',
+    compilers: [
+      {
+        version: "0.7.0"
+      }
+    ],
+    overrides: {
+      "@openzeppelin/*": {
+        version: "0.8.0"
+      }
+    },
     settings: {
       optimizer: {
         enabled: true,
         runs: 200
+      }
+    }
+  },
+  networks: {
+    hardhat: {
+      forking: {
+        url: "https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX",
+        blockNumber: 12555982
       }
     }
   }

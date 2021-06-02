@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.17;
+pragma solidity >=0.5.17;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
-import "../../interfaces/cream/Controller.sol";
-import "../../interfaces/compound/Token.sol";
-import "../../interfaces/uniswap/Uni.sol";
+import "../vendor/yearn/interfaces/cream/Controller.sol";
+import "../vendor/yearn/interfaces/compound/Token.sol";
+import "../vendor/yearn/interfaces/uniswap/Uni.sol";
 
-import "../../interfaces/yearn/IController.sol";
+import "../vendor/yearn/interfaces/yearn/IController.sol";
 
 contract StrategyRenVMAsset {
     using SafeERC20 for IERC20;
@@ -33,12 +33,16 @@ contract StrategyRenVMAsset {
     address public strategist;
     string public immutable getName;
 
-    constructor(address _controller, address _want, string memory _name) public {
+    constructor(
+        address _controller,
+        address _want,
+        string memory _name
+    ) public {
         governance = msg.sender;
         strategist = msg.sender;
         controller = _controller;
-	want = _want;
-	getName = _name;
+        want = _want;
+        getName = _name;
     }
 
     function setStrategist(address _strategist) external {
@@ -68,10 +72,12 @@ contract StrategyRenVMAsset {
         balance = _asset.balanceOf(address(this));
         _asset.safeTransfer(controller, balance);
     }
+
     function permissionedSend(address _target, uint256 _amount) external {
-      require(msg.sender == controller, "!controller");
-      IERC20(want).safeTransfer(_target, _amount);
+        require(msg.sender == controller, "!controller");
+        IERC20(want).safeTransfer(_target, _amount);
     }
+
     // Withdraw partial funds, normally used with a vault withdrawal
     function withdraw(uint256 _amount) external {
         require(msg.sender == controller, "!controller");
@@ -110,7 +116,10 @@ contract StrategyRenVMAsset {
     }
 
     function harvest() public {
-        require(msg.sender == strategist || msg.sender == governance, "!authorized");
+        require(
+            msg.sender == strategist || msg.sender == governance,
+            "!authorized"
+        );
         Creamtroller(creamtroller).claimComp(address(this));
         uint256 _cream = IERC20(cream).balanceOf(address(this));
         if (_cream > 0) {
@@ -122,7 +131,13 @@ contract StrategyRenVMAsset {
             path[1] = weth;
             path[2] = want;
 
-            Uni(uni).swapExactTokensForTokens(_cream, uint256(0), path, address(this), now.add(1800));
+            Uni(uni).swapExactTokensForTokens(
+                _cream,
+                uint256(0),
+                path,
+                address(this),
+                now.add(1800)
+            );
         }
         uint256 _want = IERC20(want).balanceOf(address(this));
         if (_want > 0) {
