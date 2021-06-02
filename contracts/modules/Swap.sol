@@ -47,16 +47,16 @@ contract Swap {
 
         IUniswapV2Router02 router = IUniswapV2Router02(ROUTER);
         require(RENBTC.approve(address(router), actual), "approve failed");
-        uint256 amountOut = router.getAmountsOut(actual, path)[2];
-        router.swapExactTokensForETH(
-            actual,
-            amountOut,
-            path,
-            msg.sender,
-            block.timestamp
-        ); // TODO add safety checks
+        uint256 minimumOut = router.getAmountsOut(actual, path)[2];
+        uint256 actualAmountOut =
+            router.swapExactTokensForTokens(
+                actual,
+                minimumOut,
+                path,
+                address(this),
+                block.timestamp
+            )[2]; // TODO add safety checks
 
-        uint256 actualAmountOut = USDC.balanceOf(address(this));
         outstanding[nonce] = SwapLib.SwapRecord(
             actualAmountOut,
             block.timestamp,
