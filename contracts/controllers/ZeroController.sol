@@ -5,6 +5,7 @@ pragma solidity >=0.7.0;
 import {
     ERC721Upgradeable
 } from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import { IZeroModule } from "../interfaces/IZeroModule.sol";
 import {ZeroUnderwriterLock} from "../underwriter/ZeroUnderwriterLock.sol";
 import {ZeroLib} from "../libraries/ZeroLib.sol";
 import {
@@ -14,6 +15,7 @@ import {ControllerUpgradeable} from "./ControllerUpgradeable.sol";
 import {EIP712} from "@openzeppelin/contracts/drafts/EIP712.sol";
 import {ECDSA} from "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import {FactoryLib} from "../libraries/factory/FactoryLib.sol";
+import { yVault } from "../vendor/yearn/vaults/yVault.sol";
 
 /**
 @title upgradeable contract which determines the authority of a given address to sign off on loans
@@ -117,7 +119,7 @@ contract ZeroController is
             "loan is not in the UNPAID state"
         );
         IZeroUnderwriterLock(ZeroLib.lockFor(msg.sender)).trackIn(actualAmount);
-        IModule(module).repay(params.to, asset, actualAmount, nonce, data);
+        IZeroModule(module).repayLoan(params.to, asset, actualAmount, nonce, data);
         //uint256 amount =
         IGateway(getGateway(asset)).mint(
             keccak256(abi.encode(nonce, data)),
@@ -190,7 +192,7 @@ contract ZeroController is
 
         IStrategy(strategies[params.asset]).permissionedSend(module, actual);
 
-        IModule(module).receiveLoan(
+        IZeroModule(module).receiveLoan(
             params.to,
             params.asset,
             actual,

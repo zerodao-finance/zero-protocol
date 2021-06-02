@@ -1,8 +1,10 @@
 pragma solidity >=0.5.0;
 
+import { IZeroModule } from "../interfaces/IZeroModule.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/Initializable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {ZeroController} from "../controllers/ZeroController.sol";
 import {yVault} from "../vendor/yearn/vaults/yVault.sol";
@@ -56,7 +58,6 @@ contract ZeroUnderwriterLock is Ownable, Initializable {
     function initialize(IERC20 _vault) public initializer {
         controller = msg.sender;
         vault = _vault;
-        underwriter = _underwriter;
     }
 
     /**
