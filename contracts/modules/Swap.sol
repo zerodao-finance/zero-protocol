@@ -57,6 +57,8 @@ contract Swap {
         ); // TODO add safety checks
 
         uint256 actualAmountOut = USDC.balanceOf(address(this));
-        outstanding.push(SwapLib.SwapRecord(asset, block.timestamp, actual)); //DEV correct format for record?
+        outstanding.push(
+            SwapLib.SwapRecord(actualAmountOut, block.timestamp, actual)
+        );
     }
 }
