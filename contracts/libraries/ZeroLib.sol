@@ -33,6 +33,11 @@ library ZeroLib {
         view
         returns (ZeroUnderwriterLock result)
     {
+        address underwriterLockImpl =
+            FactoryLib.deployImplementation(
+                type(ZeroUnderwriterLock).creationCode,
+                "zero.underwriter.lock-implementation"
+            );
         result = ZeroUnderwriterLock(
             FactoryLib.computeAddress(
                 nft,

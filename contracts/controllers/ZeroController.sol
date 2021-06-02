@@ -13,6 +13,7 @@ import {
 import {ControllerUpgradeable} from "./ControllerUpgradeable.sol";
 import {EIP712} from "@openzeppelin/contracts/drafts/EIP712.sol";
 import {ECDSA} from "@openzeppelin/contracts/cryptography/ECDSA.sol";
+import {FactoryLib} from "../libraries/factory/FactoryLib.sol";
 
 /**
 @title upgradeable contract which determines the authority of a given address to sign off on loans
@@ -50,7 +51,7 @@ contract ZeroController is
         __Ownable_init_unchained();
         __Controller_init_unchained(_rewards);
         __ERC721_init_unchained("ZeroController", "ZWRITE");
-        underwriterLockImpl = ZeroFactoryLib.deployImplementation(
+        underwriterLockImpl = FactoryLib.deployImplementation(
             type(ZeroUnderwriterLock).creationCode,
             "zero.underwriter.lock-implementation"
         );
@@ -81,7 +82,7 @@ contract ZeroController is
 
     function mint(address underwriter, yVault vault) public {
         address lock =
-            ZeroFactoryLib.deploy(
+            FactoryLib.deploy(
                 underwriterLockImpl,
                 keccak256(abi.encodePacked(underwriter))
             );
