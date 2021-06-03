@@ -5,7 +5,7 @@ pragma solidity >=0.7.0;
 import {
     ERC721Upgradeable
 } from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-import { IZeroModule } from "../interfaces/IZeroModule.sol";
+import {IZeroModule} from "../interfaces/IZeroModule.sol";
 import {ZeroUnderwriterLock} from "../underwriter/ZeroUnderwriterLock.sol";
 import {ZeroLib} from "../libraries/ZeroLib.sol";
 import {
@@ -15,7 +15,7 @@ import {ControllerUpgradeable} from "./ControllerUpgradeable.sol";
 import {EIP712} from "@openzeppelin/contracts/drafts/EIP712.sol";
 import {ECDSA} from "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import {FactoryLib} from "../libraries/factory/FactoryLib.sol";
-import { yVault } from "../vendor/yearn/vaults/yVault.sol";
+import {yVault} from "../vendor/yearn/vaults/yVault.sol";
 
 /**
 @title upgradeable contract which determines the authority of a given address to sign off on loans
@@ -32,6 +32,7 @@ contract ZeroController is
     mapping(address => uint256) public loaned;
     mapping(address => uint256) public repaid;
     mapping(address => bool) public moduleApproved;
+    mapping(bytes32 => ZeroLib.LoanStatusCode) public loanStatus;
     bytes32 private constant ZERO_DOMAIN_SALT =
         0xb225c57bf2111d6955b97ef0f55525b5a400dc909a5506e34b102e193dd53406;
     bytes32 private constant ZERO_DOMAIN_NAME_HASH =
@@ -119,7 +120,13 @@ contract ZeroController is
             "loan is not in the UNPAID state"
         );
         IZeroUnderwriterLock(ZeroLib.lockFor(msg.sender)).trackIn(actualAmount);
-        IZeroModule(module).repayLoan(params.to, asset, actualAmount, nonce, data);
+        IZeroModule(module).repayLoan(
+            params.to,
+            asset,
+            actualAmount,
+            nonce,
+            data
+        );
         //uint256 amount =
         IGateway(getGateway(asset)).mint(
             keccak256(abi.encode(nonce, data)),
@@ -130,11 +137,10 @@ contract ZeroController is
         depositAll(asset);
     }
 
-    function toTypedDataHash(LoanParams memory params, address underwriter)
-        internal
-        pure
-        returns (bytes32 result)
-    {
+    function toTypedDataHash(
+        ZeroLib.LoanParams memory params,
+        address underwriter
+    ) internal pure returns (bytes32 result) {
         result = ECDSA.toTypedDataHash(
             ZERO_DOMAIN_SEPARATOR,
             keccak256(
