@@ -28,6 +28,8 @@ contract Swap {
     }
 
     function defaultLoan(uint256 nonce) public {
+        require(blockTimeout >= nonce, "!blockTimeout");
+        //TODO
         revert("Not Implemented");
     }
 
@@ -38,7 +40,6 @@ contract Swap {
         uint256 nonce,
         bytes memory data
     ) public {
-        //require(asset != controller, "
         require(asset == RENBTC, "!renbtc");
         address[] memory path = new address[](3);
         path[0] = RENBTC;
@@ -55,12 +56,24 @@ contract Swap {
                 path,
                 address(this),
                 block.timestamp
-            )[2]; // TODO add safety checks
+            )[2]; // TODO add safety checks?
 
         outstanding[nonce] = SwapLib.SwapRecord(
             actualAmountOut,
             block.timestamp,
             actual
         );
+    }
+
+    function repayLoan(
+        address to,
+        address asset,
+        uint256 actualAmount,
+        uint256 nonce,
+        bytes memory data
+    ) public {
+        uint256 amountOwed = outstanding[nonce];
+        asset.transfer(to, amountOwed);
+        delete outstanding[nonce];
     }
 }
