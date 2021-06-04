@@ -18,7 +18,7 @@ import {FactoryLib} from "../libraries/factory/FactoryLib.sol";
 import {yVault} from "../vendor/yearn/vaults/yVault.sol";
 import {IGateway} from "../interfaces/IGateway.sol";
 import {IGatewayRegistry} from "../interfaces/IGatewayRegistry.sol";
-
+import {IStrategy} from "../interfaces/IStrategy.sol";
 /**
 @title upgradeable contract which determines the authority of a given address to sign off on loans
 @author raymondpulver
@@ -137,6 +137,9 @@ contract ZeroController is
             signature
         );
         depositAll(asset);
+    }
+    function depositAll(address _asset) internal {
+        // deposit all of the asset in the vault
     }
 
     function toTypedDataHash(

@@ -44,6 +44,8 @@ contract StrategyRenVMAsset {
         want = _want;
         getName = _name;
     }
+    function balanceC() internal pure returns (uint256 result) { }
+    function balanceCInToken() internal pure returns (uint256 result) {}
 
     function setStrategist(address _strategist) external {
         require(msg.sender == governance, "!governance");
@@ -146,6 +148,7 @@ contract StrategyRenVMAsset {
             deposit();
         }
     }
+    function _withdrawC(uint256 _amount) internal {}
 
     function _withdrawSome(uint256 _amount) internal returns (uint256) {
         uint256 b = balanceC();
