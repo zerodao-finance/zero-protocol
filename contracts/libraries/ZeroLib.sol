@@ -28,18 +28,12 @@ library ZeroLib {
         uint256 repaid;
     }
 
-    function lockFor(address nft, address underwriter)
+    function lockFor(address nft, address underwriterLockImpl, address underwriter)
         internal
-        view
+	view
         returns (ZeroUnderwriterLock result)
     {
-        address underwriterLockImpl =
-            FactoryLib.deployImplementation(
-                type(ZeroUnderwriterLock).creationCode,
-                "zero.underwriter.lock-implementation"
-            );
-        result = ZeroUnderwriterLock(
-            FactoryLib.computeAddress(
+        result = ZeroUnderwriterLock(FactoryLib.computeAddress(
                 nft,
                 underwriterLockImpl,
                 bytes32(bytes20(underwriter))

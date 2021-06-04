@@ -100,7 +100,7 @@ contract veCurveVault {
         address signatory = ecrecover(digest, v, r, s);
         require(signatory != address(0), "delegateBySig: sig");
         require(nonce == nonces[signatory]++, "delegateBySig: nonce");
-        require(now <= expiry, "delegateBySig: expired");
+        require(block.timestamp <= expiry, "delegateBySig: expired");
         _delegate(signatory, delegatee);
     }
 
@@ -292,7 +292,7 @@ contract veCurveVault {
         bal = rewards.balanceOf(address(this));
     }
 
-    constructor() public {
+    constructor() {
         // Set governance for this token
         governance = msg.sender;
         DOMAINSEPARATOR = keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), _getChainId(), address(this)));
@@ -400,7 +400,7 @@ contract veCurveVault {
         address signatory = ecrecover(digest, v, r, s);
         require(signatory != address(0), "permit: signature");
         require(signatory == owner, "permit: unauthorized");
-        require(now <= deadline, "permit: expired");
+        require(block.timestamp <= deadline, "permit: expired");
 
         allowances[owner][spender] = amount;
 

@@ -24,7 +24,6 @@ contract yVault is ERC20 {
     address public controller;
 
     constructor(address _token, address _controller, string memory _name, string memory _symbol)
-        public
         ERC20(
             _name,
             _symbol

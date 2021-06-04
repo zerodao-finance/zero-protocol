@@ -12,7 +12,7 @@ import "../vendor/yearn/interfaces/yearn/IConverter.sol";
 import "../vendor/yearn/interfaces/yearn/IOneSplitAudit.sol";
 import "../vendor/yearn/interfaces/yearn/IStrategy.sol";
 
-contract ControllerUpgradeable is Initializable {
+contract ControllerUpgradeable {
     using SafeERC20 for IERC20;
     using Address for address;
     using SafeMath for uint256;
@@ -31,19 +31,11 @@ contract ControllerUpgradeable is Initializable {
     uint256 public split = 500;
     uint256 public constant max = 10000;
 
-    function __Controller_init(address _rewards) internal initializer {
-        __Controller_init_unchained(_rewards);
-    }
-
     function __Controller_init_unchained(address _rewards) internal {
         governance = msg.sender;
         strategist = msg.sender;
         onesplit = address(0x50FDA034C0Ce7a8f7EFDAebDA7Aa7cA21CC1267e);
         rewards = _rewards;
-    }
-
-    function initialize(address _rewards) public initializer {
-        __Controller_init_unchained(_rewards);
     }
 
     function setRewards(address _rewards) public {
@@ -130,7 +122,7 @@ contract ControllerUpgradeable is Initializable {
         IStrategy(_strategy).deposit();
     }
 
-    function balanceOf(address _token) external view returns (uint256) {
+    function balanceOf(address _token) public virtual view returns (uint256) {
         return IStrategy(strategies[_token]).balanceOf();
     }
 

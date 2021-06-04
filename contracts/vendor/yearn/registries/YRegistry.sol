@@ -26,7 +26,7 @@ contract YRegistry {
 
     mapping(address => bool) public isDelegatedVault;
 
-    constructor(address _governance) public {
+    constructor(address _governance) {
         require(_governance != address(0), "Missing Governance");
         governance = _governance;
     }

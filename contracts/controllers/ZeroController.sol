@@ -34,7 +34,7 @@ contract ZeroController is
     mapping(address => uint256) public loaned;
     mapping(address => uint256) public repaid;
     mapping(address => bool) public moduleApproved;
-    mapping(bytes32 => ZeroLib.LoanStatusCode) public loanStatus;
+    mapping(bytes32 => ZeroLib.LoanStatus) public loanStatus;
     bytes32 private constant ZERO_DOMAIN_SALT =
         0xb225c57bf2111d6955b97ef0f55525b5a400dc909a5506e34b102e193dd53406;
     bytes32 private constant ZERO_DOMAIN_NAME_HASH =
@@ -48,9 +48,10 @@ contract ZeroController is
 
     function getChainId() internal view returns (uint8 response) {
         assembly {
-            response := chainId()
+            response := chainid()
         }
     }
+    address public constant gatewayRegistry = 0xe80d347DF1209a76DD9d2319d62912ba98C54DDD;
 
     function initialize(address _rewards) public {
         __Ownable_init_unchained();
@@ -60,21 +61,24 @@ contract ZeroController is
             type(ZeroUnderwriterLock).creationCode,
             "zero.underwriter.lock-implementation"
         );
-        ZERO_DOMAIN_SEPARATOR = EIP712.buildDomainSeparator(
+        ZERO_DOMAIN_SEPARATOR = bytes32(0);/* EIP712.buildDomainSeparator(
             ZERO_DOMAIN_NAME_HASH,
             ZERO_DOMAIN_VERSION_HASH,
             getChainId(),
             address(this),
             ZERO_DOMAIN_SALT
-        );
+        ); */
     }
 
     modifier onlyUnderwriter {
         require(
-            ownerOf(lockFor(msg.sender)) != address(0x0),
+            ownerOf(uint256(address(lockFor(msg.sender)))) != address(0x0),
             "must be called by underwriter"
         );
         _;
+    }
+    function balanceOf(address _owner) public view override(ControllerUpgradeable, ERC721Upgradeable) returns (uint256 result) {
+      result = ControllerUpgradeable.balanceOf(_owner);
     }
 
     function lockFor(address underwriter)
@@ -82,7 +86,7 @@ contract ZeroController is
         view
         returns (ZeroUnderwriterLock result)
     {
-        result = ZeroLib.lockFor(address(this), underwriter);
+        result = ZeroLib.lockFor(address(this), underwriterLockImpl, underwriter);
     }
 
     function mint(address underwriter, yVault vault) public {
@@ -121,7 +125,7 @@ contract ZeroController is
             loanStatus[digest].status == ZeroLib.LoanStatusCode.UNPAID,
             "loan is not in the UNPAID state"
         );
-        ZeroUnderwriterLock(ZeroLib.lockFor(msg.sender)).trackIn(actualAmount);
+        ZeroUnderwriterLock(lockFor(msg.sender)).trackIn(actualAmount);
         IZeroModule(module).repayLoan(
             params.to,
             asset,
@@ -130,7 +134,7 @@ contract ZeroController is
             data
         );
         //uint256 amount =
-        IGateway(IGatewayRegistry.getGatewayByToken(asset)).mint(
+        IGateway(IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset)).mint(
             keccak256(abi.encode(nonce, data)),
             actualAmount,
             nHash,
@@ -146,7 +150,7 @@ contract ZeroController is
         ZeroLib.LoanParams memory params,
         address underwriter
     ) internal pure returns (bytes32 result) {
-        result = ECDSA.toTypedDataHash(
+        result = bytes32(0); /* ECDSA.toTypedDataHash(
             ZERO_DOMAIN_SEPARATOR,
             keccak256(
                 abi.encode(
@@ -159,7 +163,7 @@ contract ZeroController is
                     params.data
                 )
             )
-        );
+        ); */
     }
 
     function loan(
@@ -196,7 +200,7 @@ contract ZeroController is
         });
         uint256 actual = 0; // TODO: implement best way to get vault underlying asset out and in the module, subtract all fees, remainder is in actual
 
-        ZeroUnderwriterLock(ZeroLib.lockFor(msg.sender)).trackOut(
+        ZeroUnderwriterLock(lockFor(msg.sender)).trackOut(
             params.module,
             actual
         );

@@ -26,27 +26,24 @@ contract StrategyRenVMAsset {
     uint256 public performanceMax;
 
     uint256 public withdrawalFee;
-    uint256 public constant withdrawalMax;
+    uint256 public withdrawalMax;
 
     address public governance;
     address public controller;
     address public strategist;
-    string public immutable getName;
+    string public getName;
 
     constructor(
         address _controller,
         address _want,
         string memory _name
-    ) public {
+    ) {
         governance = msg.sender;
         strategist = msg.sender;
         controller = _controller;
         want = _want;
         getName = _name;
     }
-    function balanceC() internal pure returns (uint256 result) { }
-    function balanceCInToken() internal pure returns (uint256 result) {}
-
     function setStrategist(address _strategist) external {
         require(msg.sender == governance, "!governance");
         strategist = _strategist;
@@ -63,8 +60,8 @@ contract StrategyRenVMAsset {
     }
 
     function deposit() public {
-        uint256 _want = IERC20(want).balanceOf(address(this));
-        IERC20(want).safeTransferFrom(crYFI, _want);
+        uint256 _want = IERC20(want).balanceOf(msg.sender);
+        IERC20(want).safeTransferFrom(address(msg.sender), address(this), _want);
     }
 
     // Controller only function for creating additional rewards from dust
@@ -111,10 +108,7 @@ contract StrategyRenVMAsset {
     }
 
     function _withdrawAll() internal {
-        uint256 amount = balanceC();
-        if (amount > 0) {
-            _withdrawSome(balanceCInToken().sub(1));
-        }
+            _withdrawSome(balanceOfWant());
     }
 
     function harvest() public {
@@ -122,52 +116,21 @@ contract StrategyRenVMAsset {
             msg.sender == strategist || msg.sender == governance,
             "!authorized"
         );
-        Creamtroller(creamtroller).claimComp(address(this));
-        uint256 _cream = IERC20(cream).balanceOf(address(this));
-        if (_cream > 0) {
-            IERC20(cream).safeApprove(uni, 0);
-            IERC20(cream).safeApprove(uni, _cream);
-
-            address[] memory path = new address[](3);
-            path[0] = cream;
-            path[1] = weth;
-            path[2] = want;
-
-            Uni(uni).swapExactTokensForTokens(
-                _cream,
-                uint256(0),
-                path,
-                address(this),
-                now.add(1800)
-            );
-        }
-        uint256 _want = IERC20(want).balanceOf(address(this));
-        if (_want > 0) {
-            uint256 _fee = _want.mul(performanceFee).div(performanceMax);
-            IERC20(want).safeTransfer(IController(controller).rewards(), _fee);
-            deposit();
-        }
     }
     function _withdrawC(uint256 _amount) internal {}
 
     function _withdrawSome(uint256 _amount) internal returns (uint256) {
-        uint256 b = balanceC();
-        uint256 bT = balanceCInToken();
-        // can have unintentional rounding errors
-        uint256 amount = (b.mul(_amount)).div(bT).add(1);
         uint256 _before = IERC20(want).balanceOf(address(this));
-        _withdrawC(amount);
         uint256 _after = IERC20(want).balanceOf(address(this));
         uint256 _withdrew = _after.sub(_before);
         return _withdrew;
     }
 
-    function balanceOfWant() public view returns (uint256) {
-        return IERC20(want).balanceOf(address(this));
+    function balanceOfWant() public view returns (uint256 result) {
+        result = IERC20(want).balanceOf(address(this));
     }
 
-    function balanceOf() public view returns (uint256) {
-        return balanceOfWant().add(balanceCInToken());
+    function balanceOf() public view returns (uint256 result) {
     }
 
     function setGovernance(address _governance) external {

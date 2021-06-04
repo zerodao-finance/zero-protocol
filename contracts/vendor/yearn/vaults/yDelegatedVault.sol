@@ -32,7 +32,6 @@ contract yDelegatedVault is ERC20 {
     address public constant aave = address(0x24a42fD28C976A61Df5D00D0599C34c4f90748c8);
 
     constructor(address _token, address _controller)
-        public
         ERC20(
             string(abi.encodePacked("yearn ", ERC20(_token).name())),
             string(abi.encodePacked("y", ERC20(_token).symbol()))

@@ -2,7 +2,7 @@
 pragma solidity >=0.5.0;
 
 import {Implementation} from "./Implementation.sol";
-import "@openzeppelin/contracts/utils/Create2.sol";
+import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 
 /**
 @title clone factory library
@@ -36,10 +36,21 @@ library FactoryLib {
         bytes32 salt
     ) internal pure returns (address result) {
         result = Create2.computeAddress(
-            creator,
-            salt,
-            assembleCreationCode(implementation)
+	    salt,
+	    keccak256(assembleCreationCode(implementation)),
+            creator
         );
+    }
+    function computeImplementationAddress(
+      address creator,
+      bytes32 bytecodeHash,
+      string memory id
+    ) internal pure returns (address result) {
+      result = Create2.computeAddress(
+        keccak256(abi.encodePacked(id)),
+	bytecodeHash,
+	creator
+      );
     }
 
     /// @notice Deploys a given master Contract as a clone.
@@ -50,7 +61,6 @@ library FactoryLib {
     /// @return cloneAddress Address of the created clone contract.
     function deploy(address implementation, bytes32 salt)
         public
-        payable
         returns (address cloneAddress)
     {
         bytes memory creationCode = assembleCreationCode(implementation);
@@ -63,7 +73,7 @@ library FactoryLib {
         internal
         returns (address implementation)
     {
-        bytes32 salt = keccak256(id);
+        bytes32 salt = keccak256(abi.encodePacked(id));
         assembly {
             implementation := create2(
                 0,

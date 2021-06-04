@@ -4,8 +4,12 @@ import {SwapLib} from "./SwapLib.sol";
 import {
     IUniswapV2Router02
 } from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import { IController } from "../interfaces/IController.sol";
 
 contract Swap {
+    using SafeERC20 for *;
     mapping(uint256 => SwapLib.SwapRecord) public outstanding;
     address public immutable controller;
     address public immutable governance;
@@ -47,7 +51,7 @@ contract Swap {
         path[2] = USDC;
 
         IUniswapV2Router02 router = IUniswapV2Router02(ROUTER);
-        require(RENBTC.approve(address(router), actual), "approve failed");
+        require(IERC20(RENBTC).approve(address(router), actual), "approve failed");
         uint256 minimumOut = router.getAmountsOut(actual, path)[2];
         uint256 actualAmountOut =
             router.swapExactTokensForTokens(
@@ -58,11 +62,11 @@ contract Swap {
                 block.timestamp
             )[2]; // TODO add safety checks?
 
-        outstanding[nonce] = SwapLib.SwapRecord(
-            actualAmountOut,
-            block.timestamp,
-            actual
-        );
+        outstanding[nonce] = SwapLib.SwapRecord({
+            qty: actualAmountOut,
+            when: uint64(block.timestamp),
+	    token: RENBTC
+	});
     }
 
     function repayLoan(
@@ -72,8 +76,8 @@ contract Swap {
         uint256 nonce,
         bytes memory data
     ) public {
-        uint256 amountOwed = outstanding[nonce];
-        asset.transfer(to, amountOwed);
+        uint256 amountOwed = outstanding[nonce].qty;
+        IERC20(asset).safeTransfer(to, amountOwed);
         delete outstanding[nonce];
     }
 }

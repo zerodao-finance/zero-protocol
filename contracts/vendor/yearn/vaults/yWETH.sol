@@ -26,7 +26,6 @@ contract yWETH is ERC20 {
     address public controller;
 
     constructor(address _token, address _controller)
-        public
         ERC20(
             string(abi.encodePacked("yearn ", ERC20(_token).name())),
             string(abi.encodePacked("y", ERC20(_token).symbol()))

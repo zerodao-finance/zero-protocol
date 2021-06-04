@@ -19,7 +19,7 @@ contract BTCOSMedianizer {
     UniswapAnchoredView public constant MEDIANIZER = UniswapAnchoredView(0x9B8Eb8b3d6e2e0Db36F41455185FEF7049a35CaE);
     string public symbol = "BTC";
 
-    constructor() public {
+    constructor() {
         governance = msg.sender;
     }
 
