@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0;
 
-import { IZeroModule } from "../interfaces/IZeroModule.sol";
+import {IZeroModule} from "../interfaces/IZeroModule.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/Initializable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";

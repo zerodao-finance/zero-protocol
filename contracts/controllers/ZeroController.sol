@@ -16,6 +16,8 @@ import {EIP712} from "@openzeppelin/contracts/drafts/EIP712.sol";
 import {ECDSA} from "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import {FactoryLib} from "../libraries/factory/FactoryLib.sol";
 import {yVault} from "../vendor/yearn/vaults/yVault.sol";
+import {IGateway} from "../interfaces/IGateway.sol";
+import {IGatewayRegistry} from "../interfaces/IGatewayRegistry.sol";
 
 /**
 @title upgradeable contract which determines the authority of a given address to sign off on loans
@@ -119,7 +121,7 @@ contract ZeroController is
             loanStatus[digest].status == ZeroLib.LoanStatusCode.UNPAID,
             "loan is not in the UNPAID state"
         );
-        IZeroUnderwriterLock(ZeroLib.lockFor(msg.sender)).trackIn(actualAmount);
+        ZeroUnderwriterLock(ZeroLib.lockFor(msg.sender)).trackIn(actualAmount);
         IZeroModule(module).repayLoan(
             params.to,
             asset,
@@ -128,7 +130,7 @@ contract ZeroController is
             data
         );
         //uint256 amount =
-        IGateway(getGateway(asset)).mint(
+        IGateway(IGatewayRegistry.getGatewayByToken(asset)).mint(
             keccak256(abi.encode(nonce, data)),
             actualAmount,
             nHash,
@@ -148,7 +150,7 @@ contract ZeroController is
                     ZERO_RENVM_BORROW_MESSAGE_TYPE_HASH,
                     params.asset,
                     params.amount,
-                    underwtiter,
+                    underwriter,
                     params.nonce,
                     params.module,
                     params.data
@@ -191,7 +193,7 @@ contract ZeroController is
         });
         uint256 actual = 0; // TODO: implement best way to get vault underlying asset out and in the module, subtract all fees, remainder is in actual
 
-        IZeroUnderwriterLock(ZeroLib.lockFor(msg.sender)).trackOut(
+        ZeroUnderwriterLock(ZeroLib.lockFor(msg.sender)).trackOut(
             params.module,
             actual
         );
