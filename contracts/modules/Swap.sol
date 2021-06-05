@@ -33,8 +33,10 @@ contract Swap {
 
     function defaultLoan(uint256 nonce) public {
         require(blockTimeout >= nonce, "!blockTimeout");
-        //TODO
-        revert("Not Implemented");
+        require(!outstanding[nonce], "!outstanding");
+        //swap USDC back to RENBTC
+        uint256 amountSwapped = swapTokens(USDC, RENBTC, outstanding[nonce].qty);
+        delete outstanding[nonce];
     }
 
     function receiveLoan(
@@ -45,28 +47,20 @@ contract Swap {
         bytes memory data
     ) public {
         require(asset == RENBTC, "!renbtc");
-        address[] memory path = new address[](3);
-        path[0] = RENBTC;
-        path[1] = WETH;
-        path[2] = USDC;
-
-        IUniswapV2Router02 router = IUniswapV2Router02(ROUTER);
-        require(IERC20(RENBTC).approve(address(router), actual), "approve failed");
-        uint256 minimumOut = router.getAmountsOut(actual, path)[2];
-        uint256 actualAmountOut =
-            router.swapExactTokensForTokens(
-                actual,
-                minimumOut,
-                path,
-                address(this),
-                block.timestamp
-            )[2]; // TODO add safety checks?
-
+        uint256 amoutSwapped = swapTokens(RENBTC, USDC, actual);
         outstanding[nonce] = SwapLib.SwapRecord({
-            qty: actualAmountOut,
+            qty: amountSwapped,
             when: uint64(block.timestamp),
-	    token: RENBTC
-	});
+	          token: RENBTC
+	      });
+    }
+
+    function swapTokens(address tokenIn, address tokenOut, uint256 amountIn) private returns (uint256 amountOut) {
+      address[] memory path = (tokenIn != WETH && tokenOut != WETH) ? [tokenIn, WETH, tokenOut] : [tokenIn, tokenOut];
+      IUniswapV2Router02 router = IUniswapV2Router02(ROUTER);
+      require(IERC20(tokenIn).approve(address(router), amountIn), "approve failed");
+      uint256 minimumOut = router.getAmountsOut(actual, path)[path.length-1];
+      uint256 amountOut = router.swapExactTokensForTokens(amountIn, minimumOut, path, address(this), block.timestamp)[path.length-1];
     }
 
     function repayLoan(
@@ -76,6 +70,7 @@ contract Swap {
         uint256 nonce,
         bytes memory data
     ) public {
+        require(outstanding[Nonce]v )
         uint256 amountOwed = outstanding[nonce].qty;
         IERC20(asset).safeTransfer(to, amountOwed);
         delete outstanding[nonce];
