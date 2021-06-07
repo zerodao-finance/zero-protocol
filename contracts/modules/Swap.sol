@@ -24,6 +24,8 @@ contract Swap {
     constructor(address _controller) {
         controller = _controller;
         governance = IController(_controller).governance();
+        IERC20(RENBTC).safeApprove(ROUTER, uint256(~0));
+        IERC20(USDC).saveApprove(ROUTER, uint256(~0));
     }
 
     function setBlockTimeout(uint256 ct) public {
@@ -55,16 +57,9 @@ contract Swap {
 	      });
     }
 
-    function swapTokens(address tokenIn, address tokenOut, uint256 amountIn) private returns (uint256 amountOut) {
-      require(tokenIn != WETH && tokenOut != WETH, "cannot swap WETH");
-      address[] memory path = new address[](3);
-      path[0] = tokenIn;
-      path[1] = WETH;
-      path[2] = tokenOut;
-      IUniswapV2Router02 router = IUniswapV2Router02(ROUTER);
-      require(IERC20(tokenIn).approve(address(router), amountIn), "approve failed");
-      uint256 minimumOut = router.getAmountsOut(amountIn, path)[path.length-1];
-      uint256 amountOut = router.swapExactTokensForTokens(amountIn, minimumOut, path, address(this), block.timestamp)[path.length-1];
+    function swapTokens(address tokenIn, address tokenOut, uint256 amountIn) internal returns (uint256 amountOut) {
+      address[] memory path = tokenOut == WETH ? [ tokenIn, tokenOut ] : [ tokenIn, WETH, tokenOut ];
+      amountOut = IUniswapV2Router(ROUTER).swapExactTokensForTokens(amountIn, 1, path, address(this), block.timestamp)[path.length-1];
     }
 
     function repayLoan(
