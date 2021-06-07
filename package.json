@@ -2,7 +2,7 @@
   "name": "zeroflash-protocol",
   "version": "0.1.0",
   "description": "zeroflash Solidity contracts",
-  "main": "index.js",
+  "main": "lib/zero.js",
   "repository": "https://github.com/zeroflash/zeroflash-protocol",
   "author": "zeroflash",
   "license": "MIT",
