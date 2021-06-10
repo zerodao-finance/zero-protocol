@@ -12,20 +12,25 @@ contract StrategyRenVM is StrategyAPI {
     using Address for address;
     using SafeMath for uint256;
     
-
     address public immutable yearnStrategyPool;
-    address public immutable reserveRenBTC;
-    address public immutable reserveWETH;
+    uint256 public reserveRenBTC;
+    uint256 public reserveWETH;
+    address public immutable governance;
     address public constant renBTC = 0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D;
     address public constant wETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address public constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address public constant ROUTER =
         0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
 
-    constructor(address _yearnStrategyPool, uint256 _reserveRenBTC, uint256 _reserveWETH) {
+    modifier onlyGovernance() {
+        require(msg.sender == governance, '!governance');
+    }
+
+    constructor(address _yearnStrategyPool, address _governance, uint256 _reserveRenBTC, uint256 _reserveWETH) {
         yearnStrategyPool = _yearnStrategyPool;
         reserveRenBTC = _reserveRenBTC;
         reserveWETH = _reserveWETH;
+        governance = _governance;
     }
 
     function name() external view returns (string memory) {
@@ -54,6 +59,14 @@ contract StrategyRenVM is StrategyAPI {
 
     function delegatedAssets() external view returns (uint256) {
         revert('Not Implemented');
+    }
+
+    function setMinimumRenBTC(uint256 want) external onlyGovernance {
+        reserveRenBTC = want;
+    }
+
+    function setMinimumWETH(uint256 want) external onlyGovernance {
+        reserveWETH = want;
     }
 
     /*
