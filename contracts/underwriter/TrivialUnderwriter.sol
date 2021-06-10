@@ -6,7 +6,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 @title contract that is the simplest underwriter, just a proxy with an owner tag
 @author raymondpulver
 */
-contract TrivialUnderwriter is Ownable
+contract TrivialUnderwriter is Ownable {
   address payable public immutable controller;
   constructor(address _controller) Ownable() {}
   function bubble(bool success, bytes memory response) internal {
@@ -32,6 +32,6 @@ contract TrivialUnderwriter is Ownable
   fallback() external payable {
     require(msg.sender == owner(), "must be called by owner");
     (bool success, bytes memory response) = controller.call{ value: msg.value }(msg.data);
-    bubble(success, data);
+    bubble(success, response);
   }
 }

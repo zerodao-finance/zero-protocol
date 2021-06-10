@@ -5,7 +5,10 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../vendor/yearn/interfaces/yearn/IStrategy.sol";
-import "../interfaces/StrategyAPI.sol";
+import { StrategyAPI } from "../interfaces/StrategyAPI.sol";
+import {
+    IUniswapV2Router02
+} from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 contract StrategyRenVM is StrategyAPI {
     using SafeERC20 for IERC20;
@@ -24,6 +27,7 @@ contract StrategyRenVM is StrategyAPI {
 
     modifier onlyGovernance() {
         require(msg.sender == governance, '!governance');
+        _;
     }
 
     constructor(address _yearnStrategyPool, address _governance, uint256 _reserveRenBTC, uint256 _reserveWETH) {
@@ -75,17 +79,17 @@ contract StrategyRenVM is StrategyAPI {
     function estimatedTotalAssets() external view returns (uint256) {
         uint256 renBalance = IERC20(renBTC).balanceOf(address(this));
         uint256 wETHBalance = IERC20(wETH).balanceOf(address(this));
-        address[] memory renPATH = new address[](3);
-        renPATH[0] = renBTC;
-        renPATH[1] = wETH;
-        renPATH[2] = USDC;
+        address[] memory renPath = new address[](3);
+        renPath[0] = renBTC;
+        renPath[1] = wETH;
+        renPath[2] = USDC;
         address[] memory wethPath = new address[](2);
         wethPath[0] = wETH;
         wethPath[1] = USDC;
         uint256 renValue = IUniswapV2Router02(ROUTER).swapExactTokensForTokens(renBalance, 1, renPath, address(this), block.timestamp)[renPath.length-1];
         uint256 wethValue = IUniswapV2Router02(ROUTER).swapExactTokensForTokens(wETHBalance, 1, wethPath, address(this), block.timestamp)[wethPath.length-1];
         //TODO add calculation for vault assets
-        return renValue + wethValue
+        return renValue + wethValue;
     }
 
     /*
@@ -104,7 +108,7 @@ contract StrategyRenVM is StrategyAPI {
     /*
     If harvest should be called, will signal it to keeper. Should not ever return same as tendTrigger.
     */
-    function harvestTrigger(uint256 callCost) externval view returns (bool) {
+    function harvestTrigger(uint256 callCost) external view returns (bool) {
         return bool(IERC20(renBTC).balanceOf(address(this)) > reserveRenBTC || IERC20(wETH).balanceOf(address(this)) > reserveWETH);
     }
 
