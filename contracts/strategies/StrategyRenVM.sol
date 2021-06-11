@@ -1,11 +1,12 @@
+// SPDX-License-Identifier: MIT
 pragma solidity >= 0.6.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "../vendor/yearn/interfaces/yearn/IStrategy.sol";
-import { StrategyAPI } from "../interfaces/StrategyAPI.sol";
+import "oz410/token/ERC20/IERC20.sol";
+import "oz410/utils/math/SafeMath.sol";
+import "oz410/utils/Address.sol";
+import "oz410/token/ERC20/utils/SafeERC20.sol";
+import "../interfaces/IStrategy.sol";
+import { StrategyAPI } from "../interfaces/IStrategy.sol";
 import {
     IUniswapV2Router02
 } from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
@@ -37,46 +38,46 @@ contract StrategyRenVM is StrategyAPI {
         governance = _governance;
     }
 
-    function name() external view returns (string memory) {
+    function name() external virtual override view returns (string memory) {
         revert('Not Implemented');
     }
 
-    function vault() external view returns (address) {
+    function vault() external virtual override view returns (address) {
         revert('Not Implemented');
     }
 
-    function want() external view returns (address) {
+    function want() external virtual override view returns (address) {
         revert('Not Implemented');
     }
 
-    function apiVersion() external pure returns (string memory) {
+    function apiVersion() virtual override external pure returns (string memory) {
         revert('Not Implemented');
     }
 
-    function keeper() external view returns (address) {
+    function keeper() virtual override external view returns (address) {
         revert('Not Implemented');
     }
 
-    function isActive() external view returns (bool) {
+    function isActive() virtual override external view returns (bool) {
         return true;
     }
 
-    function delegatedAssets() external view returns (uint256) {
+    function delegatedAssets() virtual override external view returns (uint256) {
         revert('Not Implemented');
     }
 
-    function setMinimumRenBTC(uint256 want) external onlyGovernance {
+    function setMinimumRenBTC(uint256 want) virtual external onlyGovernance {
         reserveRenBTC = want;
     }
 
-    function setMinimumWETH(uint256 want) external onlyGovernance {
+    function setMinimumWETH(uint256 want) virtual external onlyGovernance {
         reserveWETH = want;
     }
 
     /*
     Estimate the total assets managed by this strategy.
     */
-    function estimatedTotalAssets() external view returns (uint256) {
+    function estimatedTotalAssets() virtual override external view returns (uint256) {
         uint256 renBalance = IERC20(renBTC).balanceOf(address(this));
         uint256 wETHBalance = IERC20(wETH).balanceOf(address(this));
         address[] memory renBTCPath = new address[](3);
@@ -95,11 +96,11 @@ contract StrategyRenVM is StrategyAPI {
     /*
     If trigger should be called, will signal it to the keeper. Should not ever return same as harvestTrigger.
     */
-    function tendTrigger(uint256 callCost) external view returns (bool) {
+    function tendTrigger(uint256 callCost) virtual override external view returns (bool) {
         return bool(IERC20(renBTC).balanceOf(address(this)) < reserveRenBTC || IERC20(wETH).balanceOf(address(this)) < reserveWETH);
     }
 
-    function tend() external {
+    function tend() virtual override external {
         uint256 renBalance = IERC20(renBTC).balanceOf(address(this));
         uint256 wETHBalance = IERC20(wETH).balanceOf(address(this));
         revert('Not Implemented');
@@ -108,11 +109,11 @@ contract StrategyRenVM is StrategyAPI {
     /*
     If harvest should be called, will signal it to keeper. Should not ever return same as tendTrigger.
     */
-    function harvestTrigger(uint256 callCost) external view returns (bool) {
+    function harvestTrigger(uint256 callCost) virtual override external view returns (bool) {
         return bool(IERC20(renBTC).balanceOf(address(this)) > reserveRenBTC || IERC20(wETH).balanceOf(address(this)) > reserveWETH);
     }
 
-    function harvest() external {
+    function harvest() virtual override external {
         uint256 renBalance = IERC20(renBTC).balanceOf(address(this));
         uint256 wETHBalance = IERC20(wETH).balanceOf(address(this));
         revert('Not Implemented');

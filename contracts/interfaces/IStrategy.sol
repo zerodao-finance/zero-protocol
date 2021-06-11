@@ -1,8 +1,5 @@
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.6.0;
-
-interface IStrategy {
-  function permissionedSend(address _asset, uint256 _amount) external;
-}
 
 interface StrategyAPI {
     function name() external view returns (string memory);
@@ -31,3 +28,12 @@ interface StrategyAPI {
 
     event Harvested(uint256 profit, uint256 loss, uint256 debtPayment, uint256 debtOutstanding);
 }
+abstract contract IStrategy is StrategyAPI {
+  function permissionedSend(address _asset, uint256 _amount) external virtual;
+  function withdrawAll() external virtual;
+  function deposit() external virtual;
+  function balanceOf() external virtual view returns (uint256);
+  function withdraw(uint256) external virtual;
+  function withdraw(address) external virtual;
+}
+

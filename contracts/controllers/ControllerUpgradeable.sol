@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.5.0;
+pragma solidity >=0.7.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts/proxy/Initializable.sol";
+import "oz410/token/ERC20/IERC20.sol";
+import "oz410/utils/math/SafeMath.sol";
+import "oz410/utils/Address.sol";
+import "oz410/token/ERC20/utils/SafeERC20.sol";
+import "oz410/proxy/utils/Initializable.sol";
 
-import "../vendor/yearn/interfaces/yearn/IConverter.sol";
-import "../vendor/yearn/interfaces/yearn/IOneSplitAudit.sol";
-import "../vendor/yearn/interfaces/yearn/IStrategy.sol";
+import "../interfaces/IConverter.sol";
+import "../interfaces/IOneSplitAudit.sol";
+import "../interfaces/IStrategy.sol";
 
 contract ControllerUpgradeable {
     using SafeERC20 for IERC20;

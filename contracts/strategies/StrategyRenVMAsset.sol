@@ -2,16 +2,11 @@
 
 pragma solidity >=0.5.17;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-
-import "../vendor/yearn/interfaces/cream/Controller.sol";
-import "../vendor/yearn/interfaces/compound/Token.sol";
-import "../vendor/yearn/interfaces/uniswap/Uni.sol";
-
-import "../vendor/yearn/interfaces/yearn/IController.sol";
+import "oz410/token/ERC20/IERC20.sol";
+import "oz410/utils/math/SafeMath.sol";
+import "oz410/utils/Address.sol";
+import "oz410/token/ERC20/utils/SafeERC20.sol";
+import { IController } from "../interfaces/IController.sol";
 
 contract StrategyRenVMAsset {
     using SafeERC20 for IERC20;
@@ -119,7 +114,7 @@ contract StrategyRenVMAsset {
     }
     function _withdrawC(uint256 _amount) internal {}
 
-    function _withdrawSome(uint256 _amount) internal returns (uint256) {
+    function _withdrawSome(uint256 _amount) internal view returns (uint256) {
         uint256 _before = IERC20(want).balanceOf(address(this));
         uint256 _after = IERC20(want).balanceOf(address(this));
         uint256 _withdrew = _after.sub(_before);
