@@ -79,17 +79,17 @@ contract StrategyRenVM is StrategyAPI {
     function estimatedTotalAssets() external view returns (uint256) {
         uint256 renBalance = IERC20(renBTC).balanceOf(address(this));
         uint256 wETHBalance = IERC20(wETH).balanceOf(address(this));
-        address[] memory renPath = new address[](3);
-        renPath[0] = renBTC;
-        renPath[1] = wETH;
-        renPath[2] = USDC;
-        address[] memory wethPath = new address[](2);
-        wethPath[0] = wETH;
-        wethPath[1] = USDC;
-        uint256 renValue = IUniswapV2Router02(ROUTER).swapExactTokensForTokens(renBalance, 1, renPath, address(this), block.timestamp)[renPath.length-1];
-        uint256 wethValue = IUniswapV2Router02(ROUTER).swapExactTokensForTokens(wETHBalance, 1, wethPath, address(this), block.timestamp)[wethPath.length-1];
+        address[] memory renBTCPath = new address[](3);
+        renBTCPath[0] = renBTC;
+        renBTCPath[1] = wETH;
+        renBTCPath[2] = USDC;
+        address[] memory wETHPath = new address[](2);
+        wETHPath[0] = wETH;
+        wETHPath[1] = USDC;
+        uint256 renBTCValue = IUniswapV2Router02(ROUTER).getAmountsOut(renBalance, renBTCPath)[renBTCPath.length-1];
+        uint256 wETHValue = IUniswapV2Router02(ROUTER).getAmountsOut(wETHBalance, wETHPath)[wETHPath.length-1];
         //TODO add calculation for vault assets
-        return renValue + wethValue;
+        return renBTCValue + wETHValue;
     }
 
     /*
