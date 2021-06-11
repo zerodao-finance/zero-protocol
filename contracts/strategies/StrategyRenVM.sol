@@ -6,6 +6,7 @@ import "oz410/utils/math/SafeMath.sol";
 import "oz410/utils/Address.sol";
 import "oz410/token/ERC20/utils/SafeERC20.sol";
 import "../interfaces/IStrategy.sol";
+import "../interfaces/IyVault.sol";
 import { StrategyAPI } from "../interfaces/IStrategy.sol";
 import {
     IUniswapV2Router02
@@ -47,7 +48,7 @@ contract StrategyRenVM is StrategyAPI {
     }
 
     function want() external virtual override view returns (address) {
-        revert('Not Implemented');
+        return renBTC;
     }
 
     function apiVersion() virtual override external pure returns (string memory) {
@@ -97,10 +98,15 @@ contract StrategyRenVM is StrategyAPI {
     If trigger should be called, will signal it to the keeper. Should not ever return same as harvestTrigger.
     */
     function tendTrigger(uint256 callCost) virtual override external view returns (bool) {
-        return bool(IERC20(renBTC).balanceOf(address(this)) < reserveRenBTC || IERC20(wETH).balanceOf(address(this)) < reserveWETH);
+        return bool(IERC20(renBTC).balanceOf(address(this)) < reserveRenBTC);
     }
 
     function tend() virtual override external {
+        uint256 renBTCBalance = IERC20(renBTC).balanceOf(address(this));
+        if (renBTCBalance < reserveRenBTC) {
+            uint256 shortageRenBTC = reserveRenBTC - renBTCBalance;
+            uint256 name = IyVault(yearnStrategyPool).withdraw(shortageRenBTC);
+        }
         uint256 renBalance = IERC20(renBTC).balanceOf(address(this));
         uint256 wETHBalance = IERC20(wETH).balanceOf(address(this));
         revert('Not Implemented');
@@ -110,12 +116,16 @@ contract StrategyRenVM is StrategyAPI {
     If harvest should be called, will signal it to keeper. Should not ever return same as tendTrigger.
     */
     function harvestTrigger(uint256 callCost) virtual override external view returns (bool) {
-        return bool(IERC20(renBTC).balanceOf(address(this)) > reserveRenBTC || IERC20(wETH).balanceOf(address(this)) > reserveWETH);
+        return bool(IERC20(renBTC).balanceOf(address(this)) > reserveRenBTC);
     }
 
     function harvest() virtual override external {
-        uint256 renBalance = IERC20(renBTC).balanceOf(address(this));
-        uint256 wETHBalance = IERC20(wETH).balanceOf(address(this));
+        uint256 renBTCBalance = IERC20(renBTC).balanceOf(address(this));
+        if (renBTCBalance > reserveRenBTC) {
+            uint256 surplusRenBTC = renBTCBalance - reserveRenBTC;
+            uint256 name = IyVault(yearnStrategyPool).deposit(surplusRenBTC);
+            //todo 
+        }
         revert('Not Implemented');
     }
 
