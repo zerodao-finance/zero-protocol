@@ -1,15 +1,16 @@
-pragma solidity >=0.5.0;
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.6.0;
 
 import {IZeroModule} from "../interfaces/IZeroModule.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Initializable} from "@openzeppelin/contracts/proxy/Initializable.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {Ownable} from "oz410/access/Ownable.sol";
+import {Initializable} from "oz410/proxy/utils/Initializable.sol";
+import {IERC20} from "oz410/token/ERC20/ERC20.sol";
+import {IERC721} from "oz410/token/ERC721/IERC721.sol";
+import {SafeMath} from "oz410/utils/math/SafeMath.sol";
+import { IyVault } from "../interfaces/IyVault.sol";
 import {ZeroController} from "../controllers/ZeroController.sol";
-import {yVault} from "../vendor/yearn/vaults/yVault.sol";
 import {ZeroLib} from "../libraries/ZeroLib.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import {SafeERC20} from "oz410/token/ERC20/utils/SafeERC20.sol";
 
 /**
 @title contract to hold locked underwriter funds while the underwriter is active
@@ -19,7 +20,7 @@ contract ZeroUnderwriterLock is Ownable, Initializable {
     using SafeMath for *;
     using SafeERC20 for *;
     ZeroController public controller;
-    yVault public vault;
+    address public vault;
     ZeroLib.BalanceSheet internal _balanceSheet;
 
     function balanceSheet()
@@ -43,9 +44,9 @@ contract ZeroUnderwriterLock is Ownable, Initializable {
     }
 
     function reserve() public view returns (uint256 result) {
-        result = vault
+        result = IyVault(vault)
             .balanceOf(address(this))
-            .mul(vault.getPricePerFullShare())
+            .mul(IyVault(vault).getPricePerFullShare())
             .div(uint256(1 ether));
     }
 
@@ -57,7 +58,7 @@ contract ZeroUnderwriterLock is Ownable, Initializable {
   @notice sets the owner to the ZeroUnderwriterNFT
   @param _vault the address of the LP token which will be either burned or redeemed when the NFT is destroyed
   */
-    function initialize(yVault _vault) public initializer {
+    function initialize(address _vault) public initializer {
         controller = ZeroController(msg.sender);
         vault = _vault;
     }
@@ -79,10 +80,10 @@ contract ZeroUnderwriterLock is Ownable, Initializable {
   */
     function burn(address receiver) public onlyOwner {
         require(
-            vault.transfer(receiver, vault.balanceOf(address(this))),
+            IyVault(vault).transfer(receiver, IyVault(vault).balanceOf(address(this))),
             "failed to transfer vault token to receiver"
         );
-        selfdestruct(msg.sender);
+        selfdestruct(payable(msg.sender));
     }
 
     function trackOut(address module, uint256 amount) public {

@@ -1044,15 +1044,10 @@
     node-fetch "^2.6.0"
     semver "^6.3.0"
 
-"@openzeppelin/contracts-ethereum-package@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-ethereum-package/-/contracts-ethereum-package-3.0.0.tgz#d5db971a177c3b37733db2ee4ebdb79c67575d64"
-  integrity sha512-Xg33RtX7FGbSK/YnroLhcGNAvH30/C84NRW8KvbSdXXYiLA8YqM1bOA9sAeLjmQxXqYUn/YL4AUVTgDnG51NOw==
-
-"@openzeppelin/contracts-upgradeable@3.4.0":
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-3.4.0.tgz#7674c73c643a509f1b90c509e3e72fe9aae02aeb"
-  integrity sha512-7wBcbukDqWZt/B1zjb7zyeWq+AC7rx7nGln7/hPxHdKd8PAiiteXd51Cp2KmGP8qaY0/TXh/fQLsA082LWp8Zw==
+"@openzeppelin/contracts-upgradeable@4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.1.0.tgz#36a6113ceeda278ae14f740280e5388161dfd383"
+  integrity sha512-QZSvbYqNpU/x60vARhq/jghh97VWjml3NAlKfu4u1XehvpEBbHVXJyKTBSZtZY7jviG305jOczEisnN8VeOMcw==
 
 "@openzeppelin/contracts@3.4.0":
   version "3.4.0"
@@ -5651,6 +5646,11 @@ osenv@^0.1.4:
   dependencies:
     os-homedir "^1.0.0"
     os-tmpdir "^1.0.0"
+
+"oz410@npm:@openzeppelin/contracts@4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.1.0.tgz#baec89a7f5f73e3d8ea582a78f1980134b605375"
+  integrity sha512-TihZitscnaHNcZgXGj9zDLDyCqjziytB4tMCwXq0XimfWkAjBYyk5/pOsDbbwcavhlc79HhpTEpQcrMnPVa1mw==
 
 p-any@^3.0.0:
   version "3.0.0"

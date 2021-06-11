@@ -2,7 +2,7 @@
 pragma solidity >=0.5.0;
 
 import {Implementation} from "./Implementation.sol";
-import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
+import {Create2} from "oz410/utils/Create2.sol";
 
 /**
 @title clone factory library

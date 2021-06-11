@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.5.0;
+pragma solidity >=0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "oz410/token/ERC20/IERC20.sol";
+import "oz410/utils/math/SafeMath.sol";
+import "oz410/utils/Address.sol";
+import "oz410/token/ERC20/utils/SafeERC20.sol";
+import "oz410/token/ERC20/ERC20.sol";
+import "oz410/access/Ownable.sol";
 
 import "../interfaces/yearn/IController.sol";
 
@@ -22,6 +22,7 @@ contract yVault is ERC20 {
 
     address public governance;
     address public controller;
+    uint8 internal _decimals;
 
     constructor(address _token, address _controller, string memory _name, string memory _symbol)
         ERC20(
@@ -29,10 +30,13 @@ contract yVault is ERC20 {
             _symbol
         )
     {
-        _setupDecimals(ERC20(_token).decimals());
+        _decimals = ERC20(_token).decimals();
         token = IERC20(_token);
         governance = msg.sender;
         controller = _controller;
+    }
+    function decimals() public view override returns (uint8) {
+      return _decimals;
     }
 
     function balance() public view returns (uint256) {

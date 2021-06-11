@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Ownable } from "oz410/access/Ownable.sol";
 
 /**
 @title contract that is the simplest underwriter, just a proxy with an owner tag
@@ -8,8 +8,10 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 */
 contract TrivialUnderwriter is Ownable {
   address payable public immutable controller;
-  constructor(address _controller) Ownable() {}
-  function bubble(bool success, bytes memory response) internal {
+  constructor(address payable _controller) Ownable() {
+    controller = _controller;
+  }
+  function bubble(bool success, bytes memory response) internal pure {
     assembly {
       if iszero(success) {
         revert(add(0x20, response), mload(response))

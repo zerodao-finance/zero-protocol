@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.7.0;
+pragma solidity >=0.8.0;
 
 import {
     ERC721Upgradeable
@@ -12,10 +12,9 @@ import {
     OwnableUpgradeable
 } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ControllerUpgradeable} from "./ControllerUpgradeable.sol";
-import {EIP712} from "@openzeppelin/contracts/drafts/EIP712.sol";
-import {ECDSA} from "@openzeppelin/contracts/cryptography/ECDSA.sol";
+import {EIP712} from "oz410/utils/cryptography/draft-EIP712.sol";
+import {ECDSA} from "oz410/utils/cryptography/ECDSA.sol";
 import {FactoryLib} from "../libraries/factory/FactoryLib.sol";
-import {yVault} from "../vendor/yearn/vaults/yVault.sol";
 import {IGateway} from "../interfaces/IGateway.sol";
 import {IGatewayRegistry} from "../interfaces/IGatewayRegistry.sol";
 import {IStrategy} from "../interfaces/IStrategy.sol";
@@ -72,7 +71,7 @@ contract ZeroController is
 
     modifier onlyUnderwriter {
         require(
-            ownerOf(uint256(address(lockFor(msg.sender)))) != address(0x0),
+            ownerOf(uint256(uint160(address(lockFor(msg.sender))))) != address(0x0),
             "must be called by underwriter"
         );
         _;
@@ -89,7 +88,7 @@ contract ZeroController is
         result = ZeroLib.lockFor(address(this), underwriterLockImpl, underwriter);
     }
 
-    function mint(address underwriter, yVault vault) public {
+    function mint(address underwriter, address vault) public {
         address lock =
             FactoryLib.deploy(
                 underwriterLockImpl,
