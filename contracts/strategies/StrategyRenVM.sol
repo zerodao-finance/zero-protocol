@@ -107,8 +107,6 @@ contract StrategyRenVM is StrategyAPI {
             uint256 shortageRenBTC = reserveRenBTC - renBTCBalance;
             uint256 name = IyVault(yearnStrategyPool).withdraw(shortageRenBTC);
         }
-        uint256 renBalance = IERC20(renBTC).balanceOf(address(this));
-        uint256 wETHBalance = IERC20(wETH).balanceOf(address(this));
         revert('Not Implemented');
     }
 
@@ -124,7 +122,6 @@ contract StrategyRenVM is StrategyAPI {
         if (renBTCBalance > reserveRenBTC) {
             uint256 surplusRenBTC = renBTCBalance - reserveRenBTC;
             uint256 name = IyVault(yearnStrategyPool).deposit(surplusRenBTC);
-            //todo 
         }
         revert('Not Implemented');
     }
