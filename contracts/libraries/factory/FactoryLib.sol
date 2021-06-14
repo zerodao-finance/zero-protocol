@@ -60,7 +60,7 @@ library FactoryLib {
     /// @param salt Salt to use
     /// @return cloneAddress Address of the created clone contract.
     function deploy(address implementation, bytes32 salt)
-        public
+        internal
         returns (address cloneAddress)
     {
         bytes memory creationCode = assembleCreationCode(implementation);

@@ -11,7 +11,7 @@ abstract contract Implementation is Initializable {
     /**
   @notice ensure the contract cannot be initialized twice
   */
-    function lock() public virtual initializer {
+    function lock() public virtual {
         // no other logic
     }
 }
