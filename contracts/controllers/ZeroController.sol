@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.8.0;
+pragma solidity >=0.7.0;
 
 import {
     ERC721Upgradeable
@@ -12,8 +12,8 @@ import {
     OwnableUpgradeable
 } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ControllerUpgradeable} from "./ControllerUpgradeable.sol";
-import {EIP712} from "oz410/utils/cryptography/draft-EIP712.sol";
-import {ECDSA} from "oz410/utils/cryptography/ECDSA.sol";
+import {EIP712} from "oz410/drafts/EIP712.sol";
+import {ECDSA} from "oz410/cryptography/ECDSA.sol";
 import {FactoryLib} from "../libraries/factory/FactoryLib.sol";
 import {IGateway} from "../interfaces/IGateway.sol";
 import {IGatewayRegistry} from "../interfaces/IGatewayRegistry.sol";

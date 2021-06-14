@@ -3,14 +3,14 @@ pragma solidity >=0.6.0;
 
 import {IZeroModule} from "../interfaces/IZeroModule.sol";
 import {Ownable} from "oz410/access/Ownable.sol";
-import {Initializable} from "oz410/proxy/utils/Initializable.sol";
+import {Initializable} from "oz410/proxy/Initializable.sol";
 import {IERC20} from "oz410/token/ERC20/ERC20.sol";
 import {IERC721} from "oz410/token/ERC721/IERC721.sol";
-import {SafeMath} from "oz410/utils/math/SafeMath.sol";
+import {SafeMath} from "oz410/math/SafeMath.sol";
 import { IyVault } from "../interfaces/IyVault.sol";
 import {ZeroController} from "../controllers/ZeroController.sol";
 import {ZeroLib} from "../libraries/ZeroLib.sol";
-import {SafeERC20} from "oz410/token/ERC20/utils/SafeERC20.sol";
+import {SafeERC20} from "oz410/token/ERC20/SafeERC20.sol";
 
 /**
 @title contract to hold locked underwriter funds while the underwriter is active
@@ -58,7 +58,7 @@ contract ZeroUnderwriterLock is Ownable, Initializable {
   @notice sets the owner to the ZeroUnderwriterNFT
   @param _vault the address of the LP token which will be either burned or redeemed when the NFT is destroyed
   */
-    function initialize(address _vault) public initializer {
+    function initialize(address _vault) public {
         controller = ZeroController(msg.sender);
         vault = _vault;
     }

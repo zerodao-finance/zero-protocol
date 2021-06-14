@@ -2,9 +2,9 @@
 pragma solidity >= 0.6.0;
 
 import "oz410/token/ERC20/IERC20.sol";
-import "oz410/utils/math/SafeMath.sol";
+import "oz410/math/SafeMath.sol";
 import "oz410/utils/Address.sol";
-import "oz410/token/ERC20/utils/SafeERC20.sol";
+import "oz410/token/ERC20/SafeERC20.sol";
 import "../interfaces/IStrategy.sol";
 import "../interfaces/IyVault.sol";
 import { StrategyAPI } from "../interfaces/IStrategy.sol";

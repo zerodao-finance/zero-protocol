@@ -5,7 +5,7 @@ import {
     IUniswapV2Router02
 } from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import { IERC20 } from "oz410/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "oz410/token/ERC20/utils/SafeERC20.sol";
+import { SafeERC20 } from "oz410/token/ERC20/SafeERC20.sol";
 import { IController } from "../interfaces/IController.sol";
 
 contract Swap {

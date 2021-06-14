@@ -11,13 +11,13 @@
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-etherscan": "^2.1.2",
     "@openzeppelin/contracts": "3.4.0",
-    "@openzeppelin/contracts-upgradeable": "4.1.0",
+    "@openzeppelin/contracts-upgradeable": "3.4.1-solc-0.7-2",
     "@renproject/ren": "^2.1.7",
     "hardhat": "^2.2.1",
     "hardhat-deploy": "^0.7.5",
     "hardhat-deploy-ethers": "^0.3.0-beta.7",
     "hardhat-gas-reporter": "^1.0.4",
-    "oz410": "npm:@openzeppelin/contracts@4.1.0"
+    "oz410": "npm:@openzeppelin/contracts@3.4.1-solc-0.7-2"
   },
   "dependencies": {
     "@nomiclabs/buidler": "^1.4.8",
