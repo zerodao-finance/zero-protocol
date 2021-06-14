@@ -15,6 +15,7 @@ import {ControllerUpgradeable} from "./ControllerUpgradeable.sol";
 import {EIP712} from "oz410/drafts/EIP712.sol";
 import {ECDSA} from "oz410/cryptography/ECDSA.sol";
 import {FactoryLib} from "../libraries/factory/FactoryLib.sol";
+import { ZeroUnderwriterLockBytecodeLib } from "../libraries/bytecode/ZeroUnderwriterLockBytecodeLib.sol";
 import {IGateway} from "../interfaces/IGateway.sol";
 import {IGatewayRegistry} from "../interfaces/IGatewayRegistry.sol";
 import {IStrategy} from "../interfaces/IStrategy.sol";
@@ -56,10 +57,11 @@ contract ZeroController is
         __Ownable_init_unchained();
         __Controller_init_unchained(_rewards);
         __ERC721_init_unchained("ZeroController", "ZWRITE");
-        underwriterLockImpl = FactoryLib.deployImplementation(
-            type(ZeroUnderwriterLock).creationCode,
+	ZeroUnderwriterLockBytecodeLib.get(); // remove this line
+        underwriterLockImpl = address(0);/*FactoryLib.deployImplementation(
+            ZeroUnderwriterLockBytecodeLib.get(),
             "zero.underwriter.lock-implementation"
-        );
+        );  */
         ZERO_DOMAIN_SEPARATOR = bytes32(0);/* EIP712.buildDomainSeparator(
             ZERO_DOMAIN_NAME_HASH,
             ZERO_DOMAIN_VERSION_HASH,

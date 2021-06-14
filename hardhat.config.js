@@ -18,6 +18,7 @@ module.exports = {
       }
     }]
   },
+  namedAccounts: { deployer: 0 },
   networks: {
     hardhat: {
       forking: {
