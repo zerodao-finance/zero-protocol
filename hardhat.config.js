@@ -1,6 +1,8 @@
 require('hardhat-deploy');
 require('hardhat-deploy-ethers');
 require('hardhat-gas-reporter');
+require('@openzeppelin/hardhat-upgrades');
+
 
 module.exports = {
   solidity: {
