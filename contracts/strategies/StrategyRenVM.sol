@@ -40,19 +40,30 @@ contract StrategyRenVM is StrategyAPI {
     }
 
     function name() external virtual override view returns (string memory) {
-        revert('Not Implemented');
+        string memory name = "0confirmation RenVM Strategy";
+        return name;
     }
 
+    /*
+    The address of the vault this strategy uses
+    */
     function vault() external virtual override view returns (address) {
-        revert('Not Implemented');
+        return yearnStrategyPool;
     }
 
+    /*
+    Function returns the token address that the strategy wants
+    */
     function want() external virtual override view returns (address) {
         return renBTC;
     }
 
+    /*
+    The current api version
+    */
     function apiVersion() virtual override external pure returns (string memory) {
-        revert('Not Implemented');
+        string memory version = "1.0";
+        return version;
     }
 
     function keeper() virtual override external view returns (address) {
@@ -71,27 +82,19 @@ contract StrategyRenVM is StrategyAPI {
         reserveRenBTC = want;
     }
 
-    function setMinimumWETH(uint256 want) virtual external onlyGovernance {
-        reserveWETH = want;
-    }
 
     /*
-    Estimate the total assets managed by this strategy.
+    Estimate the total value of ren managed by the strategy
     */
     function estimatedTotalAssets() virtual override external view returns (uint256) {
         uint256 renBalance = IERC20(renBTC).balanceOf(address(this));
-        uint256 wETHBalance = IERC20(wETH).balanceOf(address(this));
         address[] memory renBTCPath = new address[](3);
         renBTCPath[0] = renBTC;
         renBTCPath[1] = wETH;
         renBTCPath[2] = USDC;
-        address[] memory wETHPath = new address[](2);
-        wETHPath[0] = wETH;
-        wETHPath[1] = USDC;
         uint256 renBTCValue = IUniswapV2Router02(ROUTER).getAmountsOut(renBalance, renBTCPath)[renBTCPath.length-1];
-        uint256 wETHValue = IUniswapV2Router02(ROUTER).getAmountsOut(wETHBalance, wETHPath)[wETHPath.length-1];
-        //TODO add calculation for vault assets
-        return renBTCValue + wETHValue;
+        //TODO add calculation for vault assets and eth assets?
+        return renBTCValue;
     }
 
     /*
@@ -105,9 +108,10 @@ contract StrategyRenVM is StrategyAPI {
         uint256 renBTCBalance = IERC20(renBTC).balanceOf(address(this));
         if (renBTCBalance < reserveRenBTC) {
             uint256 shortageRenBTC = reserveRenBTC - renBTCBalance;
-            uint256 name = IyVault(yearnStrategyPool).withdraw(shortageRenBTC);
+            IyVault(yearnStrategyPool).withdraw(shortageRenBTC);
+        } else {
+            revert('Nothing to tend');
         }
-        revert('Not Implemented');
     }
 
     /*
@@ -121,9 +125,10 @@ contract StrategyRenVM is StrategyAPI {
         uint256 renBTCBalance = IERC20(renBTC).balanceOf(address(this));
         if (renBTCBalance > reserveRenBTC) {
             uint256 surplusRenBTC = renBTCBalance - reserveRenBTC;
-            uint256 name = IyVault(yearnStrategyPool).deposit(surplusRenBTC);
+            IyVault(yearnStrategyPool).deposit(surplusRenBTC);
+        } else {
+            revert('Nothing to harvest');
         }
-        revert('Not Implemented');
     }
 
 }
