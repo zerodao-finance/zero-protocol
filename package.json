@@ -17,12 +17,15 @@
     "hardhat-deploy": "^0.7.5",
     "hardhat-deploy-ethers": "^0.3.0-beta.7",
     "hardhat-gas-reporter": "^1.0.4",
-    "oz410": "npm:@openzeppelin/contracts@3.4.1-solc-0.7-2"
+    "nice-repl": "^0.1.2",
+    "oz410": "npm:@openzeppelin/contracts@3.4.1-solc-0.7-2",
+    "request-debug": "^0.2.0"
   },
   "dependencies": {
     "@nomiclabs/buidler": "^1.4.8",
     "@openzeppelin/hardhat-upgrades": "^1.8.2",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
+    "bitcoin-core": "^3.0.0",
     "bitcore-lib": "^8.25.10",
     "bluebird": "^3.7.2",
     "eip712-helpers": "^1.0.2",
