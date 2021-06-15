@@ -39,15 +39,18 @@ module.exports = async ({
     const zeroController = await upgrades.deployProxy(zeroControllerFactory, ["0x0F4ee9631f4be0a63756515141281A3E2B293Bbe"], {
         unsafeAllowLinkedLibraries: true
     });
+    console.log('deployed ZeroController');
     const trivialUnderwriterFactory = await deployments.deploy("TrivialUnderwriter", {
       contractName: 'TrivialUnderwriter',
-      args: [],
+      args: [ zeroController.address ],
       from: deployer
     });
+    console.log('deployed TrivialUnderwriter');
     const swapModuleFactory = await deployments.deploy('Swap', {
-      args: [],
+      args: [ zeroController.address],
       contractName: 'Swap',
       from: deployer
     });
+    console.log('deployed SwapModule');
 };
 
