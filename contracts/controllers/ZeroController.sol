@@ -15,10 +15,13 @@ import {ControllerUpgradeable} from "./ControllerUpgradeable.sol";
 import {EIP712} from "oz410/drafts/EIP712.sol";
 import {ECDSA} from "oz410/cryptography/ECDSA.sol";
 import {FactoryLib} from "../libraries/factory/FactoryLib.sol";
-import { ZeroUnderwriterLockBytecodeLib } from "../libraries/bytecode/ZeroUnderwriterLockBytecodeLib.sol";
+import {
+    ZeroUnderwriterLockBytecodeLib
+} from "../libraries/bytecode/ZeroUnderwriterLockBytecodeLib.sol";
 import {IGateway} from "../interfaces/IGateway.sol";
 import {IGatewayRegistry} from "../interfaces/IGatewayRegistry.sol";
 import {IStrategy} from "../interfaces/IStrategy.sol";
+
 /**
 @title upgradeable contract which determines the authority of a given address to sign off on loans
 @author raymondpulver
@@ -51,29 +54,34 @@ contract ZeroController is
             response := chainid()
         }
     }
-    address public constant gatewayRegistry = 0xe80d347DF1209a76DD9d2319d62912ba98C54DDD;
+
+    address public constant gatewayRegistry =
+        0xe80d347DF1209a76DD9d2319d62912ba98C54DDD;
 
     function initialize(address _rewards) public {
         __Ownable_init_unchained();
         __Controller_init_unchained(_rewards);
         __ERC721_init_unchained("ZeroController", "ZWRITE");
-	ZeroUnderwriterLockBytecodeLib.get(); // remove this line
-        underwriterLockImpl = address(0);/*FactoryLib.deployImplementation(
+        ZeroUnderwriterLockBytecodeLib.get(); // remove this line
+        underwriterLockImpl = address(0); /*FactoryLib.deployImplementation(
             ZeroUnderwriterLockBytecodeLib.get(),
             "zero.underwriter.lock-implementation"
         );  */
-        ZERO_DOMAIN_SEPARATOR = bytes32(0);/* EIP712.buildDomainSeparator(
-            ZERO_DOMAIN_NAME_HASH,
-            ZERO_DOMAIN_VERSION_HASH,
-            getChainId(),
-            address(this),
-            ZERO_DOMAIN_SALT
-        ); */
+        ZERO_DOMAIN_SEPARATOR = keccak256(
+            abi.encode(
+                ZERO_DOMAIN_SALT,
+                ZERO_DOMAIN_NAME_HASH,
+                ZERO_DOMAIN_VERSION_HASH,
+                address(this),
+                getChainId()
+            )
+        );
     }
 
     modifier onlyUnderwriter {
         require(
-            ownerOf(uint256(uint160(address(lockFor(msg.sender))))) != address(0x0),
+            ownerOf(uint256(uint160(address(lockFor(msg.sender))))) !=
+                address(0x0),
             "must be called by underwriter"
         );
         _;
@@ -87,7 +95,11 @@ contract ZeroController is
         view
         returns (ZeroUnderwriterLock result)
     {
-        result = ZeroLib.lockFor(address(this), underwriterLockImpl, underwriter);
+        result = ZeroLib.lockFor(
+            address(this),
+            underwriterLockImpl,
+            underwriter
+        );
     }
 
     function mint(address underwriter, address vault) public {
@@ -135,7 +147,8 @@ contract ZeroController is
             data
         );
         //uint256 amount =
-        IGateway(IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset)).mint(
+        IGateway(IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset))
+            .mint(
             keccak256(abi.encode(nonce, data)),
             actualAmount,
             nHash,
@@ -143,6 +156,7 @@ contract ZeroController is
         );
         depositAll(asset);
     }
+
     function depositAll(address _asset) internal {
         // deposit all of the asset in the vault
     }
