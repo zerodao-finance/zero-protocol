@@ -79,7 +79,7 @@ contract ZeroController is
         _;
     }
     function balanceOf(address _owner) public view override(ControllerUpgradeable, ERC721Upgradeable) returns (uint256 result) {
-      result = ControllerUpgradeable.balanceOf(_owner);
+      result = _balanceOf(_owner);
     }
 
     function lockFor(address underwriter)

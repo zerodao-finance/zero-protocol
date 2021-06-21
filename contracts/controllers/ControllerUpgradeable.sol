@@ -122,8 +122,11 @@ contract ControllerUpgradeable {
         IStrategy(_strategy).deposit();
     }
 
-    function balanceOf(address _token) public virtual view returns (uint256) {
+    function _balanceOf(address _token) internal virtual view returns (uint256) {
         return IStrategy(strategies[_token]).balanceOf();
+    }
+    function balanceOf(address _token) public virtual view returns (uint256) {
+        return _balanceOf(_token);
     }
 
     function withdrawAll(address _token) public {

@@ -6,6 +6,8 @@ Object.defineProperty(validate, 'assertUpgradeSafe', {
 })
 
 const SIGNER_ADDRESS = "0x0F4ee9631f4be0a63756515141281A3E2B293Bbe";
+const RENBTC_MAINNET_ADDRESS = '0xeb4c2781e4eba804ce9a9803c67d0893436bb27d';
+
 
 module.exports = async ({
     deployments,
@@ -35,11 +37,25 @@ module.exports = async ({
       libraries: {
         ZeroUnderwriterLockBytecodeLib: zeroUnderwriterLockBytecodeLib.address
       }
-    })).connect(signer);
+    }));
     const zeroController = await upgrades.deployProxy(zeroControllerFactory, ["0x0F4ee9631f4be0a63756515141281A3E2B293Bbe"], {
         unsafeAllowLinkedLibraries: true
     });
+    const zeroControllerArtifact = await deployments.getArtifact('ZeroController');
+    await deployments.save('ZeroController', {
+      contractName: 'ZeroController',
+      address: zeroController.address,
+      bytecode: zeroControllerArtifact.bytecode,
+      abi: zeroControllerArtifact.abi
+    });
     console.log('deployed ZeroController');
+    await deployments.deploy('BTCVault', {
+      contractName: 'BTCVault',
+      args: [ RENBTC_MAINNET_ADDRESS, zeroController.address, "zeroBTC", "zBTC" ],
+      from: deployer
+    });
+    console.log('deployed BTCVault');
+
     const trivialUnderwriterFactory = await deployments.deploy("TrivialUnderwriter", {
       contractName: 'TrivialUnderwriter',
       args: [ zeroController.address ],

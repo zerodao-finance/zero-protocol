@@ -40,15 +40,16 @@ const setupUnderwriter = async (signer, amountOfRenBTC = '100') => {
 };
 
 const getGateway = (signer) => {
-  return ethers.Contract(BTCGATEWAY_MAINNET_ADDRESS, GatewayLogicV1.abi, signer);
+  return new ethers.Contract(BTCGATEWAY_MAINNET_ADDRESS, GatewayLogicV1.abi, signer);
 };
 
 const getRenBTC = (signer) => {
-  return ethers.Contract(RENBTC_MAINNET_ADDRESS, BTCVault.abi, signer);
+  return new ethers.Contract(RENBTC_MAINNET_ADDRESS, BTCVault.abi, signer);
 };
 
 describe('Zero', () => {
   before(async () => {
+   await deployments.fixture();
    const artifact = await deployments.getArtifact('MockGatewayLogicV1');
     const implementationAddress = await getImplementation(BTCGATEWAY_MAINNET_ADDRESS);
    

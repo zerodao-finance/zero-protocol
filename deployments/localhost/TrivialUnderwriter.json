@@ -1,5 +1,5 @@
 {
-  "address": "0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690",
+  "address": "0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8",
   "abi": [
     {
       "inputs": [
@@ -100,22 +100,22 @@
       "type": "function"
     }
   ],
-  "transactionHash": "0xf068ea73945f2347767cc92dbfa3d33298bf572b36ab5b40ac98fa07e10f3051",
+  "transactionHash": "0xa8c082d3aa35c0eba80f7671ff99f1b852dd46dbefa57c0a4335a3cb490c24c2",
   "receipt": {
     "to": null,
     "from": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-    "contractAddress": "0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690",
+    "contractAddress": "0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8",
     "transactionIndex": 0,
     "gasUsed": "424578",
-    "logsBloom": "0x00000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000001000000000000000000000000000000000000020000000000000100000800000000000000000000000000000000400000000800000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000002000000000000000000020000000000000000000000000000000000000000000000000000000000000000000",
-    "blockHash": "0x71ccdccaf2f7031911fb3e7e2c44c13a612b213ac7cbaa6cc208f5763d018318",
-    "transactionHash": "0xf068ea73945f2347767cc92dbfa3d33298bf572b36ab5b40ac98fa07e10f3051",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000008000000020000000000010100000800000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000002000000000000000000020000000000000000000000000000000000000000000000000000000000000001000",
+    "blockHash": "0x2f933ced432fb07543a9bd659fcc356e1625451943070d7da34960b749e73f53",
+    "transactionHash": "0xa8c082d3aa35c0eba80f7671ff99f1b852dd46dbefa57c0a4335a3cb490c24c2",
     "logs": [
       {
         "transactionIndex": 0,
-        "blockNumber": 12555987,
-        "transactionHash": "0xf068ea73945f2347767cc92dbfa3d33298bf572b36ab5b40ac98fa07e10f3051",
-        "address": "0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690",
+        "blockNumber": 12555988,
+        "transactionHash": "0xa8c082d3aa35c0eba80f7671ff99f1b852dd46dbefa57c0a4335a3cb490c24c2",
+        "address": "0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8",
         "topics": [
           "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0",
           "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -123,16 +123,16 @@
         ],
         "data": "0x",
         "logIndex": 0,
-        "blockHash": "0x71ccdccaf2f7031911fb3e7e2c44c13a612b213ac7cbaa6cc208f5763d018318"
+        "blockHash": "0x2f933ced432fb07543a9bd659fcc356e1625451943070d7da34960b749e73f53"
       }
     ],
-    "blockNumber": 12555987,
+    "blockNumber": 12555988,
     "cumulativeGasUsed": "424578",
     "status": 1,
     "byzantium": true
   },
   "args": [
-    "0xE958B2907f45eb72CD734bb87DF80a11958870EF"
+    "0x9E545E3C0baAB3E08CdfD552C960A1050f373042"
   ],
   "solcInputHash": "b3a560bf8ab4e96e1c7a5897deb310b9",
   "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address payable\",\"name\":\"_controller\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"inputs\":[],\"name\":\"controller\",\"outputs\":[{\"internalType\":\"address payable\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address payable\",\"name\":\"target\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"proxy\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"author\":\"raymondpulver\",\"kind\":\"dev\",\"methods\":{\"owner()\":{\"details\":\"Returns the address of the current owner.\"},\"proxy(address,bytes)\":{\"params\":{\"data\":\"the calldata for the transaction\",\"target\":\"the to address of the transaction\"}},\"renounceOwnership()\":{\"details\":\"Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.\"},\"transferOwnership(address)\":{\"details\":\"Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner.\"}},\"title\":\"contract that is the simplest underwriter, just a proxy with an owner tag\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"proxy(address,bytes)\":{\"notice\":\"proxy a regular call to an arbitrary contract\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/underwriter/TrivialUnderwriter.sol\":\"TrivialUnderwriter\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/underwriter/TrivialUnderwriter.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\nimport { Ownable } from \\\"oz410/access/Ownable.sol\\\";\\n\\n/**\\n@title contract that is the simplest underwriter, just a proxy with an owner tag\\n@author raymondpulver\\n*/\\ncontract TrivialUnderwriter is Ownable {\\n  address payable public immutable controller;\\n  constructor(address payable _controller) Ownable() {\\n    controller = _controller;\\n  }\\n  function bubble(bool success, bytes memory response) internal pure {\\n    assembly {\\n      if iszero(success) {\\n        revert(add(0x20, response), mload(response))\\n      }\\n      return(add(0x20, response), mload(response))\\n    }\\n  }\\n  /**\\n  @notice proxy a regular call to an arbitrary contract\\n  @param target the to address of the transaction\\n  @param data the calldata for the transaction\\n  */\\n  function proxy(address payable target, bytes memory data) public payable onlyOwner {\\n    (bool success, bytes memory response) = target.call{ value: msg.value }(data);\\n    bubble(success, response);\\n  }\\n  /**\\n  @notice handles any other call and forwards to the controller\\n  */\\n  fallback() external payable {\\n    require(msg.sender == owner(), \\\"must be called by owner\\\");\\n    (bool success, bytes memory response) = controller.call{ value: msg.value }(msg.data);\\n    bubble(success, response);\\n  }\\n}\\n\",\"keccak256\":\"0xfee10751dd7d6adbfd976fdc8aaa8446f71c1b0a44efbcb5bb7486a76cc468ef\",\"license\":\"MIT\"},\"oz410/access/Ownable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.7.0;\\n\\nimport \\\"../utils/Context.sol\\\";\\n/**\\n * @dev Contract module which provides a basic access control mechanism, where\\n * there is an account (an owner) that can be granted exclusive access to\\n * specific functions.\\n *\\n * By default, the owner account will be the one that deploys the contract. This\\n * can later be changed with {transferOwnership}.\\n *\\n * This module is used through inheritance. It will make available the modifier\\n * `onlyOwner`, which can be applied to your functions to restrict their use to\\n * the owner.\\n */\\nabstract contract Ownable is Context {\\n    address private _owner;\\n\\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\\n\\n    /**\\n     * @dev Initializes the contract setting the deployer as the initial owner.\\n     */\\n    constructor () {\\n        address msgSender = _msgSender();\\n        _owner = msgSender;\\n        emit OwnershipTransferred(address(0), msgSender);\\n    }\\n\\n    /**\\n     * @dev Returns the address of the current owner.\\n     */\\n    function owner() public view virtual returns (address) {\\n        return _owner;\\n    }\\n\\n    /**\\n     * @dev Throws if called by any account other than the owner.\\n     */\\n    modifier onlyOwner() {\\n        require(owner() == _msgSender(), \\\"Ownable: caller is not the owner\\\");\\n        _;\\n    }\\n\\n    /**\\n     * @dev Leaves the contract without owner. It will not be possible to call\\n     * `onlyOwner` functions anymore. Can only be called by the current owner.\\n     *\\n     * NOTE: Renouncing ownership will leave the contract without an owner,\\n     * thereby removing any functionality that is only available to the owner.\\n     */\\n    function renounceOwnership() public virtual onlyOwner {\\n        emit OwnershipTransferred(_owner, address(0));\\n        _owner = address(0);\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n     * Can only be called by the current owner.\\n     */\\n    function transferOwnership(address newOwner) public virtual onlyOwner {\\n        require(newOwner != address(0), \\\"Ownable: new owner is the zero address\\\");\\n        emit OwnershipTransferred(_owner, newOwner);\\n        _owner = newOwner;\\n    }\\n}\\n\",\"keccak256\":\"0x549c5343ad9f7e3f38aa4c4761854403502574bbc15b822db2ce892ff9b79da7\",\"license\":\"MIT\"},\"oz410/utils/Context.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity >=0.6.0 <0.8.0;\\n\\n/*\\n * @dev Provides information about the current execution context, including the\\n * sender of the transaction and its data. While these are generally available\\n * via msg.sender and msg.data, they should not be accessed in such a direct\\n * manner, since when dealing with GSN meta-transactions the account sending and\\n * paying for execution may not be the actual sender (as far as an application\\n * is concerned).\\n *\\n * This contract is only required for intermediate, library-like contracts.\\n */\\nabstract contract Context {\\n    function _msgSender() internal view virtual returns (address payable) {\\n        return msg.sender;\\n    }\\n\\n    function _msgData() internal view virtual returns (bytes memory) {\\n        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691\\n        return msg.data;\\n    }\\n}\\n\",\"keccak256\":\"0x8d3cb350f04ff49cfb10aef08d87f19dcbaecc8027b0bed12f3275cd12f38cf0\",\"license\":\"MIT\"}},\"version\":1}",

@@ -1,3 +1,4 @@
+require('@nomiclabs/hardhat-ethers');
 require('hardhat-deploy');
 require('hardhat-deploy-ethers');
 require('hardhat-gas-reporter');
@@ -24,9 +25,12 @@ module.exports = {
   networks: {
     hardhat: {
       forking: {
-        url: "https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX",
-        blockNumber: 12555982
+        url: 'https://eth-mainnet.alchemyapi.io/v2/opf1pfLThCfvgyUtE9Mj_NvZwY3yIVJx'
       }
+    },
+    localhost: {
+	    url: 'http://localhost:8545',
+	    chainId: 31337
     }
   }
 }
