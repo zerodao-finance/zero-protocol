@@ -4,6 +4,9 @@
   "description": "zeroflash Solidity contracts",
   "main": "lib/zero.js",
   "repository": "https://github.com/zeroflash/zeroflash-protocol",
+  "scripts": {
+    "test": "hardhat test"
+  },
   "author": "zeroflash",
   "license": "MIT",
   "private": false,
@@ -13,6 +16,7 @@
     "@openzeppelin/contracts": "3.4.0",
     "@openzeppelin/contracts-upgradeable": "3.4.1-solc-0.7-2",
     "@renproject/ren": "^2.1.7",
+    "chai": "^4.3.4",
     "hardhat": "^2.2.1",
     "hardhat-deploy": "^0.7.5",
     "hardhat-deploy-ethers": "^0.3.0-beta.7",
