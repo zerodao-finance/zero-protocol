@@ -29,7 +29,8 @@ import {IStrategy} from "../interfaces/IStrategy.sol";
 contract ZeroController is
     ControllerUpgradeable,
     OwnableUpgradeable,
-    ERC721Upgradeable
+    ERC721Upgradeable,
+    EIP712
 {
     string internal constant UNDERWRITER_LOCK_IMPLEMENTATION_ID =
         "zero.underwriter.lock-implementation";
@@ -58,7 +59,10 @@ contract ZeroController is
     address public constant gatewayRegistry =
         0xe80d347DF1209a76DD9d2319d62912ba98C54DDD;
 
-    function initialize(address _rewards) public {
+    function initialize(address _rewards)
+        public
+        EIP712("ZeroController", "v1")
+    {
         __Ownable_init_unchained();
         __Controller_init_unchained(_rewards);
         __ERC721_init_unchained("ZeroController", "ZWRITE");
@@ -67,15 +71,6 @@ contract ZeroController is
             ZeroUnderwriterLockBytecodeLib.get(),
             "zero.underwriter.lock-implementation"
         );  */
-        ZERO_DOMAIN_SEPARATOR = keccak256(
-            abi.encode(
-                ZERO_DOMAIN_SALT,
-                ZERO_DOMAIN_NAME_HASH,
-                ZERO_DOMAIN_VERSION_HASH,
-                address(this),
-                getChainId()
-            )
-        );
     }
 
     modifier onlyUnderwriter {
@@ -86,8 +81,14 @@ contract ZeroController is
         );
         _;
     }
-    function balanceOf(address _owner) public view override(ControllerUpgradeable, ERC721Upgradeable) returns (uint256 result) {
-      result = _balanceOf(_owner);
+
+    function balanceOf(address _owner)
+        public
+        view
+        override(ControllerUpgradeable, ERC721Upgradeable)
+        returns (uint256 result)
+    {
+        result = _balanceOf(_owner);
     }
 
     function lockFor(address underwriter)
