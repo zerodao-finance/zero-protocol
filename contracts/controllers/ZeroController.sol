@@ -48,6 +48,8 @@ contract ZeroController is
         keccak256(
             "RenVMBorrowMessage(address module,uint256 amount,address underwriter,uint256 pNonce,bytes pData)"
         );
+    bytes32 private constant TYPE_HASH =
+        keccak256("TransferRequest(address asset,uint256 amount)");
     bytes32 private ZERO_DOMAIN_SEPARATOR;
 
     function getChainId() internal view returns (uint8 response) {
@@ -166,20 +168,22 @@ contract ZeroController is
         ZeroLib.LoanParams memory params,
         address underwriter
     ) internal pure returns (bytes32 result) {
-        result = bytes32(0); /* ECDSA.toTypedDataHash(
-            ZERO_DOMAIN_SEPARATOR,
-            keccak256(
-                abi.encode(
-                    ZERO_RENVM_BORROW_MESSAGE_TYPE_HASH,
-                    params.asset,
-                    params.amount,
-                    underwriter,
-                    params.nonce,
-                    params.module,
-                    params.data
+        bytes32 digest =
+            _hashTypedDataV4(
+                keccak256(
+                    abi.encode(
+                        keccak256(
+                            "TransferRequest(address asset,uint256 amount,address underwriter,address module,bytes data)"
+                        ),
+                        params.asset,
+                        params.amount,
+                        underwriter,
+                        params.module,
+                        keccak256(params.data)
+                    )
                 )
-            )
-        ); */
+            );
+        return digest;
     }
 
     function loan(
@@ -200,12 +204,8 @@ contract ZeroController is
                 module: module,
                 data: data
             });
-        bytes32 digest = _hashTypedDataV4(keccak256(abi.encode(
-            keccak256("TransferRequest(address asset,uint256 amount)", asset, amount)
-        )));
         require(
-            ECDSA.recover(digest, userSignature) ==
-                msg.sender.to,
+            ECDSA.recover(digest, userSignature) == msg.sender.to,
             "invalid signature"
         );
         bytes32 digest = keccak256(abi.encodePacked(params.to, params.nonce));
