@@ -63,7 +63,7 @@ contract ZeroController is
 
     function initialize(address _rewards)
         public
-        EIP712("ZeroController", "v1")
+        EIP712("ZeroController", "1")
     {
         __Ownable_init_unchained();
         __Controller_init_unchained(_rewards);
