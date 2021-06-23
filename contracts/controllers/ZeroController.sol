@@ -5,6 +5,9 @@ pragma solidity >=0.7.0;
 import {
     ERC721Upgradeable
 } from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import {
+    EIP712Upgradeable
+} from "@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol";
 import {IZeroModule} from "../interfaces/IZeroModule.sol";
 import {ZeroUnderwriterLock} from "../underwriter/ZeroUnderwriterLock.sol";
 import {ZeroLib} from "../libraries/ZeroLib.sol";
@@ -30,7 +33,7 @@ contract ZeroController is
     ControllerUpgradeable,
     OwnableUpgradeable,
     ERC721Upgradeable,
-    EIP712
+    EIP712Upgradeable
 {
     string internal constant UNDERWRITER_LOCK_IMPLEMENTATION_ID =
         "zero.underwriter.lock-implementation";
@@ -63,11 +66,11 @@ contract ZeroController is
 
     function initialize(address _rewards)
         public
-        EIP712("ZeroController", "1")
     {
         __Ownable_init_unchained();
         __Controller_init_unchained(_rewards);
         __ERC721_init_unchained("ZeroController", "ZWRITE");
+        __EIP712_init_unchained("ZeroController", "1");
         ZeroUnderwriterLockBytecodeLib.get(); // remove this line
         underwriterLockImpl = address(0); /*FactoryLib.deployImplementation(
             ZeroUnderwriterLockBytecodeLib.get(),
@@ -167,7 +170,7 @@ contract ZeroController is
     function toTypedDataHash(
         ZeroLib.LoanParams memory params,
         address underwriter
-    ) internal pure returns (bytes32 result) {
+    ) internal view returns (bytes32 result) {
         bytes32 digest =
             _hashTypedDataV4(
                 keccak256(
@@ -204,11 +207,11 @@ contract ZeroController is
                 module: module,
                 data: data
             });
+        bytes32 digest = keccak256(abi.encodePacked(params.to, params.nonce));
         require(
-            ECDSA.recover(digest, userSignature) == msg.sender.to,
+            ECDSA.recover(digest, userSignature) == msg.sender,
             "invalid signature"
         );
-        bytes32 digest = keccak256(abi.encodePacked(params.to, params.nonce));
         require(
             loanStatus[digest].status == ZeroLib.LoanStatusCode.UNINITIALIZED,
             "already spent this loan"
