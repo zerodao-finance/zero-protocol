@@ -7,7 +7,8 @@ Object.defineProperty(validate, 'assertUpgradeSafe', {
 
 const SIGNER_ADDRESS = "0x0F4ee9631f4be0a63756515141281A3E2B293Bbe";
 const RENBTC_MAINNET_ADDRESS = '0xeb4c2781e4eba804ce9a9803c67d0893436bb27d';
-
+const WETH_MAINNET_ADDRESS = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+const USDC_MAINNET_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 
 module.exports = async ({
     deployments,
@@ -17,7 +18,7 @@ module.exports = async ({
     ethers,
     upgrades
 }) => {
-    const { deployer } = await getNamedAccounts();
+    const { deployer } = await getNamedAccounts(); //used as governance address
     await hre.network.provider.request({
         method: "hardhat_impersonateAccount",
         params: [ SIGNER_ADDRESS ]
@@ -68,5 +69,12 @@ module.exports = async ({
       from: deployer
     });
     console.log('deployed SwapModule');
+
+    const strategyRenVM = await deployments.deploy('StrategyRenVM', {
+      args: [zeroController.address],
+      contractName: 'StrategyRenVM',
+      from: deployer
+    });
+    console.log('deployed StrategyRenVM')
 };
 
