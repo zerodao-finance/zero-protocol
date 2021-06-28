@@ -51,16 +51,14 @@ contract StrategyRenVM {
         governance = msg.sender;
         strategist = msg.sender;
         controller = _controller;
+        address[3] memory _renBTCPath = [ want, weth, usdc ];
+        renBTCPath = _renBTCPath;
 
-        renBTCPath[0] = want;
-        renBTCPath[1] = weth;
-        renBTCPath[2] = usdc;
+        address[2] memory _wETHPath = [ weth, usdc ];
+        wETHPath = _wETHPath;
+        address[2] memory _wETHtoRenBTCPath = [ weth, want ];
 
-        wETHPath[0] = weth;
-        wETHPath[1] = usdc;
-
-        wETHtoRenBTCPath[0] = weth;
-        wETHtoRenBTCPath[1] = want;
+        wETHtoRenBTCPath = _wETHtoRenBTCPath;
     }
 
     function deposit() external virtual {
