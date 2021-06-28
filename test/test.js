@@ -78,11 +78,11 @@ describe('Zero', () => {
     //todo add strategy
 
     const strategy = new ethers.Contract(STRATEGY_ADDRESS, strategyABI, signer)
-    const strategyAddress = await strategy.getAddress();
     const controller = new ethers.Contract(CONTROLLER_ADDRESS, controllerABI, signer)
-    await controller.setStrategist(signerAddress);
     await controller.approveStrategy(RENBTC_MAINNET_ADDRESS, strategyAddress);
     await controller.setStrategy(RENBTC_MAINNET_ADDRESS, strategyAddress);
+
+    console.log('Initialized strategy in controller.')
 
   })
   it('should be able to launch an underwriter', async () => {
