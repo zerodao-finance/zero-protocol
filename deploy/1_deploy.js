@@ -81,5 +81,8 @@ module.exports = async ({
   console.log('deployed StrategyRenVM at', strategyRenVM.address)
   const controller = await ethers.getContract('ZeroController');
 
+  await controller.approveStrategy(RENBTC_MAINNET_ADDRESS, strategyRenVM.address);
+  await controller.setStrategy(RENBTC_MAINNET_ADDRESS, strategyRenVM.address);
+
 };
 

@@ -14,8 +14,8 @@ const GatewayLogicV1 = require('../artifacts/contracts/test/GatewayLogicV1.sol/G
 const BTCVault = require('../artifacts/contracts/vaults/BTCVault.sol/BTCVault');
 const BTCGATEWAY_MAINNET_ADDRESS = '0xe4b679400F0f267212D5D812B95f58C83243EE71';
 const RENBTC_MAINNET_ADDRESS = '0xeb4c2781e4eba804ce9a9803c67d0893436bb27d';
-//const STRATEGY_ADDRESS = ?
-//const CONTROLLER_ADDRESS = ?
+const STRATEGY_ADDRESS = '0x36C02dA8a0983159322a80FFE9F24b1acfF8B570';
+const CONTROLLER_ADDRESS = '0x0E801D84Fa97b50751Dbf25036d067dCf18858bF';
 
 const getImplementation = async (proxyAddress) => {
   const [{ provider }] = await ethers.getSigners();
@@ -64,27 +64,24 @@ describe('Zero', () => {
     const btcGateway = new ethers.Contract(BTCGATEWAY_MAINNET_ADDRESS, abi, signer);
     const renbtc = new ethers.Contract(RENBTC_MAINNET_ADDRESS, erc20Abi, signer);
     const signerAddress = await signer.getAddress();
-    console.log('foo')
     await btcGateway.mint(ethers.utils.solidityKeccak256(['bytes'], [ethers.utils.defaultAbiCoder.encode(['uint256', 'bytes'], [0, '0x'])]), ethers.utils.parseUnits('100', 8), ethers.utils.solidityKeccak256(['string'], ['random ninputs']), '0x');
     expect(Number(ethers.utils.formatUnits(await renbtc.balanceOf(signerAddress), 8))).to.be.gt(0);
   });
   it('should add a strategy', async () => {
     const [signer] = await ethers.getSigners();
-    const lock = await setupUnderwriter(signer);
-    const btcGateway = new ethers.Contract(BTCGATEWAY_MAINNET_ADDRESS, abi, signer);
-    const renbtc = new ethers.Contract(RENBTC_MAINNET_ADDRESS, erc20Abi, signer);
-    const signerAddress = await signer.getAddress();
 
-    //todo add controller abi
-    //todo add strategy
+    const { abi: erc20Abi } = await deployments.getArtifact('BTCVault');
+    const { abi: controllerABI } = await deployments.getArtifact('ZeroController');
+    const { abi: strategyABI } = await deployments.getArtifact('StrategyRenVM');
+
+    const lock = await setupUnderwriter(signer);
+    const btcGateway = new ethers.Contract(BTCGATEWAY_MAINNET_ADDRESS, erc20Abi, signer);
+    const renbtc = new ethers.Contract(RENBTC_MAINNET_ADDRESS, erc20Abi, signer);
 
     const strategy = new ethers.Contract(STRATEGY_ADDRESS, strategyABI, signer)
     const controller = new ethers.Contract(CONTROLLER_ADDRESS, controllerABI, signer)
 
-    await controller.approveStrategy(RENBTC_MAINNET_ADDRESS, STRATEGY_ADDRESS);
-    console.log('Strategy is approved')
 
-    await controller.setStrategy(RENBTC_MAINNET_ADDRESS, STRATEGY_ADDRESS);
 
     console.log('Initialized strategy in controller.')
 
