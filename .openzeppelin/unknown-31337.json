@@ -7,8 +7,8 @@
       "hash": "0x2d08ce6ac36a0470bb20f77c7d938d8b885a738bc46bb1f71bdf9ecd1a8bf015",
       "type": 0,
       "accessList": null,
-      "blockHash": "0xc0a61cb70714996d520b29d4c85e2dab648ff1dbbe9e2a0143bac5ef6e1f061c",
-      "blockNumber": 12723451,
+      "blockHash": "0x0c9632951e269ac26db2d0838742875c8225849e49626596a6a8bed52c92a228",
+      "blockNumber": 12723596,
       "transactionIndex": 0,
       "confirmations": 1,
       "from": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
@@ -732,64 +732,64 @@
         }
       }
     },
-    "28788330d6baf23288a00b01e64de7e8cd09a2ae1c537e0c43a1fdd59b999cdd": {
+    "3cbda246c7fc76580b71c420c5be9205368c02fcc336c773976c1b588827b367": {
       "address": "0x4826533B4897376654Bb4d4AD88B7faFD0C98528",
-      "txHash": "0xdb87da579dd5dcd7f6a339fdf11d5d96b9ed3ef1296ed5e86ce28428ba1efe8d",
+      "txHash": "0x0a1e558671f3b0d89dd70bec56a7ca93b0584296c17b285b0a86fd63c30e3251",
       "layout": {
         "storage": [
           {
             "contract": "ControllerUpgradeable",
             "label": "governance",
             "type": "t_address",
-            "src": "contracts/controllers/ControllerUpgradeable.sol:20"
+            "src": "contracts/controllers/ControllerUpgradeable.sol:21"
           },
           {
             "contract": "ControllerUpgradeable",
             "label": "strategist",
             "type": "t_address",
-            "src": "contracts/controllers/ControllerUpgradeable.sol:21"
+            "src": "contracts/controllers/ControllerUpgradeable.sol:22"
           },
           {
             "contract": "ControllerUpgradeable",
             "label": "onesplit",
             "type": "t_address",
-            "src": "contracts/controllers/ControllerUpgradeable.sol:23"
+            "src": "contracts/controllers/ControllerUpgradeable.sol:24"
           },
           {
             "contract": "ControllerUpgradeable",
             "label": "rewards",
             "type": "t_address",
-            "src": "contracts/controllers/ControllerUpgradeable.sol:24"
+            "src": "contracts/controllers/ControllerUpgradeable.sol:25"
           },
           {
             "contract": "ControllerUpgradeable",
             "label": "vaults",
             "type": "t_mapping(t_address,t_address)",
-            "src": "contracts/controllers/ControllerUpgradeable.sol:25"
+            "src": "contracts/controllers/ControllerUpgradeable.sol:26"
           },
           {
             "contract": "ControllerUpgradeable",
             "label": "strategies",
             "type": "t_mapping(t_address,t_address)",
-            "src": "contracts/controllers/ControllerUpgradeable.sol:26"
+            "src": "contracts/controllers/ControllerUpgradeable.sol:27"
           },
           {
             "contract": "ControllerUpgradeable",
             "label": "converters",
             "type": "t_mapping(t_address,t_mapping(t_address,t_address))",
-            "src": "contracts/controllers/ControllerUpgradeable.sol:27"
+            "src": "contracts/controllers/ControllerUpgradeable.sol:28"
           },
           {
             "contract": "ControllerUpgradeable",
             "label": "approvedStrategies",
             "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
-            "src": "contracts/controllers/ControllerUpgradeable.sol:29"
+            "src": "contracts/controllers/ControllerUpgradeable.sol:30"
           },
           {
             "contract": "ControllerUpgradeable",
             "label": "split",
             "type": "t_uint256",
-            "src": "contracts/controllers/ControllerUpgradeable.sol:31"
+            "src": "contracts/controllers/ControllerUpgradeable.sol:32"
           },
           {
             "contract": "Initializable",
@@ -932,7 +932,7 @@
           {
             "contract": "ZeroController",
             "label": "loanStatus",
-            "type": "t_mapping(t_bytes32,t_struct(LoanStatus)5532_storage)",
+            "type": "t_mapping(t_bytes32,t_struct(LoanStatus)5541_storage)",
             "src": "contracts/controllers/ZeroController.sol:44"
           },
           {
@@ -958,13 +958,13 @@
           "t_bool": {
             "label": "bool"
           },
-          "t_mapping(t_bytes32,t_struct(LoanStatus)5532_storage)": {
+          "t_mapping(t_bytes32,t_struct(LoanStatus)5541_storage)": {
             "label": "mapping(bytes32 => struct ZeroLib.LoanStatus)"
           },
           "t_bytes32": {
             "label": "bytes32"
           },
-          "t_struct(LoanStatus)5532_storage": {
+          "t_struct(LoanStatus)5541_storage": {
             "label": "struct ZeroLib.LoanStatus",
             "members": [
               {
@@ -973,11 +973,11 @@
               },
               {
                 "label": "status",
-                "type": "t_enum(LoanStatusCode)5514"
+                "type": "t_enum(LoanStatusCode)5523"
               }
             ]
           },
-          "t_enum(LoanStatusCode)5514": {
+          "t_enum(LoanStatusCode)5523": {
             "label": "enum ZeroLib.LoanStatusCode",
             "members": [
               "UNINITIALIZED",

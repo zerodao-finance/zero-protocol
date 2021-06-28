@@ -55,6 +55,9 @@ module.exports = async ({
     args: [RENBTC_MAINNET_ADDRESS, zeroController.address, "zeroBTC", "zBTC"],
     from: deployer
   });
+  const v = await ethers.getContract('BTCVault');
+  await v.attach(RENBTC_MAINNET_ADDRESS).balanceOf(ethers.constants.AddressZero);
+  console.log(await v.token());
   console.log('deployed BTCVault at', btcVault.address);
 
   const trivialUnderwriterFactory = await deployments.deploy("TrivialUnderwriter", {

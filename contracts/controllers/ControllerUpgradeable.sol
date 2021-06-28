@@ -11,6 +11,7 @@ import "oz410/proxy/Initializable.sol";
 import "../interfaces/IConverter.sol";
 import "../interfaces/IOneSplitAudit.sol";
 import "../interfaces/IStrategy.sol";
+import "hardhat/console.sol";
 
 contract ControllerUpgradeable {
     using SafeERC20 for IERC20;
@@ -123,6 +124,7 @@ contract ControllerUpgradeable {
     }
 
     function _balanceOf(address _token) internal virtual view returns (uint256) {
+      console.log(strategies[_token]);
         return IStrategy(strategies[_token]).balanceOf();
     }
     function balanceOf(address _token) public virtual view returns (uint256) {

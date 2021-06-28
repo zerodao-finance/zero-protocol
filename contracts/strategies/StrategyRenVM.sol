@@ -10,6 +10,7 @@ import "../interfaces/IyVault.sol";
 import {StrategyAPI} from "../interfaces/IStrategy.sol";
 import {IController} from "../interfaces/IController.sol";
 import {IUniswapV2Router02} from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+import { console } from "hardhat/console.sol";
 
 contract StrategyRenVM {
     using SafeERC20 for IERC20;
