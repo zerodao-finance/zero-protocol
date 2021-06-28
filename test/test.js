@@ -64,6 +64,7 @@ describe('Zero', () => {
     const btcGateway = new ethers.Contract(BTCGATEWAY_MAINNET_ADDRESS, abi, signer);
     const renbtc = new ethers.Contract(RENBTC_MAINNET_ADDRESS, erc20Abi, signer);
     const signerAddress = await signer.getAddress();
+    console.log('foo')
     await btcGateway.mint(ethers.utils.solidityKeccak256(['bytes'], [ethers.utils.defaultAbiCoder.encode(['uint256', 'bytes'], [0, '0x'])]), ethers.utils.parseUnits('100', 8), ethers.utils.solidityKeccak256(['string'], ['random ninputs']), '0x');
     expect(Number(ethers.utils.formatUnits(await renbtc.balanceOf(signerAddress), 8))).to.be.gt(0);
   });
@@ -79,8 +80,11 @@ describe('Zero', () => {
 
     const strategy = new ethers.Contract(STRATEGY_ADDRESS, strategyABI, signer)
     const controller = new ethers.Contract(CONTROLLER_ADDRESS, controllerABI, signer)
-    await controller.approveStrategy(RENBTC_MAINNET_ADDRESS, strategyAddress);
-    await controller.setStrategy(RENBTC_MAINNET_ADDRESS, strategyAddress);
+
+    await controller.approveStrategy(RENBTC_MAINNET_ADDRESS, STRATEGY_ADDRESS);
+    console.log('Strategy is approved')
+
+    await controller.setStrategy(RENBTC_MAINNET_ADDRESS, STRATEGY_ADDRESS);
 
     console.log('Initialized strategy in controller.')
 

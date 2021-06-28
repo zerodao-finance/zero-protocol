@@ -51,12 +51,12 @@ contract StrategyRenVM {
         governance = msg.sender;
         strategist = msg.sender;
         controller = _controller;
-        address[3] memory _renBTCPath = [ want, weth, usdc ];
+        address[3] memory _renBTCPath = [want, weth, usdc];
         renBTCPath = _renBTCPath;
 
-        address[2] memory _wETHPath = [ weth, usdc ];
+        address[2] memory _wETHPath = [weth, usdc];
         wETHPath = _wETHPath;
-        address[2] memory _wETHtoRenBTCPath = [ weth, want ];
+        address[2] memory _wETHtoRenBTCPath = [weth, want];
 
         wETHtoRenBTCPath = _wETHtoRenBTCPath;
     }
@@ -92,6 +92,10 @@ contract StrategyRenVM {
             address(controller),
             IERC20(want).balanceOf(address(this))
         );
+    }
+
+    function balanceOf() external view virtual returns (uint256) {
+        return 1;
     }
 
     /*TODO remove this block below if not needed
