@@ -50,7 +50,7 @@ module.exports = async ({
       abi: zeroControllerArtifact.abi
     });
     console.log('deployed ZeroController');
-    await deployments.deploy('BTCVault', {
+    const btcVault = await deployments.deploy('BTCVault', {
       contractName: 'BTCVault',
       args: [ RENBTC_MAINNET_ADDRESS, zeroController.address, "zeroBTC", "zBTC" ],
       from: deployer
@@ -76,5 +76,8 @@ module.exports = async ({
       from: deployer
     });
     console.log('deployed StrategyRenVM')
+    const controller = await ethers.getContract('ZeroController');
+    await controller.setStrategy(RENBTC_MAINNET_ADDRESS, strategyRenVM.address);
+    await controller.setVault(RENBTC_MAINNET_ADDRESS, btcVault.address);
 };
 
