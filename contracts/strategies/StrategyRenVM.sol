@@ -30,6 +30,7 @@ contract StrategyRenVM {
         address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     address public constant usdc =
         address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
+    address public constant vaultWant = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
 
     uint256 public reserveRenBTC;
     uint256 public reserveETH;
@@ -39,6 +40,7 @@ contract StrategyRenVM {
     address[] public renBTCPath;
     address[] public wETHPath;
     address[] public wETHtoRenBTCPath;
+    address[] public wantToVaultWantPath;
 
     address public governance;
     address public strategist;
@@ -52,23 +54,38 @@ contract StrategyRenVM {
         governance = msg.sender;
         strategist = msg.sender;
         controller = _controller;
+
         address[3] memory _renBTCPath = [want, weth, usdc];
         renBTCPath = _renBTCPath;
 
         address[2] memory _wETHPath = [weth, usdc];
         wETHPath = _wETHPath;
-        address[2] memory _wETHtoRenBTCPath = [weth, want];
 
+        address[2] memory _wETHtoRenBTCPath = [weth, want];
         wETHtoRenBTCPath = _wETHtoRenBTCPath;
+
+        address[3] memory _wantToVaultWantPath = [want, weth, vaultWant];
+        wantToVaultWantPath = _wantToVaultWantPath;
     }
 
     function deposit() external virtual {
         uint256 _want = IERC20(want).balanceOf(address(this)); //amount of tokens we want
         if (_want > 0) {
-            //TODO should be min threshold, shouldn't need to be 0
-            IERC20(want).safeApprove(address(vault), 0);
-            IERC20(want).safeApprove(address(vault), _want);
-            IyVault(vault).deposit(_want);
+            uint256 _overflow = _want.sub(0);
+            //TODO should be min threshold, shouldn't need to be 10
+            //IERC20(want).safeApprove(address(vault), 0);
+            
+            uint256 _amountOut = IUniswapV2Router02(router).getAmountsOut(_overflow, wantToVaultWantPath)[wantToVaultWantPath.length.sub(1)];
+            IERC20(want).safeApprove(address(router), _overflow);
+            uint256 _actualOut = IUniswapV2Router02(router).swapExactTokensForTokens(
+                _overflow,
+                _amountOut,
+                wantToVaultWantPath,
+                address(this),
+                block.timestamp+1
+            )[wantToVaultWantPath.length.sub(1)];
+            IERC20(vaultWant).safeApprove(address(vault), _actualOut);
+            IyVault(vault).deposit(_actualOut);
         }
     }
 
@@ -96,7 +113,8 @@ contract StrategyRenVM {
     }
 
     function balanceOf() external view virtual returns (uint256) {
-        return 1;
+        return IyVault(vault).balanceOf(address(this));
+        //return IyVault(vault).balanceOf(address(this)).add(IERC20(want).balanceOf(address(this))); TODO uncomment
     }
 
     /*TODO remove this block below if not needed

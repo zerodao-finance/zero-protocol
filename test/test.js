@@ -6,7 +6,7 @@ const {
   ethers,
   deployments
 } = hre;
-const { expect } = require('chai');
+const { expect, assert } = require('chai');
 
 const { override } = require('../lib/test/inject-mock');
 
@@ -67,28 +67,57 @@ describe('Zero', () => {
     await btcGateway.mint(ethers.utils.solidityKeccak256(['bytes'], [ethers.utils.defaultAbiCoder.encode(['uint256', 'bytes'], [0, '0x'])]), ethers.utils.parseUnits('100', 8), ethers.utils.solidityKeccak256(['string'], ['random ninputs']), '0x');
     expect(Number(ethers.utils.formatUnits(await renbtc.balanceOf(signerAddress), 8))).to.be.gt(0);
   });
-  it('should add a strategy', async () => {
-    const [signer] = await ethers.getSigners();
-
-    const { abi: erc20Abi } = await deployments.getArtifact('BTCVault');
-    const { abi: controllerABI } = await deployments.getArtifact('ZeroController');
-    const { abi: strategyABI } = await deployments.getArtifact('StrategyRenVM');
-
-    const lock = await setupUnderwriter(signer);
-    const btcGateway = new ethers.Contract(BTCGATEWAY_MAINNET_ADDRESS, erc20Abi, signer);
-    const renbtc = new ethers.Contract(RENBTC_MAINNET_ADDRESS, erc20Abi, signer);
-
-    const strategy = new ethers.Contract(STRATEGY_ADDRESS, strategyABI, signer)
-    const controller = new ethers.Contract(CONTROLLER_ADDRESS, controllerABI, signer)
-
-
-
-    console.log('Initialized strategy in controller.')
-
-  })
   it('should be able to launch an underwriter', async () => {
     const [signer] = await ethers.getSigners();
     const lock = await setupUnderwriter(signer);
-    console.log(lock.address);
   });
+  it('should deposit in vault', async () => {
+    const [ signer ] = await ethers.getSigners();
+    const lock = await setupUnderwriter(signer);
+
+    const { abi: erc20abi } = await deployments.getArtifact('BTCVault')
+    const renbtc = new ethers.Contract(RENBTC_MAINNET_ADDRESS, erc20abi, signer);
+
+    const BTCVault = await ethers.getContract('BTCVault', signer)
+    const signerAddress = await signer.getAddress();
+
+    const beforeBalance = (await renbtc.balanceOf(BTCVault.address)).toNumber() / await renbtc.decimals();
+    const addedAmount = 10;
+    await BTCVault.deposit(addedAmount * await renbtc.decimals());
+    const afterBalance = (await renbtc.balanceOf(BTCVault.address)).toNumber() / await renbtc.decimals();
+
+    assert(beforeBalance + addedAmount == afterBalance, 'Balances not adding up');
+  });
+  it('should transfer overflow funds to strategy vault', async () => {
+    const [ signer ] = await ethers.getSigners();
+    await setupUnderwriter(signer);
+    const { abi: erc20abi } = await deployments.getArtifact('BTCVault');
+    const signerAddress = await signer.getAddress();
+
+    const renbtc = new ethers.Contract(RENBTC_MAINNET_ADDRESS, erc20abi, signer);
+    const decimals = await renbtc.decimals();
+
+    const BTCVault = await ethers.getContract('BTCVault', signer)
+    const Controller = await ethers.getContract('ZeroController', signer)
+    const Strategy = await ethers.getContract('StrategyRenVM', signer)
+    const StrategyVault = new ethers.Contract('0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E', erc20abi, signer)
+
+    const getBalances = async () => {
+      const vaultBalance = (await renbtc.balanceOf(BTCVault.address)).toNumber() / decimals;
+      const controllerBalance = (await renbtc.balanceOf(Controller.address)).toNumber() / decimals;
+      const strategyBalance = (await renbtc.balanceOf(Strategy.address)).toNumber() / decimals;
+      const strategyVaultBalance = (await Strategy.balanceOf()).toNumber() / decimals;
+      console.log("Vault Balance:", vaultBalance);
+      console.log("Controller Balance:", controllerBalance);
+      console.log("Strategy Balance", strategyBalance);
+      console.log("Strategy-Vault Balance:", strategyVaultBalance);
+    }
+
+    console.log("Strategy wants", await Strategy.want());
+
+    await getBalances();
+    await BTCVault.earn();
+    console.log("Called BTCVault.earn()");
+    await getBalances();
+  })
 });
