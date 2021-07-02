@@ -127,10 +127,7 @@ describe('Zero', () => {
     const lock = await setupUnderwriter(signer);
     
     const Controller = await ethers.getContract('ZeroController', signer);
-    const BTCVault = await ethers.getContract('BTCVault', signer)
-  
-    const SushiswapRouter = '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F';
-    
+    const BTCVault = await ethers.getContract('BTCVault', signer)    
   
     await BTCVault.earn();
     const transferRequest = createTransferRequest({
@@ -143,7 +140,7 @@ describe('Zero', () => {
     });
   
     transferRequest.setUnderwriter(lock)
-    await transferRequest.sign(signer, SushiswapRouter);
+    await transferRequest.sign(signer, Controller.address);
   
   })
 });
