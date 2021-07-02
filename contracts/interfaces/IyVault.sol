@@ -6,4 +6,5 @@ abstract contract IyVault is IERC20 {
   function getPricePerFullShare() external virtual view returns (uint256);
   function deposit(uint256 _amount) external virtual returns (uint256);
   function withdraw(uint256 maxShares) external virtual returns (uint256);
+  function want() external virtual returns (address);
 }

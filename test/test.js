@@ -1,6 +1,8 @@
 'use strict';
 
 const hre = require('hardhat');
+const { createTransferRequest } = require('../lib/zero');
+const { abi: IUniswapV2Router02 } = require('../artifacts/@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol/IUniswapV2Router02.json')
 
 const {
   ethers,
@@ -119,5 +121,31 @@ describe('Zero', () => {
     await BTCVault.earn();
     console.log("Called BTCVault.earn()");
     await getBalances();
+  });
+  it('should make a swap', async () => {
+    const [ signer ] = await ethers.getSigners();
+    const lock = await setupUnderwriter(signer);
+    
+    const Controller = await ethers.getContract('ZeroController', signer);
+    const BTCVault = await ethers.getContract('BTCVault', signer)
+  
+    const SushiswapRouter = '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F';
+    
+  
+    await BTCVault.earn();
+    const transferRequest = createTransferRequest({
+      module: "Swap",
+      to: await signer.getAddress(),
+      nonce: '0x' + ethers.utils.randomBytes(32).toString('hex'),
+      pNonce: '0x' + ethers.utils.randomBytes(32).toString('hex'),
+      amount: 100,
+      data: '0x'
+    });
+  
+    transferRequest.setUnderwriter(lock)
+    await transferRequest.sign(signer, SushiswapRouter);
+  
   })
 });
+
+
