@@ -109,35 +109,34 @@ describe('Zero', () => {
       const controllerBalance = (await renbtc.balanceOf(Controller.address)).toNumber() / decimals;
       const strategyBalance = (await renbtc.balanceOf(Strategy.address)).toNumber() / decimals;
       const strategyVaultBalance = (await Strategy.balanceOf()).toNumber() / decimals;
-      console.log("Vault Balance:", vaultBalance);
-      console.log("Controller Balance:", controllerBalance);
-      console.log("Strategy Balance", strategyBalance);
-      console.log("Strategy-Vault Balance:", strategyVaultBalance);
     }
 
-    console.log("Strategy wants", await Strategy.want());
-
-    await getBalances();
     await BTCVault.earn();
-    console.log("Called BTCVault.earn()");
-    await getBalances();
   });
   it('should make a swap', async () => {
     const [ signer ] = await ethers.getSigners();
     const lock = await setupUnderwriter(signer);
+    const signerAddress = await signer.getAddress();
+
+    console.log("SIgner address is", signerAddress);
     
     const Controller = await ethers.getContract('ZeroController', signer);
     const BTCVault = await ethers.getContract('BTCVault', signer)    
+    const Underwriter = await ethers.getContract('TrivialUnderwriter');
   
     await BTCVault.earn();
     const transferRequest = createTransferRequest({
       module: "Swap",
-      to: await signer.getAddress(),
+      to: signerAddress,
+      underwriter: Underwriter.address,
+      asset: RENBTC_MAINNET_ADDRESS,
       nonce: '0x' + ethers.utils.randomBytes(32).toString('hex'),
       pNonce: '0x' + ethers.utils.randomBytes(32).toString('hex'),
-      amount: 100,
+      amount: 100000000000,
       data: '0x'
     });
+
+    console.log("Transfer Request", transferRequest);
   
     transferRequest.setUnderwriter(lock)
     await transferRequest.sign(signer, Controller.address);
