@@ -123,22 +123,21 @@ describe('Zero', () => {
     const Controller = await ethers.getContract('ZeroController', signer);
     const BTCVault = await ethers.getContract('BTCVault', signer)    
     const Underwriter = await ethers.getContract('TrivialUnderwriter');
+    const SwapModule = await ethers.getContract('Swap');
   
     await BTCVault.earn();
     const transferRequest = createTransferRequest({
-      module: "Swap",
+      module: SwapModule.address,
       to: signerAddress,
       underwriter: Underwriter.address,
       asset: RENBTC_MAINNET_ADDRESS,
-      nonce: '0x' + ethers.utils.randomBytes(32).toString('hex'),
-      pNonce: '0x' + ethers.utils.randomBytes(32).toString('hex'),
-      amount: 100000000000,
+      amount: '100000000000',
       data: '0x'
     });
 
     console.log("Transfer Request", transferRequest);
   
-    transferRequest.setUnderwriter(lock)
+    transferRequest.setUnderwriter(lock.address)
     await transferRequest.sign(signer, Controller.address);
   
   })
