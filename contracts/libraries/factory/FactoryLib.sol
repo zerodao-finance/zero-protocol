@@ -82,6 +82,5 @@ library FactoryLib {
                 salt
             )
         }
-        Implementation(implementation).lock();
     }
 }

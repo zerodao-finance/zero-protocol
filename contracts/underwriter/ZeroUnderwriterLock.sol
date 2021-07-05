@@ -2,7 +2,6 @@
 pragma solidity >=0.6.0;
 
 import {IZeroModule} from "../interfaces/IZeroModule.sol";
-import {Ownable} from "oz410/access/Ownable.sol";
 import {Initializable} from "oz410/proxy/Initializable.sol";
 import {IERC20} from "oz410/token/ERC20/ERC20.sol";
 import {IERC721} from "oz410/token/ERC721/IERC721.sol";
@@ -16,7 +15,7 @@ import {SafeERC20} from "oz410/token/ERC20/SafeERC20.sol";
 @title contract to hold locked underwriter funds while the underwriter is active
 @author raymondpulver
 */
-contract ZeroUnderwriterLock is Ownable, Initializable {
+contract ZeroUnderwriterLock is Initializable {
     using SafeMath for *;
     using SafeERC20 for *;
     ZeroController public controller;
@@ -49,8 +48,12 @@ contract ZeroUnderwriterLock is Ownable, Initializable {
             .mul(IyVault(vault).getPricePerFullShare())
             .div(uint256(1 ether));
     }
+    modifier onlyOwner {
+      require(msg.sender == owner(), "must be called by owner");
+      _;
+    }
 
-    function owner() public view override returns (address result) {
+    function owner() public view returns (address result) {
         result = IERC721(address(controller)).ownerOf(uint256(uint160(address(this))));
     }
 

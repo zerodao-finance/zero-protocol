@@ -138,7 +138,14 @@ describe('Zero', () => {
     console.log("Transfer Request", transferRequest);
   
     transferRequest.setUnderwriter(lock.address)
-    await transferRequest.sign(signer, Controller.address);
+    const signature = await transferRequest.sign(signer, Controller.address);
+    const btcVault = await ethers.getContract('BTCVault');
+    await btcVault.deposit('100000000000');
+    const from = await signer.getAddress();
+    await btcVault.transfer(Underwriter.address, await btcVault.balanceOf(from));
+    console.log(signature);
+    process.exit(0);
+
   
   })
 });

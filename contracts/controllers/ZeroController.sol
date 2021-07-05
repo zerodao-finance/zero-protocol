@@ -71,11 +71,10 @@ contract ZeroController is
         __Controller_init_unchained(_rewards);
         __ERC721_init_unchained("ZeroController", "ZWRITE");
         __EIP712_init_unchained("ZeroController", "1");
-        ZeroUnderwriterLockBytecodeLib.get(); // remove this line
-        underwriterLockImpl = address(0); /*FactoryLib.deployImplementation(
+        underwriterLockImpl = FactoryLib.deployImplementation(
             ZeroUnderwriterLockBytecodeLib.get(),
             "zero.underwriter.lock-implementation"
-        );  */
+        ); 
     }
 
     modifier onlyUnderwriter {
