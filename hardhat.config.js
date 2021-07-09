@@ -32,5 +32,8 @@ module.exports = {
 	    url: 'http://localhost:8545',
 	    chainId: 31337
     }
+  },
+  mocha: {
+    timeout: 0,
   }
 }
