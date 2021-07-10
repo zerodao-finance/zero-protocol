@@ -1,0 +1,5 @@
+version: "3.7"
+services:
+  signaling-server:
+    image: libp2p/js-libp2p-webrtc-star:version-0.23.0
+    network_mode: host 
