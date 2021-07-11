@@ -932,6 +932,11 @@
     "@hapi/bourne" "2.x.x"
     "@hapi/hoek" "9.x.x"
 
+"@leichtgewicht/ip-codec@^2.0.1":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@leichtgewicht/ip-codec/-/ip-codec-2.0.2.tgz#862a66b3e0197109c11ddf2082a8db4c66ba6bd2"
+  integrity sha512-PjsLKLzJ0jWM1iM4xdYkrMyonAHP4kHGiXm81FRNfcnjToQA9UOknwZE28bxq0AGmEAMVBPSuuHurzla2wyYyA==
+
 "@motrix/nat-api@^0.3.1":
   version "0.3.1"
   resolved "https://registry.yarnpkg.com/@motrix/nat-api/-/nat-api-0.3.1.tgz#de18e7101cc6ed82e9e1e7b5720cb2b40f490246"
@@ -2870,6 +2875,13 @@ dns-over-http-resolver@^1.0.0:
     debug "^4.3.1"
     native-fetch "^3.0.0"
     receptacle "^1.3.2"
+
+dns-packet@^5.2.2:
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/dns-packet/-/dns-packet-5.3.0.tgz#9a0f66118d3be176b828b911a842b0b1a4bdfd4f"
+  integrity sha512-Nce7YLu6YCgWRvOmDBsJMo9M5/jV3lEZ5vUWnWXYmwURvPylHvq7nkDWhNmk1ZQoZZOP7oQh/S0lSxbisKOfHg==
+  dependencies:
+    "@leichtgewicht/ip-codec" "^2.0.1"
 
 dom-walk@^0.1.0:
   version "0.1.2"
@@ -5541,6 +5553,16 @@ libp2p-kad-dht@^0.22.0:
     varint "^6.0.0"
     xor-distance "^2.0.0"
 
+libp2p-mdns@^0.17.0:
+  version "0.17.0"
+  resolved "https://registry.yarnpkg.com/libp2p-mdns/-/libp2p-mdns-0.17.0.tgz#5b321229b75f4f2477ee384efff56e9ab6d17b3d"
+  integrity sha512-W9i1WFTahJkA5rgFNeIpKkp416ciKIkAgd3nckcLat9eO6P8xAxWOm2Ft8sR8FuJSPMJMU/Gp3PJgt8I7Y2+wA==
+  dependencies:
+    debug "^4.3.1"
+    multiaddr "^10.0.0"
+    multicast-dns "^7.2.0"
+    peer-id "^0.15.0"
+
 libp2p-mplex@^0.10.3:
   version "0.10.3"
   resolved "https://registry.yarnpkg.com/libp2p-mplex/-/libp2p-mplex-0.10.3.tgz#dde26361125f2e3450f771bbf403f6cce5bab291"
@@ -6212,6 +6234,18 @@ multiaddr-to-uri@^7.0.0:
   dependencies:
     multiaddr "^9.0.1"
 
+multiaddr@^10.0.0:
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/multiaddr/-/multiaddr-10.0.0.tgz#3d5cf213c9c89a14520bfb581557e4d75c6323a9"
+  integrity sha512-yP3LzFkM0GORZHNenS8Ok2spsaICRBhxLEohAfKKwwrgHIEWrDUhMRIkh/MONDBThNqaiGl7Ch1H7qblRDNHyg==
+  dependencies:
+    dns-over-http-resolver "^1.0.0"
+    err-code "^3.0.1"
+    is-ip "^3.1.0"
+    multiformats "^9.0.2"
+    uint8arrays "^2.1.3"
+    varint "^6.0.0"
+
 multiaddr@^6.0.3, multiaddr@^6.1.0:
   version "6.1.1"
   resolved "https://registry.yarnpkg.com/multiaddr/-/multiaddr-6.1.1.tgz#9aae57b3e399089b9896d9455afa8f6b117dff06"
@@ -6294,6 +6328,14 @@ multibase@^4.0.1, multibase@^4.0.2, multibase@^4.0.3:
   dependencies:
     "@multiformats/base-x" "^4.0.1"
 
+multicast-dns@^7.2.0:
+  version "7.2.3"
+  resolved "https://registry.yarnpkg.com/multicast-dns/-/multicast-dns-7.2.3.tgz#cbd07571dda41807b36f71067681f19e85ccc2cd"
+  integrity sha512-TzxgGSLRLB7tqAlzjgd2x2ZE0cDsGFq4rs9W4yE5xp+7hlRXeUQGtXZsTGfGw2FwWB45rfe8DtXMYBpZGMLUng==
+  dependencies:
+    dns-packet "^5.2.2"
+    thunky "^1.0.2"
+
 multicodec@^1.0.1, multicodec@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/multicodec/-/multicodec-1.0.4.tgz#46ac064657c40380c28367c90304d8ed175a714f"
@@ -6317,6 +6359,11 @@ multicodec@^3.0.1:
   dependencies:
     uint8arrays "^2.1.3"
     varint "^5.0.2"
+
+multiformats@^9.0.0, multiformats@^9.0.2:
+  version "9.2.0"
+  resolved "https://registry.yarnpkg.com/multiformats/-/multiformats-9.2.0.tgz#c504aad54c140aa0c7c9a543aef039d3b5a1e871"
+  integrity sha512-jscxrWeITHg3I6HtbFAF/j5AX3UJDJDviNoOtIwLMlZSRpSDL0b69Zgu50EZEY6T4b48/kDHonVCiLtRTmzlAQ==
 
 multihashes@^1.0.1:
   version "1.0.1"
@@ -7104,6 +7151,18 @@ peer-id@^0.14.0, peer-id@^0.14.2, peer-id@^0.14.8:
     libp2p-crypto "^0.19.0"
     minimist "^1.2.5"
     multihashes "^4.0.2"
+    protobufjs "^6.10.2"
+    uint8arrays "^2.0.5"
+
+peer-id@^0.15.0:
+  version "0.15.0"
+  resolved "https://registry.yarnpkg.com/peer-id/-/peer-id-0.15.0.tgz#8416d976fdc44389eb38639a2fbaef9b909fce03"
+  integrity sha512-IYgdFzYEWhEQQV/tlcr7f+13q7fxFlBT/fDd9KMLT989RwD2fqAhwIziF2bJN6J8XppejNjvAYclTibyo5FFmg==
+  dependencies:
+    class-is "^1.1.0"
+    libp2p-crypto "^0.19.0"
+    minimist "^1.2.5"
+    multiformats "^9.0.0"
     protobufjs "^6.10.2"
     uint8arrays "^2.0.5"
 
@@ -8443,6 +8502,11 @@ through@^2.3.8:
   version "2.3.8"
   resolved "https://registry.yarnpkg.com/through/-/through-2.3.8.tgz#0dd4c9ffaabc357960b1b724115d7e0e86a2e1f5"
   integrity sha1-DdTJ/6q8NXlgsbckEV1+Doai4fU=
+
+thunky@^1.0.2:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/thunky/-/thunky-1.1.0.tgz#5abaf714a9405db0504732bbccd2cedd9ef9537d"
+  integrity sha512-eHY7nBftgThBqOyHGVN+l8gF0BucP09fMo0oO/Lb0w1OF80dJv+lDVpXG60WMQvkcxAkNybKsrEIE3ZtKGmPrA==
 
 time-cache@^0.3.0:
   version "0.3.0"
