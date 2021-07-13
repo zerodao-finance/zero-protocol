@@ -115,38 +115,50 @@ describe('Zero', () => {
   });
   it('should make a swap', async () => {
     const [ signer ] = await ethers.getSigners();
+    const { abi: erc20abi } = await deployments.getArtifact('BTCVault');
+    const renBTC = new ethers.Contract(RENBTC_MAINNET_ADDRESS, erc20abi, signer);
+    const decimals = await renBTC.decimals();
     const lock = await setupUnderwriter(signer);
     const signerAddress = await signer.getAddress();
 
-    console.log("SIgner address is", signerAddress);
+    console.log("Signer address is", signerAddress, ". Signer balance is", (await renBTC.balanceOf(signerAddress)).toNumber() / decimals);
     
     const Controller = await ethers.getContract('ZeroController', signer);
-    const BTCVault = await ethers.getContract('BTCVault', signer)    
+    const BTCVault = await ethers.getContract('BTCVault', signer);
     const Underwriter = await ethers.getContract('TrivialUnderwriter');
     const SwapModule = await ethers.getContract('Swap');
-  
+
+    console.log("Depositing into Vault")
+
+    await BTCVault.deposit('1000000000');
+
+    console.log("Deposit was succesful. Now calling earn on vault.")
     await BTCVault.earn();
+
+    console.log("Earn was called on vault. Now transferring assets.");
+
+    await BTCVault.transfer(Underwriter.address, await BTCVault.balanceOf(signerAddress));
+    console.log("Transfer was succesful. Now calling earn.")
+    
+
+    console.log("Balance: ", await BTCVault.balanceOf(signerAddress))
+
     const transferRequest = createTransferRequest({
       module: SwapModule.address,
       to: signerAddress,
       underwriter: Underwriter.address,
       asset: RENBTC_MAINNET_ADDRESS,
-      amount: '100000000000',
+      amount: '1000000000',
       data: '0x'
     });
 
+    transferRequest.setUnderwriter(lock.address);
+
     console.log("Transfer Request", transferRequest);
   
-    transferRequest.setUnderwriter(lock.address)
     const signature = await transferRequest.sign(signer, Controller.address);
-    const btcVault = await ethers.getContract('BTCVault');
-    await btcVault.deposit('100000000000');
-    const from = await signer.getAddress();
-    await btcVault.transfer(Underwriter.address, await btcVault.balanceOf(from));
-    console.log(signature);
-    process.exit(0);
-
-  
+    console.log("Signature is", signature);
+ 
   })
 });
 
