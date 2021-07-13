@@ -124,41 +124,46 @@ describe('Zero', () => {
     console.log("Signer address is", signerAddress, ". Signer balance is", (await renBTC.balanceOf(signerAddress)).toNumber() / decimals);
     
     const Controller = await ethers.getContract('ZeroController', signer);
+    const {abi: controllerABI} = await deployments.getArtifact('ZeroController');
     const BTCVault = await ethers.getContract('BTCVault', signer);
-    const Underwriter = await ethers.getContract('TrivialUnderwriter');
+    const TrivialUnderwriter = await ethers.getContract('TrivialUnderwriter');
     const SwapModule = await ethers.getContract('Swap');
 
-    console.log("Depositing into Vault")
+    console.log("\n");
+    console.log("Signer is", signerAddress);
+    console.log("Underwriter is", TrivialUnderwriter.address);
+    console.log("\n");
 
     await BTCVault.deposit('1000000000');
-
-    console.log("Deposit was succesful. Now calling earn on vault.")
     await BTCVault.earn();
-
-    console.log("Earn was called on vault. Now transferring assets.");
-
-    await BTCVault.transfer(Underwriter.address, await BTCVault.balanceOf(signerAddress));
-    console.log("Transfer was succesful. Now calling earn.")
-    
-
-    console.log("Balance: ", await BTCVault.balanceOf(signerAddress))
-
     const transferRequest = createTransferRequest({
       module: SwapModule.address,
       to: signerAddress,
-      underwriter: Underwriter.address,
+      underwriter: TrivialUnderwriter.address,
       asset: RENBTC_MAINNET_ADDRESS,
       amount: '1000000000',
       data: '0x'
     });
 
     transferRequest.setUnderwriter(lock.address);
-
-    console.log("Transfer Request", transferRequest);
-  
     const signature = await transferRequest.sign(signer, Controller.address);
+    console.log("Transfer Request", transferRequest);
     console.log("Signature is", signature);
- 
+
+    
+
+    const Underwriter = new ethers.Contract(TrivialUnderwriter.address, controllerABI, signer);
+
+    await Underwriter.loan(
+      signerAddress,
+      RENBTC_MAINNET_ADDRESS,
+      '1000000000',
+      ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      SwapModule.address,
+      '0x',
+      signature
+    )
+
   })
 });
 

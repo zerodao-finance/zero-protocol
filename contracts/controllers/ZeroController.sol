@@ -25,6 +25,8 @@ import {IGateway} from "../interfaces/IGateway.sol";
 import {IGatewayRegistry} from "../interfaces/IGatewayRegistry.sol";
 import {IStrategy} from "../interfaces/IStrategy.sol";
 
+import {console} from "hardhat/console.sol";
+
 /**
 @title upgradeable contract which determines the authority of a given address to sign off on loans
 @author raymondpulver
@@ -78,6 +80,8 @@ contract ZeroController is
     }
 
     modifier onlyUnderwriter {
+        console.log("Sender is", msg.sender);
+        console.log("Lock is", uint256(uint160(address(lockFor(msg.sender)))));
         require(
             ownerOf(uint256(uint160(address(lockFor(msg.sender))))) !=
                 address(0x0),
