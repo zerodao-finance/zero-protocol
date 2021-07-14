@@ -36,7 +36,7 @@ library ZeroLib {
         result = ZeroUnderwriterLock(FactoryLib.computeAddress(
                 nft,
                 underwriterLockImpl,
-                bytes32(bytes20(underwriter))
+                bytes32(uint256(uint160(underwriter)))
             )
         );
     }

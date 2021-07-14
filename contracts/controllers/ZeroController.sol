@@ -80,8 +80,6 @@ contract ZeroController is
     }
 
     modifier onlyUnderwriter {
-        console.log("Sender is", msg.sender);
-        console.log("Lock is", uint256(uint160(address(lockFor(msg.sender)))));
         require(
             ownerOf(uint256(uint160(address(lockFor(msg.sender))))) !=
                 address(0x0),
@@ -115,8 +113,9 @@ contract ZeroController is
         address lock =
             FactoryLib.deploy(
                 underwriterLockImpl,
-                keccak256(abi.encodePacked(underwriter))
+                bytes32(uint256(uint160(underwriter)))
             );
+
         ZeroUnderwriterLock(lock).initialize(vault);
         _mint(msg.sender, uint256(uint160(lock)));
     }

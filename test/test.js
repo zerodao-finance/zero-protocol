@@ -40,7 +40,7 @@ const setupUnderwriter = async (signer, amountOfRenBTC = '100') => {
   await vault.approve(controller.address, await vault.balanceOf(from));
   await controller.mint(underwriterAddress, vault.address);
   const lock = await controller.lockFor(underwriterAddress);
-  return new ethers.Contract(lock, ZeroUnderwriterLock.abi, signer);
+  return new ethers.Contract(underwriterAddress, underwriterFactory.interface, signer);
 };
 
 const getGateway = (signer) => {
@@ -118,7 +118,7 @@ describe('Zero', () => {
     const { abi: erc20abi } = await deployments.getArtifact('BTCVault');
     const renBTC = new ethers.Contract(RENBTC_MAINNET_ADDRESS, erc20abi, signer);
     const decimals = await renBTC.decimals();
-    const lock = await setupUnderwriter(signer);
+    const underwriter = await setupUnderwriter(signer);
     const signerAddress = await signer.getAddress();
 
     console.log("Signer address is", signerAddress, ". Signer balance is", (await renBTC.balanceOf(signerAddress)).toNumber() / decimals);
@@ -126,12 +126,11 @@ describe('Zero', () => {
     const Controller = await ethers.getContract('ZeroController', signer);
     const {abi: controllerABI} = await deployments.getArtifact('ZeroController');
     const BTCVault = await ethers.getContract('BTCVault', signer);
-    const TrivialUnderwriter = await ethers.getContract('TrivialUnderwriter');
     const SwapModule = await ethers.getContract('Swap');
 
     console.log("\n");
     console.log("Signer is", signerAddress);
-    console.log("Underwriter is", TrivialUnderwriter.address);
+    console.log("Underwriter is", underwriter.address);
     console.log("\n");
 
     await BTCVault.deposit('1000000000');
@@ -139,20 +138,20 @@ describe('Zero', () => {
     const transferRequest = createTransferRequest({
       module: SwapModule.address,
       to: signerAddress,
-      underwriter: TrivialUnderwriter.address,
+      underwriter: underwriter.address,
       asset: RENBTC_MAINNET_ADDRESS,
       amount: '1000000000',
       data: '0x'
     });
 
-    transferRequest.setUnderwriter(lock.address);
+    transferRequest.setUnderwriter(underwriter.address);
     const signature = await transferRequest.sign(signer, Controller.address);
     console.log("Transfer Request", transferRequest);
     console.log("Signature is", signature);
 
     
 
-    const Underwriter = new ethers.Contract(TrivialUnderwriter.address, controllerABI, signer);
+    const Underwriter = new ethers.Contract(underwriter.address, controllerABI, signer);
 
     await Underwriter.loan(
       signerAddress,
