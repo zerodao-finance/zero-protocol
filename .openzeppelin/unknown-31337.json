@@ -7,8 +7,8 @@
       "hash": "0x2d08ce6ac36a0470bb20f77c7d938d8b885a738bc46bb1f71bdf9ecd1a8bf015",
       "type": 0,
       "accessList": null,
-      "blockHash": "0x56067ac25c7660358eb2fd7dad1c04a4cc82bda1c609e922acea6958d866a215",
-      "blockNumber": 12825741,
+      "blockHash": "0x1ab95359dcd9a245e7da8792aa71e52ac91ec2d7b97d7ae86b4e817828a2fa2d",
+      "blockNumber": 12825926,
       "transactionIndex": 0,
       "confirmations": 1,
       "from": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
@@ -732,9 +732,9 @@
         }
       }
     },
-    "143bc44906c10b8e47061755edf06122b255adab6ea94c657bf7ef5eca52d133": {
+    "0ab4f1d0fae5be0100d2a718fd100a600becfd2d0dcee9b2339360cf231ad2e5": {
       "address": "0x4826533B4897376654Bb4d4AD88B7faFD0C98528",
-      "txHash": "0xc64c2040887829e09a8bc8b733c082c5d558bee65ab1e46145a7a8a793dace71",
+      "txHash": "0x70bd4424499e7a9c6280eb6edef230c8416bb2e218123bd785f42951ee6fa898",
       "layout": {
         "storage": [
           {
@@ -932,7 +932,7 @@
           {
             "contract": "ZeroController",
             "label": "loanStatus",
-            "type": "t_mapping(t_bytes32,t_struct(LoanStatus)5601_storage)",
+            "type": "t_mapping(t_bytes32,t_struct(LoanStatus)5548_storage)",
             "src": "contracts/controllers/ZeroController.sol:46"
           },
           {
@@ -958,13 +958,13 @@
           "t_bool": {
             "label": "bool"
           },
-          "t_mapping(t_bytes32,t_struct(LoanStatus)5601_storage)": {
+          "t_mapping(t_bytes32,t_struct(LoanStatus)5548_storage)": {
             "label": "mapping(bytes32 => struct ZeroLib.LoanStatus)"
           },
           "t_bytes32": {
             "label": "bytes32"
           },
-          "t_struct(LoanStatus)5601_storage": {
+          "t_struct(LoanStatus)5548_storage": {
             "label": "struct ZeroLib.LoanStatus",
             "members": [
               {
@@ -973,11 +973,11 @@
               },
               {
                 "label": "status",
-                "type": "t_enum(LoanStatusCode)5583"
+                "type": "t_enum(LoanStatusCode)5530"
               }
             ]
           },
-          "t_enum(LoanStatusCode)5583": {
+          "t_enum(LoanStatusCode)5530": {
             "label": "enum ZeroLib.LoanStatusCode",
             "members": [
               "UNINITIALIZED",

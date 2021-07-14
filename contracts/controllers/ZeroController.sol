@@ -178,12 +178,13 @@ contract ZeroController is
                 keccak256(
                     abi.encode(
                         keccak256(
-                            "TransferRequest(address asset,uint256 amount,address underwriter,address module,bytes data)"
+                            "TransferRequest(address asset,uint256 amount,address underwriter,address module,uint256 nonce,bytes data)"
                         ),
                         params.asset,
                         params.amount,
                         underwriter,
                         params.module,
+                        params.nonce,
                         keccak256(params.data)
                     )
                 )
@@ -209,9 +210,9 @@ contract ZeroController is
                 module: module,
                 data: data
             });
-        bytes32 digest = keccak256(abi.encodePacked(params.to, params.nonce));
+        bytes32 digest = toTypedDataHash(params, msg.sender);
         require(
-            ECDSA.recover(digest, userSignature) == msg.sender,
+            ECDSA.recover(digest, userSignature) == params.to,
             "invalid signature"
         );
         require(

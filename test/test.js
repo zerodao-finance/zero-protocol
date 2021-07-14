@@ -157,7 +157,7 @@ describe('Zero', () => {
       signerAddress,
       RENBTC_MAINNET_ADDRESS,
       '1000000000',
-      ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+      transferRequest.pNonce,
       SwapModule.address,
       '0x',
       signature
