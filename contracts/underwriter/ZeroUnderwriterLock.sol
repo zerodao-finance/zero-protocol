@@ -11,6 +11,8 @@ import {ZeroController} from "../controllers/ZeroController.sol";
 import {ZeroLib} from "../libraries/ZeroLib.sol";
 import {SafeERC20} from "oz410/token/ERC20/SafeERC20.sol";
 
+import "hardhat/console.sol";
+
 /**
 @title contract to hold locked underwriter funds while the underwriter is active
 @author raymondpulver
@@ -39,7 +41,7 @@ contract ZeroUnderwriterLock is Initializable {
     }
 
     function owed() public view returns (uint256 result) {
-        result = _balanceSheet.repaid.sub(uint256(_balanceSheet.loaned));
+        result = uint256(_balanceSheet.loaned).sub(_balanceSheet.repaid);
     }
 
     function reserve() public view returns (uint256 result) {

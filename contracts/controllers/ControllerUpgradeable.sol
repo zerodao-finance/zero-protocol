@@ -119,7 +119,9 @@ contract ControllerUpgradeable {
             IERC20(_want).safeTransfer(_strategy, _amount);
         } else {
             IERC20(_token).safeTransfer(_strategy, _amount);
+            console.log("Transferring to Strategy", _amount);
         }
+        console.log("Calling deposit on Strategy");
         IStrategy(_strategy).deposit();
     }
 

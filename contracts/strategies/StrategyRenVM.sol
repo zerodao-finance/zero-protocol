@@ -10,12 +10,17 @@ import "../interfaces/IyVault.sol";
 import {StrategyAPI} from "../interfaces/IStrategy.sol";
 import {IController} from "../interfaces/IController.sol";
 import {IUniswapV2Router02} from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+import {ICurvePool} from "../interfaces/ICurvePool.sol";
 import { console } from "hardhat/console.sol";
 
 contract StrategyRenVM {
     using SafeERC20 for IERC20;
     using Address for address;
     using SafeMath for uint256;
+
+    address public constant sBTCPool = 0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714;
+    int128 public constant renbtcIndex = 0;
+    int128 public constant wbtcIndex = 1;
 
     address public constant want =
         address(0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D);
@@ -24,23 +29,14 @@ contract StrategyRenVM {
     string public constant name = "0confirmation RenVM Strategy";
     bool public constant isActive = true;
 
-    address public constant router =
-        address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
-    address public constant weth =
-        address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
-    address public constant usdc =
-        address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
     address public constant vaultWant = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
 
     uint256 public reserveRenBTC;
     uint256 public reserveETH;
 
-    address public immutable controller;
+    uint256 public constant reserve = 200000000;
 
-    address[] public renBTCPath;
-    address[] public wETHPath;
-    address[] public wETHtoRenBTCPath;
-    address[] public wantToVaultWantPath;
+    address public immutable controller;
 
     address public governance;
     address public strategist;
@@ -54,27 +50,18 @@ contract StrategyRenVM {
         governance = msg.sender;
         strategist = msg.sender;
         controller = _controller;
-
-        address[3] memory _renBTCPath = [want, weth, usdc];
-        renBTCPath = _renBTCPath;
-
-        address[2] memory _wETHPath = [weth, usdc];
-        wETHPath = _wETHPath;
-
-        address[2] memory _wETHtoRenBTCPath = [weth, want];
-        wETHtoRenBTCPath = _wETHtoRenBTCPath;
-
-        address[3] memory _wantToVaultWantPath = [want, weth, vaultWant];
-        wantToVaultWantPath = _wantToVaultWantPath;
     }
 
     function deposit() external virtual {
         uint256 _want = IERC20(want).balanceOf(address(this)); //amount of tokens we want
-        if (_want > 0) {
-            uint256 _overflow = _want.sub(0);
-            //TODO should be min threshold, shouldn't need to be 10
-            //IERC20(want).safeApprove(address(vault), 0);
+        console.log("Currently have", _want);
+        if (_want > reserve) {
+            console.log("Strategy has met the minimum reserves");
+            uint256 _overflow = _want.sub(reserve);
+            console.log("Overflow of", _overflow);
+            //TODO should be min threshold, not hard coded
             
+            /*
             uint256 _amountOut = IUniswapV2Router02(router).getAmountsOut(_overflow, wantToVaultWantPath)[wantToVaultWantPath.length.sub(1)];
             IERC20(want).safeApprove(address(router), _overflow);
             uint256 _actualOut = IUniswapV2Router02(router).swapExactTokensForTokens(
@@ -83,64 +70,51 @@ contract StrategyRenVM {
                 wantToVaultWantPath,
                 address(this),
                 block.timestamp+1
-            )[wantToVaultWantPath.length.sub(1)];
+            )[wantToVaultWantPath.length.sub(1)];*/
+
+            uint256 _amountOut = ICurvePool(sBTCPool).get_dy(renbtcIndex, wbtcIndex, _overflow);
+            IERC20(want).safeApprove(address(sBTCPool), _overflow);
+            ICurvePool(sBTCPool).exchange(renbtcIndex, wbtcIndex, _overflow, _amountOut);
+            uint256 _actualOut = _amountOut;
+
+            console.log("Swapped renBTC for wBTC", _actualOut);
             IERC20(vaultWant).safeApprove(address(vault), _actualOut);
+            console.log("Depositing into Strategy Vault:", _actualOut);
             IyVault(vault).deposit(_actualOut);
         }
+        console.log("Strategy.deposit is done.");
     }
 
-    function withdraw(uint256 _amount) external virtual onlyController {
+    function withdraw(uint256 _amount) public virtual onlyController {
         IyVault(vault).withdraw(_amount);
-        IERC20(want).transfer(address(controller), _amount);
+        uint256 _amountOut = ICurvePool(sBTCPool).get_dy(wbtcIndex, renbtcIndex, _amount);
+        IERC20(want).safeApprove(address(sBTCPool), _amount);
+        ICurvePool(sBTCPool).exchange(wbtcIndex, renbtcIndex, _amount, _amountOut);
+        IERC20(want).transfer(address(controller), _amountOut);
     }
 
     function withdrawAll() external virtual onlyController {
-        //TODO Not sure if this is correct methodology, test later
         uint256 _amount = IERC20(vault).balanceOf(address(this));
-        IyVault(vault).withdraw(_amount);
-        uint256 _eth = address(this).balance;
-        //TODO do you approve for ETH?
-        IUniswapV2Router02(router).swapExactETHForTokens(
-            _eth,
-            wETHtoRenBTCPath,
-            address(controller),
-            block.timestamp
-        );
-        IERC20(want).transfer(
-            address(controller),
-            IERC20(want).balanceOf(address(this))
-        );
+        withdraw(_amount);
     }
 
     function balanceOf() external view virtual returns (uint256) {
-        return IyVault(vault).balanceOf(address(this));
+        return IyVault(vault).balanceOf(address(this)).mul(IyVault(vault).pricePerShare());
         //return IyVault(vault).balanceOf(address(this)).add(IERC20(want).balanceOf(address(this))); TODO uncomment
     }
 
-    /*TODO remove this block below if not needed
-    function tend() virtual override external {
-        uint256 renBTCBalance = IERC20(renBTC).balanceOf(address(this));
-        uint256 ethBalance = address(this).balance;
-
-        uint256 wantRenBTC = renBTCBalance < reserveRenBTC ? reserveRenBTC - renBTCBalance : 0;
-        uint256 wantETHinRenBTC = ethBalance < reserveETH ? IUniswapV2Router02(ROUTER).getAmountsIn(reserveETH - ethBalance, wETHtoRenBTCPath)[0] : 0;
-        IyVault(vault).withdraw(wantRenBTC+wantETHinRenBTC);
-
-        if (wantETHinRenBTC!=0) {
-            require(IERC20(renBTC).approve(address(ROUTER), wantETHinRenBTC), 'approve failed.');
-            uint256 expectedEthOut = reserveETH - ethBalance;
-            IUniswapV2Router02(ROUTER).swapExactTokensForETH(wantETHinRenBTC, reserveETH - ethBalance, wETHtoRenBTCPath, address(this), block.timestamp+1);
-        }
-    }
-
-    function harvest() virtual override external {
-        uint256 renBTCBalance = IERC20(renBTC).balanceOf(address(this));
-        if (renBTCBalance > reserveRenBTC) {
-            uint256 surplusRenBTC = renBTCBalance - reserveRenBTC;
-            IyVault(yearnStrategyPool).deposit(surplusRenBTC);
+    function permissionedSend(address _module, uint256 _amount) external virtual onlyController {
+        uint256 _reserve = IERC20(want).balanceOf(address(this));
+        if (_amount > _reserve) {
+            uint256 _deficit = _amount - _reserve;
+            console.log("Withdrawing deficit");
+            withdraw(_deficit);
+            uint256 _actual = IERC20(want).balanceOf(address(this));
+            console.log("New balance is", _actual.sub(_reserve));
+            IERC20(want).safeTransfer(_module, _actual);
         } else {
-            revert('Nothing to harvest');
+            IERC20(want).safeTransfer(_module, _amount);
         }
     }
-    */
+
 }
