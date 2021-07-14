@@ -124,7 +124,6 @@ contract ControllerUpgradeable {
     }
 
     function _balanceOf(address _token) internal virtual view returns (uint256) {
-      console.log(strategies[_token]);
         return IStrategy(strategies[_token]).balanceOf();
     }
     function balanceOf(address _token) public virtual view returns (uint256) {
