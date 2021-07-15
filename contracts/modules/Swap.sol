@@ -1,6 +1,7 @@
 pragma solidity >=0.6.0;
 
 import {SwapLib} from "./SwapLib.sol";
+import {SafeMath} from "oz410/math/SafeMath.sol";
 import {
     IUniswapV2Router02
 } from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
@@ -10,6 +11,7 @@ import { IController } from "../interfaces/IController.sol";
 
 contract Swap {
     using SafeERC20 for *;
+    using SafeMath for *;
     mapping(uint256 => SwapLib.SwapRecord) public outstanding;
     address public immutable controller;
     address public immutable governance;
@@ -77,4 +79,10 @@ contract Swap {
         IERC20(asset).safeTransfer(to, amountOwed);
         delete outstanding[nonce];
     }
+
+    function computeReserveRequirement(uint256 _in) external view returns (uint256) {
+        return _in.mul(uint256(1e17)).div(uint256(1 ether));
+    }
+
+
 }

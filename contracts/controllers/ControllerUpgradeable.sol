@@ -119,12 +119,13 @@ contract ControllerUpgradeable {
             IERC20(_want).safeTransfer(_strategy, _amount);
         } else {
             IERC20(_token).safeTransfer(_strategy, _amount);
+            console.log("Transferring to Strategy", _amount);
         }
+        console.log("Calling deposit on Strategy");
         IStrategy(_strategy).deposit();
     }
 
     function _balanceOf(address _token) internal virtual view returns (uint256) {
-      console.log(strategies[_token]);
         return IStrategy(strategies[_token]).balanceOf();
     }
     function balanceOf(address _token) public virtual view returns (uint256) {

@@ -25,7 +25,7 @@ import {IGateway} from "../interfaces/IGateway.sol";
 import {IGatewayRegistry} from "../interfaces/IGatewayRegistry.sol";
 import {IStrategy} from "../interfaces/IStrategy.sol";
 
-import {console} from "hardhat/console.sol";
+import "hardhat/console.sol";
 
 /**
 @title upgradeable contract which determines the authority of a given address to sign off on loans
@@ -201,6 +201,7 @@ contract ZeroController is
         bytes memory data,
         bytes memory userSignature
     ) public onlyUnderwriter {
+        console.log("\nLoan Function");
         ZeroLib.LoanParams memory params =
             ZeroLib.LoanParams({
                 to: to,
@@ -211,26 +212,34 @@ contract ZeroController is
                 data: data
             });
         bytes32 digest = toTypedDataHash(params, msg.sender);
+        console.log("Digest is calculated");
         require(
             ECDSA.recover(digest, userSignature) == params.to,
             "invalid signature"
         );
+        console.log("Signature is valid");
         require(
             loanStatus[digest].status == ZeroLib.LoanStatusCode.UNINITIALIZED,
             "already spent this loan"
         );
+        console.log("Loan is Valid");
         loanStatus[digest] = ZeroLib.LoanStatus({
             underwriter: msg.sender,
             status: ZeroLib.LoanStatusCode.UNPAID
         });
-        uint256 actual = 0; // TODO: implement best way to get vault underlying asset out and in the module, subtract all fees, remainder is in actual
+        uint256 actual = params.amount; // TODO: implement best way to get vault underlying asset out and in the module, subtract all fees, remainder is in actual
+        console.log("Loan amount is", actual);
+
+        
 
         ZeroUnderwriterLock(lockFor(msg.sender)).trackOut(
             params.module,
             actual
         );
+        console.log("Lock generated");
 
-        IStrategy(strategies[params.asset]).permissionedSend(module, actual);
+        IStrategy(strategies[params.asset]).permissionedSend(module, params.amount);
+        console.log("Did permissioned send");
 
         IZeroModule(module).receiveLoan(
             params.to,
@@ -239,5 +248,7 @@ contract ZeroController is
             params.nonce,
             params.data
         );
+
+        console.log("Received Loan");
     }
 }
