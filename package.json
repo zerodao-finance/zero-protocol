@@ -8,7 +8,8 @@
     "test": "hardhat test",
     "test:p2p": "NODE_ENV=test yarn mocha lib/p2p/test/*.js --exit --timeout 0",
     "test:external": "hardhat test --network localhost",
-    "start": "hardhat node"
+    "start": "hardhat node",
+    "lint": "prettier --check \"lib/**/*.{js,jsx,ts,tsx}\""
   },
   "author": "zeroflash",
   "license": "MIT",
@@ -36,11 +37,17 @@
     "@0x/utils": "^6.4.3",
     "@nomiclabs/buidler": "^1.4.8",
     "@openzeppelin/hardhat-upgrades": "^1.8.2",
+		"@typescript-eslint/eslint-plugin": "^4.28.3",
+		"@typescript-eslint/parser": "^4.28.3",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
+		"bignumber.js": "^9.0.1",
     "bitcoin-core": "^3.0.0",
     "bitcore-lib": "^8.25.10",
     "bluebird": "^3.7.2",
     "eip712-helpers": "^1.0.2",
+		"eslint": "^7.30.0",
+		"eslint-config-prettier": "^8.3.0",
+		"eslint-plugin-prettier": "^3.4.0",
     "ethers": "^5.3.1",
     "libp2p": "^0.31.6",
     "libp2p-bootstrap": "^0.12.3",
@@ -56,6 +63,7 @@
     "libp2p-websockets": "^0.15.7",
     "peer-info": "^0.17.5",
     "pull-stream": "^3.6.14",
+    "tslint-config-prettier": "^1.18.0",
     "winston": "^3.3.3",
     "wrtc": "^0.4.7"
   }

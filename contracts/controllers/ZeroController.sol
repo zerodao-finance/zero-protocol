@@ -25,6 +25,8 @@ import {IGateway} from "../interfaces/IGateway.sol";
 import {IGatewayRegistry} from "../interfaces/IGatewayRegistry.sol";
 import {IStrategy} from "../interfaces/IStrategy.sol";
 
+import "hardhat/console.sol";
+
 /**
 @title upgradeable contract which determines the authority of a given address to sign off on loans
 @author raymondpulver
@@ -111,8 +113,9 @@ contract ZeroController is
         address lock =
             FactoryLib.deploy(
                 underwriterLockImpl,
-                keccak256(abi.encodePacked(underwriter))
+                bytes32(uint256(uint160(underwriter)))
             );
+
         ZeroUnderwriterLock(lock).initialize(vault);
         _mint(msg.sender, uint256(uint160(lock)));
     }
@@ -175,12 +178,13 @@ contract ZeroController is
                 keccak256(
                     abi.encode(
                         keccak256(
-                            "TransferRequest(address asset,uint256 amount,address underwriter,address module,bytes data)"
+                            "TransferRequest(address asset,uint256 amount,address underwriter,address module,uint256 nonce,bytes data)"
                         ),
                         params.asset,
                         params.amount,
                         underwriter,
                         params.module,
+                        params.nonce,
                         keccak256(params.data)
                     )
                 )
@@ -197,6 +201,7 @@ contract ZeroController is
         bytes memory data,
         bytes memory userSignature
     ) public onlyUnderwriter {
+        console.log("\nLoan Function");
         ZeroLib.LoanParams memory params =
             ZeroLib.LoanParams({
                 to: to,
@@ -206,27 +211,35 @@ contract ZeroController is
                 module: module,
                 data: data
             });
-        bytes32 digest = keccak256(abi.encodePacked(params.to, params.nonce));
+        bytes32 digest = toTypedDataHash(params, msg.sender);
+        console.log("Digest is calculated");
         require(
-            ECDSA.recover(digest, userSignature) == msg.sender,
+            ECDSA.recover(digest, userSignature) == params.to,
             "invalid signature"
         );
+        console.log("Signature is valid");
         require(
             loanStatus[digest].status == ZeroLib.LoanStatusCode.UNINITIALIZED,
             "already spent this loan"
         );
+        console.log("Loan is Valid");
         loanStatus[digest] = ZeroLib.LoanStatus({
             underwriter: msg.sender,
             status: ZeroLib.LoanStatusCode.UNPAID
         });
-        uint256 actual = 0; // TODO: implement best way to get vault underlying asset out and in the module, subtract all fees, remainder is in actual
+        uint256 actual = params.amount; // TODO: implement best way to get vault underlying asset out and in the module, subtract all fees, remainder is in actual
+        console.log("Loan amount is", actual);
+
+        
 
         ZeroUnderwriterLock(lockFor(msg.sender)).trackOut(
             params.module,
             actual
         );
+        console.log("Lock generated");
 
-        IStrategy(strategies[params.asset]).permissionedSend(module, actual);
+        IStrategy(strategies[params.asset]).permissionedSend(module, params.amount);
+        console.log("Did permissioned send");
 
         IZeroModule(module).receiveLoan(
             params.to,
@@ -235,5 +248,7 @@ contract ZeroController is
             params.nonce,
             params.data
         );
+
+        console.log("Received Loan");
     }
 }

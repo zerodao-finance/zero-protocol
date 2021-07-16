@@ -32,7 +32,6 @@ module.exports = async ({
     args: [],
     from: deployer
   });
-  console.log('deployed ZeroUnderwriterLockBytecodeLib');
 
   const zeroControllerFactory = (await hre.ethers.getContractFactory("ZeroController", {
     libraries: {
@@ -49,7 +48,6 @@ module.exports = async ({
     bytecode: zeroControllerArtifact.bytecode,
     abi: zeroControllerArtifact.abi
   });
-  console.log('deployed ZeroController at', zeroController.address);
   const btcVault = await deployments.deploy('BTCVault', {
     contractName: 'BTCVault',
     args: [RENBTC_MAINNET_ADDRESS, zeroController.address, "zeroBTC", "zBTC"],
@@ -57,28 +55,22 @@ module.exports = async ({
   });
   const v = await ethers.getContract('BTCVault');
   await v.attach(RENBTC_MAINNET_ADDRESS).balanceOf(ethers.constants.AddressZero);
-  console.log(await v.token());
-  console.log('deployed BTCVault at', btcVault.address);
 
   const trivialUnderwriterFactory = await deployments.deploy("TrivialUnderwriter", {
     contractName: 'TrivialUnderwriter',
     args: [zeroController.address],
     from: deployer
   });
-  console.log('deployed TrivialUnderwriter at', trivialUnderwriterFactory.address);
   const swapModuleFactory = await deployments.deploy('Swap', {
     args: [zeroController.address],
     contractName: 'Swap',
     from: deployer
   });
-  console.log('deployed SwapModule at', swapModuleFactory.address);
-
   const strategyRenVM = await deployments.deploy('StrategyRenVM', {
     args: [zeroController.address],
     contractName: 'StrategyRenVM',
     from: deployer
   });
-  console.log('deployed StrategyRenVM at', strategyRenVM.address)
   const controller = await ethers.getContract('ZeroController');
 
   await controller.approveStrategy(RENBTC_MAINNET_ADDRESS, strategyRenVM.address);

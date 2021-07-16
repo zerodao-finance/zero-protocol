@@ -29,7 +29,7 @@ interface StrategyAPI {
     event Harvested(uint256 profit, uint256 loss, uint256 debtPayment, uint256 debtOutstanding);
 }
 abstract contract IStrategy is StrategyAPI {
-  function permissionedSend(address _asset, uint256 _amount) external virtual;
+  function permissionedSend(address _module, uint256 _amount) external virtual;
   function withdrawAll() external virtual;
   function deposit() external virtual;
   function balanceOf() external virtual view returns (uint256);

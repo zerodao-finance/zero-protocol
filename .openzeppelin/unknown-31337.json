@@ -7,8 +7,8 @@
       "hash": "0x2d08ce6ac36a0470bb20f77c7d938d8b885a738bc46bb1f71bdf9ecd1a8bf015",
       "type": 0,
       "accessList": null,
-      "blockHash": "0x75e63f0f6002cab12b456d4dba2e40cb74f312bc92ab10b16951306c2bd152b8",
-      "blockNumber": 12768121,
+      "blockHash": "0x1ab95359dcd9a245e7da8792aa71e52ac91ec2d7b97d7ae86b4e817828a2fa2d",
+      "blockNumber": 12825926,
       "transactionIndex": 0,
       "confirmations": 1,
       "from": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
@@ -732,9 +732,9 @@
         }
       }
     },
-    "239737a8a4bdbbc0d5638fc2f1209a9d17cfa1d16e030e5669f80c90920d5a11": {
+    "0ab4f1d0fae5be0100d2a718fd100a600becfd2d0dcee9b2339360cf231ad2e5": {
       "address": "0x4826533B4897376654Bb4d4AD88B7faFD0C98528",
-      "txHash": "0x0cc74e3d4c444a0096ebd41d411880059e83bd625bc55762c3c014eeb2e7251f",
+      "txHash": "0x70bd4424499e7a9c6280eb6edef230c8416bb2e218123bd785f42951ee6fa898",
       "layout": {
         "storage": [
           {
@@ -909,37 +909,37 @@
             "contract": "ZeroController",
             "label": "underwriterLockImpl",
             "type": "t_address",
-            "src": "contracts/controllers/ZeroController.sol:40"
+            "src": "contracts/controllers/ZeroController.sol:42"
           },
           {
             "contract": "ZeroController",
             "label": "loaned",
             "type": "t_mapping(t_address,t_uint256)",
-            "src": "contracts/controllers/ZeroController.sol:41"
+            "src": "contracts/controllers/ZeroController.sol:43"
           },
           {
             "contract": "ZeroController",
             "label": "repaid",
             "type": "t_mapping(t_address,t_uint256)",
-            "src": "contracts/controllers/ZeroController.sol:42"
+            "src": "contracts/controllers/ZeroController.sol:44"
           },
           {
             "contract": "ZeroController",
             "label": "moduleApproved",
             "type": "t_mapping(t_address,t_bool)",
-            "src": "contracts/controllers/ZeroController.sol:43"
+            "src": "contracts/controllers/ZeroController.sol:45"
           },
           {
             "contract": "ZeroController",
             "label": "loanStatus",
-            "type": "t_mapping(t_bytes32,t_struct(LoanStatus)5544_storage)",
-            "src": "contracts/controllers/ZeroController.sol:44"
+            "type": "t_mapping(t_bytes32,t_struct(LoanStatus)5548_storage)",
+            "src": "contracts/controllers/ZeroController.sol:46"
           },
           {
             "contract": "ZeroController",
             "label": "ZERO_DOMAIN_SEPARATOR",
             "type": "t_bytes32",
-            "src": "contracts/controllers/ZeroController.sol:56"
+            "src": "contracts/controllers/ZeroController.sol:58"
           }
         ],
         "types": {
@@ -958,13 +958,13 @@
           "t_bool": {
             "label": "bool"
           },
-          "t_mapping(t_bytes32,t_struct(LoanStatus)5544_storage)": {
+          "t_mapping(t_bytes32,t_struct(LoanStatus)5548_storage)": {
             "label": "mapping(bytes32 => struct ZeroLib.LoanStatus)"
           },
           "t_bytes32": {
             "label": "bytes32"
           },
-          "t_struct(LoanStatus)5544_storage": {
+          "t_struct(LoanStatus)5548_storage": {
             "label": "struct ZeroLib.LoanStatus",
             "members": [
               {
@@ -973,11 +973,11 @@
               },
               {
                 "label": "status",
-                "type": "t_enum(LoanStatusCode)5526"
+                "type": "t_enum(LoanStatusCode)5530"
               }
             ]
           },
-          "t_enum(LoanStatusCode)5526": {
+          "t_enum(LoanStatusCode)5530": {
             "label": "enum ZeroLib.LoanStatusCode",
             "members": [
               "UNINITIALIZED",
