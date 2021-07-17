@@ -6,6 +6,7 @@
 	"repository": "https://github.com/zeroflash/zeroflash-protocol",
 	"scripts": {
 		"test": "hardhat test",
+		"test:p2p": "NODE_ENV=test yarn mocha lib/p2p/test/*.js --exit --timeout 0",
 		"test:external": "hardhat test --network localhost",
 		"start": "hardhat node",
 		"lint": "prettier --check \"lib/**/*.{js,jsx,ts,tsx}\""
@@ -25,9 +26,12 @@
 		"hardhat-deploy": "^0.8.8",
 		"hardhat-deploy-ethers": "^0.3.0-beta.10",
 		"hardhat-gas-reporter": "^1.0.4",
+		"ioredis": "^4.27.6",
+		"ioredis-mock": "^5.6.0",
 		"nice-repl": "^0.1.2",
 		"oz410": "npm:@openzeppelin/contracts@3.4.1-solc-0.7-2",
-		"request-debug": "^0.2.0"
+		"request-debug": "^0.2.0",
+		"sinon": "^11.1.1"
 	},
 	"dependencies": {
 		"@0x/utils": "^6.4.3",
@@ -49,6 +53,7 @@
 		"libp2p-bootstrap": "^0.12.3",
 		"libp2p-gossipsub": "^0.10.0",
 		"libp2p-kad-dht": "^0.22.0",
+		"libp2p-mdns": "^0.17.0",
 		"libp2p-mplex": "^0.10.3",
 		"libp2p-secio": "^0.13.1",
 		"libp2p-spdy": "^0.13.3",
@@ -57,9 +62,9 @@
 		"libp2p-websocket-star": "^0.10.2",
 		"libp2p-websockets": "^0.15.7",
 		"peer-info": "^0.17.5",
-		"prettier": "^2.3.2",
 		"pull-stream": "^3.6.14",
 		"tslint-config-prettier": "^1.18.0",
+		"winston": "^3.3.3",
 		"wrtc": "^0.4.7"
 	}
 }
