@@ -1,16 +1,4 @@
 'use strict';
-// const libp2p = require('libp2p')
-// const TCP = require('libp2p-tcp')
-// const WS = require('libp2p-websockets')
-// const Mplex = require('libp2p-mplex')
-// const SECIO = require('libp2p-secio')
-// const MultiCastDNS = require('libp2p-mdns')
-// const KadDHT = require('libp2p-kad-dht')
-// const PeerInfo = require('peer-info');
-// const GossipSub = require('libp2p-gossipsub');
-// const WStar = require('libp2p-webrtc-star');
-const returnOp = <T>(v: T): T => v;
-
 import libp2p from 'libp2p';
 import TCP from 'libp2p-tcp';
 import WS from 'libp2p-websockets';
@@ -24,6 +12,8 @@ import WStar from 'libp2p-websocket-star';
 import wrtc from 'wrtc';
 import { NodeOptions } from './types';
 import MultiAddr from 'multiaddr';
+
+const returnOp = <T>(v: T): T => v;
 
 const presets = {
 	lendnet: '/dns4/lendnet.0confirmation.com/tcp/443/wss/p2p-webrtc-star/',
