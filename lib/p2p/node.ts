@@ -1,21 +1,30 @@
 'use strict';
 import libp2p from 'libp2p';
+// @ts-expect-error
 import TCP from 'libp2p-tcp';
+// @ts-expect-error
 import WS from 'libp2p-websockets';
+// @ts-expect-error
 import Mplex from 'libp2p-mplex';
+// @ts-expect-error
 import SECIO from 'libp2p-secio';
+// @ts-expect-error
 import MultiCastDNS from 'libp2p-mdns';
 import KadDHT from 'libp2p-kad-dht';
 import PeerInfo from 'peer-info';
 import GossipSub from 'libp2p-gossipsub';
+// @ts-expect-error
 import WStar from 'libp2p-websocket-star';
+// @ts-expect-error
 import wrtc from 'wrtc';
 import { NodeOptions } from './types';
 import MultiAddr from 'multiaddr';
 
 const returnOp = <T>(v: T): T => v;
 
-const presets = {
+const presets: {
+	[index: string]: string;
+} = {
 	lendnet: '/dns4/lendnet.0confirmation.com/tcp/443/wss/p2p-webrtc-star/',
 	zeronet: '/dns4/zeronet.0confirmation.com/tcp/443/wss/p2p-webrtc-star/',
 };

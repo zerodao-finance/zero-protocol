@@ -16,7 +16,7 @@ describe('MockPubSub', () => {
 
 	it('Should subscribe to a topic/channel', async () => {
 		const instance = new MockPubsub(peerOne);
-		const cb = (msg) => msg;
+		const cb = (msg: any) => msg;
 		await instance.on('foo', cb);
 		await instance.subscribe('foo');
 		expect(instance.subscriptions['foo'].callbacks).to.eql([cb]);
@@ -25,7 +25,7 @@ describe('MockPubSub', () => {
 	it('should receive messages from subscription', async () => {
 		const instanceOne = new MockPubsub(peerOne);
 		const instanceTwo = new MockPubsub(peerTwo);
-		const spy = (msg) => {
+		const spy = (msg: any) => {
 			const { data, from } = msg;
 			const parsed = fromBufferToJSON(data);
 			expect(parsed.foo).to.eql('bar');

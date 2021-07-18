@@ -1,28 +1,21 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { ZeroUser, ZeroKeeper, createNode } from '..';
-import { wait } from './testUtils';
+import { transferRequest, wait } from './testUtils';
 import 'mocha';
 
-let zeroUser;
-let zeroKeeper;
+const connOptions = { multiaddr: '/dns4/localhost/tcp/9090/ws/p2p-webrtc-star/' };
 
 describe.skip('E2E', () => {
-	beforeEach(async () => {
-		const connOptions = { multiaddr: '/dns4/localhost/tcp/9090/ws/p2p-webrtc-star/' };
-		const connectionOne = await createNode(connOptions);
-		const connectionTwo = await createNode(connOptions);
-		zeroUser = new ZeroUser(connectionOne);
-		zeroKeeper = new ZeroKeeper(connectionTwo);
-	});
-
 	afterEach(() => {
-		zeroUser = null;
-		zeroKeeper = null;
 		sinon.restore();
 	});
 
-	it.skip('should subscribe to keeper broadcasts', async () => {
+	it('should subscribe to keeper broadcasts', async () => {
+		const connectionOne = await createNode(connOptions);
+		const connectionTwo = await createNode(connOptions);
+		const zeroUser = new ZeroUser(connectionOne);
+		const zeroKeeper = new ZeroKeeper(connectionTwo);
 		await zeroKeeper.advertiseAsKeeper('0x1234');
 		await wait(1000);
 		await zeroUser.subscribeKeepers();
@@ -31,15 +24,19 @@ describe.skip('E2E', () => {
 	});
 
 	it('should publish a transfer request', async () => {
+		const connectionOne = await createNode(connOptions);
+		const connectionTwo = await createNode(connOptions);
+		const zeroUser = new ZeroUser(connectionOne);
+		const zeroKeeper = new ZeroKeeper(connectionTwo);
 		await zeroKeeper.advertiseAsKeeper('0x1234');
 		await wait(1000);
 		await zeroUser.subscribeKeepers();
 		await wait(1000);
 
-		const spy = (foo) => expect(foo.foo).to.eql('bar');
+		const spy = (foo: any) => expect(foo.foo).to.eql('bar');
 		await zeroKeeper.setTxDispatcher(spy);
 		await wait(1000);
-		await zeroUser.publishTransferRequest({ foo: 'bar' });
+		await zeroUser.publishTransferRequest(transferRequest);
 		await wait(500);
 	});
 });
