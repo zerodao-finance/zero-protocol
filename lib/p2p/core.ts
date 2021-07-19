@@ -6,6 +6,7 @@ import { fromJSONtoBuffer, fromBufferToJSON } from './util';
 import pipe from 'it-pipe';
 import lp from 'it-length-prefixed';
 import { ConnectionTypes } from './types';
+import { TransferRequest } from '../types';
 class ZeroConnection extends libp2p {}
 
 class ZeroUser {
@@ -13,7 +14,7 @@ class ZeroUser {
 	keepers: string[];
 	log: Logger;
 
-	constructor(connection) {
+	constructor(connection: ConnectionTypes) {
 		this.conn = connection;
 		this.keepers = [];
 		this.log = createLogger('zero.user');
@@ -52,15 +53,15 @@ class ZeroUser {
 		this.keepers = [];
 	}
 
-	async publishTransferRequest(transferRequest) {
+	async publishTransferRequest(transferRequest: TransferRequest) {
 		if (this.keepers.length === 0) {
 			this.log.error('Cannot publish transfer request if no keepers are found');
 			return;
 		}
 		try {
 			let ackReceived = false;
-			await this.conn.handle('/zero/user/confirmation', async ({ stream }) => {
-				pipe(stream.source, lp.decode(), async function (rawData) {
+			await this.conn.handle('/zero/user/confirmation', async function (this: ZeroUser, { stream }) {
+				pipe(stream.source, lp.decode(), async function (this: ZeroUser, rawData: any) {
 					let string = [];
 					for await (const msg of rawData) {
 						string.push(msg.toString());
@@ -103,13 +104,13 @@ class ZeroKeeper {
 	log: Logger;
 	active: NodeJS.Timeout;
 
-	constructor(connection) {
+	constructor(connection: ConnectionTypes) {
 		this.conn = connection;
 		this.dispatches = [];
 		this.log = createLogger('zero.keeper');
 	}
 
-	async advertiseAsKeeper(address) {
+	async advertiseAsKeeper(address: string) {
 		this.active = setInterval(async () => {
 			try {
 				await this.conn.pubsub.publish(
@@ -128,9 +129,10 @@ class ZeroKeeper {
 		this.log.info('Started to listen for tx dispatch requests');
 	}
 
-	async setTxDispatcher(callback) {
-		const handler = ({ connection, stream }) => {
-			pipe(stream.source, lp.decode(), async function (rawData) {
+	async setTxDispatcher(callback: Function) {
+		const handler = async function (this: ZeroUser, duplex: any) {
+			const stream: any = duplex.stream;
+			pipe(stream.source, lp.decode(), async function (rawData: any) {
 				// TODO: match handle and dialProtocol spec
 				if (process?.env.NODE_ENV === 'test') {
 					callback(fromBufferToJSON(stream.source));

@@ -1,7 +1,8 @@
+// @ts-expect-error
 import Redis from 'ioredis-mock';
 import PeerId from 'peer-id';
 import { bufferToString, fromJSONtoBuffer, stringToBuffer } from '../util';
-import { Subscriptions } from './types';
+import { PayloadType, Subscriptions } from './types';
 
 const redis = new Redis();
 
@@ -12,12 +13,12 @@ class MockPubsub {
 	subscriptions: Subscriptions;
 	peerId: PeerId;
 
-	constructor(peerId) {
+	constructor(peerId: PeerId) {
 		this.subscriptions = {};
 		this.peerId = peerId;
 	}
 
-	on(channel, callback) {
+	on(channel: string, callback: (arg0: PayloadType) => void) {
 		if (this.subscriptions[channel]) {
 			this.subscriptions[channel].callbacks = [...this.subscriptions[channel].callbacks, callback];
 		} else {
@@ -26,20 +27,20 @@ class MockPubsub {
 		}
 	}
 
-	async publish(channel, msg) {
-		const payload = {
+	async publish(channel: string, msg: Uint8Array) {
+		const payload: PayloadType = {
 			from: this.peerId.toB58String(),
 			data: bufferToString(msg),
 		};
 		return redis.publish(channel, JSON.stringify(payload));
 	}
 
-	async subscribe(channel) {
+	async subscribe(channel: string) {
 		const subClient = redis.createConnectedClient();
 		if (!this.subscriptions[channel]) {
 			throw new Error('Cannot subscribe to channel with no handlers');
 		}
-		subClient.on('message', (c, msg) => {
+		subClient.on('message', (c: string, msg: string) => {
 			if (c === channel) {
 				this.subscriptions[channel].callbacks.forEach((cb) => {
 					const message = JSON.parse(msg);
@@ -55,7 +56,7 @@ class MockPubsub {
 		this.subscriptions[channel].client = subClient;
 	}
 
-	async unsubscribe(channel) {
+	async unsubscribe(channel: string) {
 		const client = this.subscriptions[channel].client;
 		if (client) {
 			client.unsubscribe(channel);
@@ -88,7 +89,7 @@ class MockZeroConnection {
 		};
 	}
 
-	async handle(protocol, callback) {
+	async handle(protocol: string, callback: (arg0: any) => void) {
 		const channel = `test/p2p/${this.peerId.toB58String()}`;
 		await this.pubsub.on(channel, async (msg) => {
 			callback({ stream: { source: msg.data } });
@@ -96,8 +97,8 @@ class MockZeroConnection {
 		await this.pubsub.subscribe(channel);
 	}
 
-	async dialProtocol(peerId, protocol) {
-		const sink = async (source) => {
+	async dialProtocol(peerId: string, protocol: string) {
+		const sink = async (source: any) => {
 			const vals = [];
 			for await (const val of source) {
 				vals.push(val.toString().split('\x01').pop());

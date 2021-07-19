@@ -1,11 +1,13 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { ZeroKeeper, ZeroUser, MockZeroConnection, stringToBuffer, fromJSONtoBuffer } from '..';
-import { wait } from './testUtils';
+import { ZeroKeeper, ZeroUser, MockZeroConnection, fromJSONtoBuffer } from '..';
+import { wait, transferRequest } from './testUtils';
 import pipe from 'it-pipe';
 import lp from 'it-length-prefixed';
 import 'mocha';
-let mock;
+
+let mock: MockZeroConnection;
+
 describe('MockZeroConnection', () => {
 	beforeEach(() => {
 		mock = new MockZeroConnection();
@@ -91,7 +93,7 @@ describe('MockZeroConnection', () => {
 		await wait(500);
 		await user.subscribeKeepers();
 		await wait(500);
-		await user.publishTransferRequest({ foo: 'bar' });
+		await user.publishTransferRequest(transferRequest);
 		await wait(500);
 		expect(spy.calledOnce).to.eql(true);
 	});

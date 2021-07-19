@@ -6,6 +6,10 @@
             "es2017",
             "dom"
         ],
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "strictNullChecks": false,
+        "outDir": "dist",
+        "strict": true,
+        "sourceMap": true
     }
 }
