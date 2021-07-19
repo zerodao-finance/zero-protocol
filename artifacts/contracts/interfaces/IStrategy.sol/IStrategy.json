@@ -162,7 +162,7 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "_asset",
+          "name": "_module",
           "type": "address"
         },
         {
