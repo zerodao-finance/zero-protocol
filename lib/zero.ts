@@ -43,7 +43,7 @@ export class TransferRequest {
 		return true;
 	}
 
-	toEIP712Digest(contractAddress, chainId: number = 1): Buffer {
+	toEIP712Digest(contractAddress: string, chainId: number = 1): Buffer {
 		return signTypedDataUtils.generateTypedDataHash(this.toEIP712(contractAddress, chainId));
 	}
 
@@ -68,7 +68,7 @@ export class TransferRequest {
 		};
 	}
 
-	toGatewayAddress({ mpkh, isTest }) {
+	toGatewayAddress({ mpkh, isTest }: any) {
 		const renvm = new RenVM(null, {});
 		return renvm.computeGatewayAddress({
 			mpkh: mpkh,
