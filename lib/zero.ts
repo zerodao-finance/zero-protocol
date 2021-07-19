@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 import type { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signers';
 import { ethers } from 'ethers';
 import { signTypedDataUtils } from '@0x/utils';
+import { EIP712TypedData } from '@0x/types';
 import { EIP712_TYPES } from './config/constants';
 import RenVM from './util/renvm';
 import { computeP } from './util/helpers';
@@ -11,12 +12,21 @@ export class TransferRequest {
 	public to: string;
 	public underwriter: string;
 	public asset: string;
-	public nonce: number;
-	public pNonce: number;
+	public nonce: string;
+	public pNonce: string;
 	public amount: string;
 	public data: any;
 
-	constructor(module, to, underwriter, asset, amount, data, nonce?, pNonce?) {
+	constructor(
+		module: string,
+		to: string,
+		underwriter: string,
+		asset: string,
+		amount: string,
+		data: any,
+		nonce?: string,
+		pNonce?: string,
+	) {
 		this.module = module;
 		this.to = to;
 		this.underwriter = underwriter;
@@ -33,17 +43,17 @@ export class TransferRequest {
 		return true;
 	}
 
-	toEIP712Digest(contractAddress, chainId: number = 1) {
+	toEIP712Digest(contractAddress, chainId: number = 1): Buffer {
 		return signTypedDataUtils.generateTypedDataHash(this.toEIP712(contractAddress, chainId));
 	}
 
-	toEIP712(contractAddress: string, chainId: number = 1) {
+	toEIP712(contractAddress: string, chainId: number = 1): EIP712TypedData {
 		return {
 			types: EIP712_TYPES,
 			domain: {
 				name: 'ZeroController',
 				version: '1',
-				chainId: chainId || '1',
+				chainId: chainId.toString() || '1',
 				verifyingContract: contractAddress || ethers.constants.AddressZero,
 			},
 			message: {
@@ -64,7 +74,7 @@ export class TransferRequest {
 			mpkh: mpkh,
 			isTestnet: isTest,
 			g: {
-				p: computeP(this.pNonce, this.data),
+				p: computeP(parseInt(this.pNonce), this.data),
 				nonce: this.nonce,
 				tokenAddress: this.asset,
 				to: this.module,
