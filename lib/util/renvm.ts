@@ -1,3 +1,4 @@
+// @ts-expect-error
 import { Script, Networks } from 'bitcore-lib';
 import { stripHexPrefix, maybeCoerceToGHash, encodeInitializationActions } from './helpers';
 import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
@@ -5,16 +6,16 @@ import { getCreate2Address } from '@ethersproject/address';
 import assembleCloneCode from './assembleCloneCode';
 
 class RenVM {
-	public cachedProxyCodeHash;
-	public shifterBorrowProxyBytecode;
-	private InitializationActionsABI = [];
+	public cachedProxyCodeHash: any;
+	public shifterBorrowProxyBytecode: any;
+	private InitializationActionsABI: any[] = [];
 
-	constructor(cachedProxyCodeHash, shifterBorrowProxy) {
+	constructor(cachedProxyCodeHash: any, shifterBorrowProxy: any) {
 		this.cachedProxyCodeHash = cachedProxyCodeHash;
 		this.shifterBorrowProxyBytecode = shifterBorrowProxy;
 	}
 
-	computeGatewayAddress = ({ isTestnet, g, mpkh }) =>
+	computeGatewayAddress = ({ isTestnet, g, mpkh }: any) =>
 		new Script()
 			.add(Buffer.from(stripHexPrefix(maybeCoerceToGHash(g)), 'hex'))
 			.add('OP_DROP')
@@ -39,7 +40,7 @@ class RenVM {
 		gasRequested,
 		forbidLoan = false,
 		actions = [],
-	}) =>
+	}: any) =>
 		solidityKeccak256(
 			['address', 'address', 'bytes32', 'uint256', 'uint256', 'bool', 'bytes'],
 			[
@@ -53,7 +54,7 @@ class RenVM {
 			],
 		);
 
-	computeBorrowProxyAddress = ({ shifterPool, borrower, token, nonce, amount, forbidLoan, actions }) => {
+	computeBorrowProxyAddress = ({ shifterPool, borrower, token, nonce, amount, forbidLoan, actions }: any) => {
 		const salt = solidityKeccak256(
 			['address', 'address', 'bytes32', 'uint256', 'bool', 'bytes'],
 			[

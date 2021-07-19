@@ -30,27 +30,27 @@ export const maybeCoerceToPHash = (params: [any, any]) =>
 		: stripHexPrefix(params).length === 64
 		? params
 		: computePHash(params);
-const computePHash = (p) => solidityKeccak256(['bytes'], [p]);
+const computePHash = (p: any) => solidityKeccak256(['bytes'], [p]);
 
-export const maybeCoerceToGHash = (input) => (typeof input === 'object' ? computeGHash(input) : input);
-const computeGHash = ({ to, tokenAddress, p, nonce }) =>
+export const maybeCoerceToGHash = (input: any) => (typeof input === 'object' ? computeGHash(input) : input);
+const computeGHash = ({ to, tokenAddress, p, nonce }: any) =>
 	keccakAbiEncoded(['bytes32', 'address', 'address', 'bytes32'], [maybeCoerceToPHash(p), tokenAddress, to, nonce]);
 
-const abiEncode = ([types, params]) => abi.encode(types, params);
-const keccakAbiEncoded = (types, values) => solidityKeccak256(BYTES_TYPES, [abi.encode(types, values)]);
+const abiEncode = ([types, params]: any[]) => abi.encode(types, params);
+const keccakAbiEncoded = (types: any, values: any) => solidityKeccak256(BYTES_TYPES, [abi.encode(types, values)]);
 
-export const encodeInitializationActions = (input, InitializationActionsABI) =>
+export const encodeInitializationActions = (input: any, InitializationActionsABI: any) =>
 	abi.encode(
 		[InitializationActionsABI],
 		[
-			input.map((v) => ({
+			input.map((v: any) => ({
 				txData: v.calldata,
 				to: v.to,
 			})),
 		],
 	);
 
-export const computeShiftInTxHash = ({ renContract, utxo, g }) =>
+export const computeShiftInTxHash = ({ renContract, utxo, g }: any) =>
 	toBase64(
 		solidityKeccak256(
 			['string'],
@@ -62,10 +62,10 @@ export const computeNHash = ({
 	txHash, // utxo hash
 	vOut,
 	nonce,
-}) => keccakAbiEncoded(['bytes32', 'bytes32', 'uint256'], [nonce, txHash, vOut]);
-const maybeCoerceToNHash = (input) => (typeof input === 'object' ? computeNHash(input) : input);
+}: any) => keccakAbiEncoded(['bytes32', 'bytes32', 'uint256'], [nonce, txHash, vOut]);
+const maybeCoerceToNHash = (input: any) => (typeof input === 'object' ? computeNHash(input) : input);
 
-export const computeHashForDarknodeSignature = ({ p, n, amount, to, tokenAddress }) =>
+export const computeHashForDarknodeSignature = ({ p, n, amount, to, tokenAddress }: any) =>
 	keccakAbiEncoded(
 		['bytes32', 'uint256', 'address', 'address', 'bytes32'],
 		[maybeCoerceToPHash(p), amount, tokenAddress, to, maybeCoerceToNHash(n)],
