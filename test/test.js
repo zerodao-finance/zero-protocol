@@ -121,6 +121,9 @@ describe('Zero', () => {
     const underwriter = await setupUnderwriter(signer);
     const signerAddress = await signer.getAddress();
     const Strategy = await ethers.getContract('StrategyRenVM', signer);
+    const wBTC = new ethers.Contract('0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', erc20abi, signer);
+    const StrategyVault = new ethers.Contract('0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E', erc20abi, signer);
+
     
     const Controller = await ethers.getContract('ZeroController', signer);
     const {abi: controllerABI} = await deployments.getArtifact('ZeroController');
@@ -133,9 +136,7 @@ describe('Zero', () => {
       const wETHDecimals = await wETH.decimals();
       const USDC = new ethers.Contract('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', erc20abi, signer);
       const usdcDecimals = await USDC.decimals();
-      const wBTC = new ethers.Contract('0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', erc20abi, signer);
       const wBTCDecimals = await wBTC.decimals();
-      const StrategyVault = new ethers.Contract('0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E', erc20abi, signer);
       const [{ provider }] = await ethers.getSigners();
       const contracts = {
         "Wallet": signerAddress,
@@ -168,6 +169,9 @@ describe('Zero', () => {
     await renBTC.approve(BTCVault.address,_balance);
     await BTCVault.deposit(_balance);
     await getBalances();
+
+    const loanAmount = '300000000';
+    const balanceBefore = await wBTC.balanceOf(StrategyVault.address);
     
     console.log("\nCalling earn on the vault & deposit on the strategy")
     await BTCVault.earn();
@@ -176,10 +180,13 @@ describe('Zero', () => {
       to: signerAddress,
       underwriter: underwriter.address,
       asset: RENBTC_MAINNET_ADDRESS,
-      amount: '300000000',
+      amount: loanAmount,
       data: '0x'
     });
     await getBalances();
+    const balanceAfter = await wBTC.balanceOf(StrategyVault.address);
+    const dBalance = balanceAfter - balanceBefore;
+    console.log("Change in balance is", dBalance / 10**8)
 
     transferRequest.setUnderwriter(underwriter.address);
     const signature = await transferRequest.sign(signer, Controller.address);
@@ -190,7 +197,7 @@ describe('Zero', () => {
     await Underwriter.loan(
       signerAddress,
       RENBTC_MAINNET_ADDRESS,
-      '100000000',
+      loanAmount,
       transferRequest.pNonce,
       SwapModule.address,
       '0x',
