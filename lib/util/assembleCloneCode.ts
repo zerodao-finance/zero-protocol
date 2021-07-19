@@ -1,6 +1,4 @@
-'use strict';
-
-const assembleCloneCode = (from, implementation) => {
+const assembleCloneCode = (from: string, implementation: string): string => {
 	return (
 		'0x3d3d606380380380913d393d73' +
 		from.substr(2) +
@@ -10,4 +8,4 @@ const assembleCloneCode = (from, implementation) => {
 	);
 };
 
-module.exports = assembleCloneCode;
+export default assembleCloneCode;

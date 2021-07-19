@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import type { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signers';
 import { ethers } from 'ethers';
 import { signTypedDataUtils } from '@0x/utils';
 import { EIP712_TYPES } from './config/constants';
@@ -6,24 +7,24 @@ import RenVM from './util/renvm';
 import { computeP } from './util/helpers';
 
 export class TransferRequest {
-	public module: any;
+	public module: string;
 	public to: string;
 	public underwriter: string;
-	public asset: any;
+	public asset: string;
 	public nonce: number;
 	public pNonce: number;
-	public amount: BigNumber;
+	public amount: string;
 	public data: any;
 
-	constructor(module, to, underwriter, asset, nonce, pNonce, amount, data) {
+	constructor(module, to, underwriter, asset, amount, data, nonce?, pNonce?) {
 		this.module = module;
 		this.to = to;
 		this.underwriter = underwriter;
 		this.asset = asset;
-		this.nonce = nonce;
-		this.pNonce = pNonce;
 		this.amount = amount;
 		this.data = data;
+		this.nonce = nonce ?? ethers.utils.hexlify(ethers.utils.randomBytes(32));
+		this.pNonce = pNonce ?? ethers.utils.hexlify(ethers.utils.randomBytes(32));
 	}
 
 	setUnderwriter(underwriter: string): boolean {
@@ -58,7 +59,7 @@ export class TransferRequest {
 	}
 
 	toGatewayAddress({ mpkh, isTest }) {
-		const renvm = new RenVM();
+		const renvm = new RenVM(null, {});
 		return renvm.computeGatewayAddress({
 			mpkh: mpkh,
 			isTestnet: isTest,
@@ -71,10 +72,11 @@ export class TransferRequest {
 		});
 	}
 
-	async sign(signer: ethers.providers.JsonRpcSigner, contractAddress: string) {
+	async sign(signer: SignerWithAddress, contractAddress: string) {
+		const provider = signer.provider as ethers.providers.JsonRpcProvider;
 		const { chainId } = await signer.provider.getNetwork();
 		try {
-			return await signer.provider.send('eth_signTypedData_v4', [
+			return await provider.send('eth_signTypedData_v4', [
 				await signer.getAddress(),
 				this.toEIP712(contractAddress, chainId),
 			]);
@@ -85,3 +87,25 @@ export class TransferRequest {
 		}
 	}
 }
+
+export const createTransferRequest = (
+	module: string,
+	to: string,
+	asset: string,
+	underwriter: string,
+	amount: string,
+	data: string,
+	nonce?: string,
+	pNonce?: string,
+) => {
+	return new TransferRequest(
+		(module = module),
+		(to = to),
+		(underwriter = underwriter),
+		(asset = asset),
+		(amount = amount),
+		(data = data),
+		(nonce = nonce ?? null),
+		(pNonce = pNonce ?? null),
+	);
+};
