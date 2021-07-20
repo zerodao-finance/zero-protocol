@@ -100,15 +100,17 @@ contract StrategyRenVM {
 		return _amount.mul(10**8).div(IyVault(vault).pricePerShare());
 	}
 
-	function permissionedSend(address _module, uint256 _amount) external virtual onlyController {
+	function permissionedSend(address _module, uint256 _amount) external virtual onlyController returns (uint256) {
 		//Sends _amount of renBTC to _module.
 		uint256 _reserve = IERC20(want).balanceOf(address(this));
 		if (_amount > _reserve) {
 			uint256 _deficit = _amount.sub(_reserve);
 			uint256 _actualAmount = _withdraw(_deficit);
 			IERC20(want).safeTransfer(_module, _reserve.add(_actualAmount));
+			return _reserve.add(_actualAmount);
 		} else {
 			IERC20(want).safeTransfer(_module, _amount);
+			return _amount;
 		}
 	}
 }

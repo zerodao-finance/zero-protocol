@@ -171,17 +171,11 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 
 		ZeroUnderwriterLock(lockFor(msg.sender)).trackOut(params.module, actual);
 
-		IStrategy(strategies[params.asset]).permissionedSend(module, params.amount);
-		console.log('Did permissioned send');
+		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(module, params.amount);
+		console.log('Amount sent is', _amountSent);
 
-		/*IZeroModule(module).receiveLoan(
-            params.to,
-            params.asset,
-            actual,
-            params.nonce,
-            params.data
-        );
+		IZeroModule(module).receiveLoan(params.to, params.asset, _amountSent, params.nonce, params.data);
 
-        console.log("Received Loan");*/
+		console.log('Received Loan');
 	}
 }
