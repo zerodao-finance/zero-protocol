@@ -54,41 +54,30 @@ contract StrategyRenVM {
 		uint256 _want = IERC20(want).balanceOf(address(this)); //amount of tokens we want
 		console.log('Currently have', _want);
 		if (_want > reserve) {
-			console.log('Strategy has met the minimum reserves');
 			uint256 _overflow = _want.sub(reserve);
-			console.log('Overflow of', _overflow);
 			//TODO should be min threshold, not hard coded
 
-			uint256 _amountOut = ICurvePool(sBTCPool).get_dy(renbtcIndex, wbtcIndex, _overflow) - 1;
-
-			console.log('Amount out is', _amountOut);
-
+			uint256 _amountOut = ICurvePool(sBTCPool).get_dy(renbtcIndex, wbtcIndex, _overflow).sub(1);
 			IERC20(want).safeApprove(address(sBTCPool), _overflow);
-			console.log('Approved for', _overflow);
 			ICurvePool(sBTCPool).exchange(renbtcIndex, wbtcIndex, _overflow, _amountOut);
 			uint256 _actualOut = _amountOut;
 
-			console.log('Swapped renBTC for wBTC', _actualOut);
 			IERC20(vaultWant).safeApprove(address(vault), _actualOut);
-			console.log('Depositing into Strategy Vault:', _actualOut);
-			console.log('Price per share was', IyVault(vault).pricePerShare());
 			IyVault(vault).deposit(_actualOut);
 			uint256 estimatedShares = IyVault(vault).pricePerShare().mul(_actualOut).div(10**8);
-			console.log('Estimated shares are', estimatedShares);
-			console.log('Price per share is', IyVault(vault).pricePerShare());
 		}
-		console.log('Strategy.deposit is done.');
 	}
 
 	function _withdraw(uint256 _amount) private returns (uint256) {
-		IyVault(vault).withdraw(_amount);
-		console.log('Withdrew from strategy vault', _amount);
-		uint256 _amountOut = ICurvePool(sBTCPool).get_dy(wbtcIndex, renbtcIndex, _amount);
-		IERC20(want).approve(address(sBTCPool), _amount);
-		console.log('Pool was approved');
-		ICurvePool(sBTCPool).exchange(wbtcIndex, renbtcIndex, _amount, _amountOut);
-		console.log('Amount out is', _amountOut);
+		// _amount is the number of renBTC we would like.
+		uint256 _vaultWant = ICurvePool(sBTCPool).get_dy(wbtcIndex, renbtcIndex, _amount);
+		// _vaultWant is the number of wBTC we would need.
 
+		uint256 _shares = estimateShares(_vaultWant);
+		IyVault(vault).withdraw(_shares);
+		IERC20(vaultWant).safeApprove(sBTCPool, _vaultWant);
+		uint256 _amountOut = ICurvePool(sBTCPool).get_dy(wbtcIndex, renbtcIndex, _vaultWant);
+		ICurvePool(sBTCPool).exchange(wbtcIndex, renbtcIndex, _vaultWant, _amountOut);
 		return _amountOut;
 	}
 
@@ -107,15 +96,19 @@ contract StrategyRenVM {
 		//return IyVault(vault).balanceOf(address(this)).add(IERC20(want).balanceOf(address(this))); TODO uncomment
 	}
 
+	function estimateShares(uint256 _amount) internal virtual returns (uint256) {
+		return _amount.mul(10**8).div(IyVault(vault).pricePerShare());
+	}
+
 	function permissionedSend(address _module, uint256 _amount) external virtual onlyController {
+		//Sends _amount of renBTC to _module.
 		uint256 _reserve = IERC20(want).balanceOf(address(this));
 		if (_amount > _reserve) {
-			uint256 _deficit = _amount.sub(_reserve).mul(105e17).div(10e18); //105%
-			uint256 _balance = IERC20(vault).balanceOf(address(this));
-			uint256 _price = IyVault(vault).pricePerShare();
-			uint256 _toShares = _deficit.mul(uint256(10**8)).div(_price);
-			_withdraw(_deficit);
+			uint256 _deficit = _amount.sub(_reserve);
+			uint256 _actualAmount = _withdraw(_deficit);
+			IERC20(want).safeTransfer(_module, _reserve.add(_actualAmount));
+		} else {
+			IERC20(want).safeTransfer(_module, _amount);
 		}
-		IERC20(want).safeTransfer(_module, _amount);
 	}
 }
