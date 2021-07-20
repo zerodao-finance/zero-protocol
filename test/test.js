@@ -171,13 +171,15 @@ describe('Zero', () => {
     
     console.log("\nCalling earn on the vault & deposit on the strategy")
     await BTCVault.earn();
+    const amount = '300000000';
+    const data = '0x';
     const transferRequest = createTransferRequest({
       module: SwapModule.address,
       to: signerAddress,
       underwriter: underwriter.address,
       asset: RENBTC_MAINNET_ADDRESS,
-      amount: '300000000',
-      data: '0x'
+      amount,
+      data
     });
     await getBalances();
 
@@ -188,12 +190,12 @@ describe('Zero', () => {
     console.log("\nWriting loan");
 
     await Underwriter.loan(
-      signerAddress,
-      RENBTC_MAINNET_ADDRESS,
-      '100000000',
+      transferRequest.to,
+      transferRequest.asset,
+      transferRequest.amount,
       transferRequest.pNonce,
-      SwapModule.address,
-      '0x',
+      transferRequest.module,
+      transferRequest.data,
       signature
     );
 
