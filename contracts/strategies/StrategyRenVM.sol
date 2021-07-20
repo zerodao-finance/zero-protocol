@@ -76,7 +76,7 @@ contract StrategyRenVM {
 		uint256 _shares = estimateShares(_vaultWant);
 		IyVault(vault).withdraw(_shares);
 		IERC20(vaultWant).safeApprove(sBTCPool, _vaultWant);
-		uint256 _amountOut = ICurvePool(sBTCPool).get_dy(wbtcIndex, renbtcIndex, _vaultWant);
+		uint256 _amountOut = ICurvePool(sBTCPool).get_dy(wbtcIndex, renbtcIndex, _vaultWant).sub(1);
 		ICurvePool(sBTCPool).exchange(wbtcIndex, renbtcIndex, _vaultWant, _amountOut);
 		return _amountOut;
 	}
