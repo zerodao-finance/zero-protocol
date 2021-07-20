@@ -1,11 +1,10 @@
-'use strict';
+import { ForkStateManager } from 'hardhat/internal/hardhat-network/provider/fork/ForkStateManager';
+import { ethers } from 'ethers';
+import { Buffer } from 'buffer';
 
-const { ForkStateManager } = require('hardhat/internal/hardhat-network/provider/fork/ForkStateManager');
 const { getContractCode } = ForkStateManager.prototype;
-const ethers = require('ethers');
-const { Buffer } = require('buffer');
 
-const toString = (v) => ethers.utils.getAddress(v.toString('hex')).toLowerCase();
+const toString = (v: any) => ethers.utils.getAddress(v.toString('hex')).toLowerCase();
 
 exports.overrides = {};
 
@@ -13,7 +12,7 @@ Object.defineProperty(ForkStateManager.prototype, 'getContractCode', {
 	enumerable: false,
 	configurable: true,
 	writable: true,
-	value: function (address) {
+	value: function (address: any) {
 		address = toString(address);
 		if (exports.overrides[address]) {
 			return Promise.resolve(Buffer.from(exports.overrides[address].substr(2), 'hex'));
@@ -22,7 +21,7 @@ Object.defineProperty(ForkStateManager.prototype, 'getContractCode', {
 	},
 });
 
-exports.override = (address, runtimeCode) => {
+export const override = (address: string, runtimeCode: any) => {
 	exports.overrides[toString(address)] = runtimeCode;
 	return true;
 };

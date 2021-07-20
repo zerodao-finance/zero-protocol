@@ -60,61 +60,69 @@ contract StrategyRenVM {
             uint256 _overflow = _want.sub(reserve);
             console.log("Overflow of", _overflow);
             //TODO should be min threshold, not hard coded
-            
-            /*
-            uint256 _amountOut = IUniswapV2Router02(router).getAmountsOut(_overflow, wantToVaultWantPath)[wantToVaultWantPath.length.sub(1)];
-            IERC20(want).safeApprove(address(router), _overflow);
-            uint256 _actualOut = IUniswapV2Router02(router).swapExactTokensForTokens(
-                _overflow,
-                _amountOut,
-                wantToVaultWantPath,
-                address(this),
-                block.timestamp+1
-            )[wantToVaultWantPath.length.sub(1)];*/
 
-            uint256 _amountOut = ICurvePool(sBTCPool).get_dy(renbtcIndex, wbtcIndex, _overflow);
+            uint256 _amountOut = ICurvePool(sBTCPool).get_dy(renbtcIndex, wbtcIndex, _overflow) - 1;
+
+            console.log("Amount out is", _amountOut);
+
             IERC20(want).safeApprove(address(sBTCPool), _overflow);
+            console.log("Approved for", _overflow);
             ICurvePool(sBTCPool).exchange(renbtcIndex, wbtcIndex, _overflow, _amountOut);
             uint256 _actualOut = _amountOut;
 
             console.log("Swapped renBTC for wBTC", _actualOut);
             IERC20(vaultWant).safeApprove(address(vault), _actualOut);
             console.log("Depositing into Strategy Vault:", _actualOut);
+            console.log("Price per share was", IyVault(vault).pricePerShare());
             IyVault(vault).deposit(_actualOut);
+            uint256 estimatedShares = IyVault(vault).pricePerShare().mul(_actualOut).div(10**8);
+            console.log("Estimated shares are", estimatedShares);
+            console.log("Price per share is", IyVault(vault).pricePerShare());
         }
         console.log("Strategy.deposit is done.");
     }
 
-    function withdraw(uint256 _amount) public virtual onlyController {
+    function _withdraw(uint256 _amount) private returns (uint256) {
         IyVault(vault).withdraw(_amount);
+        console.log("Withdrew from strategy vault", _amount);
         uint256 _amountOut = ICurvePool(sBTCPool).get_dy(wbtcIndex, renbtcIndex, _amount);
         IERC20(want).safeApprove(address(sBTCPool), _amount);
+        console.log("Pool was approved");
         ICurvePool(sBTCPool).exchange(wbtcIndex, renbtcIndex, _amount, _amountOut);
+        console.log("Amount out is", _amountOut);
+        
+        return _amountOut; 
+    }
+
+    function withdraw(uint256 _amount) external virtual onlyController {
+        uint256 _amountOut = _withdraw(_amount);
         IERC20(want).transfer(address(controller), _amountOut);
     }
 
     function withdrawAll() external virtual onlyController {
         uint256 _amount = IERC20(vault).balanceOf(address(this));
-        withdraw(_amount);
+        _withdraw(_amount);
     }
 
     function balanceOf() external view virtual returns (uint256) {
-        return IyVault(vault).balanceOf(address(this)).mul(IyVault(vault).pricePerShare());
+        return IyVault(vault).balanceOf(address(this));
         //return IyVault(vault).balanceOf(address(this)).add(IERC20(want).balanceOf(address(this))); TODO uncomment
     }
 
     function permissionedSend(address _module, uint256 _amount) external virtual onlyController {
+        console.log("Doing permissioned send");
         uint256 _reserve = IERC20(want).balanceOf(address(this));
         if (_amount > _reserve) {
-            uint256 _deficit = _amount - _reserve;
-            console.log("Withdrawing deficit");
-            withdraw(_deficit);
-            uint256 _actual = IERC20(want).balanceOf(address(this));
-            console.log("New balance is", _actual.sub(_reserve));
-            IERC20(want).safeTransfer(_module, _actual);
-        } else {
-            IERC20(want).safeTransfer(_module, _amount);
+            uint256 _deficit = _amount.sub(_reserve).mul(105e17).div(10e18); //105%
+            uint256 _balance = IERC20(vault).balanceOf(address(this));
+            uint256 _price = IyVault(vault).pricePerShare();
+            console.log("Balance is", _balance);
+            console.log("Price is", _price);
+            uint256 _toShares = _balance.mul(uint256(10**8)).div(_price);
+            console.log("Equivalent is", _toShares);
+            _withdraw(_toShares);
         }
+        IERC20(want).safeTransfer(_module, _amount);
     }
 
 }
