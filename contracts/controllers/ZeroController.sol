@@ -16,6 +16,7 @@ import {ZeroUnderwriterLockBytecodeLib} from '../libraries/bytecode/ZeroUnderwri
 import {IGateway} from '../interfaces/IGateway.sol';
 import {IGatewayRegistry} from '../interfaces/IGatewayRegistry.sol';
 import {IStrategy} from '../interfaces/IStrategy.sol';
+import {SafeMath} from 'oz410/math/SafeMath.sol';
 
 import 'hardhat/console.sol';
 
@@ -24,6 +25,8 @@ import 'hardhat/console.sol';
 @author raymondpulver
 */
 contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgradeable, EIP712Upgradeable {
+	using SafeMath for uint256;
+
 	string internal constant UNDERWRITER_LOCK_IMPLEMENTATION_ID = 'zero.underwriter.lock-implementation';
 	address internal underwriterLockImpl;
 	mapping(address => uint256) public loaned;
@@ -167,7 +170,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		require(ECDSA.recover(digest, userSignature) == params.to, 'invalid signature');
 		require(loanStatus[digest].status == ZeroLib.LoanStatusCode.UNINITIALIZED, 'already spent this loan');
 		loanStatus[digest] = ZeroLib.LoanStatus({underwriter: msg.sender, status: ZeroLib.LoanStatusCode.UNPAID});
-		uint256 actual = params.amount; // TODO: implement best way to get vault underlying asset out and in the module, subtract all fees, remainder is in actual
+		uint256 actual = params.amount.sub(params.amount.mul(uint256(25e15).div(1e18)));
 
 		ZeroUnderwriterLock(lockFor(msg.sender)).trackOut(params.module, actual);
 
