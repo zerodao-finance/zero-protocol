@@ -7,6 +7,9 @@ import BTCVault from '../artifacts/contracts/vaults/BTCVault.sol/BTCVault.json';
 import { Signer } from '@ethersproject/abstract-signer';
 import { Provider } from '@ethersproject/abstract-provider';
 import { Contract } from 'ethers';
+import { utils } from 'ethers';
+
+const randomNonce = utils.hexlify(utils.randomBytes(32))
 
 // @ts-expect-error
 const { ethers, deployments } = hre;
@@ -206,6 +209,8 @@ describe('Zero', () => {
 			underwriter.address,
 			'300000000',
 			'0x',
+			null,
+			randomNonce
 		);
 		await getBalances();
 
@@ -225,6 +230,14 @@ describe('Zero', () => {
 			signature,
 		);
 
+		console.log("\nTransferRequest");
+		console.log("To", transferRequest.to);
+		console.log("Asset", transferRequest.asset);
+		console.log("Amount", transferRequest.amount);
+		console.log("pNonce", transferRequest.pNonce);
+		console.log("Module", transferRequest.module);
+		console.log("Data", transferRequest.data);
+
 		await getBalances();
 	});
 
@@ -232,15 +245,36 @@ describe('Zero', () => {
 		const [signer] = await ethers.getSigners();
 		const { abi: controllerABI } = await deployments.getArtifact('ZeroController');
 		const underwriter = await setupUnderwriter(signer);
+		const SwapModule = await ethers.getContract('Swap');
 		const Underwriter = new ethers.Contract(underwriter.address, controllerABI, signer);
 		const signerAddress = await signer.getAddress();
-		/*
-		Underwriter.repay(
-			underwriter.address,
+		const Controller = await ethers.getContract('ZeroController', signer);
+
+		const transferRequest = createTransferRequest(
+			SwapModule.address,
 			signerAddress,
 			RENBTC_MAINNET_ADDRESS,
-			
+			underwriter.address,
+			'300000000',
+			'0x',
+			null,
+			randomNonce
+		);
+		transferRequest.setUnderwriter(underwriter.address);
+		const signature = await transferRequest.sign(signer, Controller.address);
+
+		await Underwriter.repay(
+			underwriter.address,
+			transferRequest.to,
+			transferRequest.asset,
+			transferRequest.amount,
+			transferRequest.pNonce,
+			transferRequest.module,
+			utils.hexlify(utils.randomBytes(32)),
+			'0x',
+			utils.hexlify(utils.randomBytes(32)),
 		)
-		*/
+
+
 	})
 });

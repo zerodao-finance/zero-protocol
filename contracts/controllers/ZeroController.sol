@@ -93,7 +93,6 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		address to,
 		address asset,
 		uint256 amount,
-		uint256 actualAmount,
 		uint256 nonce,
 		address module,
 		bytes32 nHash,
@@ -110,15 +109,16 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		});
 		bytes32 digest = toTypedDataHash(params, underwriter);
 		require(loanStatus[digest].status == ZeroLib.LoanStatusCode.UNPAID, 'loan is not in the UNPAID state');
-		ZeroUnderwriterLock(lockFor(msg.sender)).trackIn(actualAmount);
-		IZeroModule(module).repayLoan(params.to, asset, actualAmount, nonce, data);
-		//uint256 amount =
-		IGateway(IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset)).mint(
+		uint256 actualAmount = IGateway(IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset)).mint(
 			keccak256(abi.encode(nonce, data)),
-			actualAmount,
+			amount,
 			nHash,
 			signature
 		);
+		ZeroUnderwriterLock(lockFor(msg.sender)).trackIn(actualAmount);
+		IZeroModule(module).repayLoan(params.to, asset, actualAmount, nonce, data);
+		//uint256 amount =
+
 		depositAll(asset);
 	}
 
