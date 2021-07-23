@@ -6,7 +6,8 @@
 	"repository": "https://github.com/zeroflash/zeroflash-protocol",
 	"scripts": {
 		"test": "hardhat test",
-		"test:p2p": "NODE_ENV=test yarn mocha -r ts-node/register lib/p2p/test/*.ts --exit --timeout 0",
+		"test:p2p:unit": "NODE_ENV=test yarn mocha -r ts-node/register lib/p2p/test/mockPubsub.test.ts lib/p2p/test/mockZero.test.ts --exit --timeout 0",
+		"test:p2p:e2e": "NODE_ENV=integration yarn mocha -r ts-node/register lib/p2p/test/e2e.test.ts --timeout 0 --exit",
 		"test:external": "hardhat test --network localhost",
 		"start": "hardhat node",
 		"lint": "prettier --check \"lib/**/*.{js,jsx,ts,tsx}\""

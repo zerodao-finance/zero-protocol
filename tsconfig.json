@@ -7,5 +7,7 @@
 		"strict": true,
 		"sourceMap": true,
 		"resolveJsonModule": true
-	}
+	},
+	"include": ["./deploy", "./lib", "./test"],
+	"files": ["./hardhat.config.ts"]
 }

@@ -6,7 +6,7 @@ import 'mocha';
 
 const connOptions = { multiaddr: '/dns4/localhost/tcp/9090/ws/p2p-webrtc-star/' };
 
-describe.skip('E2E', () => {
+describe('E2E', () => {
 	afterEach(() => {
 		sinon.restore();
 	});
