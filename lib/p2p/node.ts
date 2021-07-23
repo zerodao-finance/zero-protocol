@@ -35,7 +35,6 @@ export const createNode = async (options: NodeOptions) => {
 	const peerInfo = options.peerInfo || (await PeerInfo.create());
 	const multiaddr = fromPresetOrMultiAddr(options.multiaddr);
 	peerInfo.multiaddrs.add(multiaddr);
-	const dhtEnable = typeof options.dht === 'undefined' || options.dht === true;
 	const socket = await libp2p.create({
 		peerInfo,
 		addresses: {
@@ -49,7 +48,7 @@ export const createNode = async (options: NodeOptions) => {
 			// @ts-expect-error
 			pubsub: GossipSub,
 			peerDiscovery: [MultiCastDNS],
-			dht: dhtEnable ? KadDHT : undefined,
+			dht: true,
 		},
 		config: {
 			peerDiscovery: {
@@ -69,7 +68,7 @@ export const createNode = async (options: NodeOptions) => {
 				},
 			},
 			dht: {
-				enabled: dhtEnable,
+				enabled: true,
 				kBucketSize: 20,
 			},
 			pubsub: {

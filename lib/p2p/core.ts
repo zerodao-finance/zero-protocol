@@ -21,7 +21,7 @@ class ZeroUser {
 	}
 
 	async subscribeKeepers() {
-		this.conn.pubsub.on('zero.keepers', async (message) => {
+		this.conn.pubsub.on('zero.keepers', async (message: any) => {
 			const { data, from } = message;
 			const { address } = fromBufferToJSON(data);
 			if (!this.keepers.includes(from)) {

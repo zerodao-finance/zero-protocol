@@ -1,12 +1,12 @@
 {
 	"compilerOptions": {
-		"lib": ["es5", "es6", "es2017", "dom"],
+		"lib": ["es2017", "dom"],
 		"esModuleInterop": true,
 		"strictNullChecks": false,
 		"outDir": "dist",
-		"strict": true,
 		"sourceMap": true,
-		"resolveJsonModule": true
+		"resolveJsonModule": true,
+		"strict": true
 	},
 	"include": ["./deploy", "./lib", "./test"],
 	"files": ["./hardhat.config.ts"]
