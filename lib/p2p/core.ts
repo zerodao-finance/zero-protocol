@@ -60,8 +60,8 @@ class ZeroUser {
 		}
 		try {
 			let ackReceived = false;
-			await this.conn.handle('/zero/user/confirmation', async function (this: ZeroUser, { stream }) {
-				pipe(stream.source, lp.decode(), async function (this: ZeroUser, rawData: any) {
+			await this.conn.handle('/zero/user/confirmation', async ({ stream }) => {
+				pipe(stream.source, lp.decode(), async (rawData: any) => {
 					let string = [];
 					for await (const msg of rawData) {
 						string.push(msg.toString());
@@ -130,9 +130,9 @@ class ZeroKeeper {
 	}
 
 	async setTxDispatcher(callback: Function) {
-		const handler = async function (this: ZeroUser, duplex: any) {
+		const handler = async (duplex: any) => {
 			const stream: any = duplex.stream;
-			pipe(stream.source, lp.decode(), async function (rawData: any) {
+			pipe(stream.source, lp.decode(), async (rawData: any) => {
 				// TODO: match handle and dialProtocol spec
 				if (process?.env.NODE_ENV === 'test') {
 					callback(fromBufferToJSON(stream.source));
