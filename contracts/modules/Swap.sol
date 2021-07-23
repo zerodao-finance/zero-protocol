@@ -15,75 +15,68 @@ contract Swap {
 	address public immutable controller;
 	address public immutable governance;
 	uint256 public blockTimeout;
-	address public constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-	address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-	address public constant RENBTC = 0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D;
-	address public constant ROUTER = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+	address public constant fiat = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+	address public constant wNative = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+	address public constant want = 0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D;
+	address public constant router = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
 
 	constructor(address _controller) {
 		controller = _controller;
 		governance = IController(_controller).governance();
-		IERC20(RENBTC).safeApprove(ROUTER, ~uint256(0));
-		IERC20(USDC).safeApprove(ROUTER, ~uint256(0));
+		IERC20(want).safeApprove(router, ~uint256(0));
+		IERC20(fiat).safeApprove(router, ~uint256(0));
 	}
 
-	function setBlockTimeout(uint256 ct) public {
+	function setBlockTimeout(uint256 _ct) public {
 		require(msg.sender == governance, '!governance');
-		blockTimeout = ct;
+		blockTimeout = _ct;
 	}
 
-	function defaultLoan(uint256 nonce) public {
-		require(blockTimeout >= nonce, '!blockTimeout');
-		require(outstanding[nonce].qty != 0, '!outstanding');
-		//swap USDC back to RENBTC
-		uint256 amountSwapped = swapTokens(USDC, RENBTC, outstanding[nonce].qty);
-		delete outstanding[nonce];
+	function defaultLoan(uint256 _nonce) public {
+		require(blockTimeout >= _nonce, '!blockTimeout');
+		require(outstanding[_nonce].qty != 0, '!outstanding');
+		uint256 amountSwapped = swapTokens(fiat, want, outstanding[_nonce].qty);
+		delete outstanding[_nonce];
 	}
 
 	function receiveLoan(
-		address to,
-		address asset,
-		uint256 actual,
-		uint256 nonce,
-		bytes memory data
+		address _to,
+		address _asset,
+		uint256 _actual,
+		uint256 _nonce,
+		bytes memory _data
 	) public {
-		require(asset == RENBTC, '!renbtc');
-		uint256 amountSwapped = swapTokens(RENBTC, USDC, actual);
-		outstanding[nonce] = SwapLib.SwapRecord({qty: amountSwapped, when: uint64(block.timestamp), token: RENBTC});
+		require(_asset == want, '!renbtc');
+		uint256 amountSwapped = swapTokens(want, fiat, _actual);
+		outstanding[_nonce] = SwapLib.SwapRecord({qty: amountSwapped, when: uint64(block.timestamp), token: want});
 	}
 
 	function swapTokens(
-		address tokenIn,
-		address tokenOut,
-		uint256 amountIn
-	) internal returns (uint256 amountOut) {
-		address[] memory path = new address[](3);
-		path[0] = tokenIn;
-		path[1] = WETH;
-		path[2] = tokenOut;
-		console.log('Balance of renBTC is', IERC20(tokenIn).balanceOf(address(this)));
-		console.log('Trying to swap', amountIn);
-		IERC20(tokenIn).approve(ROUTER, amountIn);
-		amountOut = IUniswapV2Router02(ROUTER).swapExactTokensForTokens(
-			amountIn,
-			1,
-			path,
-			address(this),
-			block.timestamp
-		)[path.length - 1];
+		address _tokenIn,
+		address _tokenOut,
+		uint256 _amountIn
+	) internal returns (uint256) {
+		address[] memory _path = new address[](3);
+		_path[0] = _tokenIn;
+		_path[1] = wNative;
+		_path[2] = _tokenOut;
+		IERC20(_tokenIn).approve(router, _amountIn);
+		return
+			IUniswapV2Router02(router).swapExactTokensForTokens(_amountIn, 1, _path, address(this), block.timestamp)[
+				_path.length - 1
+			];
 	}
 
 	function repayLoan(
-		address to,
-		address asset,
-		uint256 actualAmount,
-		uint256 nonce,
-		bytes memory data
+		address _to,
+		address _asset,
+		uint256 _actualAmount,
+		uint256 _nonce,
+		bytes memory _data
 	) public {
-		require(outstanding[nonce].qty != 0, '!outstanding');
-		uint256 amountOwed = outstanding[nonce].qty;
-		IERC20(asset).safeTransfer(to, amountOwed);
-		delete outstanding[nonce];
+		require(outstanding[_nonce].qty != 0, '!outstanding');
+		IERC20(_asset).safeTransfer(_to, outstanding[_nonce].qty);
+		delete outstanding[_nonce];
 	}
 
 	function computeReserveRequirement(uint256 _in) external view returns (uint256) {
