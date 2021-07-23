@@ -34,7 +34,7 @@ describe('E2E', () => {
 		await zeroUser.subscribeKeepers();
 		await wait(1000);
 
-		const spy = (foo: any) => expect(foo.foo).to.eql('bar');
+		const spy = (foo: any) => expect(foo.from).to.eql(zeroUser.conn.peerId.toB58String());
 		await zeroKeeper.setTxDispatcher(spy);
 		await wait(1000);
 		await zeroUser.publishTransferRequest(transferRequest);

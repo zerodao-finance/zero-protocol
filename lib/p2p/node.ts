@@ -48,7 +48,7 @@ export const createNode = async (options: NodeOptions) => {
 			// @ts-expect-error
 			pubsub: GossipSub,
 			peerDiscovery: [MultiCastDNS],
-			dht: true,
+			dht: KadDHT,
 		},
 		config: {
 			peerDiscovery: {
