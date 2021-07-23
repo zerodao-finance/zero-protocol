@@ -132,18 +132,16 @@ describe('Zero', () => {
 	});
 	it('should make a swap', async () => {
 		const [signer] = await ethers.getSigners();
-		const { abi: erc20abi } = await deployments.getArtifact('BTCVault');
-		const renBTC = new ethers.Contract(RENBTC_MAINNET_ADDRESS, erc20abi, signer);
-		const decimals = await renBTC.decimals();
 		const underwriter = await setupUnderwriter(signer);
 		const signerAddress = await signer.getAddress();
-		const Strategy = await ethers.getContract('StrategyRenVM', signer);
 
-		const Controller = await ethers.getContract('ZeroController', signer);
+		const { abi: erc20abi } = await deployments.getArtifact('BTCVault');
 		const { abi: controllerABI } = await deployments.getArtifact('ZeroController');
+		const renBTC = new ethers.Contract(RENBTC_MAINNET_ADDRESS, erc20abi, signer);
+		const Strategy = await ethers.getContract('StrategyRenVM', signer);
+		const Controller = await ethers.getContract('ZeroController', signer);
 		const BTCVault = await ethers.getContract('BTCVault', signer);
 		const SwapModule = await ethers.getContract('Swap');
-		const [{ provider }] = await ethers.getSigners();
 
 		const getBalances = async () => {
 			const renBTCDecimals = await renBTC.decimals();
@@ -189,7 +187,6 @@ describe('Zero', () => {
 
 		const _balance = (await renBTC.balanceOf(signerAddress)).toString();
 
-		console.log('\nStarting Balances');
 		await getBalances();
 
 		console.log('\nDepositing to vault');
@@ -204,7 +201,7 @@ describe('Zero', () => {
 			signerAddress,
 			RENBTC_MAINNET_ADDRESS,
 			underwriter.address,
-			'300000000',
+			'100000000',
 			'0x',
 		);
 		await getBalances();
