@@ -109,10 +109,16 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 			data: data
 		});
 		bytes32 digest = toTypedDataHash(params, underwriter);
+		console.log('Calculated digest');
 		require(loanStatus[digest].status == ZeroLib.LoanStatusCode.UNPAID, 'loan is not in the UNPAID state');
-		ZeroUnderwriterLock(lockFor(msg.sender)).trackIn(actualAmount);
+		console.log('Creating lock');
+
+		ZeroUnderwriterLock lock = ZeroUnderwriterLock(lockFor(msg.sender));
+		console.log('Tracking lock');
+		lock.trackIn(actualAmount);
+		console.log('Attempting to repay loan (contract call)');
 		IZeroModule(module).repayLoan(params.to, asset, actualAmount, nonce, data);
-		//uint256 amount =
+		console.log('Repaid loan');
 		IGateway(IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset)).mint(
 			keccak256(abi.encode(nonce, data)),
 			actualAmount,
