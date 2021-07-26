@@ -6,7 +6,7 @@ import GatewayLogicV1 from '../artifacts/contracts/test/GatewayLogicV1.sol/Gatew
 import BTCVault from '../artifacts/contracts/vaults/BTCVault.sol/BTCVault.json';
 import { Signer } from '@ethersproject/abstract-signer';
 import { Provider } from '@ethersproject/abstract-provider';
-import { Contract } from 'ethers';
+import { Contract, utils } from 'ethers';
 
 // @ts-expect-error
 const { ethers, deployments } = hre;
@@ -228,13 +228,43 @@ describe('Zero', () => {
 		const underwriter = await setupUnderwriter(signer);
 		const Underwriter = new ethers.Contract(underwriter.address, controllerABI, signer);
 		const signerAddress = await signer.getAddress();
-		/*
-		Underwriter.repay(
-			underwriter.address,
+		const SwapModule = await ethers.getContract('Swap');
+		const Controller = await ethers.getContract('ZeroController', signer);
+
+		const transferRequest = createTransferRequest(
+			SwapModule.address,
 			signerAddress,
 			RENBTC_MAINNET_ADDRESS,
-			
+			underwriter.address,
+			'100000000',
+			'0x',
+		);
+
+		transferRequest.setUnderwriter(underwriter.address);
+		const signature = await transferRequest.sign(signer, Controller.address);
+
+		await Underwriter.loan(
+			transferRequest.to,
+			transferRequest.asset,
+			transferRequest.amount,
+			transferRequest.pNonce,
+			transferRequest.module,
+			transferRequest.data,
+			signature,
+		);
+
+		await Underwriter.repay(
+			underwriter.address, //underwriter
+			signerAddress, //to
+			RENBTC_MAINNET_ADDRESS, //asset
+			transferRequest.amount, //amount
+			String(Number(transferRequest.amount) - 10000), //actualAmount
+			transferRequest.nonce, //nonce
+			SwapModule.address, //module
+			utils.hexlify(utils.randomBytes(32)), //nHash
+			transferRequest.data,
+			utils.hexlify(utils.randomBytes(32)) //signature
 		)
-		*/
+
 	})
 });
