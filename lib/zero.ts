@@ -7,7 +7,7 @@ import { EIP712_TYPES } from './config/constants';
 import RenVM from './util/renvm';
 import { computeP } from './util/helpers';
 
-export class TransferRequest {
+class TransferRequest {
 	public module: string;
 	public to: string;
 	public underwriter: string;
@@ -98,7 +98,7 @@ export class TransferRequest {
 	}
 }
 
-export const createTransferRequest = (
+export function createTransferRequest(
 	module: string,
 	to: string,
 	asset: string,
@@ -107,7 +107,7 @@ export const createTransferRequest = (
 	data: string,
 	nonce?: string,
 	pNonce?: string,
-) => {
+): TransferRequest {
 	return new TransferRequest(
 		(module = module),
 		(to = to),
@@ -118,4 +118,6 @@ export const createTransferRequest = (
 		(nonce = nonce ?? null),
 		(pNonce = pNonce ?? null),
 	);
-};
+}
+
+export default { createTransferRequest };
