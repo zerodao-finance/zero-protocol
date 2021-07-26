@@ -6,6 +6,7 @@ import { EIP712TypedData } from '@0x/types';
 import { EIP712_TYPES } from './config/constants';
 import RenVM from './util/renvm';
 import { computeP } from './util/helpers';
+import { createNode, ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
 
 class TransferRequest {
 	public module: string;
@@ -120,4 +121,19 @@ export function createTransferRequest(
 	);
 }
 
-export default { createTransferRequest };
+export async function createZeroConnection(address: string): Promise<ZeroConnection> {
+	const connOptions = {
+		multiaddr: address,
+	};
+	return await createNode(connOptions);
+}
+
+export function createZeroUser(connection: ZeroConnection) {
+	return new ZeroUser(connection);
+}
+
+export function createZeroKeeper(connection: ZeroConnection) {
+	return new ZeroKeeper(connection);
+}
+
+export default { createTransferRequest, createZeroConnection, createZeroUser, createZeroKeeper };
