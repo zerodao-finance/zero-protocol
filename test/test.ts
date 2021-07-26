@@ -158,7 +158,6 @@ describe('Zero', () => {
 				'Strategy Vault': '0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E',
 				'Swap Module': SwapModule.address,
 			};
-			console.log("Lock:", lock);
 			console.table(
 				// @ts-expect-error
 				Object.fromEntries(
