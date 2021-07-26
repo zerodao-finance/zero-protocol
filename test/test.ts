@@ -121,12 +121,6 @@ describe('Zero', () => {
 		const Strategy = await ethers.getContract('StrategyRenVM', signer)
 		const StrategyVault = new ethers.Contract('0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E', erc20abi, signer)
 
-		const getBalances = async () => {
-			const vaultBalance = (await renbtc.balanceOf(BTCVault.address)).toNumber() / decimals;
-			const controllerBalance = (await renbtc.balanceOf(Controller.address)).toNumber() / decimals;
-			const strategyBalance = (await renbtc.balanceOf(Strategy.address)).toNumber() / decimals;
-			const strategyVaultBalance = (await Strategy.balanceOf()).toNumber() / decimals;
-		}
 
 		await BTCVault.earn();
 	});
@@ -142,6 +136,9 @@ describe('Zero', () => {
 		const Controller = await ethers.getContract('ZeroController', signer);
 		const BTCVault = await ethers.getContract('BTCVault', signer);
 		const SwapModule = await ethers.getContract('Swap');
+		const underwriterFactory = (await ethers.getContractFactory('TrivialUnderwriter')).connect(signer);
+		const { address: underwriterAddress } = await underwriterFactory.deploy(Controller.address);
+		const lock = await Controller.lockFor(underwriterAddress);
 
 		const getBalances = async () => {
 			const renBTCDecimals = await renBTC.decimals();
@@ -159,9 +156,9 @@ describe('Zero', () => {
 				Controller: Controller.address,
 				Strategy: Strategy.address,
 				'Strategy Vault': '0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E',
-				Underwriter: underwriter.address,
 				'Swap Module': SwapModule.address,
 			};
+			console.log("Lock:", lock);
 			console.table(
 				// @ts-expect-error
 				Object.fromEntries(
@@ -177,6 +174,7 @@ describe('Zero', () => {
 									USDC: ((await USDC.balanceOf(address)) / 10 ** usdcDecimals).toLocaleString(),
 									wBTC: ((await wBTC.balanceOf(address)) / 10 ** wBTCDecimals).toLocaleString(),
 									yvWBTC: ((await StrategyVault.balanceOf(address)) / 10 ** 8).toLocaleString(),
+									zBTC: ((await BTCVault.balanceOf(address)) / 10 ** (await BTCVault.decimals())).toLocaleString(),
 								},
 							];
 						}),
