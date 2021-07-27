@@ -176,7 +176,8 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		require(ECDSA.recover(digest, userSignature) == params.to, 'invalid signature');
 		require(loanStatus[digest].status == ZeroLib.LoanStatusCode.UNINITIALIZED, 'already spent this loan');
 		loanStatus[digest] = ZeroLib.LoanStatus({underwriter: msg.sender, status: ZeroLib.LoanStatusCode.UNPAID});
-		uint256 actual = params.amount.sub(params.amount.mul(uint256(25e15).div(1e18)));
+		uint256 actual = params.amount.sub(params.amount.mul(uint256(25e15)).div(1e18));
+console.log("actual amount (loan): ", actual);
 
 		ZeroUnderwriterLock(lockFor(msg.sender)).trackOut(params.module, actual);
 
