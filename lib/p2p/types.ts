@@ -5,7 +5,6 @@ import { MockZeroConnection } from './mocks';
 export interface NodeOptions {
 	peerInfo?: PeerInfo;
 	multiaddr: string;
-	dht?: boolean;
 }
 
 export type ConnectionTypes = MockZeroConnection | ZeroConnection;

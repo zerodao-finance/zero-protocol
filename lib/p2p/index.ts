@@ -1,5 +1,5 @@
 import { MockZeroConnection, ZeroConnection, ZeroKeeper, ZeroUser } from './core';
-import { createNode } from './node';
+const { createNode } = require('./node');
 import { bufferToString, fromBufferToJSON, fromJSONtoBuffer, stringToBuffer } from './util';
 
 export {

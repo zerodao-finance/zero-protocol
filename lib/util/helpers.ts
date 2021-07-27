@@ -15,6 +15,24 @@ export const toBase64 = (input: string): string =>
 export const fromBase64 = (input: string): Buffer => Buffer.from(input, 'base64');
 export const toHex = (input: string): string => addHexPrefix(Buffer.from(input).toString('hex'));
 
+/* General purpose fetch that returns a JSON formatted response or null if there's an error
+ * @param request = Promise to await
+ * @return JSON formatted response
+ */
+export const fetchData = async <T>(request: () => Promise<Response>): Promise<T | null> => {
+	try {
+		const response = await request();
+		if (!response.ok) {
+			return null;
+		}
+		// purposefully await to use try / catch
+		return await response.json();
+	} catch (err) {
+		console.log('error', err);
+		return null;
+	}
+};
+
 /*
 ===========================================
 ============= SOLIDITY HELPERS ============
