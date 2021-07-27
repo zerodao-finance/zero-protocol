@@ -101,17 +101,24 @@ contract ZeroUnderwriterLock is Initializable {
 			)
 		);
 	}
-
+        function _logSheet() internal view {
+          console.log("required", _balanceSheet.required);
+          console.log("loaned", _balanceSheet.loaned);
+          console.log("repaid", _balanceSheet.repaid);
+        }
 	function trackIn(uint256 amount) public {
 		require(msg.sender == address(controller), '!controller');
 		uint256 _owed = owed();
 		console.log('Owed is', _owed);
 		console.log('Attempting to repay', amount);
-		_balanceSheet.required = uint128(
+                _logSheet();
+               
+		_balanceSheet.required = _owed < amount ? uint128(0) : uint128(
 			uint256(_balanceSheet.required).mul(_owed).div(uint256(1 ether)).sub(amount).mul(uint256(1 ether)).div(
 				_owed.sub(amount)
 			)
 		);
+                _logSheet();
 		console.log('Set _balanceSheet required');
 		_balanceSheet.repaid = _balanceSheet.repaid.add(amount);
 	}

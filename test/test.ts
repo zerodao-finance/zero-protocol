@@ -253,6 +253,7 @@ describe('Zero', () => {
 			signature,
 		);
 
+		console.log(transferRequest.amount);
 		await Underwriter.repay(
 			underwriter.address, //underwriter
 			transferRequest.to, //to
