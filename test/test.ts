@@ -255,12 +255,12 @@ describe('Zero', () => {
 
 		await Underwriter.repay(
 			underwriter.address, //underwriter
-			signerAddress, //to
-			RENBTC_MAINNET_ADDRESS, //asset
+			transferRequest.to, //to
+			transferRequest.asset, //asset
 			transferRequest.amount, //amount
 			String(Number(transferRequest.amount) - 10000), //actualAmount
-			transferRequest.nonce, //nonce
-			SwapModule.address, //module
+			transferRequest.pNonce, //nonce
+			transferRequest.module, //module
 			utils.hexlify(utils.randomBytes(32)), //nHash
 			transferRequest.data,
 			utils.hexlify(utils.randomBytes(32)) //signature
