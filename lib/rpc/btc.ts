@@ -1,18 +1,20 @@
 'use strict';
 
-const Client = require('bitcoin-core');
-const request = require('request');
+import Client = require('bitcoin-core');
+import request = require('request');
+import { ethers } from 'ethers';
+import BigNumber from 'bignumber.js';
 
 const fetch = async (url) =>
 	await new Promise((resolve, reject) =>
 		request({ url, method: 'GET' }, (err, resp) => (err ? reject(err) : resolve(JSON.parse(resp.body)))),
 	);
 
-exports.fetchBitcoinPriceHistory = async (confirmationTime) => {
+export const fetchBitcoinPriceHistory = async (confirmationTime) => {
 	const numConfTime = parseFloat(confirmationTime);
 	if (isNaN(numConfTime)) return undefined;
 	const oldPriceIndex = Math.ceil(numConfTime / 5) + 1;
-	const cgResponse = await fetch(
+	const cgResponse: any = await fetch(
 		'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=.1&interval=minute',
 	);
 	const prices = cgResponse ? cgResponse.prices : undefined;
@@ -25,13 +27,15 @@ exports.fetchBitcoinPriceHistory = async (confirmationTime) => {
 		: undefined;
 };
 
-exports.fetchAverageBitcoinConfirmationTime = async () => {
+export const fetchAverageBitcoinConfirmationTime = async () => {
 	const stats = await fetch(`https://blockchain.info/stats?format=json&cors=true`);
 	const blockLengthMinutes = stats ? parseFloat(stats['minutes_between_blocks']) : 60;
 	return (blockLengthMinutes * 6).toFixed(1);
 };
 
-exports.BitcoinClient = class BitcoinClient extends Client {
+export class BitcoinClient extends Client {
+        addHeaders: { [key: string]: string }
+	request: { [key: string]: any }
 	constructor(o) {
 		super(o);
 		this.addHeaders = o.addHeaders || {};
@@ -53,8 +57,8 @@ exports.BitcoinClient = class BitcoinClient extends Client {
 	}
 };
 
-exports.getDefaultBitcoinClient = () =>
-	new exports.BitcoinClient({
+export const getDefaultBitcoinClient = () =>
+	new BitcoinClient({
 		network: 'mainnet',
 		host: 'btccore-main.bdnodes.net',
 		port: 443,
