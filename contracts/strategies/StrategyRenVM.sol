@@ -11,6 +11,7 @@ import {StrategyAPI} from '../interfaces/IStrategy.sol';
 import {IController} from '../interfaces/IController.sol';
 import {IUniswapV2Router02} from '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import {ICurvePool} from '../interfaces/ICurvePool.sol';
+import {IZeroModule} from '../interfaces/IZeroModule.sol';
 import {console} from 'hardhat/console.sol';
 
 contract StrategyRenVM {
@@ -67,20 +68,28 @@ contract StrategyRenVM {
 		}
 	}
 
-	function _withdraw(uint256 _amount) private returns (uint256) {
-		uint256 _amount = ICurvePool(curvePool).get_dy(vaultWantIndex, wantIndex, _amount);
+	function _withdraw(uint256 _amount, address _asset) private returns (uint256) {
+		require(_asset == want || _asset == vaultWant, 'asset not supported');
+		if (_asset == want) {
+			//then we can't directly withdraw it
+			_amount = ICurvePool(curvePool).get_dy(vaultWantIndex, wantIndex, _amount).sub(1);
+		}
 		uint256 _shares = estimateShares(_amount);
-		IyVault(vault).withdraw(_shares);
-		uint256 _amountOut = swap(vaultWant, _amount, vaultWantIndex, wantIndex);
-		return _amountOut;
+		_amount = IyVault(vault).withdraw(_shares);
+		if (_asset == want) {
+			_amount = swap(vaultWant, _amount, vaultWantIndex, wantIndex);
+		}
+		return _amount;
 	}
 
 	function withdraw(uint256 _amount) external virtual onlyController {
-		IERC20(want).transfer(address(controller), _withdraw(_amount));
+		console.log('Controller.withdraw');
+		IERC20(want).safeTransfer(address(controller), _withdraw(_amount, want));
 	}
 
 	function withdrawAll() external virtual onlyController {
-		_withdraw(IERC20(vault).balanceOf(address(this)));
+		console.log('Controller.withdraw');
+		IERC20(want).safeTransfer(address(controller), _withdraw(IERC20(vault).balanceOf(address(this)), want));
 	}
 
 	function balanceOf() external view virtual returns (uint256) {
@@ -92,16 +101,15 @@ contract StrategyRenVM {
 	}
 
 	function permissionedSend(address _module, uint256 _amount) external virtual onlyController returns (uint256) {
-		//Sends _amount of renBTC to _module.
 		uint256 _reserve = IERC20(want).balanceOf(address(this));
-		if (_amount > _reserve) {
-			uint256 _deficit = _amount.sub(_reserve);
-			uint256 _actualAmount = _withdraw(_deficit);
-			IERC20(want).safeTransfer(_module, _reserve.add(_actualAmount));
-			return _reserve.add(_actualAmount);
-		} else {
-			IERC20(want).safeTransfer(_module, _amount);
-			return _amount;
+		address _want = IZeroModule(_module).want();
+		if (_amount > _reserve || _want != want) {
+			console.log('permissionedSend special case');
+			_amount = _withdraw(_amount, _want);
 		}
+		console.log('Balance is', IERC20(_want).balanceOf(address(this)));
+		console.log('Amount to transfer is', _amount);
+		IERC20(_want).safeTransfer(_module, _amount);
+		return _amount;
 	}
 }
