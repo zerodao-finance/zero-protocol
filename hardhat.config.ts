@@ -1,7 +1,7 @@
 require('@nomiclabs/hardhat-ethers');
 require('hardhat-deploy');
 require('hardhat-deploy-ethers');
-//require('hardhat-gas-reporter');
+require('hardhat-gas-reporter');
 require('@openzeppelin/hardhat-upgrades');
 
 
@@ -29,8 +29,8 @@ module.exports = {
       }
     },
     localhost: {
-	    url: 'http://localhost:8545',
-	    chainId: 31337
+      url: 'http://localhost:8545',
+      chainId: 31337
     }
   },
   mocha: {

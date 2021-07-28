@@ -124,6 +124,20 @@ const getBalances = async () => {
 };
 
 
+const generateTransferRequest = async (amount: number) => {
+	const { swapModule, signerAddress } = await getFixtures();
+	const { underwriter } = await setupUnderwriter();
+	return createTransferRequest(
+		swapModule.address,
+		signerAddress,
+		RENBTC_MAINNET_ADDRESS,
+		underwriter.address,
+		String(amount),
+		'0x',
+	);
+}
+
+
 describe('Zero', () => {
 	before(async () => {
 		await deployments.fixture();
@@ -171,26 +185,16 @@ describe('Zero', () => {
 		await setupUnderwriter();
 		await btcVault.earn();
 	});
-	/*
-	it('should make a swap', async () => {
-		const { signer, signerAddress, renBTC, controller, btcVault, swapModule } = await getFixtures();
+
+	it('should take out, make a swap with, then repay a small loan', async () => {
+		const { signer, controller } = await getFixtures();
 		const { underwriter, underwriterImpl } = await setupUnderwriter();
-		const _balance = (await renBTC.balanceOf(signerAddress)).toString();
 
-		console.log('\nDepositing to vault');
-		await renBTC.approve(btcVault.address, _balance);
-		await btcVault.deposit(_balance);
+		//@ts-ignore
+		const transferRequest = await generateTransferRequest(100000000);
 
-		console.log('\nCalling earn on the vault & deposit on the strategy');
-		await btcVault.earn();
-		const transferRequest = createTransferRequest(
-			swapModule.address,
-			signerAddress,
-			RENBTC_MAINNET_ADDRESS,
-			underwriter.address,
-			'100000000',
-			'0x',
-		);
+		console.log('\nInitial balances');
+		await getBalances();
 
 		transferRequest.setUnderwriter(underwriter.address);
 		const signature = await transferRequest.sign(signer, controller.address);
@@ -205,28 +209,37 @@ describe('Zero', () => {
 			transferRequest.data,
 			signature,
 		);
+		await getBalances();
 
-	});*/
 
-	it('should repay the loan', async () => {
-		const { signer, signerAddress, swapModule, controller } = await getFixtures()
-		const { abi: controllerABI } = await deployments.getArtifact('ZeroController');
+		console.log("\nRepaying loan...")
+		await underwriterImpl.repay(
+			underwriter.address, //underwriter
+			transferRequest.to, //to
+			transferRequest.asset, //asset
+			transferRequest.amount, //amount
+			String(Number(transferRequest.amount) - 10000), //actualAmount
+			transferRequest.pNonce, //nonce
+			transferRequest.module, //module
+			utils.hexlify(utils.randomBytes(32)), //nHash
+			transferRequest.data,
+			signature //signature
+		);
+		await getBalances();
+	});
+
+	it('should take out, make a swap with, then repay a large loan', async () => {
+		const { signer, controller } = await getFixtures()
 		const { underwriter, underwriterImpl } = await setupUnderwriter();
 
-		const transferRequest = createTransferRequest(
-			swapModule.address,
-			signerAddress,
-			RENBTC_MAINNET_ADDRESS,
-			underwriter.address,
-			'100000000',
-			'0x',
-		);
+		//@ts-ignore
+		const transferRequest = await generateTransferRequest(300000000);
+
+		console.log('\nInitial balances');
+		await getBalances();
 
 		transferRequest.setUnderwriter(underwriter.address);
 		const signature = await transferRequest.sign(signer, controller.address);
-
-		console.log("\nInitial balances");
-		await getBalances();
 
 		console.log("\nCreating loan...")
 		await underwriterImpl.loan(
@@ -251,8 +264,8 @@ describe('Zero', () => {
 			transferRequest.module, //module
 			utils.hexlify(utils.randomBytes(32)), //nHash
 			transferRequest.data,
-			utils.hexlify(utils.randomBytes(32)) //signature
+			signature //signature
 		);
 		await getBalances();
-	})
+	});
 });
