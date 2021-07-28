@@ -4,6 +4,8 @@ pragma solidity >=0.7.0;
 
 import {ERC721Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol';
 import {EIP712Upgradeable} from '@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol';
+import {IERC20} from 'oz410/token/ERC20/ERC20.sol';
+import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
 import {IZeroModule} from '../interfaces/IZeroModule.sol';
 import {ZeroUnderwriterLock} from '../underwriter/ZeroUnderwriterLock.sol';
 import {ZeroLib} from '../libraries/ZeroLib.sol';
@@ -26,6 +28,7 @@ import 'hardhat/console.sol';
 */
 contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgradeable, EIP712Upgradeable {
 	using SafeMath for uint256;
+	using SafeERC20 for *;
 
 	string internal constant UNDERWRITER_LOCK_IMPLEMENTATION_ID = 'zero.underwriter.lock-implementation';
 	address internal underwriterLockImpl;
@@ -125,6 +128,8 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 
 	function depositAll(address _asset) internal {
 		// deposit all of the asset in the vault
+		uint256 _balance = IERC20(_asset).balanceOf(address(this));
+		IERC20(_asset).safeTransfer(strategies[_asset], _balance);
 	}
 
 	function toTypedDataHash(ZeroLib.LoanParams memory params, address underwriter)
