@@ -13,12 +13,14 @@ const { ethers, deployments } = hre;
 
 const BTCGATEWAY_MAINNET_ADDRESS = '0xe4b679400F0f267212D5D812B95f58C83243EE71';
 const RENBTC_MAINNET_ADDRESS = '0xeb4c2781e4eba804ce9a9803c67d0893436bb27d';
-const STRATEGY_ADDRESS = '0x36C02dA8a0983159322a80FFE9F24b1acfF8B570';
-const CONTROLLER_ADDRESS = '0x0E801D84Fa97b50751Dbf25036d067dCf18858bF';
+const WETH_MAINNET_ADDRESS = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+const USDC_MAINNET_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
+const WBTC_MAINNET_ADDRESS = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599';
+const YVWBTC_MAINNET_ADDRESS = '0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E';
 
 const getImplementation = async (proxyAddress: string) => {
 	const [{ provider }] = await ethers.getSigners();
-	return ethers.utils.getAddress(
+	return utils.getAddress(
 		(
 			await provider.getStorageAt(
 				proxyAddress,
@@ -28,35 +30,99 @@ const getImplementation = async (proxyAddress: string) => {
 	);
 };
 
-const setupUnderwriter = async (signer: Signer, amountOfRenBTC = '100') => {
-	const vault = (await ethers.getContract('BTCVault')).connect(signer);
-	const renbtcGateway = getGateway(signer);
-	await renbtcGateway.mint(
-		ethers.utils.randomBytes(32),
-		ethers.utils.parseUnits(amountOfRenBTC, 8),
-		ethers.utils.randomBytes(32),
+const setupUnderwriter = async (amountOfRenBTC = '100') => {
+	const { signer, btcVault, renBTC, gateway, controller, signerAddress } = await getFixtures();
+	const underwriterFactory = await ethers.getContractFactory('TrivialUnderwriter', signer);
+	const { address: underwriterAddress } = await underwriterFactory.deploy(controller.address);
+	const lock = await controller.lockFor(underwriterAddress);
+	const underwriterImpl = new Contract(underwriterAddress, controller.interface, signer);
+
+	await gateway.mint(
+		utils.randomBytes(32),
+		utils.parseUnits(amountOfRenBTC, 8),
+		utils.randomBytes(32),
 		'0x',
 	);
-	const underwriterFactory = (await ethers.getContractFactory('TrivialUnderwriter')).connect(signer);
-	const controller = await ethers.getContract('ZeroController');
-	const { address: underwriterAddress } = await underwriterFactory.deploy(controller.address);
-	const renbtc = getRenBTC(signer);
-	await renbtc.approve(vault.address, ethers.constants.MaxUint256);
-	await vault.deposit(ethers.utils.parseUnits(amountOfRenBTC, 8));
-	const from = await signer.getAddress();
-	await vault.approve(controller.address, await vault.balanceOf(from));
-	await controller.mint(underwriterAddress, vault.address);
-	const lock = await controller.lockFor(underwriterAddress);
-	return new ethers.Contract(underwriterAddress, underwriterFactory.interface, signer);
+	await renBTC.approve(btcVault.address, ethers.constants.MaxUint256);
+	await btcVault.deposit(utils.parseUnits(amountOfRenBTC, 8));
+	await btcVault.approve(controller.address, await btcVault.balanceOf(signerAddress));
+	await controller.mint(underwriterAddress, btcVault.address);
+
+	return {
+		underwriterFactory,
+		underwriterAddress,
+		underwriter: new Contract(underwriterAddress, underwriterFactory.interface, signer),
+		underwriterImpl,
+		lock
+	}
 };
 
-const getGateway = (signer: Signer): Contract => {
-	return new ethers.Contract(BTCGATEWAY_MAINNET_ADDRESS, GatewayLogicV1.abi, signer);
+const getFixtures = async () => {
+	const [signer] = await ethers.getSigners();
+	const controller = await ethers.getContract('ZeroController', signer);
+	const { abi: erc20abi } = await deployments.getArtifact('BTCVault');
+
+	return {
+		signer: signer,
+		signerAddress: await signer.getAddress(),
+		controller: controller,
+		strategy: await ethers.getContract('StrategyRenVM', signer),
+		btcVault: await ethers.getContract('BTCVault', signer),
+		swapModule: await ethers.getContract('Swap', signer),
+		gateway: new Contract(BTCGATEWAY_MAINNET_ADDRESS, GatewayLogicV1.abi, signer),
+		renBTC: new Contract(RENBTC_MAINNET_ADDRESS, erc20abi, signer),
+		wETH: new Contract(WETH_MAINNET_ADDRESS, erc20abi, signer),
+		usdc: new Contract(USDC_MAINNET_ADDRESS, erc20abi, signer),
+		wBTC: new Contract(WBTC_MAINNET_ADDRESS, erc20abi, signer),
+		yvWBTC: new Contract(YVWBTC_MAINNET_ADDRESS, erc20abi, signer)
+	}
+}
+
+const getBalances = async () => {
+	const { swapModule, strategy, controller, btcVault, signerAddress, renBTC, wETH, usdc, wBTC, yvWBTC } = await getFixtures();
+	const wallets: { [index: string]: string } = {
+		"Wallet": signerAddress,
+		"RenBTCVault": btcVault.address,
+		"Controller": controller.address,
+		"Strategy": strategy.address,
+		"yvWBTC Vault": yvWBTC.address,
+		"Swap Module": swapModule.address,
+	};
+	const tokens: { [index: string]: Contract } = {
+		renBTC,
+		wETH,
+		usdc,
+		wBTC,
+		yvWBTC,
+		zBTC: btcVault
+	}
+	const getBalance = async (wallet: string, token: Contract) => {
+		const decimals = await token.decimals();
+		const balance = await token.balanceOf(wallet);
+		return String((balance / 10 ** decimals).toFixed(2));
+	}
+	console.table(
+		Object.fromEntries(
+			await Promise.all(
+				Object.keys(wallets).map(async (name) => {
+					const wallet: string = wallets[name];
+					return [
+						name,
+						Object.fromEntries(
+							await Promise.all(
+								Object.keys(tokens).map(async (token) => {
+									const tokenContract = tokens[token];
+									return [token, await getBalance(wallet, tokenContract)]
+								})
+							)
+						)
+					];
+				}),
+			),
+		),
+	);
 };
 
-const getRenBTC = (signer: Signer): Contract => {
-	return new ethers.Contract(RENBTC_MAINNET_ADDRESS, BTCVault.abi, signer);
-};
 
 describe('Zero', () => {
 	before(async () => {
@@ -72,9 +138,9 @@ describe('Zero', () => {
 		];
 		const { abi: erc20Abi } = await deployments.getArtifact('BTCVault');
 		const [signer] = await ethers.getSigners();
+		const signerAddress = await signer.getAddress();
 		const btcGateway = new ethers.Contract(BTCGATEWAY_MAINNET_ADDRESS, abi, signer);
 		const renbtc = new ethers.Contract(RENBTC_MAINNET_ADDRESS, erc20Abi, signer);
-		const signerAddress = await signer.getAddress();
 		await btcGateway.mint(
 			ethers.utils.solidityKeccak256(
 				['bytes'],
@@ -87,129 +153,50 @@ describe('Zero', () => {
 		expect(Number(ethers.utils.formatUnits(await renbtc.balanceOf(signerAddress), 8))).to.be.gt(0);
 	});
 	it('should be able to launch an underwriter', async () => {
-		const [signer] = await ethers.getSigners();
-		const lock = await setupUnderwriter(signer);
+		await setupUnderwriter();
 	});
 	it('should deposit in vault', async () => {
-		const [signer] = await ethers.getSigners();
-		const lock = await setupUnderwriter(signer);
+		const { renBTC, btcVault } = await getFixtures();
+		await setupUnderwriter();
 
-		const { abi: erc20abi } = await deployments.getArtifact('BTCVault')
-		const renbtc = new ethers.Contract(RENBTC_MAINNET_ADDRESS, erc20abi, signer);
-
-		const BTCVault = await ethers.getContract('BTCVault', signer)
-		const signerAddress = await signer.getAddress();
-
-		const beforeBalance = (await renbtc.balanceOf(BTCVault.address)).toNumber() / await renbtc.decimals();
+		const beforeBalance = (await renBTC.balanceOf(btcVault.address)).toNumber() / await renBTC.decimals();
 		const addedAmount = 10;
-		await BTCVault.deposit(addedAmount * await renbtc.decimals());
-		const afterBalance = (await renbtc.balanceOf(BTCVault.address)).toNumber() / await renbtc.decimals();
+		await btcVault.deposit(addedAmount * await renBTC.decimals());
+		const afterBalance = (await renBTC.balanceOf(btcVault.address)).toNumber() / await renBTC.decimals();
 
 		expect(beforeBalance + addedAmount == afterBalance, 'Balances not adding up');
 	});
 	it('should transfer overflow funds to strategy vault', async () => {
-		const [signer] = await ethers.getSigners();
-		await setupUnderwriter(signer);
-		const { abi: erc20abi } = await deployments.getArtifact('BTCVault');
-		const signerAddress = await signer.getAddress();
-
-		const renbtc = new ethers.Contract(RENBTC_MAINNET_ADDRESS, erc20abi, signer);
-		const decimals = await renbtc.decimals();
-
-		const BTCVault = await ethers.getContract('BTCVault', signer)
-		const Controller = await ethers.getContract('ZeroController', signer)
-		const Strategy = await ethers.getContract('StrategyRenVM', signer)
-		const StrategyVault = new ethers.Contract('0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E', erc20abi, signer)
-
-
-		await BTCVault.earn();
+		const { signer, btcVault, renBTC } = await getFixtures();
+		await setupUnderwriter();
+		await btcVault.earn();
 	});
+	/*
 	it('should make a swap', async () => {
-		const [signer] = await ethers.getSigners();
-		const underwriter = await setupUnderwriter(signer);
-		const signerAddress = await signer.getAddress();
-
-		const { abi: erc20abi } = await deployments.getArtifact('BTCVault');
-		const { abi: controllerABI } = await deployments.getArtifact('ZeroController');
-		const renBTC = new ethers.Contract(RENBTC_MAINNET_ADDRESS, erc20abi, signer);
-		const Strategy = await ethers.getContract('StrategyRenVM', signer);
-		const Controller = await ethers.getContract('ZeroController', signer);
-		const BTCVault = await ethers.getContract('BTCVault', signer);
-		const SwapModule = await ethers.getContract('Swap');
-		const underwriterFactory = (await ethers.getContractFactory('TrivialUnderwriter')).connect(signer);
-		const { address: underwriterAddress } = await underwriterFactory.deploy(Controller.address);
-		const lock = await Controller.lockFor(underwriterAddress);
-
-		const getBalances = async () => {
-			const renBTCDecimals = await renBTC.decimals();
-			const wETH = new ethers.Contract('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', erc20abi, signer);
-			const wETHDecimals = await wETH.decimals();
-			const USDC = new ethers.Contract('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', erc20abi, signer);
-			const usdcDecimals = await USDC.decimals();
-			const wBTC = new ethers.Contract('0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', erc20abi, signer);
-			const wBTCDecimals = await wBTC.decimals();
-			const StrategyVault = new ethers.Contract('0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E', erc20abi, signer);
-			const [{ provider }] = await ethers.getSigners();
-			const contracts: { [index: string]: string } = {
-				Wallet: signerAddress,
-				RenBTCVault: BTCVault.address,
-				Controller: Controller.address,
-				Strategy: Strategy.address,
-				'Strategy Vault': '0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E',
-				'Swap Module': SwapModule.address,
-			};
-			console.table(
-				// @ts-expect-error
-				Object.fromEntries(
-					await Promise.all(
-						Object.keys(contracts).map(async (name) => {
-							const address: string = contracts[name];
-							return [
-								name,
-								{
-									renBTC: ((await renBTC.balanceOf(address)) / 10 ** renBTCDecimals).toLocaleString(),
-									ETH: (await provider.getBalance(address)).div((1e18).toString()).toString(),
-									WETH: ((await wETH.balanceOf(address)) / 10 ** 18).toLocaleString(),
-									USDC: ((await USDC.balanceOf(address)) / 10 ** usdcDecimals).toLocaleString(),
-									wBTC: ((await wBTC.balanceOf(address)) / 10 ** wBTCDecimals).toLocaleString(),
-									yvWBTC: ((await StrategyVault.balanceOf(address)) / 10 ** 8).toLocaleString(),
-									zBTC: ((await BTCVault.balanceOf(address)) / 10 ** (await BTCVault.decimals())).toLocaleString(),
-								},
-							];
-						}),
-					),
-				),
-			);
-		};
-
+		const { signer, signerAddress, renBTC, controller, btcVault, swapModule } = await getFixtures();
+		const { underwriter, underwriterImpl } = await setupUnderwriter();
 		const _balance = (await renBTC.balanceOf(signerAddress)).toString();
 
-		await getBalances();
-
 		console.log('\nDepositing to vault');
-		await renBTC.approve(BTCVault.address, _balance);
-		await BTCVault.deposit(_balance);
-		await getBalances();
+		await renBTC.approve(btcVault.address, _balance);
+		await btcVault.deposit(_balance);
 
 		console.log('\nCalling earn on the vault & deposit on the strategy');
-		await BTCVault.earn();
+		await btcVault.earn();
 		const transferRequest = createTransferRequest(
-			SwapModule.address,
+			swapModule.address,
 			signerAddress,
 			RENBTC_MAINNET_ADDRESS,
 			underwriter.address,
 			'100000000',
 			'0x',
 		);
-		await getBalances();
 
 		transferRequest.setUnderwriter(underwriter.address);
-		const signature = await transferRequest.sign(signer, Controller.address);
-		const Underwriter = new ethers.Contract(underwriter.address, controllerABI, signer);
+		const signature = await transferRequest.sign(signer, controller.address);
 
 		console.log('\nWriting loan');
-
-		await Underwriter.loan(
+		await underwriterImpl.loan(
 			transferRequest.to,
 			transferRequest.asset,
 			transferRequest.amount,
@@ -219,20 +206,15 @@ describe('Zero', () => {
 			signature,
 		);
 
-		await getBalances();
-	});
+	});*/
 
 	it('should repay the loan', async () => {
-		const [signer] = await ethers.getSigners();
+		const { signer, signerAddress, swapModule, controller } = await getFixtures()
 		const { abi: controllerABI } = await deployments.getArtifact('ZeroController');
-		const underwriter = await setupUnderwriter(signer);
-		const Underwriter = new ethers.Contract(underwriter.address, controllerABI, signer);
-		const signerAddress = await signer.getAddress();
-		const SwapModule = await ethers.getContract('Swap');
-		const Controller = await ethers.getContract('ZeroController', signer);
+		const { underwriter, underwriterImpl } = await setupUnderwriter();
 
 		const transferRequest = createTransferRequest(
-			SwapModule.address,
+			swapModule.address,
 			signerAddress,
 			RENBTC_MAINNET_ADDRESS,
 			underwriter.address,
@@ -241,9 +223,13 @@ describe('Zero', () => {
 		);
 
 		transferRequest.setUnderwriter(underwriter.address);
-		const signature = await transferRequest.sign(signer, Controller.address);
+		const signature = await transferRequest.sign(signer, controller.address);
 
-		await Underwriter.loan(
+		console.log("\nInitial balances");
+		await getBalances();
+
+		console.log("\nCreating loan...")
+		await underwriterImpl.loan(
 			transferRequest.to,
 			transferRequest.asset,
 			transferRequest.amount,
@@ -252,9 +238,10 @@ describe('Zero', () => {
 			transferRequest.data,
 			signature,
 		);
+		await getBalances();
 
-		console.log(transferRequest.amount);
-		await Underwriter.repay(
+		console.log("\nRepaying loan...")
+		await underwriterImpl.repay(
 			underwriter.address, //underwriter
 			transferRequest.to, //to
 			transferRequest.asset, //asset
@@ -265,7 +252,7 @@ describe('Zero', () => {
 			utils.hexlify(utils.randomBytes(32)), //nHash
 			transferRequest.data,
 			utils.hexlify(utils.randomBytes(32)) //signature
-		)
-
+		);
+		await getBalances();
 	})
 });
