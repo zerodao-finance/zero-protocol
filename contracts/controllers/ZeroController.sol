@@ -60,7 +60,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		);
 	}
 
-	modifier onlyUnderwriter {
+	modifier onlyUnderwriter() {
 		require(
 			ownerOf(uint256(uint160(address(lockFor(msg.sender))))) != address(0x0),
 			'must be called by underwriter'
@@ -109,16 +109,11 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 			data: data
 		});
 		bytes32 digest = toTypedDataHash(params, underwriter);
-		console.log('Calculated digest');
 		require(loanStatus[digest].status == ZeroLib.LoanStatusCode.UNPAID, 'loan is not in the UNPAID state');
-		console.log('Creating lock');
 
 		ZeroUnderwriterLock lock = ZeroUnderwriterLock(lockFor(msg.sender));
-		console.log('Tracking lock');
 		lock.trackIn(actualAmount);
-		console.log('Attempting to repay loan (contract call)');
 		IZeroModule(module).repayLoan(params.to, asset, actualAmount, nonce, data);
-		console.log('Repaid loan');
 		IGateway(IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset)).mint(
 			keccak256(abi.encode(nonce, data)),
 			actualAmount,
@@ -177,15 +172,11 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		require(loanStatus[digest].status == ZeroLib.LoanStatusCode.UNINITIALIZED, 'already spent this loan');
 		loanStatus[digest] = ZeroLib.LoanStatus({underwriter: msg.sender, status: ZeroLib.LoanStatusCode.UNPAID});
 		uint256 actual = params.amount.sub(params.amount.mul(uint256(25e15)).div(1e18));
-console.log("actual amount (loan): ", actual);
 
 		ZeroUnderwriterLock(lockFor(msg.sender)).trackOut(params.module, actual);
 
 		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(module, params.amount);
-		console.log('Amount sent is', _amountSent);
 
 		IZeroModule(module).receiveLoan(params.to, params.asset, _amountSent, params.nonce, params.data);
-
-		console.log('Received Loan');
 	}
 }
