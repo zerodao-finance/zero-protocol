@@ -78,9 +78,6 @@ contract Swap {
 		bytes memory _data
 	) public {
 		require(outstanding[_nonce].qty != 0, '!outstanding');
-		console.log('balance', IERC20(fiat).balanceOf(address(this)));
-		//IERC20(_asset).safeTransfer(_to, outstanding[_nonce].qty);
-		console.log('Attempting safe transfer of', _actualAmount);
 		IERC20(fiat).safeTransfer(_to, outstanding[_nonce].qty);
 		delete outstanding[_nonce];
 	}
