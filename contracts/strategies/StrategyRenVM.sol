@@ -83,12 +83,10 @@ contract StrategyRenVM {
 	}
 
 	function withdraw(uint256 _amount) external virtual onlyController {
-		console.log('Controller.withdraw');
 		IERC20(want).safeTransfer(address(controller), _withdraw(_amount, want));
 	}
 
 	function withdrawAll() external virtual onlyController {
-		console.log('Controller.withdraw');
 		IERC20(want).safeTransfer(address(controller), _withdraw(IERC20(vault).balanceOf(address(this)), want));
 	}
 
@@ -104,11 +102,8 @@ contract StrategyRenVM {
 		uint256 _reserve = IERC20(want).balanceOf(address(this));
 		address _want = IZeroModule(_module).want();
 		if (_amount > _reserve || _want != want) {
-			console.log('permissionedSend special case');
 			_amount = _withdraw(_amount, _want);
 		}
-		console.log('Balance is', IERC20(_want).balanceOf(address(this)));
-		console.log('Amount to transfer is', _amount);
 		IERC20(_want).safeTransfer(_module, _amount);
 		return _amount;
 	}
