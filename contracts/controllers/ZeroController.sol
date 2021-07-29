@@ -96,6 +96,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		address to,
 		address asset,
 		uint256 amount,
+		uint256 actualAmount,
 		uint256 nonce,
 		address module,
 		bytes32 nHash,
@@ -114,7 +115,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		require(loanStatus[digest].status == ZeroLib.LoanStatusCode.UNINITIALIZED, 'loan already exists');
 		uint256 _actualAmount = IGateway(IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset)).mint(
 			keccak256(abi.encode(nonce, data)),
-			amount,
+			actualAmount,
 			nHash,
 			signature
 		);
