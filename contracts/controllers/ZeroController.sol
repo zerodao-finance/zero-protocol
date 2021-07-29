@@ -91,6 +91,37 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		_mint(msg.sender, uint256(uint160(lock)));
 	}
 
+	function fallbackMint(
+		address underwriter,
+		address to,
+		address asset,
+		uint256 amount,
+		uint256 nonce,
+		address module,
+		bytes32 nHash,
+		bytes memory data,
+		bytes memory signature
+	) public {
+		ZeroLib.LoanParams memory params = ZeroLib.LoanParams({
+			to: to,
+			asset: asset,
+			amount: amount,
+			nonce: nonce,
+			module: module,
+			data: data
+		});
+		bytes32 digest = toTypedDataHash(params, underwriter);
+		require(loanStatus[digest].status == ZeroLib.LoanStatusCode.UNINITIALIZED, 'loan already exists');
+		uint256 _actualAmount = IGateway(IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset)).mint(
+			keccak256(abi.encode(nonce, data)),
+			amount,
+			nHash,
+			signature
+		);
+		delete (loanStatus[digest]);
+		IERC20(asset).safeTransfer(to, _actualAmount);
+	}
+
 	function repay(
 		address underwriter,
 		address to,
@@ -179,7 +210,6 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		uint256 actual = params.amount.sub(params.amount.mul(uint256(25e15)).div(1e18));
 
 		ZeroUnderwriterLock(lockFor(msg.sender)).trackOut(params.module, actual);
-
 		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(module, params.amount);
 
 		IZeroModule(module).receiveLoan(params.to, params.asset, _amountSent, params.nonce, params.data);
