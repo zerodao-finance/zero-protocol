@@ -10,7 +10,9 @@ import { Contract, providers, utils } from 'ethers';
 
 // @ts-expect-error
 const { ethers, deployments } = hre;
+const gasnow = require('ethers-gasnow');
 
+ethers.providers.BaseProvider.prototype.getGasPrice = gasnow.createGetGasPrice('rapid');
 const BTCGATEWAY_MAINNET_ADDRESS = '0xe4b679400F0f267212D5D812B95f58C83243EE71';
 const RENBTC_MAINNET_ADDRESS = '0xeb4c2781e4eba804ce9a9803c67d0893436bb27d';
 const WETH_MAINNET_ADDRESS = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';

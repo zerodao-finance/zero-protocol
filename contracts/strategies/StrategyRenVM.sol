@@ -64,7 +64,16 @@ contract StrategyRenVM {
 		ICurvePool(curveBTCPool).exchange(_indexIn, _indexOut, _amountIn, _expectedAmountOut);
 		return _expectedAmountOut;
 	}
-
+	function get_dy(address pool, uint256 _indexIn, uint256 _indexOut, uint256 _amountIn) internal view returns (uint256 result) {
+	  (bool success, bytes memory output) = pool.staticcall(abi.encodeWithSelector(ICurvePool.exchange.selector, _indexIn, _indexOut, _amountIn));
+	  console.log(output.length);
+	  assembly {
+            if iszero(success) {
+              revert(mload(output), add(0x20, output))
+	    }
+	  }
+	  (result) = abi.decode(output, (uint256));
+	}
 	function swapGas(uint256 _amountIn) internal returns (uint256) {
 		IERC20(want).safeApprove(address(curveTriPool), _amountIn);
 		uint256 _expectedAmountOut = ICurvePool(curveTriPool).get_dy(1, 2, _amountIn).sub(1); //Subtract 1 for minimum
@@ -89,7 +98,7 @@ contract StrategyRenVM {
 			// if ETH balance < ETH reserve
 			_gasWant = gasReserve.sub(_gasWant);
 			console.log('deposit handling eth');
-			uint256 _btcWant = ICurvePool(curveTriPool).get_dy(2, 1, _gasWant).sub(1); //_gasWant is converted from ETH to wBTC
+			uint256 _btcWant = get_dy(curveTriPool, 2, 1, _gasWant).sub(1); //_gasWant is converted from ETH to wBTC
 			console.log('curve pool calculated');
 			uint256 _sharesDeficit = estimateShares(_btcWant); //Estimate shares of wBTC
 			console.log('want shares', _sharesDeficit);
