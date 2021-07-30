@@ -83,9 +83,18 @@ contract StrategyRenVM {
 			IyVault(vault).deposit(_amountOut);
 		}
 		//Second conditional handles having too little of gasWant in the Strategy
-		uint256 _gasWant = address(this).balance;
+
+		uint256 _gasWant = address(this).balance; //ETH balance
 		if (_gasWant < gasReserve) {
-			uint256 _sharesDeficit = estimateShares(gasReserve.sub(_gasWant));
+			// if ETH balance < ETH reserve
+			_gasWant = gasReserve.sub(_gasWant);
+			console.log('deposit handling eth');
+			uint256 _btcWant = ICurvePool(curveTriPool).get_dy(2, 1, _gasWant).sub(1); //_gasWant is converted from ETH to wBTC
+			console.log('curve pool calculated');
+			uint256 _sharesDeficit = estimateShares(_btcWant); //Estimate shares of wBTC
+			console.log('want shares', _sharesDeficit);
+			console.log('have shares', IERC20(vault).balanceOf(address(this)));
+			require(IERC20(vault).balanceOf(address(this)) > _sharesDeficit, '!enough'); //revert if shares needed > shares held
 			uint256 _amountOut = IyVault(vault).withdraw(_sharesDeficit);
 			swapGas(_amountOut);
 		}
