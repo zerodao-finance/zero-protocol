@@ -19,6 +19,7 @@ import {IGateway} from '../interfaces/IGateway.sol';
 import {IGatewayRegistry} from '../interfaces/IGatewayRegistry.sol';
 import {IStrategy} from '../interfaces/IStrategy.sol';
 import {SafeMath} from 'oz410/math/SafeMath.sol';
+import '@openzeppelin/contracts/math/Math.sol';
 
 import 'hardhat/console.sol';
 
@@ -30,6 +31,9 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 	using SafeMath for uint256;
 	using SafeERC20 for *;
 
+	uint256 public maxGasPrice = 100e9;
+	uint256 public maxGasRepay = 250000;
+	uint256 public maxGasLoan = 500000;
 	string internal constant UNDERWRITER_LOCK_IMPLEMENTATION_ID = 'zero.underwriter.lock-implementation';
 	address internal underwriterLockImpl;
 	mapping(address => uint256) public loaned;
@@ -61,6 +65,10 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 			ZeroUnderwriterLockBytecodeLib.get(),
 			'zero.underwriter.lock-implementation'
 		);
+
+		maxGasPrice = 100e9;
+		maxGasRepay = 250000;
+		maxGasLoan = 500000;
 	}
 
 	modifier onlyUnderwriter() {
@@ -86,7 +94,6 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 
 	function mint(address underwriter, address vault) public {
 		address lock = FactoryLib.deploy(underwriterLockImpl, bytes32(uint256(uint160(underwriter))));
-
 		ZeroUnderwriterLock(lock).initialize(vault);
 		_mint(msg.sender, uint256(uint160(lock)));
 	}
@@ -135,6 +142,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		bytes memory data,
 		bytes memory signature
 	) public {
+		uint256 _gasBefore = gasleft();
 		ZeroLib.LoanParams memory params = ZeroLib.LoanParams({
 			to: to,
 			asset: asset,
@@ -156,6 +164,8 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 			signature
 		);
 		depositAll(asset);
+		//uint256 _gasRefund = Math.min(gasleft().sub(_gasBefore), maxGasRepay).mul(Math.min(tx.gasprice, maxGasPrice));
+		//IStrategy(strategies[params.asset]).permissionedEther(params.to, _gasRefund);
 	}
 
 	function depositAll(address _asset) internal {
@@ -196,6 +206,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		bytes memory data,
 		bytes memory userSignature
 	) public onlyUnderwriter {
+		uint256 _gasBefore = gasleft();
 		ZeroLib.LoanParams memory params = ZeroLib.LoanParams({
 			to: to,
 			asset: asset,
@@ -211,8 +222,11 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		uint256 actual = params.amount.sub(params.amount.mul(uint256(25e15)).div(1e18));
 
 		ZeroUnderwriterLock(lockFor(msg.sender)).trackOut(params.module, actual);
-		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(module, params.amount);
+		uint256 _txGas = maxGasPrice.mul(maxGasRepay.add(maxGasLoan));
+		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(module, params.amount.sub(_txGas));
 
 		IZeroModule(module).receiveLoan(params.to, params.asset, _amountSent, params.nonce, params.data);
+		//uint256 _gasRefund = Math.min(gasleft().sub(_gasBefore), maxGasLoan).mul(Math.min(tx.gasprice, maxGasPrice));
+		//IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);
 	}
 }

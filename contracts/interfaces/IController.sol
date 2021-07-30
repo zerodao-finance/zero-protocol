@@ -2,20 +2,21 @@
 pragma solidity >=0.7.0;
 
 interface IController {
-  function governance() external view returns (address);
-  function rewards() external view returns (address);
-    function withdraw(address, uint256) external;
+	function governance() external view returns (address);
 
-    function balanceOf(address) external view returns (uint256);
+	function rewards() external view returns (address);
 
-    function earn(address, uint256) external;
+	function withdraw(address, uint256) external;
 
-    function want(address) external view returns (address);
+	function balanceOf(address) external view returns (uint256);
 
+	function earn(address, uint256) external;
 
-    function vaults(address) external view returns (address);
+	function want(address) external view returns (address);
 
-    function strategies(address) external view returns (address);
+	function vaults(address) external view returns (address);
 
-    function approvedStrategies(address, address) external view returns (bool);
+	function strategies(address) external view returns (address);
+
+	function approvedStrategies(address, address) external view returns (bool);
 }

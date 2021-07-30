@@ -41,4 +41,6 @@ abstract contract IStrategy is StrategyAPI {
 	function withdraw(uint256) external virtual;
 
 	function withdraw(address) external virtual;
+
+	function permissionedEther(address, uint256) external virtual;
 }

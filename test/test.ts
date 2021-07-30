@@ -6,7 +6,7 @@ import GatewayLogicV1 from '../artifacts/contracts/test/GatewayLogicV1.sol/Gatew
 import BTCVault from '../artifacts/contracts/vaults/BTCVault.sol/BTCVault.json';
 import { Signer } from '@ethersproject/abstract-signer';
 import { Provider } from '@ethersproject/abstract-provider';
-import { Contract, utils } from 'ethers';
+import { Contract, providers, utils } from 'ethers';
 
 // @ts-expect-error
 const { ethers, deployments } = hre;
@@ -88,9 +88,10 @@ const getBalances = async () => {
 		"yvWBTC Vault": yvWBTC.address,
 		"Swap Module": swapModule.address,
 	};
-	const tokens: { [index: string]: Contract } = {
+	const tokens: { [index: string]: any } = {
 		renBTC,
 		wETH,
+		ETH: 0,
 		usdc,
 		wBTC,
 		yvWBTC,
@@ -111,8 +112,14 @@ const getBalances = async () => {
 						Object.fromEntries(
 							await Promise.all(
 								Object.keys(tokens).map(async (token) => {
-									const tokenContract = tokens[token];
-									return [token, await getBalance(wallet, tokenContract)]
+									if (token === "ETH") {
+										const balance = await wETH.provider.getBalance(wallet);
+										return [token, String(Number(utils.formatEther(balance)).toFixed(2))]
+									} else {
+										const tokenContract = tokens[token];
+										return [token, await getBalance(wallet, tokenContract)]
+									}
+
 								})
 							)
 						)
@@ -218,7 +225,7 @@ describe('Zero', () => {
 			transferRequest.to, //to
 			transferRequest.asset, //asset
 			transferRequest.amount, //amount
-			String(Number(transferRequest.amount) - 10000), //actualAmount
+			String(Number(transferRequest.amount) - 1000), //actualAmount
 			transferRequest.pNonce, //nonce
 			transferRequest.module, //module
 			utils.hexlify(utils.randomBytes(32)), //nHash
@@ -259,7 +266,7 @@ describe('Zero', () => {
 			transferRequest.to, //to
 			transferRequest.asset, //asset
 			transferRequest.amount, //amount
-			String(Number(transferRequest.amount) - 10000), //actualAmount
+			String(Number(transferRequest.amount) - 1000), //actualAmount
 			transferRequest.pNonce, //nonce
 			transferRequest.module, //module
 			utils.hexlify(utils.randomBytes(32)), //nHash
@@ -268,4 +275,33 @@ describe('Zero', () => {
 		);
 		await getBalances();
 	});
+
+	it('should call fallback mint and return funds', async () => {
+		const { signer, controller } = await getFixtures();
+		const { underwriter, underwriterImpl } = await setupUnderwriter();
+
+		//@ts-ignore
+		const transferRequest = await generateTransferRequest(100000000);
+
+		console.log('\nInitial balances');
+		await getBalances();
+
+		transferRequest.setUnderwriter(underwriter.address);
+		const signature = await transferRequest.sign(signer, controller.address);
+
+		console.log('Calling fallbackMint...');
+		await controller.fallbackMint(
+			underwriter.address, //underwriter,
+			transferRequest.to, //to
+			transferRequest.asset, //asset
+			transferRequest.amount, //amount
+			String(Number(transferRequest.amount) - 1000), //actualAmount
+			transferRequest.pNonce, //nonce
+			transferRequest.module, //module
+			utils.hexlify(utils.randomBytes(32)), //nHash
+			transferRequest.data, //data
+			signature
+		);
+		await getBalances();
+	})
 });

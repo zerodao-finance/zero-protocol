@@ -19,6 +19,7 @@ contract Swap {
 	address public constant wNative = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; //wETH
 	address public constant want = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599; //wBTC
 	address public constant router = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; //Sushi V2
+	address public constant controllerWant = 0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D; //renBTC
 
 	constructor(address _controller) {
 		controller = _controller;
@@ -35,9 +36,8 @@ contract Swap {
 	function defaultLoan(uint256 _nonce) public {
 		require(blockTimeout >= _nonce, '!blockTimeout');
 		require(outstanding[_nonce].qty != 0, '!outstanding');
-		address _want = IController(controller).want();
-		uint256 _amountSwapped = swapTokens(fiat, _want, outstanding[_nonce].qty);
-		IERC20(_want).safeTransfer(controller, _amountSwapped);
+		uint256 _amountSwapped = swapTokens(fiat, controllerWant, outstanding[_nonce].qty);
+		IERC20(controllerWant).safeTransfer(controller, _amountSwapped);
 		delete outstanding[_nonce];
 	}
 
