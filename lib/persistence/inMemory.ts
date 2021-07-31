@@ -1,9 +1,9 @@
 import { TransferRequest } from '../types';
-import { PersistenceAdapter } from './types';
+import { PersistenceAdapter, RequestStates, TransferRequestWithStatus } from './types';
 import hash from 'object-hash';
 
 type InMemoryKeyType = string;
-type InMemoryBackendType = Map<string, TransferRequest>;
+type InMemoryBackendType = Map<string, TransferRequestWithStatus>;
 
 export class InMemoryPersistenceAdapter implements PersistenceAdapter<InMemoryBackendType, InMemoryKeyType> {
 	backend: InMemoryBackendType;
@@ -13,8 +13,9 @@ export class InMemoryPersistenceAdapter implements PersistenceAdapter<InMemoryBa
 
 	async set(transferRequest: TransferRequest): Promise<InMemoryKeyType> {
 		const key = hash(transferRequest);
+		const status: TransferRequestWithStatus = { ...transferRequest, status: 'pending' };
 		try {
-			await this.backend.set(key, transferRequest);
+			await this.backend.set(key, status);
 			return key;
 		} catch (e) {
 			throw new Error(e.message);
@@ -24,8 +25,9 @@ export class InMemoryPersistenceAdapter implements PersistenceAdapter<InMemoryBa
 	async get(key: InMemoryKeyType): Promise<TransferRequest | undefined> {
 		try {
 			const value = this.backend.get(key);
-			if (value) return value;
-			else return undefined;
+			if (value) {
+				return value as TransferRequest;
+			} else return undefined;
 		} catch (e) {
 			return undefined;
 		}
@@ -46,5 +48,34 @@ export class InMemoryPersistenceAdapter implements PersistenceAdapter<InMemoryBa
 		} catch (e) {
 			return false;
 		}
+	}
+
+	async getStatus(key: InMemoryKeyType): Promise<RequestStates> {
+		try {
+			const value = (await this.get(key)) as TransferRequestWithStatus;
+			if (value) {
+				return value.status;
+			} else {
+				throw new Error(`No transfer request with key: ${key}`);
+			}
+		} catch (e) {
+			throw new Error(e.message);
+		}
+	}
+
+	async setStatus(key: InMemoryKeyType, status: RequestStates): Promise<void> {
+		try {
+			const value = (await this.get(key)) as TransferRequestWithStatus;
+			if (value) {
+				value.status = status;
+				await this.backend.set(key, value);
+			} else throw new Error(`No transfer request with key: ${key}`);
+		} catch (e) {
+			throw new Error(e.message);
+		}
+	}
+
+	async getAllTransferRequests(): Promise<TransferRequestWithStatus[]> {
+		return Array.from(this.backend.values());
 	}
 }

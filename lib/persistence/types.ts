@@ -1,5 +1,7 @@
 import { TransferRequest } from '../types';
 
+export type RequestStates = 'pending' | 'failed' | 'succeeded';
+
 export interface PersistenceAdapter<Backend, Key> {
 	/**
 	 * Gets the transfer request from the backend of choice,
@@ -22,7 +24,23 @@ export interface PersistenceAdapter<Backend, Key> {
 	 */
 	has: (key: Key) => Promise<boolean>;
 	/**
+	 * Returns the status of the transfer request
+	 */
+	getStatus: (key: Key) => Promise<RequestStates>;
+	/**
+	 * Updates the status of pending transaction
+	 */
+	setStatus: (key: Key, status: RequestStates) => Promise<void>;
+	/**
+	 * Get all transfer requests made
+	 */
+	getAllTransferRequests: () => Promise<TransferRequestWithStatus[]>;
+	/**
 	 * The Backend of choice.
 	 */
 	backend: Backend;
+}
+
+export interface TransferRequestWithStatus extends TransferRequest {
+	status: RequestStates;
 }
