@@ -1,4 +1,6 @@
 import Gun from 'gun';
+import 'gun/lib/unset';
+import 'gun/lib/';
 import { IGunChainReference } from 'gun/types/chain';
 import { TransferRequest } from '../types';
 import { PersistenceAdapter, RequestStates, TransferRequestWithStatus } from './types';
@@ -38,13 +40,8 @@ export class GunPersistenceAdapter implements PersistenceAdapter<GunBackendType,
 
 	async get(key: GunKeyType): Promise<TransferRequest | undefined> {
 		try {
-			let values: any = [];
-			await this.backend
-				.get('transferRequests')
-				.get(this.address)
-				.map()
-				.once((d) => values.push(d));
-			const value = values.filter((data: any) => data.key === key);
+			const values = await this.getAllTransferRequests();
+			const value = values.filter((data: any) => data?.key === key)[0];
 			if (value) {
 				return value as TransferRequest;
 			} else return undefined;
@@ -55,12 +52,19 @@ export class GunPersistenceAdapter implements PersistenceAdapter<GunBackendType,
 
 	async remove(key: GunKeyType): Promise<boolean> {
 		try {
-			const value = (await this.get(key)) as any;
-			if (value) {
-				await this.backend.get(value._['#']).unset(value);
-				return true;
-			}
-			return false;
+			let deleted = false;
+			await this.backend
+				.get('transferRequests')
+				.get(this.address)
+				.map()
+				// @ts-expect-error
+				.val(function (this: IGunChainReference, val: any, field: any) {
+					if (val?.key === key && !deleted) {
+						this.back(1).put({ [field]: null });
+						deleted = true;
+					}
+				});
+			return true;
 		} catch (e) {
 			return false;
 		}
@@ -107,7 +111,11 @@ export class GunPersistenceAdapter implements PersistenceAdapter<GunBackendType,
 		await this.backend
 			.get('transferRequests')
 			.map()
-			.once((d) => values.push(d));
+			.once((d) => {
+				if (d) {
+					values.push(d);
+				}
+			});
 		return values as TransferRequestWithStatus[];
 	}
 }
