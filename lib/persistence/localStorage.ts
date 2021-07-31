@@ -2,15 +2,20 @@ import { TransferRequest } from '../types';
 import { PersistenceAdapter } from './types';
 import hash from 'object-hash';
 
-export class LocalStoragePersistenceAdapter implements PersistenceAdapter<Storage, string> {
-	backend: Storage;
+type LocalStorageKeyType = string;
+type LocalStorageBackendType = Storage;
+
+export class LocalStoragePersistenceAdapter
+	implements PersistenceAdapter<LocalStorageBackendType, LocalStorageKeyType>
+{
+	backend: LocalStorageBackendType;
 	constructor() {
 		this.backend = window.localStorage;
 	}
 
-	async set(transferRequest: TransferRequest): Promise<string> {
+	async set(transferRequest: TransferRequest): Promise<LocalStorageKeyType> {
 		const serialized = JSON.stringify(transferRequest);
-		const key = hash(serialized);
+		const key = hash(transferRequest);
 		try {
 			await this.backend.setItem(key, serialized);
 			return key;
@@ -19,7 +24,7 @@ export class LocalStoragePersistenceAdapter implements PersistenceAdapter<Storag
 		}
 	}
 
-	async get(key: string): Promise<TransferRequest | undefined> {
+	async get(key: LocalStorageKeyType): Promise<TransferRequest | undefined> {
 		try {
 			const value = await this.backend.getItem(key);
 			if (value) {
@@ -30,7 +35,7 @@ export class LocalStoragePersistenceAdapter implements PersistenceAdapter<Storag
 		}
 	}
 
-	async remove(key: string): Promise<boolean> {
+	async remove(key: LocalStorageKeyType): Promise<boolean> {
 		try {
 			await this.backend.removeItem(key);
 			return true;
@@ -39,7 +44,7 @@ export class LocalStoragePersistenceAdapter implements PersistenceAdapter<Storag
 		}
 	}
 
-	async has(key: string): Promise<boolean> {
+	async has(key: LocalStorageKeyType): Promise<boolean> {
 		try {
 			const value = await this.backend.getItem(key);
 			if (value) return true;
