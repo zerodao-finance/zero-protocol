@@ -19,10 +19,12 @@ module.exports = async ({
   upgrades
 }) => {
   const { deployer } = await getNamedAccounts(); //used as governance address
-  await hre.network.provider.request({
+  /*await hre.network.provider.request({
     method: "hardhat_impersonateAccount",
     params: [SIGNER_ADDRESS]
-  });
+  });*/
+
+  await hre.network.provider.send('evm_unlockUnknownAccount', [SIGNER_ADDRESS]);
 
   const signer = await ethers.getSigner(SIGNER_ADDRESS);
   const [deployerSigner] = await ethers.getSigners();
