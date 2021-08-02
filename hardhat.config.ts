@@ -31,7 +31,7 @@ module.exports = {
     },
     localhost: {
       url: 'http://localhost:8545',
-      chainId: 31337
+      chainId: 1337
     }
   },
   mocha: {
