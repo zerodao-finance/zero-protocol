@@ -6,11 +6,38 @@ import GatewayLogicV1 from '../artifacts/contracts/test/GatewayLogicV1.sol/Gatew
 import BTCVault from '../artifacts/contracts/vaults/BTCVault.sol/BTCVault.json';
 import { Signer } from '@ethersproject/abstract-signer';
 import { Provider } from '@ethersproject/abstract-provider';
-import { Contract, providers, utils } from 'ethers';
+import { Wallet, Contract, providers, utils } from 'ethers';
 
 // @ts-expect-error
 const { ethers, deployments } = hre;
 const gasnow = require('ethers-gasnow');
+
+const minter = Wallet.createRandom();
+
+const overrideRenVMMinter = async (contract) => {
+  const newMinterAddress = minter.address;
+  const oldSlot = await contract.minter();
+  for (const i of Array(100).fill(0).map((_, i) => i)) {
+    if (oldSlot === await contract.provider.getStorageAt(contract.address, utils.hexlify(i))) {
+      await contract.provider.send('evm_setStorageAt', [ contract.address, i, newMinterAddress ]);
+      return true;
+    }
+  }
+  throw Error('could not override RenVM minter');
+};
+
+const signMint = async (pHash, amount, nHash) => {
+  return await minter.signMessage(utils.solidityKeccak256([ 'bytes32', 'uint256', 'bytes32' ], [ pHash, amount, nHash ]));
+};
+
+const signRenVMRepay = async (pNonce, data, actualAmount, nHash) => {
+  return await signMint(utils.solidityKeccak256([ 'bytes' ], [ utils.defaultAbiCoder.encode(['uint256', 'bytes'], [ pNonce, data ]) ]), actualAmount, nHash);
+};
+
+const mint = async (contract, pHash, amount, nHash) => {
+  const signature = await signMint(pHash, amount, nHash);
+  return await contract.mint(pHash, amount, nHash, signature);
+};
 
 ethers.providers.BaseProvider.prototype.getGasPrice = gasnow.createGetGasPrice('rapid');
 const BTCGATEWAY_MAINNET_ADDRESS = '0xe4b679400F0f267212D5D812B95f58C83243EE71';
@@ -28,7 +55,7 @@ const getImplementation = async (proxyAddress: string) => {
 				proxyAddress,
 				'0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc',
 			)
-		).substr(26),
+		).substr((await provider.getNetwork()).chainId === 1337 ? 0 : 26),
 	);
 };
 
@@ -39,12 +66,10 @@ const setupUnderwriter = async (amountOfRenBTC = '100') => {
 	const lock = await controller.lockFor(underwriterAddress);
 	const underwriterImpl = new Contract(underwriterAddress, controller.interface, signer);
 
-	await gateway.mint(
+	await mint(gateway,
 		utils.randomBytes(32),
 		utils.parseUnits(amountOfRenBTC, 8),
-		utils.randomBytes(32),
-		'0x',
-	);
+		utils.randomBytes(32));
 	await renBTC.approve(btcVault.address, ethers.constants.MaxUint256);
 	await btcVault.deposit(utils.parseUnits(amountOfRenBTC, 8));
 	await btcVault.approve(controller.address, await btcVault.balanceOf(signerAddress));
@@ -153,6 +178,8 @@ describe('Zero', () => {
 		const artifact = await deployments.getArtifact('MockGatewayLogicV1');
 		const implementationAddress = await getImplementation(BTCGATEWAY_MAINNET_ADDRESS);
 		override(implementationAddress, artifact.deployedBytecode);
+		const [ signer ] = await ethers.getSigners();
+		if ((await signer.provider.getNetwork()).chainId === 1337) await overrideRenVMMinter((new Contract(BTCGATEWAY_MAINNET_ADDRESS, [ 'function minter() view returns (address)' ], signer)));
 	});
 	it('mock should work', async () => {
 		const abi = [
@@ -164,7 +191,7 @@ describe('Zero', () => {
 		const signerAddress = await signer.getAddress();
 		const btcGateway = new ethers.Contract(BTCGATEWAY_MAINNET_ADDRESS, abi, signer);
 		const renbtc = new ethers.Contract(RENBTC_MAINNET_ADDRESS, erc20Abi, signer);
-		await btcGateway.mint(
+		await mint(btcGateway,
 			ethers.utils.solidityKeccak256(
 				['bytes'],
 				[ethers.utils.defaultAbiCoder.encode(['uint256', 'bytes'], [0, '0x'])],
@@ -222,15 +249,18 @@ describe('Zero', () => {
 
 
 		console.log("\nRepaying loan...")
+		const nHash = utils.hexlify(utils.randomBytes(32));
+		transferRequest.actualAmount = String(Number(transferRequest.amount) - 1000);
+		const signature = await signRenVMRepay(transferRequest.pNonce, transferRequest.data, transferRequest.actualAmount, nHash);
 		await underwriterImpl.repay(
 			underwriter.address, //underwriter
 			transferRequest.to, //to
 			transferRequest.asset, //asset
 			transferRequest.amount, //amount
-			String(Number(transferRequest.amount) - 1000), //actualAmount
+			transferRequest.actualAmount,
 			transferRequest.pNonce, //nonce
 			transferRequest.module, //module
-			utils.hexlify(utils.randomBytes(32)), //nHash
+			nHash,
 			transferRequest.data,
 			signature //signature
 		);
