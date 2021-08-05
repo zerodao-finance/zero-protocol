@@ -7,6 +7,7 @@ import { EIP712_TYPES } from './config/constants';
 import RenVM from './util/renvm';
 import { computeP } from './util/helpers';
 import { createNode, ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
+import { PersistenceAdapter } from './persistence';
 
 class TransferRequest {
 	public module: string;
@@ -128,8 +129,8 @@ export async function createZeroConnection(address: string): Promise<ZeroConnect
 	return await createNode(connOptions);
 }
 
-export function createZeroUser(connection: ZeroConnection) {
-	return new ZeroUser(connection);
+export function createZeroUser(connection: ZeroConnection, persistence?: PersistenceAdapter<any, any>) {
+	return new ZeroUser(connection, persistence);
 }
 
 export function createZeroKeeper(connection: ZeroConnection) {

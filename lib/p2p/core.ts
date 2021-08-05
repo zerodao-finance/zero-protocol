@@ -7,17 +7,20 @@ import pipe from 'it-pipe';
 import lp from 'it-length-prefixed';
 import { ConnectionTypes } from './types';
 import { TransferRequest } from '../types';
+import { PersistenceAdapter, InMemoryPersistenceAdapter } from '../persistence';
 class ZeroConnection extends libp2p {}
 
 class ZeroUser {
 	conn: ConnectionTypes;
 	keepers: string[];
 	log: Logger;
+	storage: PersistenceAdapter<any, any>;
 
-	constructor(connection: ConnectionTypes) {
+	constructor(connection: ConnectionTypes, persistence?: PersistenceAdapter<any, any>) {
 		this.conn = connection;
 		this.keepers = [];
 		this.log = createLogger('zero.user');
+		this.storage = persistence ?? new InMemoryPersistenceAdapter();
 	}
 
 	async subscribeKeepers() {
@@ -54,12 +57,14 @@ class ZeroUser {
 	}
 
 	async publishTransferRequest(transferRequest: TransferRequest) {
+		const key = await this.storage.set(transferRequest);
 		if (this.keepers.length === 0) {
 			this.log.error('Cannot publish transfer request if no keepers are found');
 			return;
 		}
 		try {
 			let ackReceived = false;
+			// should add handler for rejection
 			await this.conn.handle('/zero/user/confirmation', async ({ stream }) => {
 				pipe(stream.source, lp.decode(), async (rawData: any) => {
 					let string = [];
@@ -67,6 +72,7 @@ class ZeroUser {
 						string.push(msg.toString());
 					}
 					const { txConfirmation } = JSON.parse(string.join(''));
+					await this.storage.setStatus(key, 'succeeded');
 					ackReceived = true;
 					this.log.info(`txDispatch confirmed: ${txConfirmation}`);
 				});
