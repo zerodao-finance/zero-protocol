@@ -19,11 +19,27 @@ contract ZeroUniswapFactory {
 	}
 }
 
+library AddressSliceLib {
+  function slice(address[] memory ary, uint256 start, uint256 end) internal pure returns (address[] memory result) {
+    uint256 length = end - start;
+    result = new address[](length);
+    for (uint256 i = 0; i < length; i++) {
+      result[i] = ary[i + start];
+    }
+  }
+  function slice(address[] memory ary, uint256 start) internal pure returns (address[] memory result) {
+    result = slice(ary, start, ary.length);
+  }
+}
+
+    
+
 contract ZeroUniswapWrapper {
 	address[] public immutable path;
 	address public immutable router;
 
-    using SafeMath for uint256;
+	using SafeMath for uint256;
+	using AddressSliceLib for address[];
 
 	constructor(address _router, address[] memory _path) {
 		router = _router;
@@ -31,41 +47,52 @@ contract ZeroUniswapWrapper {
 	}
 
 	function estimate(uint256 _amount) public returns (uint256) {
-        if (path[0] == address(0x0)) {
-            return IUniswapV2Router02(router).getAmountsOut(_amount, path[1:])[path.length-2];
-        } else if(path[path.length-1] == address(0x0)){
-            return IUniswapV2Router02(router).getAmountsOut(_amount, path[:path.length-1])[path.length-2];
-        } else {
-            return IUniswapV2Router02(router).getAmountsOut(_amount, path)[path.length - 1];
-        }
+		if (path[0] == address(0x0)) {
+			return IUniswapV2Router02(router).getAmountsOut(_amount, path.slice(1))[path.length - 2];
+		} else if (path[path.length - 1] == address(0x0)) {
+			return IUniswapV2Router02(router).getAmountsOut(_amount, path.slice(0, path.length - 1))[path.length - 2];
+		} else {
+			return IUniswapV2Router02(router).getAmountsOut(_amount, path)[path.length - 1];
+		}
 	}
 
 	function convert(address _module) external payable returns (uint256) {
-        if (path[0] == address(0x0)) {
-            // Then the input token is Ether, not ERC20
-            uint256 _balance = address(this).balance;
-            uint256 _minOut = estimate(_balance).sub(1); //Subtract one for minimum in case of rounding errors
-            IUniswapV2Router02(router).swapExactETHForTokensSupportingFeeOnTransferTokens(_minOut, path[1:], msg.sender, block.timestamp);
-            uint256 _actualOut = IERC20(path[path.length-1]).balanceOf(address(this));
-            IERC20(path[path.length-1]).transfer(msg.sender, _actualOut);
-            return _actualOut;
-        } else if (path[path.length-1] == address(0x0)) {
-            // Then the output token is Ether, not ERC20
-            uint256 _balance = IERC20(path[0]).balanceOf(address(this));
-            require(IERC20(path[0]).approve(address(router), _balance), 'approve failed');
-            uint256 _minOut = estimate(_balance).sub(1); //Subtract one for minimum in case of rounding errors
-            IUniswapV2Router02(router).swapExactTokensForETH(_balance, _minOut, path, msg.sender, block.timestamp);
-            uint256 _actualOut = address(this).balance;
-            msg.sender.send(_actualOut);
-            return _actualOut;
-        } else {
-            // Then the input and output tokens are both ERC20
-		    uint256 _balance = IERC20(path[0]).balanceOf(address(this));
-		    require(IERC20(path[0]).approve(address(router), _balance), 'approve failed.');
-		    uint256 _minOut = estimate(_balance).sub(1); //Subtract one for minimum in case of rounding errors
-		    uint256 _actualOut = IUniswapV2Router02(router).swapExactTokensForTokens(_balance, _minOut, path, msg.sender, block.timestamp);
-            IERC20(path[path.length-1]).transfer(msg.sender, _actualOut);
-            return _actualOut;
-	    }
-    }
+		if (path[0] == address(0x0)) {
+			// Then the input token is Ether, not ERC20
+			uint256 _balance = address(this).balance;
+			uint256 _minOut = estimate(_balance).sub(1); //Subtract one for minimum in case of rounding errors
+			IUniswapV2Router02(router).swapExactETHForTokensSupportingFeeOnTransferTokens(
+				_minOut,
+				path.slice(1),
+				msg.sender,
+				block.timestamp
+			);
+			uint256 _actualOut = IERC20(path[path.length - 1]).balanceOf(address(this));
+			IERC20(path[path.length - 1]).transfer(msg.sender, _actualOut);
+			return _actualOut;
+		} else if (path[path.length - 1] == address(0x0)) {
+			// Then the output token is Ether, not ERC20
+			uint256 _balance = IERC20(path[0]).balanceOf(address(this));
+			require(IERC20(path[0]).approve(address(router), _balance), 'approve failed');
+			uint256 _minOut = estimate(_balance).sub(1); //Subtract one for minimum in case of rounding errors
+			IUniswapV2Router02(router).swapExactTokensForETH(_balance, _minOut, path, msg.sender, block.timestamp);
+			uint256 _actualOut = address(this).balance;
+			msg.sender.send(_actualOut);
+			return _actualOut;
+		} else {
+			// Then the input and output tokens are both ERC20
+			uint256 _balance = IERC20(path[0]).balanceOf(address(this));
+			require(IERC20(path[0]).approve(address(router), _balance), 'approve failed.');
+			uint256 _minOut = estimate(_balance).sub(1); //Subtract one for minimum in case of rounding errors
+			uint256 _actualOut = IUniswapV2Router02(router).swapExactTokensForTokens(
+				_balance,
+				_minOut,
+				path,
+				msg.sender,
+				block.timestamp
+			);
+			IERC20(path[path.length - 1]).transfer(msg.sender, _actualOut);
+			return _actualOut;
+		}
+	}
 }
