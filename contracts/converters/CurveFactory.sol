@@ -12,7 +12,7 @@ contract ZeroCurveFactory {
 		int128 _tokenInIndex,
 		int128 _tokenOutIndex,
 		address _pool
-	) {
+	) public {
 		ZeroCurveWrapper wrapper = new ZeroCurveWrapper(_tokenInIndex, _tokenOutIndex, _pool);
 		wrappers.push(wrapper);
 	}
@@ -43,11 +43,11 @@ contract ZeroCurveWrapper {
 		return ICurvePool(pool).get_dy(tokenInIndex, tokenOutIndex, _amount);
 	}
 
-	function convert(address _to) external returns (uint256) {
+	function convert(address _module) external returns (uint256) {
 		uint256 _balance = IERC20(tokenInAddress).balanceOf(address(this));
 		uint256 _minOut = estimate(_balance).sub(1); //Subtract one for minimum in case of rounding errors
 		uint256 _actualOut = ICurvePool(pool).exchange(tokenInIndex, tokenOutIndex, _balance, _minOut);
-		IERC20(tokenOutAddress).safeTransfer(msg.sender, _actualOut);
+		IERC20(tokenOutAddress).transfer(msg.sender, _actualOut);
 		return _actualOut;
 	}
 }
