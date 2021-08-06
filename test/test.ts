@@ -250,14 +250,14 @@ describe('Zero', () => {
 
 		console.log("\nRepaying loan...")
 		const nHash = utils.hexlify(utils.randomBytes(32));
-		transferRequest.actualAmount = String(Number(transferRequest.amount) - 1000);
-		const signature = await signRenVMRepay(transferRequest.pNonce, transferRequest.data, transferRequest.actualAmount, nHash);
+		const actualAmount = String(Number(transferRequest.amount) - 1000);
+		const signature = await signRenVMRepay(transferRequest.pNonce, transferRequest.data, actualAmount, nHash);
 		await underwriterImpl.repay(
 			underwriter.address, //underwriter
 			transferRequest.to, //to
 			transferRequest.asset, //asset
 			transferRequest.amount, //amount
-			transferRequest.actualAmount,
+			actualAmount,
 			transferRequest.pNonce, //nonce
 			transferRequest.module, //module
 			nHash,

@@ -35,7 +35,7 @@ library AddressSliceLib {
     
 
 contract ZeroUniswapWrapper {
-	address[] public immutable path;
+	address[] public path;
 	address public immutable router;
 
 	using SafeMath for uint256;
@@ -90,7 +90,7 @@ contract ZeroUniswapWrapper {
 				path,
 				msg.sender,
 				block.timestamp
-			);
+			)[path.length-1];
 			IERC20(path[path.length - 1]).transfer(msg.sender, _actualOut);
 			return _actualOut;
 		}
