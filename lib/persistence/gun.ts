@@ -1,6 +1,8 @@
 import Gun from 'gun';
+/*
 import 'gun/lib/unset';
 import 'gun/lib/';
+*/
 import { IGunChainReference } from 'gun/types/chain';
 import { TransferRequest } from '../types';
 import { PersistenceAdapter, RequestStates, TransferRequestWithStatus } from './types';

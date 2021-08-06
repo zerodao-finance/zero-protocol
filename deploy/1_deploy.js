@@ -26,8 +26,6 @@ module.exports = async ({
       method: "hardhat_impersonateAccount",
       params: [SIGNER_ADDRESS]
     })
-  } else if (chainId === 1337) {
-    await hre.network.provider.send('evm_unlockUnknownAccount', [SIGNER_ADDRESS]);
   }
   const signer = await ethers.getSigner(SIGNER_ADDRESS);
   const [deployerSigner] = await ethers.getSigners();
