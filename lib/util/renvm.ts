@@ -4,6 +4,8 @@ import { stripHexPrefix, maybeCoerceToGHash, encodeInitializationActions } from 
 import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
 import { getCreate2Address } from '@ethersproject/address';
 import assembleCloneCode from './assembleCloneCode';
+import RenJS, { LockAndMint } from '@renproject/ren';
+import { DepositCommon, LockAndMintParams } from '@renproject/interfaces';
 
 class RenVM {
 	public cachedProxyCodeHash: any;
@@ -78,5 +80,23 @@ class RenVM {
 		);
 	};
 }
+
+export const computeGatewayAddress = async <
+	Transaction = any,
+	Deposit extends DepositCommon<Transaction> = DepositCommon<Transaction>,
+	Address extends string | { address: string } = any,
+>(
+	ren: RenJS,
+	params: LockAndMintParams<Transaction, Deposit, Address>,
+) => {
+	const lockAndMint = await new LockAndMint(
+		ren.renVM,
+		params,
+		// @ts-ignore
+		{ ...ren._config },
+	)._initialize();
+	// @ts-expect-error
+	return lockAndMint.generateGatewayAddress();
+};
 
 export default RenVM;
