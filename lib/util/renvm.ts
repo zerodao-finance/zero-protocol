@@ -5,7 +5,11 @@ import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
 import { getCreate2Address } from '@ethersproject/address';
 import assembleCloneCode from './assembleCloneCode';
 import RenJS, { LockAndMint } from '@renproject/ren';
-import { DepositCommon, LockAndMintParams } from '@renproject/interfaces';
+import { LockChain } from '@renproject/interfaces';
+import { GatewayAddressParams } from './types';
+import { Bitcoin, Ethereum } from '@renproject/chains';
+import { ethers } from 'ethers';
+import { defaultAbiCoder, keccak256 } from 'ethers/lib/utils';
 
 class RenVM {
 	public cachedProxyCodeHash: any;
@@ -81,17 +85,37 @@ class RenVM {
 	};
 }
 
-export const computeGatewayAddress = async <
-	Transaction = any,
-	Deposit extends DepositCommon<Transaction> = DepositCommon<Transaction>,
-	Address extends string | { address: string } = any,
->(
-	ren: RenJS,
-	params: LockAndMintParams<Transaction, Deposit, Address>,
-) => {
+export const computeGatewayAddress = async (ren: RenJS, params: GatewayAddressParams) => {
+	// dev
+	throw new Error('Function is broken!');
+	let fromChain: LockChain;
+	switch (params.from) {
+		case 'btc': {
+			fromChain = Bitcoin();
+			break;
+		}
+		default: {
+			throw new Error(`Invalid from network: ${params.from}`);
+		}
+	}
+	const zeroController = '0x';
+	const pHash = keccak256(
+		defaultAbiCoder.encode(['uint256', 'address', 'bytes'], [params.pNonce, params.module, params.data]),
+	);
 	const lockAndMint = await new LockAndMint(
 		ren.renVM,
-		params,
+		{
+			from: fromChain,
+			nonce: params.nonce || ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+			to: Ethereum({ provider: params.signer.provider, signer: params.signer }).Address(zeroController),
+			contractCalls: [
+				{
+					// todo
+					contractParams: [],
+				},
+			],
+			asset: params.asset,
+		},
 		// @ts-ignore
 		{ ...ren._config },
 	)._initialize();
