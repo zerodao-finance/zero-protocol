@@ -219,7 +219,7 @@ describe('Zero', () => {
 			value: amount
 		});
 		await swapWrapper.convert(swapAddress);
-		const actualOut = (await wETH.balanceOf(await signer.getAddress())).toNumber() - (await wETH.balanceOf(await signer.getAddress())).toNumber();
+		const actualOut = (await wETH.balanceOf(await signer.getAddress())).toNumber() - balanceBefore;
 		expect(estimatedOut == actualOut, 'The swap amounts dont add up');
 	});
 
@@ -235,7 +235,7 @@ describe('Zero', () => {
 		await swapWrapper.convert(swapAddress);
 		const actualOut = (await signer.provider.getBalance(await signer.getAddress())).toNumber() - balanceBefore;
 		expect(estimatedOut == actualOut, 'The swap amounts dont add up');
-	})
+	});
 
 	it('should swap renBTC for wBTC on Uniswap', async () => {
 		const { renBTC, wBTC, controller, signer } = await getFixtures();
