@@ -69,6 +69,8 @@ const getFixtures = async () => {
 		swapModule: await ethers.getContract('Swap', signer),
 		uniswapFactory: await ethers.getContract('ZeroUniswapFactory', signer),
 		curveFactory: await ethers.getContract('ZeroCurveFactory', signer),
+		wrapper: await ethers.getContract('WrapNative', signer),
+		unwrapper: await ethers.getContract('UnwrapNative', signer),
 		gateway: new Contract(BTCGATEWAY_MAINNET_ADDRESS, GatewayLogicV1.abi, signer),
 		renBTC: new Contract(RENBTC_MAINNET_ADDRESS, erc20abi, signer),
 		wETH: new Contract(WETH_MAINNET_ADDRESS, erc20abi, signer),
@@ -161,7 +163,7 @@ describe('Zero', () => {
 		override(implementationAddress, artifact.deployedBytecode);
 
 
-		const { wBTC, renBTC, uniswapFactory, curveFactory, controller } = await getFixtures();
+		const { wBTC, renBTC, wETH, uniswapFactory, curveFactory, controller, wrapper, unwrapper } = await getFixtures();
 
 		// Curve wBTC -> renBTC Factory
 		const wBTCToRenBTCTx = await curveFactory.createWrapper(1, 0, CURVE_SBTC_POOL);
@@ -172,6 +174,12 @@ describe('Zero', () => {
 		const renBTCToWBTCTx = await uniswapFactory.createWrapper([renBTC.address, wBTC.address]);
 		const renBTCToWBTC = await getWrapperAddress(renBTCToWBTCTx);
 		await controller.setConverter(renBTC.address, wBTC.address, renBTCToWBTC);
+
+		// Wrapper ETH -> wETH
+		await controller.setConverter('0x0', wETH, wrapper);
+
+		// Unwrapper wETH -> ETH
+		await controller.setConverter(wETH, '0x0', unwrapper);
 
 
 
