@@ -96,7 +96,6 @@ contract ZeroUniswapWrapper {
 				msg.sender,
 				block.timestamp
 			)[path.length - 1];
-			console.log('sent', path[path.length - 1]);
 			return _actualOut;
 		}
 	}
