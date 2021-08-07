@@ -206,6 +206,37 @@ describe('Zero', () => {
 		expect(Number(ethers.utils.formatUnits(await renbtc.balanceOf(signerAddress), 8))).to.be.gt(0);
 	});
 
+	it('should wrap ETH and receive wETH', async () => {
+		const { wETH, controller, signer } = await getFixtures();
+		const balanceBefore = (await wETH.balanceOf(await signer.getAddress())).toNumber();
+		const swapAddress = await controller.converters('0x0', wETH.address);
+		const amount = '100000000000000000';
+		const swapWrapper = await getWrapperContract(swapAddress);
+
+		const estimatedOut = (await swapWrapper.estimate(amount)).toNumber();
+		await signer.sendTransaction({
+			to: swapAddress,
+			value: amount
+		});
+		await swapWrapper.convert(swapAddress);
+		const actualOut = (await wETH.balanceOf(await signer.getAddress())).toNumber() - (await wETH.balanceOf(await signer.getAddress())).toNumber();
+		expect(estimatedOut == actualOut, 'The swap amounts dont add up');
+	});
+
+	it('should unwrap wETH and receive ETH', async () => {
+		const { wETH, controller, signer } = await getFixtures();
+		const balanceBefore = (await signer.provider.getBalance(await signer.getAddress())).toNumber();
+		const swapAddress = await controller.converters(wETH.address, '0x0');
+		const amount = '100000000000000000';
+		const swapWrapper = await getWrapperContract(swapAddress);
+
+		const estimatedOut = (await swapWrapper.estimate(amount)).toNumber();
+		await wETH.transfer(swapAddress, amount);
+		await swapWrapper.convert(swapAddress);
+		const actualOut = (await signer.provider.getBalance(await signer.getAddress())).toNumber() - balanceBefore;
+		expect(estimatedOut == actualOut, 'The swap amounts dont add up');
+	})
+
 	it('should swap renBTC for wBTC on Uniswap', async () => {
 		const { renBTC, wBTC, controller, signer } = await getFixtures();
 		const swapAddress = await controller.converters(renBTC.address, wBTC.address);
