@@ -85,7 +85,7 @@ contract StrategyRenVM {
 			uint256 _amountOut = IyVault(vault).withdraw(_sharesDeficit);
 			address converter = IController(controller).converters(vaultWant, address(0x0));
 			IERC20(vaultWant).transfer(converter, _amountOut);
-			IConverter(converter).convert(address(0x0));
+			IConverter(converter).convert(address(this));
 			//TODO unwrap the wETH to ETHhow
 		}
 		console.log('Deposit called');
@@ -113,7 +113,7 @@ contract StrategyRenVM {
 			uint256 _amountOut = IyVault(vault).withdraw(_sharesDeficit);
 			address converter = IController(controller).converters(vaultWant, address(0x0));
 			IERC20(vaultWant).transfer(converter, _amountOut);
-			_amount = IConverter(converter).convert(address(0x0));
+			_amount = IConverter(converter).convert(address(this));
 			//TODO unwrap the wETH to ETH
 		}
 		_target.transfer(_amount);
