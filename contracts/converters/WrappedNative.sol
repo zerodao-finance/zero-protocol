@@ -9,7 +9,7 @@ import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
 contract WrapNative {
 	address public immutable wrapper;
 
-	constructor(_wrapper) {
+	constructor(address _wrapper) {
 		wrapper = _wrapper;
 	}
 
@@ -28,7 +28,7 @@ contract WrapNative {
 contract UnwrapNative {
 	address public immutable wrapper;
 
-	constructor(_wrapper) {
+	constructor(address _wrapper) {
 		wrapper = _wrapper;
 	}
 
