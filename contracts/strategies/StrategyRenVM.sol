@@ -75,8 +75,8 @@ contract StrategyRenVM {
 			// if ETH balance < ETH reserve
 			_gasWant = gasReserve.sub(_gasWant);
 			console.log('deposit handling eth');
-			address converter = IController(controller).converters(address(0x0), vaultWant);
-			uint256 _btcWant = IConverter(converter).estimate(_gasWant); //_gasWant is converted from ETH to wBTC
+			address _converter = IController(controller).converters(address(0x0), vaultWant);
+			uint256 _btcWant = IConverter(_converter).estimate(_gasWant); //_gasWant is converted from ETH to wBTC
 			console.log('curve pool calculated');
 			uint256 _sharesDeficit = estimateShares(_btcWant); //Estimate shares of wBTC
 			console.log('want shares', _sharesDeficit);
@@ -85,8 +85,8 @@ contract StrategyRenVM {
 			uint256 _amountOut = IyVault(vault).withdraw(_sharesDeficit);
 			address converter = IController(controller).converters(vaultWant, address(0x0));
 			IERC20(vaultWant).transfer(converter, _amountOut);
-			_amount = IConverter(converter).convert(_amountOut);
-			//TODO unwrap the wETH to ETH
+			IConverter(converter).convert(_amountOut);
+			//TODO unwrap the wETH to ETHhow
 		}
 		console.log('Deposit called');
 	}
