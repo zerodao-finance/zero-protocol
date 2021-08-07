@@ -147,13 +147,13 @@ const generateTransferRequest = async (amount: number) => {
 
 const getWrapperAddress = async (tx: any) => {
 	return (await tx.wait()).events[0].args._wrapper;
-}
+};
 
 const getWrapperContract = async (address: string) => {
 	const { signer } = await getFixtures();
 	const wrapperAbi = (await deployments.getArtifact('ZeroUniswapWrapper')).abi;
 	return new Contract(address, wrapperAbi, signer);
-}
+};
 
 describe('Zero', () => {
 	before(async () => {
@@ -162,8 +162,8 @@ describe('Zero', () => {
 		const implementationAddress = await getImplementation(BTCGATEWAY_MAINNET_ADDRESS);
 		override(implementationAddress, artifact.deployedBytecode);
 
-
-		const { wBTC, renBTC, wETH, uniswapFactory, curveFactory, controller, wrapper, unwrapper } = await getFixtures();
+		const { wBTC, renBTC, wETH, uniswapFactory, curveFactory, controller, wrapper, unwrapper } =
+			await getFixtures();
 
 		// Curve wBTC -> renBTC Factory
 		const wBTCToRenBTCTx = await curveFactory.createWrapper(1, 0, CURVE_SBTC_POOL);
@@ -242,24 +242,24 @@ describe('Zero', () => {
 
 		const estimatedOut = (await swapWrapper.estimate(amount)).toNumber();
 		await renBTC.transfer(swapAddress, amount);
-		await swapWrapper.convert(swapAddress)
-		const actualOut = (await wBTC.balanceOf(await signer.getAddress())).toNumber()
-		expect(estimatedOut == actualOut, 'The swap amounts dont add up')
+		await swapWrapper.convert(swapAddress);
+		const actualOut = (await wBTC.balanceOf(await signer.getAddress())).toNumber();
+		expect(estimatedOut == actualOut, 'The swap amounts dont add up');
 	});
 
 	it('should swap wBTC for renBTC on Curve', async () => {
 		const { renBTC, wBTC, controller, signer } = await getFixtures();
 		const swapAddress = await controller.converters(wBTC.address, renBTC.address);
-		const amount = String((await wBTC.balanceOf(await signer.getAddress())).toNumber())
+		const amount = String((await wBTC.balanceOf(await signer.getAddress())).toNumber());
 		const swapWrapper = await getWrapperContract(swapAddress);
 		const estimatedOut = (await swapWrapper.estimate(amount)).toNumber();
 		await wBTC.transfer(swapAddress, amount);
 		console.log('attempting to convert');
-		await swapWrapper.convert(swapAddress)
-		const actualOut = (await renBTC.balanceOf(await signer.getAddress())).toNumber()
+		await swapWrapper.convert(swapAddress);
+		const actualOut = (await renBTC.balanceOf(await signer.getAddress())).toNumber();
 		console.log('actual is', actualOut);
-		expect(estimatedOut == actualOut, 'The swap amounts dont add up')
-	})
+		expect(estimatedOut == actualOut, 'The swap amounts dont add up');
+	});
 
 	it('should be able to launch an underwriter', async () => {
 		await setupUnderwriter();
