@@ -66,7 +66,8 @@ const getFixtures = async () => {
 		strategy: await ethers.getContract('StrategyRenVM', signer),
 		btcVault: await ethers.getContract('BTCVault', signer),
 		swapModule: await ethers.getContract('Swap', signer),
-		wbtcToRenBTC: await ethers.getContract('WBTC_TO_RENBTC', signer),
+		uniswapFactory: await ethers.getContract('ZeroUniswapFactory', signer),
+		curveFactory: await ethers.getContract('ZeroCurveFactory', signer),
 		gateway: new Contract(BTCGATEWAY_MAINNET_ADDRESS, GatewayLogicV1.abi, signer),
 		renBTC: new Contract(RENBTC_MAINNET_ADDRESS, erc20abi, signer),
 		wETH: new Contract(WETH_MAINNET_ADDRESS, erc20abi, signer),
@@ -141,12 +142,36 @@ const generateTransferRequest = async (amount: number) => {
 	);
 };
 
+const getWrapperAddress = async (tx: any) => {
+	return (await tx.wait()).events[0].args._wrapper;
+}
+
+const getWrapperContract = async (address: string) => {
+	const { signer } = await getFixtures();
+	const wrapperAbi = (await deployments.getArtifact('ZeroUniswapWrapper')).abi;
+	return new Contract(address, wrapperAbi, signer);
+}
+
 describe('Zero', () => {
 	before(async () => {
 		await deployments.fixture();
 		const artifact = await deployments.getArtifact('MockGatewayLogicV1');
 		const implementationAddress = await getImplementation(BTCGATEWAY_MAINNET_ADDRESS);
 		override(implementationAddress, artifact.deployedBytecode);
+
+
+		const { wBTC, renBTC, uniswapFactory, curveFactory, controller } = await getFixtures();
+
+		// Uniswap wBTC -> renBTC Factory
+		const wBTCToRenBTCTx = await uniswapFactory.createWrapper([wBTC.address, renBTC.address]);
+		const wBTCToRenBTC = await getWrapperAddress(wBTCToRenBTCTx);
+		await controller.setConverter(wBTC.address, renBTC.address, wBTCToRenBTC);
+
+		// Uniswap renBTC -> wBTC Factory
+		const renBTCToWBTCTx = await uniswapFactory.createWrapper([renBTC.address, wBTC.address]);
+		const renBTCToWBTC = await getWrapperAddress(renBTCToWBTCTx);
+		await controller.setConverter(renBTC.address, wBTC.address, renBTCToWBTC);
+
 	});
 	it('mock should work', async () => {
 		const abi = [
@@ -169,9 +194,22 @@ describe('Zero', () => {
 		);
 		expect(Number(ethers.utils.formatUnits(await renbtc.balanceOf(signerAddress), 8))).to.be.gt(0);
 	});
-	it('should be able to do a uniswap swap', async () => {
-		const { wbtcToRenBTC } = await getFixtures();
+
+	it('should swap renBTC for wBTC on Uniswap', async () => {
+		const { renBTC, wBTC, controller, signer } = await getFixtures();
+		console.log("getting swap address")
+		const swapAddress = await controller.converters(renBTC.address, wBTC.address);
+		const amount = '50000000';
+		const swapWrapper = await getWrapperContract(swapAddress);
+
+		const estimatedOut = (await swapWrapper.estimate(amount)).toNumber();
+		console.log("Estimated out is", estimatedOut)
+		await renBTC.transfer(swapAddress, amount);
+		await swapWrapper.convert(swapAddress)
+		const actualOut = (await wBTC.balanceOf(await signer.getAddress())).toNumber()
+		expect(estimatedOut == actualOut, 'The swap amounts dont add up')
 	})
+
 	it('should be able to launch an underwriter', async () => {
 		await setupUnderwriter();
 	});
