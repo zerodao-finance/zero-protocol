@@ -66,6 +66,7 @@ const getFixtures = async () => {
 		strategy: await ethers.getContract('StrategyRenVM', signer),
 		btcVault: await ethers.getContract('BTCVault', signer),
 		swapModule: await ethers.getContract('Swap', signer),
+		wbtcToRenBTC: await ethers.getContract('WBTC_TO_RENBTC', signer),
 		gateway: new Contract(BTCGATEWAY_MAINNET_ADDRESS, GatewayLogicV1.abi, signer),
 		renBTC: new Contract(RENBTC_MAINNET_ADDRESS, erc20abi, signer),
 		wETH: new Contract(WETH_MAINNET_ADDRESS, erc20abi, signer),
@@ -168,6 +169,9 @@ describe('Zero', () => {
 		);
 		expect(Number(ethers.utils.formatUnits(await renbtc.balanceOf(signerAddress), 8))).to.be.gt(0);
 	});
+	it('should be able to do a uniswap swap', async () => {
+		const { wbtcToRenBTC } = await getFixtures();
+	})
 	it('should be able to launch an underwriter', async () => {
 		await setupUnderwriter();
 	});

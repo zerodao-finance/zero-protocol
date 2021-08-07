@@ -8,7 +8,9 @@ Object.defineProperty(validate, 'assertUpgradeSafe', {
 const SIGNER_ADDRESS = "0x0F4ee9631f4be0a63756515141281A3E2B293Bbe";
 const RENBTC_MAINNET_ADDRESS = '0xeb4c2781e4eba804ce9a9803c67d0893436bb27d';
 const WETH_MAINNET_ADDRESS = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+const WBTC_MAINNET_ADDRESS = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599';
 const USDC_MAINNET_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
+const UNISWAP_ROUTER_V2 = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D ';
 
 module.exports = async ({
   deployments,
@@ -78,6 +80,21 @@ module.exports = async ({
 
   await controller.approveStrategy(RENBTC_MAINNET_ADDRESS, strategyRenVM.address);
   await controller.setStrategy(RENBTC_MAINNET_ADDRESS, strategyRenVM.address);
+
+  const curveFactory = await deployments.deploy('ZeroCurveFactory', {
+    args: [],
+    contractName: 'ZeroCurveFactory',
+    from: deployer
+  });
+
+  const uniswapFactory = await deployments.deploy('ZeroUniswapFactory', {
+    args: [UNISWAP_ROUTER_V2],
+    contractName: 'ZeroUniswapFactory',
+    from: deployer
+  });
+
+  const WBTC_TO_RENBTC = await uniswapFactory.createWrapper([WBTC_MAINNET_ADDRESS, RENBTC_MAINNET_ADDRESS]);
+  console.log("wbtc to renbtc wrapper created")
 
 };
 
