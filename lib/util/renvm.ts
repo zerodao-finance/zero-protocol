@@ -109,10 +109,10 @@ export const computeGatewayAddress = async (ren: RenJS, params: GatewayAddressPa
 			nonce: params.nonce || ethers.utils.hexlify(ethers.utils.randomBytes(32)),
 			to: Ethereum({ provider: params.signer.provider, signer: params.signer }).Address(zeroController),
 			contractCalls: [
-				{
-					// todo
-					contractParams: [],
-				},
+				// {
+				// 	// todo
+				// 	contractParams: [],
+				// },
 			],
 			asset: params.asset,
 		},
