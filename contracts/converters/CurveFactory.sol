@@ -39,10 +39,19 @@ contract ZeroCurveWrapper {
 		pool = _pool;
 	}
 
-	function estimate(uint256 _amount) public returns (uint256) {
-		return ICurvePool(pool).get_dy(tokenInIndex, tokenOutIndex, _amount);
+	function estimate(uint256 _amount) public returns (uint256 result) {
+          (bool success, bytes memory revertData) =  address(this).call(abi.encodeWithSelector(this._estimate.selector, _amount));
+	  require(!success, "unexpected: internal call to _estimate must revert");
+	  (result) = abi.decode(revertData, (uint256));
 	}
-
+	function _estimate(uint256 _amount) public {
+          require(address(this) == msg.sender, "must be called by self");
+	  uint256 actualOut = ICurvePool(pool).exchange(tokenInIndex, tokenOutIndex, _amount, 1);
+	  bytes memory result = abi.encode(actualOut);
+	  assembly {
+            revert(add(0x20, result), mload(result))
+	  }
+	}
 	function convert(address _module) external returns (uint256) {
 		uint256 _balance = IERC20(tokenInAddress).balanceOf(address(this));
 		uint256 _minOut = estimate(_balance).sub(1); //Subtract one for minimum in case of rounding errors
