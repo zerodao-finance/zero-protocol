@@ -176,10 +176,10 @@ describe('Zero', () => {
 		await controller.setConverter(renBTC.address, wBTC.address, renBTCToWBTC);
 
 		// Wrapper ETH -> wETH
-		await controller.setConverter(ethers.constants.AddressZero, wETH.address, wrapper);
+		await controller.setConverter(ethers.constants.AddressZero, wETH.address, wrapper.address);
 
 		// Unwrapper wETH -> ETH
-		await controller.setConverter(wETH.address, ethers.constants.AddressZero, unwrapper);
+		await controller.setConverter(wETH.address, ethers.constants.AddressZero, unwrapper.address);
 	});
 	it('mock should work', async () => {
 		const abi = [
