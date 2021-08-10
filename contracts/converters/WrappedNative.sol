@@ -9,11 +9,11 @@ import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
 contract WrapNative {
 	address public immutable wrapper;
 
-	constructor(_wrapper) {
+	constructor(address _wrapper) {
 		wrapper = _wrapper;
 	}
 
-	receive() external {}
+	receive() external payable {}
 
 	function estimate(uint256 _amount) public view returns (uint256) {
 		return _amount;
@@ -21,25 +21,25 @@ contract WrapNative {
 
 	function convert(address _module) external payable returns (uint256) {
 		IWETH(wrapper).deposit{value: address(this).balance}();
-		IERC20(wrapper).transfer(msg.sender, IERC20(wrapper).balanceOf(this));
+		IERC20(wrapper).transfer(msg.sender, IERC20(wrapper).balanceOf(address(this)));
 	}
 }
 
 contract UnwrapNative {
 	address public immutable wrapper;
 
-	constructor(_wrapper) {
+	constructor(address _wrapper) {
 		wrapper = _wrapper;
 	}
 
-	receive() external {}
+	receive() external payable {}
 
 	function estimate(uint256 _amount) public view returns (uint256) {
 		return _amount;
 	}
 
 	function convert(address _module) external payable returns (uint256) {
-		IWETH(wrapper).withdraw{value: IERC20(wrapper).balanceOf(address(this))}();
+		IWETH(wrapper).withdraw(IERC20(wrapper).balanceOf(address(this)));
 		msg.sender.send(address(this).balance);
 	}
 }
