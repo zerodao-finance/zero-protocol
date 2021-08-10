@@ -90,7 +90,6 @@ contract StrategyRenVM {
 		}
 		console.log('Deposit called');
 	}
-
 	function _withdraw(uint256 _amount, address _asset) private returns (uint256) {
 		require(_asset == want || _asset == vaultWant, 'asset not supported');
 		address converter = IController(controller).converters(want, vaultWant);
