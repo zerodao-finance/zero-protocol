@@ -223,7 +223,7 @@ describe('Zero', () => {
 	it('should unwrap wETH and receive ETH', async () => {
 		const { wETH, controller, signer } = await getFixtures();
 		const balanceBefore = (await signer.provider.getBalance(await signer.getAddress())).toNumber();
-		const swapAddress = await controller.converters(wETH.address, '0x0');
+		const swapAddress = await controller.converters(wETH.address, ethers.constants.AddressZero);
 		const amount = '100000000000000000';
 		const swapWrapper = await getWrapperContract(swapAddress);
 
