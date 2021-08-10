@@ -61,10 +61,10 @@ contract StrategyRenVM {
 		if (_want > wantReserve) {
 			// Then we can deposit excess tokens into the vault
 			address converter = IController(controller).converters(want, vaultWant);
-			require(converter != address('0x0'), '!converter');
+			require(converter != address(0x0), '!converter');
 			uint256 _excess = _want.sub(wantReserve);
 			IERC20(want).transfer(converter, _excess);
-			uint256 _amountOut = IConverter(converter).convert(address('0x0'));
+			uint256 _amountOut = IConverter(converter).convert(address(0x0));
 			IERC20(vaultWant).safeApprove(address(vault), _amountOut);
 			IyVault(vault).deposit(_amountOut);
 		}
@@ -85,7 +85,7 @@ contract StrategyRenVM {
 			uint256 _amountOut = IyVault(vault).withdraw(_sharesDeficit);
 			address converter = IController(controller).converters(vaultWant, address(0x0));
 			IERC20(vaultWant).transfer(converter, _amountOut);
-			IConverter(converter).convert(_amountOut);
+			IConverter(converter).convert(address(this));
 			//TODO unwrap the wETH to ETHhow
 		}
 		console.log('Deposit called');
@@ -113,7 +113,7 @@ contract StrategyRenVM {
 			uint256 _amountOut = IyVault(vault).withdraw(_sharesDeficit);
 			address converter = IController(controller).converters(vaultWant, address(0x0));
 			IERC20(vaultWant).transfer(converter, _amountOut);
-			_amount = IConverter(converter).convert(_amountOut);
+			_amount = IConverter(converter).convert(address(this));
 			//TODO unwrap the wETH to ETH
 		}
 		_target.transfer(_amount);
