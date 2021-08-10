@@ -93,5 +93,17 @@ module.exports = async ({
     from: deployer
   });
 
+  await deployments.deploy('WrapNative', {
+    args: [WETH_MAINNET_ADDRESS],
+    contractName: 'WrapNative',
+    from: deployer
+  });
+
+  await deployments.deploy('UnwrapNative', {
+    args: [WETH_MAINNET_ADDRESS],
+    contractName: 'UnwrapNative',
+    from: deployer
+  });
+
 };
 
