@@ -3,6 +3,7 @@
 pragma solidity >=0.7.0;
 import {ICurvePool} from '../interfaces/ICurvePool.sol';
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
+import { SafeERC20 } from "oz410/token/ERC20/SafeERC20.sol";
 import {SafeMath} from 'oz410/math/SafeMath.sol';
 import 'hardhat/console.sol';
 
@@ -28,6 +29,7 @@ contract ZeroCurveWrapper {
 	address public immutable pool;
 
 	using SafeMath for uint256;
+	using SafeERC20 for IERC20;
 
 	constructor(
 		int128 _tokenInIndex,
@@ -42,25 +44,15 @@ contract ZeroCurveWrapper {
 	}
 
 	function estimate(uint256 _amount) public returns (uint256 result) {
-          (bool success, bytes memory revertData) =  address(this).call(abi.encodeWithSelector(this._estimate.selector, _amount));
-	  require(!success, "unexpected: internal call to _estimate must revert");
-	  (result) = abi.decode(revertData, (uint256));
-	}
-	function _estimate(uint256 _amount) public {
-          require(address(this) == msg.sender, "must be called by self");
-	  uint256 actualOut = ICurvePool(pool).exchange(tokenInIndex, tokenOutIndex, _amount, 1);
-	  bytes memory result = abi.encode(actualOut);
-	  assembly {
-            revert(add(0x20, result), mload(result))
-	  }
+		result = ICurvePool(pool).get_dy(tokenInIndex, tokenOutIndex, _amount);
 	}
 	function convert(address _module) external returns (uint256) {
 		uint256 _balance = IERC20(tokenInAddress).balanceOf(address(this));
-		require(IERC20(tokenInAddress).approve(pool, _balance), 'approve failed.');
-		uint256 _minOut = estimate(_balance).sub(1); //Subtract one for minimum in case of rounding errors
-		uint256 _actualOut = ICurvePool(pool).exchange(tokenInIndex, tokenOutIndex, _balance, 1);
-		console.log('actual is', _actualOut);
-		IERC20(tokenOutAddress).transfer(msg.sender, _actualOut);
+		IERC20(tokenInAddress).safeApprove(pool, _balance * 2);
+		uint256 _startOut = IERC20(tokenOutAddress).balanceOf(address(this));
+         	ICurvePool(pool).exchange(tokenInIndex, tokenOutIndex, _balance, 1);
+		uint256 _actualOut = IERC20(tokenOutAddress).balanceOf(address(this)) - _startOut;
+		IERC20(tokenOutAddress).safeTransfer(msg.sender, _actualOut);
 		return _actualOut;
 	}
 }
