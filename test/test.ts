@@ -20,26 +20,27 @@ const USDC_MAINNET_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 const WBTC_MAINNET_ADDRESS = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599';
 const YVWBTC_MAINNET_ADDRESS = '0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E';
 const CURVE_SBTC_POOL = '0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714';
+const CURVE_TRICRYPTOTWO_POOL = '0xD51a44d3FaE010294C616388b506AcdA1bfAAE46';
 
 const toAddress = (contractOrAddress: any): string => contractOrAddress.address || contractOrAddress;
-	const mintRenBTC = async (amount: any, signer?: any) => {
-        	const abi = [
-			'function mint(bytes32, uint256, bytes32, bytes) returns (uint256)',
-			'function mintFee() view returns (uint256)',
-		];
-		if (!signer) signer = (await ethers.getSigners())[0];
-		const btcGateway = new ethers.Contract(BTCGATEWAY_MAINNET_ADDRESS, abi, signer);
-		await btcGateway.mint(ethers.utils.hexlify(ethers.utils.randomBytes(32)), amount, ethers.utils.hexlify(ethers.utils.randomBytes(32)), '0x');
-	};
+const mintRenBTC = async (amount: any, signer?: any) => {
+	const abi = [
+		'function mint(bytes32, uint256, bytes32, bytes) returns (uint256)',
+		'function mintFee() view returns (uint256)',
+	];
+	if (!signer) signer = (await ethers.getSigners())[0];
+	const btcGateway = new ethers.Contract(BTCGATEWAY_MAINNET_ADDRESS, abi, signer);
+	await btcGateway.mint(ethers.utils.hexlify(ethers.utils.randomBytes(32)), amount, ethers.utils.hexlify(ethers.utils.randomBytes(32)), '0x');
+};
 
 const convert = async (controller: any, tokenIn: any, tokenOut: any, amount: any, signer?: any): Promise<any> => {
-          const [ tokenInAddress, tokenOutAddress ] = [ tokenIn, tokenOut ].map((v) => toAddress(v));
-          const swapAddress = await controller.converters(tokenInAddress, tokenOutAddress);
-	  const converterContract = new ethers.Contract(swapAddress, [ 'function convert(address) returns (uint256)' ], signer || controller.signer || controller.provider);
-	  const tokenInContract = new ethers.Contract(tokenInAddress, [ 'function transfer(address, uint256) returns (bool)' ], signer || controller.signer || controller.provider);
-	  await tokenInContract.transfer(swapAddress, amount);
-	  const tx = await converterContract.convert(ethers.constants.AddressZero);
-	  return tx;
+	const [tokenInAddress, tokenOutAddress] = [tokenIn, tokenOut].map((v) => toAddress(v));
+	const swapAddress = await controller.converters(tokenInAddress, tokenOutAddress);
+	const converterContract = new ethers.Contract(swapAddress, ['function convert(address) returns (uint256)'], signer || controller.signer || controller.provider);
+	const tokenInContract = new ethers.Contract(tokenInAddress, ['function transfer(address, uint256) returns (bool)'], signer || controller.signer || controller.provider);
+	await tokenInContract.transfer(swapAddress, amount);
+	const tx = await converterContract.convert(ethers.constants.AddressZero);
+	return tx;
 };
 
 const getImplementation = async (proxyAddress: string) => {
@@ -54,26 +55,18 @@ const getImplementation = async (proxyAddress: string) => {
 	);
 };
 
+var underwriterAddress = "0x0"
+
 const setupUnderwriter = async (amountOfRenBTC = '100') => {
 	const { signer, btcVault, renBTC, gateway, controller, signerAddress } = await getFixtures();
 	const underwriterFactory = await ethers.getContractFactory('TrivialUnderwriter', signer);
-	const { address: underwriterAddress } = await underwriterFactory.deploy(controller.address);
-	const lock = await controller.lockFor(underwriterAddress);
-	const underwriterImpl = new Contract(underwriterAddress, controller.interface, signer);
+	underwriterAddress = (await underwriterFactory.deploy(controller.address)).address;
 
 	await gateway.mint(utils.randomBytes(32), utils.parseUnits(amountOfRenBTC, 8), utils.randomBytes(32), '0x');
 	await renBTC.approve(btcVault.address, ethers.constants.MaxUint256);
 	await btcVault.deposit(utils.parseUnits(amountOfRenBTC, 8));
 	await btcVault.approve(controller.address, await btcVault.balanceOf(signerAddress));
 	await controller.mint(underwriterAddress, btcVault.address);
-
-	return {
-		underwriterFactory,
-		underwriterAddress,
-		underwriter: new Contract(underwriterAddress, underwriterFactory.interface, signer),
-		underwriterImpl,
-		lock,
-	};
 };
 
 const getFixtures = async () => {
@@ -155,7 +148,7 @@ const getBalances = async () => {
 
 const generateTransferRequest = async (amount: number) => {
 	const { swapModule, signerAddress } = await getFixtures();
-	const { underwriter } = await setupUnderwriter();
+	const { underwriter } = await getUnderwriter();
 	return createTransferRequest(
 		swapModule.address,
 		signerAddress,
@@ -165,6 +158,18 @@ const generateTransferRequest = async (amount: number) => {
 		'0x',
 	);
 };
+
+const getUnderwriter = async () => {
+	const { signer, controller } = await getFixtures();
+	const underwriterFactory = await ethers.getContractFactory('TrivialUnderwriter', signer);
+	return {
+		underwriterFactory,
+		underwriterAddress,
+		underwriter: new Contract(underwriterAddress, underwriterFactory.interface, signer),
+		underwriterImpl: new Contract(underwriterAddress, controller.interface, signer),
+		lock: await controller.lockFor(underwriterAddress)
+	};
+}
 
 const getWrapperAddress = async (tx: any) => {
 	return (await tx.wait()).events[0].args._wrapper;
@@ -183,6 +188,8 @@ describe('Zero', () => {
 		const implementationAddress = await getImplementation(BTCGATEWAY_MAINNET_ADDRESS);
 		override(implementationAddress, artifact.deployedBytecode);
 
+		await setupUnderwriter();
+
 		const { wBTC, renBTC, wETH, uniswapFactory, curveFactory, controller, wrapper, unwrapper } =
 			await getFixtures();
 
@@ -191,16 +198,33 @@ describe('Zero', () => {
 		const wBTCToRenBTC = await getWrapperAddress(wBTCToRenBTCTx);
 		await controller.setConverter(wBTC.address, renBTC.address, wBTCToRenBTC);
 
+		// Curve wETH -> wBTC Factory
+		const wEthToWBTCTx = await curveFactory.createWrapper(2, 1, CURVE_TRICRYPTOTWO_POOL);
+		const wEthToWBTC = await getWrapperAddress(wEthToWBTCTx);
+		await controller.setConverter(wETH.address, wBTC.address, wEthToWBTC);
+
+		// Curve wBTC -> wETH Factory
+		const wBtcToWETHTx = await curveFactory.createWrapper(1, 2, CURVE_TRICRYPTOTWO_POOL);
+		const wBtcToWETH = await getWrapperAddress(wBtcToWETHTx);
+		await controller.setConverter(wBTC.address, wETH.address, wBtcToWETH);
+
 		// Uniswap renBTC -> wBTC Factory
 		const renBTCToWBTCTx = await uniswapFactory.createWrapper([renBTC.address, wBTC.address]);
 		const renBTCToWBTC = await getWrapperAddress(renBTCToWBTCTx);
 		await controller.setConverter(renBTC.address, wBTC.address, renBTCToWBTC);
+
+		// Uniswap wETH -> renBTC Factory
+		const wETHToRenBTCTx = await uniswapFactory.createWrapper([wETH.address, renBTC.address]);
+		const wETHToRenBTC = await getWrapperAddress(wETHToRenBTCTx);
+		await controller.setConverter(wETH.address, renBTC.address, wETHToRenBTC);
 
 		// Wrapper ETH -> wETH
 		await controller.setConverter(ethers.constants.AddressZero, wETH.address, wrapper.address);
 
 		// Unwrapper wETH -> ETH
 		await controller.setConverter(wETH.address, ethers.constants.AddressZero, unwrapper.address);
+
+
 
 
 
@@ -274,26 +298,16 @@ describe('Zero', () => {
 		await convert(controller, renBTC, wBTC, ethers.utils.parseUnits('1', 8));
 		const amount = await wBTC.balanceOf(await signer.getAddress());
 
-console.log(ethers.utils.formatUnits(amount, Number(await wBTC.decimals())));
-		console.log('attempting to convert');
-                await convert(controller, wBTC, renBTC, amount);
+		await convert(controller, wBTC, renBTC, amount);
 		const actualOut = ethers.utils.formatUnits(await renBTC.balanceOf(await signer.getAddress()));
-		console.log('actual is', actualOut);
-//		expect(estimatedOut == actualOut, 'The swap amounts dont add up');
+		expect(actualOut > 0, 'The swap amounts dont add up');
 	});
 
-	
-          
-
-	it('should be able to launch an underwriter', async () => {
-		await setupUnderwriter();
-	});
 	it('should deposit in vault', async () => {
 		const { renBTC, btcVault } = await getFixtures();
-		await setupUnderwriter();
 
 		const beforeBalance = (await renBTC.balanceOf(btcVault.address)).toNumber() / (await renBTC.decimals());
-		const addedAmount = 10;
+		const addedAmount = 1000000000;
 		await btcVault.deposit(addedAmount * (await renBTC.decimals()));
 		const afterBalance = (await renBTC.balanceOf(btcVault.address)).toNumber() / (await renBTC.decimals());
 
@@ -301,13 +315,12 @@ console.log(ethers.utils.formatUnits(amount, Number(await wBTC.decimals())));
 	});
 	it('should transfer overflow funds to strategy vault', async () => {
 		const { signer, btcVault, renBTC } = await getFixtures();
-		await setupUnderwriter();
 		await btcVault.earn();
 	});
 
 	it('should take out, make a swap with, then repay a small loan', async () => {
 		const { signer, controller } = await getFixtures();
-		const { underwriter, underwriterImpl } = await setupUnderwriter();
+		const { underwriter, underwriterImpl } = await getUnderwriter();
 
 		//@ts-ignore
 		const transferRequest = await generateTransferRequest(100000000);
@@ -351,7 +364,7 @@ console.log(ethers.utils.formatUnits(amount, Number(await wBTC.decimals())));
 
 	it('should take out, make a swap with, then repay a large loan', async () => {
 		const { signer, controller } = await getFixtures();
-		const { underwriter, underwriterImpl } = await setupUnderwriter();
+		const { underwriter, underwriterImpl } = await getUnderwriter();
 
 		//@ts-ignore
 		const transferRequest = await generateTransferRequest(300000000);
@@ -392,7 +405,7 @@ console.log(ethers.utils.formatUnits(amount, Number(await wBTC.decimals())));
 
 	it('should call fallback mint and return funds', async () => {
 		const { signer, controller } = await getFixtures();
-		const { underwriter, underwriterImpl } = await setupUnderwriter();
+		const { underwriter, underwriterImpl } = await getUnderwriter();
 
 		//@ts-ignore
 		const transferRequest = await generateTransferRequest(100000000);
