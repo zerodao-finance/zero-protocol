@@ -6,7 +6,11 @@ interface StrategyAPI {
 
 	function vault() external view returns (address);
 
+	function nativeWrapper() external view returns (address);
+
 	function want() external view returns (address);
+
+	function vaultWant() external view returns (address);
 
 	function apiVersion() external pure returns (string memory);
 

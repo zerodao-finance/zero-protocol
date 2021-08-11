@@ -19,6 +19,7 @@ import {IGateway} from '../interfaces/IGateway.sol';
 import {IGatewayRegistry} from '../interfaces/IGatewayRegistry.sol';
 import {IStrategy} from '../interfaces/IStrategy.sol';
 import {SafeMath} from 'oz410/math/SafeMath.sol';
+import '../interfaces/IConverter.sol';
 import '@openzeppelin/contracts/math/Math.sol';
 
 import 'hardhat/console.sol';
@@ -206,6 +207,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		bytes memory data,
 		bytes memory userSignature
 	) public onlyUnderwriter {
+		console.log('loan func');
 		uint256 _gasBefore = gasleft();
 		ZeroLib.LoanParams memory params = ZeroLib.LoanParams({
 			to: to,
@@ -222,9 +224,15 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		uint256 actual = params.amount.sub(params.amount.mul(uint256(25e15)).div(1e18));
 
 		ZeroUnderwriterLock(lockFor(msg.sender)).trackOut(params.module, actual);
+		console.log('underwriter lock');
 		uint256 _txGas = maxGasPrice.mul(maxGasRepay.add(maxGasLoan));
-		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(module, params.amount.sub(_txGas));
-
+		address strategy = strategies[params.asset];
+		// convert _txGas from wETH to params.asset
+		_txGas = IConverter(converters[IStrategy(strategy).nativeWrapper()][params.asset]).estimate(1).mul(_txGas);
+		console.log('txGas in renBTC is', _txGas);
+		console.log('Doing permissioned send');
+		uint256 _amountSent = IStrategy(strategy).permissionedSend(module, params.amount.sub(_txGas));
+		console.log('receive loan');
 		IZeroModule(module).receiveLoan(params.to, params.asset, _amountSent, params.nonce, params.data);
 		//uint256 _gasRefund = Math.min(gasleft().sub(_gasBefore), maxGasLoan).mul(Math.min(tx.gasprice, maxGasPrice));
 		//IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);

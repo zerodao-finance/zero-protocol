@@ -74,34 +74,40 @@ contract StrategyRenVM {
 		if (_gasWant < gasReserve) {
 			// if ETH balance < ETH reserve
 			_gasWant = gasReserve.sub(_gasWant);
-			console.log('deposit handling eth');
-			address _converter = IController(controller).converters(address(0x0), vaultWant);
-			uint256 _btcWant = IConverter(_converter).estimate(_gasWant); //_gasWant is converted from ETH to wBTC
-			console.log('curve pool calculated');
+			address _converter = IController(controller).converters(nativeWrapper, vaultWant);
+			uint256 _btcWant = IConverter(_converter).estimate(_gasWant); //_gasWant is converted from wETH to wBTC
 			uint256 _sharesDeficit = estimateShares(_btcWant); //Estimate shares of wBTC
-			console.log('want shares', _sharesDeficit);
-			console.log('have shares', IERC20(vault).balanceOf(address(this)));
 			require(IERC20(vault).balanceOf(address(this)) > _sharesDeficit, '!enough'); //revert if shares needed > shares held
 			uint256 _amountOut = IyVault(vault).withdraw(_sharesDeficit);
-			address converter = IController(controller).converters(vaultWant, address(0x0));
+			address converter = IController(controller).converters(vaultWant, nativeWrapper);
 			IERC20(vaultWant).transfer(converter, _amountOut);
 			IConverter(converter).convert(address(this));
-			//TODO unwrap the wETH to ETHhow
+			//TODO unwrap the wETH to ETH
 		}
 		console.log('Deposit called');
 	}
+
 	function _withdraw(uint256 _amount, address _asset) private returns (uint256) {
+		console.log('doing withdraw');
 		require(_asset == want || _asset == vaultWant, 'asset not supported');
 		address converter = IController(controller).converters(want, vaultWant);
 		if (_asset == want) {
+			// if asset is what the strategy wants
 			//then we can't directly withdraw it
+			console.log('estimating amount');
 			_amount = IConverter(converter).estimate(_amount);
+			console.log('success');
 		}
+		console.log('estimating shares');
 		uint256 _shares = estimateShares(_amount);
+		console.log('withdrawing shares', _shares);
 		_amount = IyVault(vault).withdraw(_shares);
 		if (_asset == want) {
+			// if asset is what the strategy wants
+			console.log('asset == want');
 			IERC20(vaultWant).transfer(converter, _amount);
-			_amount = IConverter(converter).convert(address(0x0));
+			console.log('should convert', _amount);
+			//_amount = IConverter(converter).convert(address(0x0));
 		}
 		return _amount;
 	}
@@ -135,11 +141,14 @@ contract StrategyRenVM {
 	}
 
 	function permissionedSend(address _module, uint256 _amount) external virtual onlyController returns (uint256) {
+		console.log('inside permissioned send');
 		uint256 _reserve = IERC20(want).balanceOf(address(this));
 		address _want = IZeroModule(_module).want();
 		if (_amount > _reserve || _want != want) {
+			console.log('calling withdraw');
 			_amount = _withdraw(_amount, _want);
 		}
+		console.log('transferring', _want);
 		IERC20(_want).safeTransfer(_module, _amount);
 		return _amount;
 	}
