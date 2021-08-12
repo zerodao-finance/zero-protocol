@@ -138,15 +138,10 @@ module.exports = async ({
   const wBtcToWETH = await getWrapperAddress(wBtcToWETHTx);
   await controller.setConverter(wBTC, wETH, wBtcToWETH);
 
-  // Uniswap renBTC -> wBTC Factory
-  const renBTCToWBTCTx = await uniswapFactory.createWrapper([renBTC, wBTC]);
+  // Curve renBTC -> wBTC Factory
+  const renBTCToWBTCTx = await curveFactory.createWrapper(0, 1, CURVE_SBTC_POOL);
   const renBTCToWBTC = await getWrapperAddress(renBTCToWBTCTx);
   await controller.setConverter(renBTC, wBTC, renBTCToWBTC);
-
-  // Curve wETH -> renBTC Factory
-  const wETHToRenBTCTx = await curveFactory.createWrapper(1, 0, CURVE_SBTC_POOL);
-  const wETHToRenBTC = await getWrapperAddress(wETHToRenBTCTx);
-  await controller.setConverter(wETH, renBTC, wETHToRenBTC);
 
   // Wrapper ETH -> wETH
   await controller.setConverter(ethers.constants.AddressZero, wETH, wrapper.address);

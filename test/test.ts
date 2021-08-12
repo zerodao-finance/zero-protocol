@@ -62,11 +62,11 @@ const setupUnderwriter = async (amountOfRenBTC = '100') => {
 	const underwriterFactory = await ethers.getContractFactory('TrivialUnderwriter', signer);
 	underwriterAddress = (await underwriterFactory.deploy(controller.address)).address;
 
-	await gateway.mint(utils.randomBytes(32), utils.parseUnits(amountOfRenBTC, 8), utils.randomBytes(32), '0x');
-	await renBTC.approve(btcVault.address, ethers.constants.MaxUint256);
-	await btcVault.deposit(utils.parseUnits(amountOfRenBTC, 8));
-	await btcVault.approve(controller.address, await btcVault.balanceOf(signerAddress));
-	await controller.mint(underwriterAddress, btcVault.address);
+	await gateway.mint(utils.randomBytes(32), utils.parseUnits(amountOfRenBTC, 8), utils.randomBytes(32), '0x'); //mint renBTC to signer
+	await renBTC.approve(btcVault.address, ethers.constants.MaxUint256); //let btcVault spend renBTC on behalf of signer
+	await btcVault.deposit(utils.parseUnits(amountOfRenBTC, 8)); //deposit renBTC into btcVault from signer
+	await btcVault.approve(controller.address, await btcVault.balanceOf(signerAddress)); //let controller spend btcVault tokens
+	await controller.mint(underwriterAddress, btcVault.address); //mint zeroBTC to signer
 };
 
 const getFixtures = async () => {
@@ -103,7 +103,7 @@ const getBalances = async () => {
 		Controller: controller.address,
 		Strategy: strategy.address,
 		'yvWBTC Vault': yvWBTC.address,
-		'Swap Module': swapModule.address,
+		'Swap Module': swapModule.address
 	};
 	const tokens: { [index: string]: any } = {
 		renBTC,
@@ -171,10 +171,6 @@ const getUnderwriter = async () => {
 	};
 }
 
-const getWrapperAddress = async (tx: any) => {
-	return (await tx.wait()).events[0].args._wrapper;
-};
-
 const getWrapperContract = async (address: string) => {
 	const { signer } = await getFixtures();
 	const wrapperAbi = (await deployments.getArtifact('ZeroUniswapWrapper')).abi;
@@ -182,6 +178,7 @@ const getWrapperContract = async (address: string) => {
 };
 
 describe('Zero', () => {
+	var prop;
 	before(async () => {
 		await deployments.fixture();
 		const artifact = await deployments.getArtifact('MockGatewayLogicV1');
@@ -189,47 +186,23 @@ describe('Zero', () => {
 		override(implementationAddress, artifact.deployedBytecode);
 
 		await setupUnderwriter();
-
-		const { wBTC, renBTC, wETH, uniswapFactory, curveFactory, controller, wrapper, unwrapper } =
-			await getFixtures();
-
-		// Curve wBTC -> renBTC Factory
-		const wBTCToRenBTCTx = await curveFactory.createWrapper(1, 0, CURVE_SBTC_POOL);
-		const wBTCToRenBTC = await getWrapperAddress(wBTCToRenBTCTx);
-		await controller.setConverter(wBTC.address, renBTC.address, wBTCToRenBTC);
-
-		// Curve wETH -> wBTC Factory
-		const wEthToWBTCTx = await curveFactory.createWrapper(2, 1, CURVE_TRICRYPTOTWO_POOL);
-		const wEthToWBTC = await getWrapperAddress(wEthToWBTCTx);
-		await controller.setConverter(wETH.address, wBTC.address, wEthToWBTC);
-
-		// Curve wBTC -> wETH Factory
-		const wBtcToWETHTx = await curveFactory.createWrapper(1, 2, CURVE_TRICRYPTOTWO_POOL);
-		const wBtcToWETH = await getWrapperAddress(wBtcToWETHTx);
-		await controller.setConverter(wBTC.address, wETH.address, wBtcToWETH);
-
-		// Uniswap renBTC -> wBTC Factory
-		const renBTCToWBTCTx = await uniswapFactory.createWrapper([renBTC.address, wBTC.address]);
-		const renBTCToWBTC = await getWrapperAddress(renBTCToWBTCTx);
-		await controller.setConverter(renBTC.address, wBTC.address, renBTCToWBTC);
-
-		// Curve wETH -> renBTC Factory
-		const wETHToRenBTCTx = await curveFactory.createWrapper(1, 0, CURVE_SBTC_POOL);
-		const wETHToRenBTC = await getWrapperAddress(wETHToRenBTCTx);
-		await controller.setConverter(wETH.address, renBTC.address, wETHToRenBTC);
-
-		// Wrapper ETH -> wETH
-		await controller.setConverter(ethers.constants.AddressZero, wETH.address, wrapper.address);
-
-		// Unwrapper wETH -> ETH
-		await controller.setConverter(wETH.address, ethers.constants.AddressZero, unwrapper.address);
-
-
-
-
-
 	});
-	it('mock should work', async () => {
+
+	beforeEach(async function () {
+		console.log("\n");
+		//@ts-ignore
+		console.log("=".repeat(32), "Beginning Test", "=".repeat(32));
+		console.log("Test:", this.currentTest.title, "\n");
+		console.log("Initial Balances:");
+		await getBalances();
+	});
+
+	afterEach(async () => {
+		console.log("Final Balances:");
+		await getBalances();
+	});
+
+	it('mock gateway should work', async () => {
 		const abi = [
 			'function mint(bytes32, uint256, bytes32, bytes) returns (uint256)',
 			'function mintFee() view returns (uint256)',
@@ -251,56 +224,29 @@ describe('Zero', () => {
 		expect(Number(ethers.utils.formatUnits(await renbtc.balanceOf(signerAddress), 8))).to.be.gt(0);
 	});
 
-	it('should wrap ETH and receive wETH', async () => {
+	it('Swap ETH -> wETH -> ETH', async () => {
 		const { wETH, controller, signer } = await getFixtures();
-		const balanceBefore = (await wETH.balanceOf(await signer.getAddress())).toNumber();
-		const swapAddress = await controller.converters(ethers.constants.AddressZero, wETH.address);
-		const amount = ethers.constants.One;
-		const swapWrapper = await getWrapperContract(swapAddress);
-
-		const estimatedOut = await swapWrapper.estimate(amount)
-		await swapWrapper.convert(swapAddress, { value: amount });
-		const actualOut = Number(await wETH.balanceOf(await signer.getAddress())) - balanceBefore;
-		expect(estimatedOut == actualOut, 'The swap amounts dont add up');
+		const amount = ethers.utils.parseUnits('1', '18');
+		const signerAddress = await signer.getAddress();
+		const originalBalance = await signer.provider.getBalance(signerAddress);
+		await convert(controller, ethers.constants.AddressZero, wETH, amount);
+		console.log("Swapped ETH to wETH");
+		await getBalances();
+		await convert(controller, wETH, ethers.constants.AddressZero, amount);
+		console.log("Swapped wETH to ETH");
+		expect(originalBalance === await signer.provider.getBalance(signerAddress), 'balance before not same as balance after');
 	});
 
-	it('should unwrap wETH and receive ETH', async () => {
-		const { wETH, controller, signer } = await getFixtures();
-		const balanceBefore = Number(await signer.provider.getBalance(await signer.getAddress()));
-		const swapAddress = await controller.converters(wETH.address, ethers.constants.AddressZero);
-		const amount = ethers.constants.One;
-		const swapWrapper = await getWrapperContract(swapAddress);
-
-
-		const estimatedOut = (await swapWrapper.estimate(amount)).toNumber();
-		await wETH.transfer(swapAddress, amount);
-		await swapWrapper.convert(swapAddress);
-		const actualOut = Number(await signer.provider.getBalance(await signer.getAddress())) - balanceBefore;
-		expect(estimatedOut == actualOut, 'The swap amounts dont add up');
-	});
-
-	it('should swap renBTC for wBTC on Uniswap', async () => {
+	it('Swap renBTC -> wBTC -> renBTC', async () => {
 		const { renBTC, wBTC, controller, signer } = await getFixtures();
-		const swapAddress = await controller.converters(renBTC.address, wBTC.address);
-		const amount = '50000000';
-		const swapWrapper = await getWrapperContract(swapAddress);
-
-		const estimatedOut = (await swapWrapper.estimate(amount)).toNumber();
-		await renBTC.transfer(swapAddress, amount);
-		await swapWrapper.convert(swapAddress);
-		const actualOut = (await wBTC.balanceOf(await signer.getAddress())).toNumber();
-		expect(estimatedOut == actualOut, 'The swap amounts dont add up');
-	});
-
-	it('should swap wBTC for renBTC on Curve', async () => {
-		const { renBTC, wBTC, controller, signer } = await getFixtures();
-		await mintRenBTC(ethers.utils.parseUnits('1', 8), signer);
-		await convert(controller, renBTC, wBTC, ethers.utils.parseUnits('1', 8));
-		const amount = await wBTC.balanceOf(await signer.getAddress());
-
-		await convert(controller, wBTC, renBTC, amount);
-		const actualOut = ethers.utils.formatUnits(await renBTC.balanceOf(await signer.getAddress()));
-		expect(actualOut > 0, 'The swap amounts dont add up');
+		const amount = ethers.utils.parseUnits('5', '8');
+		await convert(controller, renBTC, wBTC, amount);
+		console.log("Converted renBTC to wBTC");
+		await getBalances();
+		const newAmount = Number(await wBTC.balanceOf(await signer.getAddress()));
+		await convert(controller, wBTC, renBTC, newAmount);
+		console.log("Converted wBTC to renBTC");
+		expect(Number(await renBTC.balanceOf(await signer.getAddress())) > 0, 'The swap amounts dont add up');
 	});
 
 	it('should deposit in vault', async () => {
