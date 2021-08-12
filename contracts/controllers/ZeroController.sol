@@ -207,7 +207,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		bytes memory data,
 		bytes memory userSignature
 	) public onlyUnderwriter {
-		console.log('loan func');
+		console.log('Entering loan function');
 		uint256 _gasBefore = gasleft();
 		ZeroLib.LoanParams memory params = ZeroLib.LoanParams({
 			to: to,

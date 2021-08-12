@@ -36,7 +36,7 @@ const mintRenBTC = async (amount: any, signer?: any) => {
 const convert = async (controller: any, tokenIn: any, tokenOut: any, amount: any, signer?: any): Promise<any> => {
 	const [tokenInAddress, tokenOutAddress] = [tokenIn, tokenOut].map((v) => toAddress(v));
 	const swapAddress = await controller.converters(tokenInAddress, tokenOutAddress);
-        const converterContract = new ethers.Contract(swapAddress, ['function convert(address) returns (uint256)'], signer || controller.signer || controller.provider);
+	const converterContract = new ethers.Contract(swapAddress, ['function convert(address) returns (uint256)'], signer || controller.signer || controller.provider);
 
 	if (tokenIn === ethers.constants.AddressZero) {
 		await controller.signer.sendTransaction({ value: amount, to: swapAddress });
@@ -287,19 +287,21 @@ describe('Zero', () => {
 	});
 
 	it('should take out, make a swap with, then repay a small loan', async () => {
-		const { signer, controller } = await getFixtures();
+		const { signer, controller, btcVault } = await getFixtures();
 		const { underwriter, underwriterImpl } = await getUnderwriter();
+
+		await btcVault.deposit('1500000000');
+		await btcVault.earn();
+		console.log("Deposited 15renBTC and called earn");
+		await getBalances();
 
 		//@ts-ignore
 		const transferRequest = await generateTransferRequest(100000000);
 
-		console.log('\nInitial balances');
-		await getBalances();
-
 		transferRequest.setUnderwriter(underwriter.address);
 		const signature = await transferRequest.sign(signer, controller.address);
 
-		console.log('\nWriting loan');
+		console.log('\nWriting a small loan');
 		await underwriterImpl.loan(
 			transferRequest.to,
 			transferRequest.asset,
@@ -331,8 +333,13 @@ describe('Zero', () => {
 	});
 
 	it('should take out, make a swap with, then repay a large loan', async () => {
-		const { signer, controller } = await getFixtures();
+		const { signer, controller, btcVault } = await getFixtures();
 		const { underwriter, underwriterImpl } = await getUnderwriter();
+
+		await btcVault.deposit('2500000000');
+		await btcVault.earn();
+		console.log("Deposited 25renBTC and called earn");
+		await getBalances();
 
 		//@ts-ignore
 		const transferRequest = await generateTransferRequest(300000000);
@@ -343,7 +350,7 @@ describe('Zero', () => {
 		transferRequest.setUnderwriter(underwriter.address);
 		const signature = await transferRequest.sign(signer, controller.address);
 
-		console.log('\nCreating loan...');
+		console.log('\nWriting a large loan');
 		await underwriterImpl.loan(
 			transferRequest.to,
 			transferRequest.asset,
