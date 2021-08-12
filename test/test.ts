@@ -213,8 +213,8 @@ describe('Zero', () => {
 		const renBTCToWBTC = await getWrapperAddress(renBTCToWBTCTx);
 		await controller.setConverter(renBTC.address, wBTC.address, renBTCToWBTC);
 
-		// Uniswap wETH -> renBTC Factory
-		const wETHToRenBTCTx = await uniswapFactory.createWrapper([wETH.address, renBTC.address]);
+		// Curve wETH -> renBTC Factory
+		const wETHToRenBTCTx = await curveFactory.createWrapper(1, 0, CURVE_SBTC_POOL);
 		const wETHToRenBTC = await getWrapperAddress(wETHToRenBTCTx);
 		await controller.setConverter(wETH.address, renBTC.address, wETHToRenBTC);
 
@@ -310,7 +310,7 @@ describe('Zero', () => {
 		const addedAmount = 1000000000;
 		await btcVault.deposit(addedAmount * (await renBTC.decimals()));
 		const afterBalance = (await renBTC.balanceOf(btcVault.address)).toNumber() / (await renBTC.decimals());
-
+		await getBalances();
 		expect(beforeBalance + addedAmount == afterBalance, 'Balances not adding up');
 	});
 	it('should transfer overflow funds to strategy vault', async () => {
