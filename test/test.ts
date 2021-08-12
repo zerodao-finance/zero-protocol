@@ -36,11 +36,18 @@ const mintRenBTC = async (amount: any, signer?: any) => {
 const convert = async (controller: any, tokenIn: any, tokenOut: any, amount: any, signer?: any): Promise<any> => {
 	const [tokenInAddress, tokenOutAddress] = [tokenIn, tokenOut].map((v) => toAddress(v));
 	const swapAddress = await controller.converters(tokenInAddress, tokenOutAddress);
-	const converterContract = new ethers.Contract(swapAddress, ['function convert(address) returns (uint256)'], signer || controller.signer || controller.provider);
-	const tokenInContract = new ethers.Contract(tokenInAddress, ['function transfer(address, uint256) returns (bool)'], signer || controller.signer || controller.provider);
-	await tokenInContract.transfer(swapAddress, amount);
-	const tx = await converterContract.convert(ethers.constants.AddressZero);
-	return tx;
+
+	if (tokenIn === ethers.constants.AddressZero) {
+		const converterContract = new ethers.Contract(swapAddress, ['function convert(address) payable returns (uint256)'], signer || controller.signer || controller.provider);
+		const tx = await converterContract.convert(ethers.constants.AddressZero, { value: amount.toString() })
+		return tx
+	} else {
+		const converterContract = new ethers.Contract(swapAddress, ['function convert(address) returns (uint256)'], signer || controller.signer || controller.provider);
+		const tokenInContract = new ethers.Contract(tokenInAddress, ['function transfer(address, uint256) returns (bool)'], signer || controller.signer || controller.provider);
+		await tokenInContract.transfer(swapAddress, amount);
+		const tx = await converterContract.convert(ethers.constants.AddressZero);
+		return tx
+	}
 };
 
 const getImplementation = async (proxyAddress: string) => {
