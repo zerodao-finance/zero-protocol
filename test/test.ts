@@ -74,11 +74,11 @@ const deployUnderwriter = async () => {
 }
 
 const mintUnderwriterNFTIfNotMinted = async () => {
-  const { signer, controller, renBTC, btcVault } = await getFixtures();
-  const lock = (await controller.provider.getCode(await controller.lockFor(underwriterAddress)));
-  if (lock === '0x') await controller.mint(underwriterAddress, btcVault.address);
+	const { signer, controller, renBTC, btcVault } = await getFixtures();
+	const lock = (await controller.provider.getCode(await controller.lockFor(underwriterAddress)));
+	if (lock === '0x') await controller.mint(underwriterAddress, btcVault.address);
 };
-  
+
 
 const underwriterDeposit = async (amountOfRenBTC: string) => {
 	const { btcVault, controller } = await getFixtures();
@@ -296,9 +296,8 @@ describe('Zero', () => {
 		const { signer, controller, btcVault } = await getFixtures();
 		const { underwriter, underwriterImpl } = await getUnderwriter();
 
-                const renbtc = new ethers.Contract(await btcVault.token(), btcVault.interface, signer);
+		const renbtc = new ethers.Contract(await btcVault.token(), btcVault.interface, signer);
 		await renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
-
 		await btcVault.deposit('1500000000');
 		await btcVault.earn();
 		console.log("Deposited 15renBTC and called earn");
@@ -344,16 +343,16 @@ describe('Zero', () => {
 	it('should take out, make a swap with, then repay a large loan', async () => {
 		const { signer, controller, btcVault } = await getFixtures();
 		const { underwriter, underwriterImpl } = await getUnderwriter();
-                const renbtc = new ethers.Contract(await btcVault.token(), btcVault.interface, signer);
+		const renbtc = new ethers.Contract(await btcVault.token(), btcVault.interface, signer);
 		await renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
 
 		await btcVault.deposit('2500000000');
 		await btcVault.earn();
-		console.log("Deposited 25renBTC and called earn");
+		console.log("Deposited 15renBTC and called earn");
 		await getBalances();
 
 		//@ts-ignore
-		const transferRequest = await generateTransferRequest(300000000);
+		const transferRequest = await generateTransferRequest(1500000000);
 
 		console.log('\nInitial balances');
 		await getBalances();

@@ -88,6 +88,7 @@ contract StrategyRenVM {
 	function _withdraw(uint256 _amount, address _asset) private returns (uint256) {
 		require(_asset == want || _asset == vaultWant, 'asset not supported');
 		address converter = IController(controller).converters(want, vaultWant);
+		// _asset is wBTC and want is renBTC
 		if (_asset == want) {
 			// if asset is what the strategy wants
 			//then we can't directly withdraw it
@@ -107,10 +108,14 @@ contract StrategyRenVM {
 		if (_amount > gasReserve) {
 			uint256 _sharesDeficit = estimateShares(_amount);
 			uint256 _amountOut = IyVault(vault).withdraw(_sharesDeficit);
-			address converter = IController(controller).converters(vaultWant, address(0x0));
-			IERC20(vaultWant).transfer(converter, _amountOut);
-			_amount = IConverter(converter).convert(address(this));
-			//TODO unwrap the wETH to ETH
+			address _vaultConverter = IController(controller).converters(vaultWant, nativeWrapper);
+			address _converter = IController(controller).converters(nativeWrapper, address(0x0));
+			console.log('convert to nativeWrapper');
+			IERC20(vaultWant).transfer(_vaultConverter, _amountOut);
+			_amount = IConverter(_vaultConverter).convert(address(this));
+			console.log('convert to ETH');
+			IERC20(nativeWrapper).transfer(_converter, _amount);
+			_amount = IConverter(_converter).convert(address(this));
 		}
 		_target.transfer(_amount);
 	}
@@ -138,6 +143,7 @@ contract StrategyRenVM {
 			console.log('calling withdraw');
 			_amount = _withdraw(_amount, _want);
 		}
+		console.log('withdraw worked');
 		IERC20(_want).safeTransfer(_module, _amount);
 		return _amount;
 	}

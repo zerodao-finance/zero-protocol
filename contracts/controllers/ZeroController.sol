@@ -165,8 +165,8 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 			signature
 		);
 		depositAll(asset);
-		//uint256 _gasRefund = Math.min(gasleft().sub(_gasBefore), maxGasRepay).mul(Math.min(tx.gasprice, maxGasPrice));
-		//IStrategy(strategies[params.asset]).permissionedEther(params.to, _gasRefund);
+		uint256 _gasRefund = Math.min(gasleft().sub(_gasBefore), maxGasRepay).mul(Math.min(tx.gasprice, maxGasPrice));
+		IStrategy(strategies[params.asset]).permissionedEther(params.to, _gasRefund);
 	}
 
 	function depositAll(address _asset) internal {
@@ -232,7 +232,9 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		_txGas = IConverter(converters[IStrategy(strategies[params.asset]).vaultWant()][params.asset]).estimate(_txGas);
 		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(module, params.amount.sub(_txGas));
 		IZeroModule(module).receiveLoan(params.to, params.asset, _amountSent, params.nonce, params.data);
-		//uint256 _gasRefund = Math.min(gasleft().sub(_gasBefore), maxGasLoan).mul(Math.min(tx.gasprice, maxGasPrice));
-		//IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);
+		console.log('received loan');
+		uint256 _gasRefund = Math.min(gasleft().sub(_gasBefore), maxGasLoan).mul(Math.min(tx.gasprice, maxGasPrice));
+		console.log('calling permissioned ether');
+		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);
 	}
 }
