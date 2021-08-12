@@ -207,7 +207,6 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		bytes memory data,
 		bytes memory userSignature
 	) public onlyUnderwriter {
-		console.log('Entering loan function');
 		uint256 _gasBefore = gasleft();
 		ZeroLib.LoanParams memory params = ZeroLib.LoanParams({
 			to: to,
@@ -221,19 +220,17 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		require(ECDSA.recover(digest, userSignature) == params.to, 'invalid signature');
 		require(loanStatus[digest].status == ZeroLib.LoanStatusCode.UNINITIALIZED, 'already spent this loan');
 		loanStatus[digest] = ZeroLib.LoanStatus({underwriter: msg.sender, status: ZeroLib.LoanStatusCode.UNPAID});
-		console.log('amount is', params.amount);
 		uint256 actual = params.amount.sub(params.amount.mul(uint256(25e15)).div(1e18));
 
 		ZeroUnderwriterLock(lockFor(msg.sender)).trackOut(params.module, actual);
-		console.log('underwriter lock');
 		uint256 _txGas = maxGasPrice.mul(maxGasRepay.add(maxGasLoan));
-		address strategy = strategies[params.asset];
-		// convert _txGas from wETH to params.asset
-		_txGas = IConverter(converters[IStrategy(strategy).nativeWrapper()][params.asset]).estimate(1).mul(_txGas);
-		console.log('txGas in renBTC is', _txGas);
-		console.log('Doing permissioned send');
-		uint256 _amountSent = IStrategy(strategy).permissionedSend(module, params.amount.sub(_txGas));
-		console.log('receive loan');
+		_txGas = IConverter(
+			converters[IStrategy(strategies[params.asset]).nativeWrapper()][
+				IStrategy(strategies[params.asset]).vaultWant()
+			]
+		).estimate(_txGas);
+		_txGas = IConverter(converters[IStrategy(strategies[params.asset]).vaultWant()][params.asset]).estimate(_txGas);
+		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(module, params.amount.sub(_txGas));
 		IZeroModule(module).receiveLoan(params.to, params.asset, _amountSent, params.nonce, params.data);
 		//uint256 _gasRefund = Math.min(gasleft().sub(_gasBefore), maxGasLoan).mul(Math.min(tx.gasprice, maxGasPrice));
 		//IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);

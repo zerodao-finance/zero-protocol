@@ -50,13 +50,12 @@ contract StrategyRenVM {
 		governance = msg.sender;
 		strategist = msg.sender;
 		controller = _controller;
-	        IERC20(vaultWant).safeApprove(address(vault), type(uint256).max);
+		IERC20(vaultWant).safeApprove(address(vault), type(uint256).max);
 	}
 
 	receive() external payable {}
 
 	function deposit() external virtual {
-		console.log('Calling deposit..');
 		//First conditional handles having too much of want in the Strategy
 		uint256 _want = IERC20(want).balanceOf(address(this)); //amount of tokens we want
 		if (_want > wantReserve) {
@@ -84,30 +83,22 @@ contract StrategyRenVM {
 			IConverter(converter).convert(address(this));
 			//TODO unwrap the wETH to ETH
 		}
-		console.log('Deposit called');
 	}
 
 	function _withdraw(uint256 _amount, address _asset) private returns (uint256) {
-		console.log('doing withdraw');
 		require(_asset == want || _asset == vaultWant, 'asset not supported');
 		address converter = IController(controller).converters(want, vaultWant);
 		if (_asset == want) {
 			// if asset is what the strategy wants
 			//then we can't directly withdraw it
-			console.log('estimating amount');
 			_amount = IConverter(converter).estimate(_amount);
-			console.log('success');
 		}
-		console.log('estimating shares');
 		uint256 _shares = estimateShares(_amount);
-		console.log('withdrawing shares', _shares);
 		_amount = IyVault(vault).withdraw(_shares);
 		if (_asset == want) {
 			// if asset is what the strategy wants
-			console.log('asset == want');
 			IERC20(vaultWant).transfer(converter, _amount);
-			console.log('should convert', _amount);
-			//_amount = IConverter(converter).convert(address(0x0));
+			_amount = IConverter(converter).convert(address(0x0));
 		}
 		return _amount;
 	}
@@ -141,14 +132,12 @@ contract StrategyRenVM {
 	}
 
 	function permissionedSend(address _module, uint256 _amount) external virtual onlyController returns (uint256) {
-		console.log('inside permissioned send');
 		uint256 _reserve = IERC20(want).balanceOf(address(this));
 		address _want = IZeroModule(_module).want();
 		if (_amount > _reserve || _want != want) {
 			console.log('calling withdraw');
 			_amount = _withdraw(_amount, _want);
 		}
-		console.log('transferring', _want);
 		IERC20(_want).safeTransfer(_module, _amount);
 		return _amount;
 	}
