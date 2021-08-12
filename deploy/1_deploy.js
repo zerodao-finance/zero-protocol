@@ -119,7 +119,9 @@ module.exports = async ({
   const unwrapper = await ethers.getContract('UnwrapNative', deployer);
 
   const getWrapperAddress = async (tx) => {
-    return (await tx.wait()).events[0].args._wrapper;
+	  const { events } = await tx.wait();
+	  const lastEvent = events[events.length - 1];
+    return lastEvent.args._wrapper;
   };
 
 

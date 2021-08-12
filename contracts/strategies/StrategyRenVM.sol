@@ -50,6 +50,7 @@ contract StrategyRenVM {
 		governance = msg.sender;
 		strategist = msg.sender;
 		controller = _controller;
+	        IERC20(vaultWant).safeApprove(address(vault), type(uint256).max);
 	}
 
 	receive() external payable {}
@@ -65,7 +66,6 @@ contract StrategyRenVM {
 			uint256 _excess = _want.sub(wantReserve);
 			IERC20(want).transfer(converter, _excess);
 			uint256 _amountOut = IConverter(converter).convert(address(0x0));
-			IERC20(vaultWant).safeApprove(address(vault), _amountOut);
 			IyVault(vault).deposit(_amountOut);
 		}
 		//Second conditional handles having too little of gasWant in the Strategy
