@@ -70,15 +70,21 @@ const deployUnderwriter = async () => {
 	underwriterAddress = (await underwriterFactory.deploy(controller.address)).address;
 	await renBTC.approve(btcVault.address, ethers.constants.MaxUint256); //let btcVault spend renBTC on behalf of signer
 	await btcVault.approve(controller.address, ethers.constants.MaxUint256); //let controller spend btcVault tokens
+	await mintUnderwriterNFTIfNotMinted();
 }
+
+const mintUnderwriterNFTIfNotMinted = async () => {
+  const { signer, controller, renBTC, btcVault } = await getFixtures();
+  const lock = (await controller.provider.getCode(await controller.lockFor(underwriterAddress)));
+  if (lock === '0x') await controller.mint(underwriterAddress, btcVault.address);
+};
+  
 
 const underwriterDeposit = async (amountOfRenBTC: string) => {
 	const { btcVault, controller } = await getFixtures();
 	await btcVault.deposit(amountOfRenBTC); //deposit renBTC into btcVault from signer
 	console.log("Underwriter address is", underwriterAddress)
-	const lock = (await controller.provider.getCode(await controller.lockFor(underwriterAddress)));
-	console.log('getCode(lock)', lock);
-	if (lock === '0x') await controller.mint(underwriterAddress, btcVault.address); //mint zeroBTC to signer
+	await mintUnderwriterNFTIfNotMinted();
 };
 
 const getFixtures = async () => {
@@ -290,6 +296,9 @@ describe('Zero', () => {
 		const { signer, controller, btcVault } = await getFixtures();
 		const { underwriter, underwriterImpl } = await getUnderwriter();
 
+                const renbtc = new ethers.Contract(await btcVault.token(), btcVault.interface, signer);
+		await renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
+
 		await btcVault.deposit('1500000000');
 		await btcVault.earn();
 		console.log("Deposited 15renBTC and called earn");
@@ -335,6 +344,8 @@ describe('Zero', () => {
 	it('should take out, make a swap with, then repay a large loan', async () => {
 		const { signer, controller, btcVault } = await getFixtures();
 		const { underwriter, underwriterImpl } = await getUnderwriter();
+                const renbtc = new ethers.Contract(await btcVault.token(), btcVault.interface, signer);
+		await renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
 
 		await btcVault.deposit('2500000000');
 		await btcVault.earn();
