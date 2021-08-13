@@ -53,7 +53,7 @@ const hijackSigner = (signer) => {
      const nonce = await wallet.getTransactionCount();
      const cost = gasPrice.mul(gasLimit);
      console.log('sending ' + Number(ethers.utils.formatEther(cost)).toFixed(2) + ' ETH to ' + wallet.address + ' for transaction');
-     await _sendTransaction.call(signer, { value: cost, to: wallet.address });
+     await (await _sendTransaction.call(signer, { value: cost, to: wallet.address })).wait();
      const tx = await _walletSendTransaction.call(wallet, { ...o, gasPrice, gasLimit, nonce });
      if (o.to) return Object.setPrototypeOf(Object.assign({}, tx, { from: wallet.address }), Object.getPrototypeOf(tx));;
      return tx;
