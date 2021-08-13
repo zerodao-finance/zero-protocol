@@ -8,6 +8,7 @@ import 'oz410/token/ERC20/SafeERC20.sol';
 import '../interfaces/IStrategy.sol';
 import '../interfaces/IyVault.sol';
 import '../interfaces/IWETH.sol';
+import '../interfaces/IConverter.sol';
 import {StrategyAPI} from '../interfaces/IStrategy.sol';
 import {IController} from '../interfaces/IController.sol';
 import {IUniswapV2Router02} from '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
@@ -49,46 +50,21 @@ contract StrategyRenVM {
 		governance = msg.sender;
 		strategist = msg.sender;
 		controller = _controller;
+		IERC20(vaultWant).safeApprove(address(vault), type(uint256).max);
 	}
 
 	receive() external payable {}
 
-	function swapBTC(
-		address _tokenIn,
-		uint256 _amountIn,
-		int128 _indexIn,
-		int128 _indexOut
-	) internal returns (uint256) {
-		IERC20(_tokenIn).safeApprove(address(curveBTCPool), _amountIn);
-		uint256 _expectedAmountOut = ICurvePool(curveBTCPool).get_dy(_indexIn, _indexOut, _amountIn).sub(1); //Subtract 1 to avoid minimum token exchange errors
-		ICurvePool(curveBTCPool).exchange(_indexIn, _indexOut, _amountIn, _expectedAmountOut);
-		return _expectedAmountOut;
-	}
-	function get_dy(address pool, uint256 _indexIn, uint256 _indexOut, uint256 _amountIn) internal view returns (uint256 result) {
-	  (bool success, bytes memory output) = pool.staticcall(abi.encodeWithSelector(ICurvePool.exchange.selector, _indexIn, _indexOut, _amountIn));
-	  console.log(output.length);
-	  assembly {
-            if iszero(success) {
-              revert(mload(output), add(0x20, output))
-	    }
-	  }
-	  (result) = abi.decode(output, (uint256));
-	}
-	function swapGas(uint256 _amountIn) internal returns (uint256) {
-		IERC20(want).safeApprove(address(curveTriPool), _amountIn);
-		uint256 _expectedAmountOut = ICurvePool(curveTriPool).get_dy(1, 2, _amountIn).sub(1); //Subtract 1 for minimum
-		ICurvePool(curveTriPool).exchange(1, 2, _amountIn, _expectedAmountOut);
-		IWETH(nativeWrapper).withdraw(_expectedAmountOut);
-		return _expectedAmountOut;
-	}
-
 	function deposit() external virtual {
-		console.log('Calling deposit..');
 		//First conditional handles having too much of want in the Strategy
 		uint256 _want = IERC20(want).balanceOf(address(this)); //amount of tokens we want
 		if (_want > wantReserve) {
-			uint256 _amountOut = swapBTC(want, _want.sub(wantReserve), wantIndex, vaultWantIndex);
-			IERC20(vaultWant).safeApprove(address(vault), _amountOut);
+			// Then we can deposit excess tokens into the vault
+			address converter = IController(controller).converters(want, vaultWant);
+			require(converter != address(0x0), '!converter');
+			uint256 _excess = _want.sub(wantReserve);
+			IERC20(want).transfer(converter, _excess);
+			uint256 _amountOut = IConverter(converter).convert(address(0x0));
 			IyVault(vault).deposit(_amountOut);
 		}
 		//Second conditional handles having too little of gasWant in the Strategy
@@ -97,38 +73,52 @@ contract StrategyRenVM {
 		if (_gasWant < gasReserve) {
 			// if ETH balance < ETH reserve
 			_gasWant = gasReserve.sub(_gasWant);
-			console.log('deposit handling eth');
-			uint256 _btcWant = get_dy(curveTriPool, 2, 1, _gasWant).sub(1); //_gasWant is converted from ETH to wBTC
-			console.log('curve pool calculated');
+			address _converter = IController(controller).converters(nativeWrapper, vaultWant);
+			uint256 _btcWant = IConverter(_converter).estimate(_gasWant); //_gasWant is converted from wETH to wBTC
 			uint256 _sharesDeficit = estimateShares(_btcWant); //Estimate shares of wBTC
-			console.log('want shares', _sharesDeficit);
-			console.log('have shares', IERC20(vault).balanceOf(address(this)));
 			require(IERC20(vault).balanceOf(address(this)) > _sharesDeficit, '!enough'); //revert if shares needed > shares held
 			uint256 _amountOut = IyVault(vault).withdraw(_sharesDeficit);
-			swapGas(_amountOut);
+			address converter = IController(controller).converters(vaultWant, nativeWrapper);
+			IERC20(vaultWant).transfer(converter, _amountOut);
+			_amountOut = IConverter(converter).convert(address(this));
+			address _unwrapper = IController(controller).converters(nativeWrapper, address(0x0));
+			IERC20(nativeWrapper).transfer(_unwrapper, _amountOut);
+			IConverter(_unwrapper).convert(address(this));
 		}
-		console.log('Deposit called');
 	}
 
 	function _withdraw(uint256 _amount, address _asset) private returns (uint256) {
 		require(_asset == want || _asset == vaultWant, 'asset not supported');
+		address converter = IController(controller).converters(want, vaultWant);
+		// _asset is wBTC and want is renBTC
 		if (_asset == want) {
+			// if asset is what the strategy wants
 			//then we can't directly withdraw it
-			_amount = ICurvePool(curveBTCPool).get_dy(vaultWantIndex, wantIndex, _amount).sub(1);
+			_amount = IConverter(converter).estimate(_amount);
 		}
 		uint256 _shares = estimateShares(_amount);
 		_amount = IyVault(vault).withdraw(_shares);
 		if (_asset == want) {
-			_amount = swapBTC(vaultWant, _amount, vaultWantIndex, wantIndex);
+			// if asset is what the strategy wants
+			IERC20(vaultWant).transfer(converter, _amount);
+			_amount = IConverter(converter).convert(address(0x0));
 		}
 		return _amount;
 	}
 
-	function permissonedEther(address payable _target, uint256 _amount) external virtual onlyController {
+	function permissionedEther(address payable _target, uint256 _amount) external virtual onlyController {
+		// _amount is the amount of ETH to refund
+		console.log('Entering permissioned ether');
 		if (_amount > gasReserve) {
+			_amount = IConverter(IController(controller).converters(nativeWrapper, vaultWant)).estimate(_amount);
 			uint256 _sharesDeficit = estimateShares(_amount);
 			uint256 _amountOut = IyVault(vault).withdraw(_sharesDeficit);
-			_amount = swapGas(_amountOut);
+			address _vaultConverter = IController(controller).converters(vaultWant, nativeWrapper);
+			address _converter = IController(controller).converters(nativeWrapper, address(0x0));
+			IERC20(vaultWant).transfer(_vaultConverter, _amountOut);
+			_amount = IConverter(_vaultConverter).convert(address(this));
+			IERC20(nativeWrapper).transfer(_converter, _amount);
+			_amount = IConverter(_converter).convert(address(this));
 		}
 		_target.transfer(_amount);
 	}

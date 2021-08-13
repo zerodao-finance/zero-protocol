@@ -17,8 +17,8 @@ contract yVault is ERC20 {
 
     IERC20 public token;
 
-    uint256 public min = 5;
-    uint256 public constant max = 100;
+    uint256 public min = 25;
+    uint256 public constant max = 30;
 
     address public governance;
     address public controller;
