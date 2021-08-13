@@ -16,11 +16,13 @@ contract ZeroCurveFactory {
 		address _pool
 	) public returns (address) {
 		// Determine if signed112 or unsigned256
-		try new ZeroCurveSignedWrapper(_tokenInIndex, _tokenOutIndex, _pool) returns (ZeroCurveSignedWrapper wrapper) {
+		try new ZeroCurveUnderlyingSignedWrapper(_tokenInIndex, _tokenOutIndex, _pool) returns (
+			ZeroCurveUnderlyingSignedWrapper wrapper
+		) {
 			emit CreateWrapper(address(wrapper));
 			return address(wrapper);
 		} catch {
-			ZeroCurveUnsignedWrapper wrapper = new ZeroCurveUnsignedWrapper(
+			ZeroCurveUnderlyingUnsignedWrapper wrapper = new ZeroCurveUnderlyingUnsignedWrapper(
 				uint256(_tokenInIndex),
 				uint256(_tokenOutIndex),
 				_pool
@@ -31,7 +33,7 @@ contract ZeroCurveFactory {
 	}
 }
 
-contract ZeroCurveSignedWrapper {
+contract ZeroCurveUnderlyingSignedWrapper {
 	int128 public immutable tokenInIndex;
 	int128 public immutable tokenOutIndex;
 	address public immutable tokenInAddress;
@@ -48,28 +50,28 @@ contract ZeroCurveSignedWrapper {
 	) {
 		tokenInIndex = _tokenInIndex;
 		tokenOutIndex = _tokenOutIndex;
-		address _tokenInAddress = ICurvePool(_pool).coins(_tokenInIndex);
+		address _tokenInAddress = ICurvePool(_pool).underlying_coins(_tokenInIndex);
 		tokenInAddress = _tokenInAddress;
-		tokenOutAddress = ICurvePool(_pool).coins(_tokenOutIndex);
+		tokenOutAddress = ICurvePool(_pool).underlying_coins(_tokenOutIndex);
 		pool = _pool;
 		IERC20(_tokenInAddress).safeApprove(_pool, type(uint256).max);
 	}
 
 	function estimate(uint256 _amount) public returns (uint256 result) {
-		result = ICurvePool(pool).get_dy(tokenInIndex, tokenOutIndex, _amount);
+		result = ICurvePool(pool).get_dy_underlying(tokenInIndex, tokenOutIndex, _amount);
 	}
 
 	function convert(address _module) external returns (uint256) {
 		uint256 _balance = IERC20(tokenInAddress).balanceOf(address(this));
 		uint256 _startOut = IERC20(tokenOutAddress).balanceOf(address(this));
-		ICurvePool(pool).exchange(tokenInIndex, tokenOutIndex, _balance, 1);
+		ICurvePool(pool).exchange_underlying(tokenInIndex, tokenOutIndex, _balance, 1);
 		uint256 _actualOut = IERC20(tokenOutAddress).balanceOf(address(this)) - _startOut;
 		IERC20(tokenOutAddress).safeTransfer(msg.sender, _actualOut);
 		return _actualOut;
 	}
 }
 
-contract ZeroCurveUnsignedWrapper {
+contract ZeroCurveUnderlyingUnsignedWrapper {
 	uint256 public immutable tokenInIndex;
 	uint256 public immutable tokenOutIndex;
 	address public immutable tokenInAddress;
@@ -86,20 +88,20 @@ contract ZeroCurveUnsignedWrapper {
 	) {
 		tokenInIndex = _tokenInIndex;
 		tokenOutIndex = _tokenOutIndex;
-		address _tokenInAddress = tokenInAddress = ICurvePool(_pool).coins(_tokenInIndex);
-		tokenOutAddress = ICurvePool(_pool).coins(_tokenOutIndex);
+		address _tokenInAddress = tokenInAddress = ICurvePool(_pool).underlying_coins(_tokenInIndex);
+		tokenOutAddress = ICurvePool(_pool).underlying_coins(_tokenOutIndex);
 		pool = _pool;
 		IERC20(_tokenInAddress).safeApprove(_pool, type(uint256).max);
 	}
 
 	function estimate(uint256 _amount) public returns (uint256 result) {
-		result = ICurvePool(pool).get_dy(tokenInIndex, tokenOutIndex, _amount);
+		result = ICurvePool(pool).get_dy_underlying(tokenInIndex, tokenOutIndex, _amount);
 	}
 
 	function convert(address _module) external returns (uint256) {
 		uint256 _balance = IERC20(tokenInAddress).balanceOf(address(this));
 		uint256 _startOut = IERC20(tokenOutAddress).balanceOf(address(this));
-		ICurvePool(pool).exchange(tokenInIndex, tokenOutIndex, _balance, 1);
+		ICurvePool(pool).exchange_underlying(tokenInIndex, tokenOutIndex, _balance, 1);
 		uint256 _actualOut = IERC20(tokenOutAddress).balanceOf(address(this)) - _startOut;
 		IERC20(tokenOutAddress).safeTransfer(msg.sender, _actualOut);
 		return _actualOut;

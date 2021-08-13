@@ -19,9 +19,10 @@ import {IGateway} from '../interfaces/IGateway.sol';
 import {IGatewayRegistry} from '../interfaces/IGatewayRegistry.sol';
 import {IStrategy} from '../interfaces/IStrategy.sol';
 import {SafeMath} from 'oz410/math/SafeMath.sol';
+import {LockForImplLib} from '../libraries/LockForImplLib.sol';
+import '../interfaces/IConverter.sol';
 import '@openzeppelin/contracts/math/Math.sol';
-
-import 'hardhat/console.sol';
+import {console} from 'hardhat/console.sol';
 
 /**
 @title upgradeable contract which determines the authority of a given address to sign off on loans
@@ -31,22 +32,19 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 	using SafeMath for uint256;
 	using SafeERC20 for *;
 
-	uint256 public maxGasPrice = 100e9;
-	uint256 public maxGasRepay = 250000;
-	uint256 public maxGasLoan = 500000;
+	uint256 internal maxGasPrice = 100e9;
+	uint256 internal maxGasRepay = 250000;
+	uint256 internal maxGasLoan = 500000;
 	string internal constant UNDERWRITER_LOCK_IMPLEMENTATION_ID = 'zero.underwriter.lock-implementation';
 	address internal underwriterLockImpl;
-	mapping(address => uint256) public loaned;
-	mapping(address => uint256) public repaid;
-	mapping(address => bool) public moduleApproved;
 	mapping(bytes32 => ZeroLib.LoanStatus) public loanStatus;
-	bytes32 private constant ZERO_DOMAIN_SALT = 0xb225c57bf2111d6955b97ef0f55525b5a400dc909a5506e34b102e193dd53406;
-	bytes32 private constant ZERO_DOMAIN_NAME_HASH = keccak256('ZeroController.RenVMBorrowMessage');
-	bytes32 private constant ZERO_DOMAIN_VERSION_HASH = keccak256('v2');
-	bytes32 private constant ZERO_RENVM_BORROW_MESSAGE_TYPE_HASH =
+	bytes32 internal constant ZERO_DOMAIN_SALT = 0xb225c57bf2111d6955b97ef0f55525b5a400dc909a5506e34b102e193dd53406;
+	bytes32 internal constant ZERO_DOMAIN_NAME_HASH = keccak256('ZeroController.RenVMBorrowMessage');
+	bytes32 internal constant ZERO_DOMAIN_VERSION_HASH = keccak256('v2');
+	bytes32 internal constant ZERO_RENVM_BORROW_MESSAGE_TYPE_HASH =
 		keccak256('RenVMBorrowMessage(address module,uint256 amount,address underwriter,uint256 pNonce,bytes pData)');
-	bytes32 private constant TYPE_HASH = keccak256('TransferRequest(address asset,uint256 amount)');
-	bytes32 private ZERO_DOMAIN_SEPARATOR;
+	bytes32 internal constant TYPE_HASH = keccak256('TransferRequest(address asset,uint256 amount)');
+	bytes32 internal ZERO_DOMAIN_SEPARATOR;
 
 	function getChainId() internal view returns (uint8 response) {
 		assembly {
@@ -54,7 +52,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		}
 	}
 
-	address public constant gatewayRegistry = 0xe80d347DF1209a76DD9d2319d62912ba98C54DDD;
+	address internal constant gatewayRegistry = 0xe80d347DF1209a76DD9d2319d62912ba98C54DDD;
 
 	function initialize(address _rewards) public {
 		__Ownable_init_unchained();
@@ -89,7 +87,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 	}
 
 	function lockFor(address underwriter) public view returns (ZeroUnderwriterLock result) {
-		result = ZeroLib.lockFor(address(this), underwriterLockImpl, underwriter);
+		result = LockForImplLib.lockFor(address(this), underwriterLockImpl, underwriter);
 	}
 
 	function mint(address underwriter, address vault) public {
@@ -164,8 +162,8 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 			signature
 		);
 		depositAll(asset);
-		//uint256 _gasRefund = Math.min(gasleft().sub(_gasBefore), maxGasRepay).mul(Math.min(tx.gasprice, maxGasPrice));
-		//IStrategy(strategies[params.asset]).permissionedEther(params.to, _gasRefund);
+		uint256 _gasRefund = Math.min(_gasBefore.sub(gasleft()), maxGasLoan).mul(Math.min(tx.gasprice, maxGasPrice));
+		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);
 	}
 
 	function depositAll(address _asset) internal {
@@ -223,10 +221,16 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 
 		ZeroUnderwriterLock(lockFor(msg.sender)).trackOut(params.module, actual);
 		uint256 _txGas = maxGasPrice.mul(maxGasRepay.add(maxGasLoan));
+		_txGas = IConverter(
+			converters[IStrategy(strategies[params.asset]).nativeWrapper()][
+				IStrategy(strategies[params.asset]).vaultWant()
+			]
+		).estimate(_txGas); //convert txGas from ETH to wBTC
+		_txGas = IConverter(converters[IStrategy(strategies[params.asset]).vaultWant()][params.asset]).estimate(_txGas);
+		// ^convert txGas from wBTC to renBTC
 		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(module, params.amount.sub(_txGas));
-
 		IZeroModule(module).receiveLoan(params.to, params.asset, _amountSent, params.nonce, params.data);
-		//uint256 _gasRefund = Math.min(gasleft().sub(_gasBefore), maxGasLoan).mul(Math.min(tx.gasprice, maxGasPrice));
-		//IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);
+		uint256 _gasRefund = Math.min(_gasBefore.sub(gasleft()), maxGasLoan).mul(Math.min(tx.gasprice, maxGasPrice));
+		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);
 	}
 }

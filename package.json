@@ -23,7 +23,7 @@
 		"@nomiclabs/hardhat-etherscan": "^2.1.2",
 		"@openzeppelin/contracts": "3.4.0",
 		"@openzeppelin/contracts-upgradeable": "3.4.1-solc-0.7-2",
-		"@renproject/ren": "^2.1.7",
+		"@renproject/ren": "^2.5.1",
 		"@types/chai": "^4.2.21",
 		"@types/chai-as-promised": "^7.1.4",
 		"@types/mocha": "^8.2.3",

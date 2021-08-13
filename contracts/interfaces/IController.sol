@@ -19,4 +19,6 @@ interface IController {
 	function strategies(address) external view returns (address);
 
 	function approvedStrategies(address, address) external view returns (bool);
+
+	function converters(address, address) external view returns (address);
 }

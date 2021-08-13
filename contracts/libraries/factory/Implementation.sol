@@ -6,10 +6,10 @@ pragma solidity >=0.5.0;
 @author raymondpulver
 */
 abstract contract Implementation {
-    /**
+	/**
   @notice ensure the contract cannot be initialized twice
   */
-    function lock() public virtual {
-        // no other logic
-    }
+	function lock() public virtual {
+		// no other logic
+	}
 }
