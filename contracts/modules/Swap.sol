@@ -50,6 +50,7 @@ contract Swap {
 	) public {
 		uint256 amountSwapped = swapTokens(want, fiat, _actual);
 		outstanding[_nonce] = SwapLib.SwapRecord({qty: amountSwapped, when: uint64(block.timestamp), token: _asset});
+		console.log('Loan was received and handled');
 	}
 
 	function swapTokens(

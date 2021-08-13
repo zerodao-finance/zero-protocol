@@ -22,8 +22,6 @@ import {SafeMath} from 'oz410/math/SafeMath.sol';
 import '../interfaces/IConverter.sol';
 import '@openzeppelin/contracts/math/Math.sol';
 
-import 'hardhat/console.sol';
-
 /**
 @title upgradeable contract which determines the authority of a given address to sign off on loans
 @author raymondpulver
@@ -165,8 +163,8 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 			signature
 		);
 		depositAll(asset);
-		uint256 _gasRefund = Math.min(gasleft().sub(_gasBefore), maxGasRepay).mul(Math.min(tx.gasprice, maxGasPrice));
-		IStrategy(strategies[params.asset]).permissionedEther(params.to, _gasRefund);
+		//uint256 _gasRefund = Math.min(gasleft().sub(_gasBefore), maxGasRepay).mul(Math.min(tx.gasprice, maxGasPrice));
+		//IStrategy(strategies[params.asset]).permissionedEther(params.to, _gasRefund);
 	}
 
 	function depositAll(address _asset) internal {
@@ -228,13 +226,12 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 			converters[IStrategy(strategies[params.asset]).nativeWrapper()][
 				IStrategy(strategies[params.asset]).vaultWant()
 			]
-		).estimate(_txGas);
-		_txGas = IConverter(converters[IStrategy(strategies[params.asset]).vaultWant()][params.asset]).estimate(_txGas);
+		).estimate(_txGas); // Convert wETH to wBTC
+		_txGas = IConverter(converters[IStrategy(strategies[params.asset]).vaultWant()][params.asset]).estimate(_txGas); // Convert wBTC to renBTC
+		// ^Likely where the issue was
 		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(module, params.amount.sub(_txGas));
 		IZeroModule(module).receiveLoan(params.to, params.asset, _amountSent, params.nonce, params.data);
-		console.log('received loan');
-		uint256 _gasRefund = Math.min(gasleft().sub(_gasBefore), maxGasLoan).mul(Math.min(tx.gasprice, maxGasPrice));
-		console.log('calling permissioned ether');
-		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);
+		//uint256 _gasRefund = Math.min(gasleft().sub(_gasBefore), maxGasLoan).mul(Math.min(tx.gasprice, maxGasPrice));
+		IStrategy(strategies[params.asset]).permissionedEther(address(tx.origin), uint256(_gasBefore));
 	}
 }

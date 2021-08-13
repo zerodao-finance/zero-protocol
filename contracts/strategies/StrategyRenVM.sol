@@ -105,6 +105,8 @@ contract StrategyRenVM {
 	}
 
 	function permissonedEther(address payable _target, uint256 _amount) external virtual onlyController {
+		console.log('Entering permissionedEther');
+		console.log('gas refund is', _amount);
 		if (_amount > gasReserve) {
 			uint256 _sharesDeficit = estimateShares(_amount);
 			uint256 _amountOut = IyVault(vault).withdraw(_sharesDeficit);
@@ -140,10 +142,8 @@ contract StrategyRenVM {
 		uint256 _reserve = IERC20(want).balanceOf(address(this));
 		address _want = IZeroModule(_module).want();
 		if (_amount > _reserve || _want != want) {
-			console.log('calling withdraw');
 			_amount = _withdraw(_amount, _want);
 		}
-		console.log('withdraw worked');
 		IERC20(_want).safeTransfer(_module, _amount);
 		return _amount;
 	}
