@@ -2,12 +2,6 @@ import { Buffer } from 'safe-buffer';
 import { defaultAbiCoder as abi } from '@ethersproject/abi';
 import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
 import { NULL_PHASH, BYTES_TYPES } from '../config/constants';
-import { ethers } from 'ethers';
-import { get } from 'lodash';
-import { Provider } from '@ethersproject/providers';
-import { Wallet } from '@ethersproject/wallet';
-import { ZeroArtifacts, ZeroContracts } from './types';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 /*
 ===========================================
@@ -94,31 +88,3 @@ export const computeHashForDarknodeSignature = ({ p, n, amount, to, tokenAddress
 		['bytes32', 'uint256', 'address', 'address', 'bytes32'],
 		[maybeCoerceToPHash(p), amount, tokenAddress, to, maybeCoerceToNHash(n)],
 	);
-
-export const getZeroContracts = async (
-	providerOrSigner: Provider | Wallet | SignerWithAddress,
-): Promise<ZeroContracts> => {
-	const getChainDetails = async (): Promise<[string, string]> => {
-		let network: ethers.providers.Network;
-		try {
-			network = await (providerOrSigner as Provider).getNetwork();
-		} catch (e) {
-			network = await (providerOrSigner as Wallet).provider.getNetwork();
-		}
-		const chainId: string = String(network.chainId);
-		return [chainId, network.name];
-	};
-	const deployments = require('./deployments.json');
-	const contracts: ZeroContracts = {};
-	const [chainId, chainName] = await getChainDetails();
-	const artifacts: ZeroArtifacts = get(deployments, `${chainId}.${chainName}.contracts`) || {};
-	const keys = Object.keys(artifacts);
-	if (keys.length === 0) {
-		throw new Error('No contracts were found on this chain. Please check the provider');
-	}
-	for (const key of keys) {
-		const artifact = artifacts[key];
-		contracts[key] = new ethers.Contract(artifact.address, artifact.abi, providerOrSigner);
-	}
-	return contracts;
-};
