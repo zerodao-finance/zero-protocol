@@ -1,21 +1,11 @@
 {
   "31337": {
-    "hardhat": {
-      "name": "hardhat",
-      "chainId": "31337",
-      "contracts": {
-        "FactoryLib": {
-          "address": "0xE6E340D132b5f46d1e472DebcD681B2aBc16e57E",
-          "abi": []
-        }
-      }
-    },
     "localhost": {
       "name": "localhost",
       "chainId": "31337",
       "contracts": {
         "ZeroUnderwriterLockBytecodeLib": {
-          "address": "0x5eb3Bc0a489C5A8288765d2336659EbCA68FCd00",
+          "address": "0xCD8a1C3ba11CF5ECfa6267617243239504a98d90",
           "abi": [
             {
               "inputs": [],
@@ -33,7 +23,7 @@
           ]
         },
         "ZeroController": {
-          "address": "0x4c5859f0F772848b2D91F1D83E2Fe57935348029",
+          "address": "0x7969c5eD335650692Bc04293B07F5BF2e7A673C0",
           "abi": [
             {
               "anonymous": false,
@@ -322,19 +312,6 @@
               "type": "function"
             },
             {
-              "inputs": [],
-              "name": "gatewayRegistry",
-              "outputs": [
-                {
-                  "internalType": "address",
-                  "name": "",
-                  "type": "address"
-                }
-              ],
-              "stateMutability": "view",
-              "type": "function"
-            },
-            {
               "inputs": [
                 {
                   "internalType": "uint256",
@@ -539,25 +516,6 @@
               "inputs": [
                 {
                   "internalType": "address",
-                  "name": "",
-                  "type": "address"
-                }
-              ],
-              "name": "loaned",
-              "outputs": [
-                {
-                  "internalType": "uint256",
-                  "name": "",
-                  "type": "uint256"
-                }
-              ],
-              "stateMutability": "view",
-              "type": "function"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "address",
                   "name": "underwriter",
                   "type": "address"
                 }
@@ -587,45 +545,6 @@
               "type": "function"
             },
             {
-              "inputs": [],
-              "name": "maxGasLoan",
-              "outputs": [
-                {
-                  "internalType": "uint256",
-                  "name": "",
-                  "type": "uint256"
-                }
-              ],
-              "stateMutability": "view",
-              "type": "function"
-            },
-            {
-              "inputs": [],
-              "name": "maxGasPrice",
-              "outputs": [
-                {
-                  "internalType": "uint256",
-                  "name": "",
-                  "type": "uint256"
-                }
-              ],
-              "stateMutability": "view",
-              "type": "function"
-            },
-            {
-              "inputs": [],
-              "name": "maxGasRepay",
-              "outputs": [
-                {
-                  "internalType": "uint256",
-                  "name": "",
-                  "type": "uint256"
-                }
-              ],
-              "stateMutability": "view",
-              "type": "function"
-            },
-            {
               "inputs": [
                 {
                   "internalType": "address",
@@ -641,25 +560,6 @@
               "name": "mint",
               "outputs": [],
               "stateMutability": "nonpayable",
-              "type": "function"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "address",
-                  "name": "",
-                  "type": "address"
-                }
-              ],
-              "name": "moduleApproved",
-              "outputs": [
-                {
-                  "internalType": "bool",
-                  "name": "",
-                  "type": "bool"
-                }
-              ],
-              "stateMutability": "view",
               "type": "function"
             },
             {
@@ -725,25 +625,6 @@
               "name": "renounceOwnership",
               "outputs": [],
               "stateMutability": "nonpayable",
-              "type": "function"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "address",
-                  "name": "",
-                  "type": "address"
-                }
-              ],
-              "name": "repaid",
-              "outputs": [
-                {
-                  "internalType": "uint256",
-                  "name": "",
-                  "type": "uint256"
-                }
-              ],
-              "stateMutability": "view",
               "type": "function"
             },
             {
@@ -1292,7 +1173,7 @@
           ]
         },
         "BTCVault": {
-          "address": "0x1291Be112d480055DaFd8a610b7d1e203891C274",
+          "address": "0x7bc06c482DEAd17c0e297aFbC32f6e63d3846650",
           "abi": [
             {
               "inputs": [
@@ -1801,7 +1682,7 @@
           ]
         },
         "TrivialUnderwriter": {
-          "address": "0x5f3f1dBD7B74C6B46e8c44f98792A1dAf8d69154",
+          "address": "0xc351628EB244ec633d5f21fBD6621e1a683B1181",
           "abi": [
             {
               "inputs": [
@@ -1904,7 +1785,7 @@
           ]
         },
         "Swap": {
-          "address": "0xb7278A61aa25c888815aFC32Ad3cC52fF24fE575",
+          "address": "0xFD471836031dc5108809D173A067e8486B9047A3",
           "abi": [
             {
               "inputs": [
@@ -2164,7 +2045,7 @@
           ]
         },
         "StrategyRenVM": {
-          "address": "0xCD8a1C3ba11CF5ECfa6267617243239504a98d90",
+          "address": "0xcbEAF3BDe82155F56486Fb5a1072cb8baAf547cc",
           "abi": [
             {
               "inputs": [
@@ -2304,6 +2185,24 @@
             {
               "inputs": [
                 {
+                  "internalType": "address payable",
+                  "name": "_target",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "_amount",
+                  "type": "uint256"
+                }
+              ],
+              "name": "permissionedEther",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
                   "internalType": "address",
                   "name": "_module",
                   "type": "address"
@@ -2322,24 +2221,6 @@
                   "type": "uint256"
                 }
               ],
-              "stateMutability": "nonpayable",
-              "type": "function"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "address payable",
-                  "name": "_target",
-                  "type": "address"
-                },
-                {
-                  "internalType": "uint256",
-                  "name": "_amount",
-                  "type": "uint256"
-                }
-              ],
-              "name": "permissonedEther",
-              "outputs": [],
               "stateMutability": "nonpayable",
               "type": "function"
             },
@@ -2452,6 +2333,250 @@
               "name": "withdrawAll",
               "outputs": [],
               "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "stateMutability": "payable",
+              "type": "receive"
+            }
+          ]
+        },
+        "ZeroCurveFactory": {
+          "address": "0x162A433068F51e18b7d13932F27e66a3f99E6890",
+          "abi": [
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": false,
+                  "internalType": "address",
+                  "name": "_wrapper",
+                  "type": "address"
+                }
+              ],
+              "name": "CreateWrapper",
+              "type": "event"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "int128",
+                  "name": "_tokenInIndex",
+                  "type": "int128"
+                },
+                {
+                  "internalType": "int128",
+                  "name": "_tokenOutIndex",
+                  "type": "int128"
+                },
+                {
+                  "internalType": "address",
+                  "name": "_pool",
+                  "type": "address"
+                }
+              ],
+              "name": "createWrapper",
+              "outputs": [
+                {
+                  "internalType": "address",
+                  "name": "",
+                  "type": "address"
+                }
+              ],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            }
+          ]
+        },
+        "ZeroUniswapFactory": {
+          "address": "0x922D6956C99E12DFeB3224DEA977D0939758A1Fe",
+          "abi": [
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "_router",
+                  "type": "address"
+                }
+              ],
+              "stateMutability": "nonpayable",
+              "type": "constructor"
+            },
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": false,
+                  "internalType": "address",
+                  "name": "_wrapper",
+                  "type": "address"
+                }
+              ],
+              "name": "CreateWrapper",
+              "type": "event"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address[]",
+                  "name": "_path",
+                  "type": "address[]"
+                }
+              ],
+              "name": "createWrapper",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "router",
+              "outputs": [
+                {
+                  "internalType": "address",
+                  "name": "",
+                  "type": "address"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            }
+          ]
+        },
+        "WrapNative": {
+          "address": "0x5081a39b8A5f0E35a8D959395a630b68B74Dd30f",
+          "abi": [
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "_wrapper",
+                  "type": "address"
+                }
+              ],
+              "stateMutability": "nonpayable",
+              "type": "constructor"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "_module",
+                  "type": "address"
+                }
+              ],
+              "name": "convert",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "payable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "_amount",
+                  "type": "uint256"
+                }
+              ],
+              "name": "estimate",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "wrapper",
+              "outputs": [
+                {
+                  "internalType": "address",
+                  "name": "",
+                  "type": "address"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "stateMutability": "payable",
+              "type": "receive"
+            }
+          ]
+        },
+        "UnwrapNative": {
+          "address": "0x1fA02b2d6A771842690194Cf62D91bdd92BfE28d",
+          "abi": [
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "_wrapper",
+                  "type": "address"
+                }
+              ],
+              "stateMutability": "nonpayable",
+              "type": "constructor"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "_module",
+                  "type": "address"
+                }
+              ],
+              "name": "convert",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "payable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "_amount",
+                  "type": "uint256"
+                }
+              ],
+              "name": "estimate",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "wrapper",
+              "outputs": [
+                {
+                  "internalType": "address",
+                  "name": "",
+                  "type": "address"
+                }
+              ],
+              "stateMutability": "view",
               "type": "function"
             },
             {
