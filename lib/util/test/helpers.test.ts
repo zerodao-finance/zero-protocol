@@ -1,5 +1,9 @@
 import { getZeroContracts } from '../helpers';
-import { ethers } from 'ethers';
+import hre from 'hardhat';
+// till the hardhat.config.ts is in pure ts - with esm imports,
+// this error will exist
+// @ts-expect-error
+const ethers = hre.ethers;
 import chaiAsPromised from 'chai-as-promised';
 import chai from 'chai';
 chai.use(chaiAsPromised);
@@ -18,9 +22,7 @@ describe.only('[Helper utils]', () => {
 	});
 
 	it('[getZeroContracts] should return contracts', async () => {
-		const signer = ethers.Wallet.createRandom().connect(
-			new ethers.providers.JsonRpcProvider('https://eth-kovan.alchemyapi.io/v2/FA67QTTYt3Id7cfmoQLTYvjtgeY6Q3y1'),
-		);
+		const [signer] = await ethers.getSigners();
 		sinon.stub(signer.provider, 'getNetwork').returns(
 			Promise.resolve({
 				chainId: 31337,
