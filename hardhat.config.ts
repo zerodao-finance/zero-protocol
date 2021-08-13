@@ -21,8 +21,8 @@ module.exports = {
       settings: {
         optimizer: {
           enabled: true,
-	  runs: 200
-	}
+          runs: 200
+        }
       }
     }, {
       version: '0.7.6',
@@ -40,6 +40,9 @@ module.exports = {
       forking: {
         url: 'https://eth-mainnet.alchemyapi.io/v2/opf1pfLThCfvgyUtE9Mj_NvZwY3yIVJx'
       }
+    },
+    matic: {
+      url: "https://rpc-mumbai.maticvigil.com"
     },
     localhost: {
       url: 'http://localhost:8545',
