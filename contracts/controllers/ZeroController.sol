@@ -19,6 +19,7 @@ import {IGateway} from '../interfaces/IGateway.sol';
 import {IGatewayRegistry} from '../interfaces/IGatewayRegistry.sol';
 import {IStrategy} from '../interfaces/IStrategy.sol';
 import {SafeMath} from 'oz410/math/SafeMath.sol';
+import { LockForImplLib } from "../libraries/LockForImplLib.sol";
 import '../interfaces/IConverter.sol';
 import '@openzeppelin/contracts/math/Math.sol';
 
@@ -32,22 +33,19 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 	using SafeMath for uint256;
 	using SafeERC20 for *;
 
-	uint256 public maxGasPrice = 100e9;
-	uint256 public maxGasRepay = 250000;
-	uint256 public maxGasLoan = 500000;
+	uint256 internal maxGasPrice = 100e9;
+	uint256 internal maxGasRepay = 250000;
+	uint256 internal maxGasLoan = 500000;
 	string internal constant UNDERWRITER_LOCK_IMPLEMENTATION_ID = 'zero.underwriter.lock-implementation';
 	address internal underwriterLockImpl;
-	mapping(address => uint256) public loaned;
-	mapping(address => uint256) public repaid;
-	mapping(address => bool) public moduleApproved;
 	mapping(bytes32 => ZeroLib.LoanStatus) public loanStatus;
-	bytes32 private constant ZERO_DOMAIN_SALT = 0xb225c57bf2111d6955b97ef0f55525b5a400dc909a5506e34b102e193dd53406;
-	bytes32 private constant ZERO_DOMAIN_NAME_HASH = keccak256('ZeroController.RenVMBorrowMessage');
-	bytes32 private constant ZERO_DOMAIN_VERSION_HASH = keccak256('v2');
-	bytes32 private constant ZERO_RENVM_BORROW_MESSAGE_TYPE_HASH =
+	bytes32 internal constant ZERO_DOMAIN_SALT = 0xb225c57bf2111d6955b97ef0f55525b5a400dc909a5506e34b102e193dd53406;
+	bytes32 internal  constant ZERO_DOMAIN_NAME_HASH = keccak256('ZeroController.RenVMBorrowMessage');
+	bytes32 internal constant ZERO_DOMAIN_VERSION_HASH = keccak256('v2');
+	bytes32 internal constant ZERO_RENVM_BORROW_MESSAGE_TYPE_HASH =
 		keccak256('RenVMBorrowMessage(address module,uint256 amount,address underwriter,uint256 pNonce,bytes pData)');
-	bytes32 private constant TYPE_HASH = keccak256('TransferRequest(address asset,uint256 amount)');
-	bytes32 private ZERO_DOMAIN_SEPARATOR;
+	bytes32 internal constant TYPE_HASH = keccak256('TransferRequest(address asset,uint256 amount)');
+	bytes32 internal ZERO_DOMAIN_SEPARATOR;
 
 	function getChainId() internal view returns (uint8 response) {
 		assembly {
@@ -55,7 +53,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		}
 	}
 
-	address public constant gatewayRegistry = 0xe80d347DF1209a76DD9d2319d62912ba98C54DDD;
+	address internal constant gatewayRegistry = 0xe80d347DF1209a76DD9d2319d62912ba98C54DDD;
 
 	function initialize(address _rewards) public {
 		__Ownable_init_unchained();
@@ -90,7 +88,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 	}
 
 	function lockFor(address underwriter) public view returns (ZeroUnderwriterLock result) {
-		result = ZeroLib.lockFor(address(this), underwriterLockImpl, underwriter);
+		result = LockForImplLib.lockFor(address(this), underwriterLockImpl, underwriter);
 	}
 
 	function mint(address underwriter, address vault) public {
