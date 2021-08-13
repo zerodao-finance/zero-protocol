@@ -41,7 +41,11 @@ contract ZeroUnderwriterLock is Initializable {
 	}
 
 	function owed() public view returns (uint256 result) {
-		result = uint256(_balanceSheet.loaned).sub(_balanceSheet.repaid);
+		if (_balanceSheet.loaned >= _balanceSheet.repaid) {
+			result = uint256(_balanceSheet.loaned).sub(_balanceSheet.repaid);
+		} else {
+			result = 0;
+		}
 	}
 
 	function reserve() public view returns (uint256 result) {

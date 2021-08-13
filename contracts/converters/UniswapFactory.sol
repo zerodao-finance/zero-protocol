@@ -3,6 +3,7 @@
 pragma solidity >=0.7.0;
 import {IUniswapV2Router02} from '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
+import { SafeERC20 } from "oz410/token/ERC20/SafeERC20.sol";
 import {SafeMath} from 'oz410/math/SafeMath.sol';
 import 'hardhat/console.sol';
 
@@ -44,11 +45,13 @@ contract ZeroUniswapWrapper {
 	address public immutable router;
 
 	using SafeMath for uint256;
+	using SafeERC20 for IERC20;
 	using AddressSliceLib for address[];
 
 	constructor(address _router, address[] memory _path) {
 		router = _router;
 		path = _path;
+		IERC20(_path[0]).safeApprove(address(_router), type(uint256).max);
 	}
 
 	function estimate(uint256 _amount) public view returns (uint256) {
@@ -64,7 +67,6 @@ contract ZeroUniswapWrapper {
 	function convert(address _module) external payable returns (uint256) {
 		// Then the input and output tokens are both ERC20
 		uint256 _balance = IERC20(path[0]).balanceOf(address(this));
-		require(IERC20(path[0]).approve(address(router), _balance), 'approve failed.');
 		uint256 _minOut = estimate(_balance).sub(1); //Subtract one for minimum in case of rounding errors
 		uint256 _actualOut = IUniswapV2Router02(router).swapExactTokensForTokens(
 			_balance,

@@ -8,6 +8,12 @@ interface ICurvePool {
 		uint256
 	) external view returns (uint256);
 
+	function get_dy(
+		uint256,
+		uint256,
+		uint256
+	) external view returns (uint256);
+
 	function exchange(
 		int128,
 		int128,
@@ -15,5 +21,14 @@ interface ICurvePool {
 		uint256
 	) external;
 
+	function exchange(
+		uint256,
+		uint256,
+		uint256,
+		uint256
+	) external;
+
 	function coins(int128) external view returns (address);
+
+	function coins(uint256) external view returns (address);
 }
