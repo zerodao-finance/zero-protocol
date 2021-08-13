@@ -19,9 +19,10 @@ import {IGateway} from '../interfaces/IGateway.sol';
 import {IGatewayRegistry} from '../interfaces/IGatewayRegistry.sol';
 import {IStrategy} from '../interfaces/IStrategy.sol';
 import {SafeMath} from 'oz410/math/SafeMath.sol';
-import { LockForImplLib } from "../libraries/LockForImplLib.sol";
+import {LockForImplLib} from '../libraries/LockForImplLib.sol';
 import '../interfaces/IConverter.sol';
 import '@openzeppelin/contracts/math/Math.sol';
+import {console} from 'hardhat/console.sol';
 
 /**
 @title upgradeable contract which determines the authority of a given address to sign off on loans
@@ -38,7 +39,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 	address internal underwriterLockImpl;
 	mapping(bytes32 => ZeroLib.LoanStatus) public loanStatus;
 	bytes32 internal constant ZERO_DOMAIN_SALT = 0xb225c57bf2111d6955b97ef0f55525b5a400dc909a5506e34b102e193dd53406;
-	bytes32 internal  constant ZERO_DOMAIN_NAME_HASH = keccak256('ZeroController.RenVMBorrowMessage');
+	bytes32 internal constant ZERO_DOMAIN_NAME_HASH = keccak256('ZeroController.RenVMBorrowMessage');
 	bytes32 internal constant ZERO_DOMAIN_VERSION_HASH = keccak256('v2');
 	bytes32 internal constant ZERO_RENVM_BORROW_MESSAGE_TYPE_HASH =
 		keccak256('RenVMBorrowMessage(address module,uint256 amount,address underwriter,uint256 pNonce,bytes pData)');
@@ -161,8 +162,8 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 			signature
 		);
 		depositAll(asset);
-		//uint256 _gasRefund = Math.min(gasleft().sub(_gasBefore), maxGasRepay).mul(Math.min(tx.gasprice, maxGasPrice));
-		//IStrategy(strategies[params.asset]).permissionedEther(params.to, _gasRefund);
+		uint256 _gasRefund = Math.min(_gasBefore.sub(gasleft()), maxGasLoan).mul(Math.min(tx.gasprice, maxGasPrice));
+		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);
 	}
 
 	function depositAll(address _asset) internal {
@@ -224,12 +225,12 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 			converters[IStrategy(strategies[params.asset]).nativeWrapper()][
 				IStrategy(strategies[params.asset]).vaultWant()
 			]
-		).estimate(_txGas); // Convert wETH to wBTC
-		_txGas = IConverter(converters[IStrategy(strategies[params.asset]).vaultWant()][params.asset]).estimate(_txGas); // Convert wBTC to renBTC
-		// ^Likely where the issue was
+		).estimate(_txGas); //convert txGas from ETH to wBTC
+		_txGas = IConverter(converters[IStrategy(strategies[params.asset]).vaultWant()][params.asset]).estimate(_txGas);
+		// ^convert txGas from wBTC to renBTC
 		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(module, params.amount.sub(_txGas));
 		IZeroModule(module).receiveLoan(params.to, params.asset, _amountSent, params.nonce, params.data);
-		//uint256 _gasRefund = Math.min(gasleft().sub(_gasBefore), maxGasLoan).mul(Math.min(tx.gasprice, maxGasPrice));
-		IStrategy(strategies[params.asset]).permissionedEther(address(tx.origin), uint256(_gasBefore));
+		uint256 _gasRefund = Math.min(_gasBefore.sub(gasleft()), maxGasLoan).mul(Math.min(tx.gasprice, maxGasPrice));
+		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);
 	}
 }

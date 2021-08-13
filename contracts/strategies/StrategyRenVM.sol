@@ -80,8 +80,10 @@ contract StrategyRenVM {
 			uint256 _amountOut = IyVault(vault).withdraw(_sharesDeficit);
 			address converter = IController(controller).converters(vaultWant, nativeWrapper);
 			IERC20(vaultWant).transfer(converter, _amountOut);
-			IConverter(converter).convert(address(this));
-			//TODO unwrap the wETH to ETH
+			_amountOut = IConverter(converter).convert(address(this));
+			address _unwrapper = IController(controller).converters(nativeWrapper, address(0x0));
+			IERC20(nativeWrapper).transfer(_unwrapper, _amountOut);
+			IConverter(_unwrapper).convert(address(this));
 		}
 	}
 
@@ -104,18 +106,17 @@ contract StrategyRenVM {
 		return _amount;
 	}
 
-	function permissonedEther(address payable _target, uint256 _amount) external virtual onlyController {
-		console.log('Entering permissionedEther');
-		console.log('gas refund is', _amount);
+	function permissionedEther(address payable _target, uint256 _amount) external virtual onlyController {
+		// _amount is the amount of ETH to refund
+		console.log('Entering permissioned ether');
 		if (_amount > gasReserve) {
+			_amount = IConverter(IController(controller).converters(nativeWrapper, vaultWant)).estimate(_amount);
 			uint256 _sharesDeficit = estimateShares(_amount);
 			uint256 _amountOut = IyVault(vault).withdraw(_sharesDeficit);
 			address _vaultConverter = IController(controller).converters(vaultWant, nativeWrapper);
 			address _converter = IController(controller).converters(nativeWrapper, address(0x0));
-			console.log('convert to nativeWrapper');
 			IERC20(vaultWant).transfer(_vaultConverter, _amountOut);
 			_amount = IConverter(_vaultConverter).convert(address(this));
-			console.log('convert to ETH');
 			IERC20(nativeWrapper).transfer(_converter, _amount);
 			_amount = IConverter(_converter).convert(address(this));
 		}
