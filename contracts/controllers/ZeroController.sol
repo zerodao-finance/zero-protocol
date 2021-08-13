@@ -119,7 +119,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		bytes32 digest = toTypedDataHash(params, underwriter);
 		require(loanStatus[digest].status == ZeroLib.LoanStatusCode.UNINITIALIZED, 'loan already exists');
 		uint256 _actualAmount = IGateway(IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset)).mint(
-			keccak256(abi.encode(nonce, data)),
+			keccak256(abi.encode(nonce, module, data)),
 			actualAmount,
 			nHash,
 			signature
