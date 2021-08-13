@@ -1,6 +1,6 @@
 // @ts-expect-error
 import { Script, Networks } from 'bitcore-lib';
-import { stripHexPrefix, maybeCoerceToGHash, encodeInitializationActions } from './helpers';
+import { stripHexPrefix, maybeCoerceToGHash, encodeInitializationActions, getZeroContracts } from './helpers';
 import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
 import { getCreate2Address } from '@ethersproject/address';
 import assembleCloneCode from './assembleCloneCode';
@@ -88,6 +88,9 @@ class RenVM {
 export const computeGatewayAddress = async (ren: RenJS, params: GatewayAddressParams) => {
 	// dev
 	throw new Error('Function is broken!');
+	const contracts = await getZeroContracts(params.signer);
+	const zeroController = contracts.ZeroController.address;
+	const underwriterAddress = contracts.Underwriter.address;
 	let fromChain: LockChain;
 	switch (params.from) {
 		case 'btc': {
@@ -98,7 +101,6 @@ export const computeGatewayAddress = async (ren: RenJS, params: GatewayAddressPa
 			throw new Error(`Invalid from network: ${params.from}`);
 		}
 	}
-	const zeroController = '0x';
 	const pHash = keccak256(
 		defaultAbiCoder.encode(['uint256', 'address', 'bytes'], [params.pNonce, params.module, params.data]),
 	);
@@ -107,13 +109,14 @@ export const computeGatewayAddress = async (ren: RenJS, params: GatewayAddressPa
 		{
 			from: fromChain,
 			nonce: params.nonce || ethers.utils.hexlify(ethers.utils.randomBytes(32)),
-			to: Ethereum({ provider: params.signer.provider, signer: params.signer }).Address(zeroController),
-			contractCalls: [
-				// {
-				// 	// todo
-				// 	contractParams: [],
-				// },
-			],
+			to: Ethereum({ provider: params.signer.provider, signer: params.signer }).Contract({
+				sendTo: zeroController,
+				contractFn: 'fallbackMint',
+				contractParams: [
+					// todo
+				],
+			}),
+			tags: ['zero-protocol'],
 			asset: params.asset,
 		},
 		// @ts-ignore

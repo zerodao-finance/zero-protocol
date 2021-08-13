@@ -2,6 +2,7 @@ import { Contract, Wallet } from 'ethers';
 
 export interface GatewayAddressParams {
 	from: 'btc';
+	to: string;
 	signer: Wallet;
 	nonce?: string | Buffer;
 	asset: string;
