@@ -1695,6 +1695,14 @@
     "@types/node" ">=10"
     bignumber.js "^9.0.1"
 
+"@renproject/interfaces@^2.5.1":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@renproject/interfaces/-/interfaces-2.5.1.tgz#8ab56589251a6a0005d963ee5e6bbc2124a943c4"
+  integrity sha512-SHf+/22bQ/4LLuIN/qIKRfW34f44qLlWsvB5Tl92EQdiwL1px5NKLi7pzwq+B97UhqkeWVBKljEO4mN+xITijA==
+  dependencies:
+    "@types/node" ">=10"
+    bignumber.js "^9.0.1"
+
 "@renproject/provider@^2.5.0":
   version "2.5.0"
   resolved "https://registry.npmjs.org/@renproject/provider/-/provider-2.5.0.tgz"
@@ -1706,15 +1714,26 @@
     axios "^0.21.1"
     immutable "^4.0.0-rc.14"
 
-"@renproject/ren@^2.1.7":
-  version "2.5.0"
-  resolved "https://registry.npmjs.org/@renproject/ren/-/ren-2.5.0.tgz"
-  integrity sha512-Xe1j5vo+n842gSCVUxbRZ6SJAe6I6x30xXxVRfgUPIn4s9cc6HLu8wMMNwzm0R9ujRLoanCQLCfr/orAHcm2nA==
+"@renproject/provider@^2.5.1":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@renproject/provider/-/provider-2.5.1.tgz#c7c77406bea674c567bb5e265d23ffa4450fc642"
+  integrity sha512-j3LrWOoXJlMRQ7vcMl2x2wRN/ZLfpjc5AseHm5j1ywFyAa0r9sWd4OobrJzkbIA0UV0koT/RC5vVquSLovbvEw==
   dependencies:
-    "@renproject/interfaces" "^2.5.0"
-    "@renproject/provider" "^2.5.0"
-    "@renproject/rpc" "^2.5.0"
-    "@renproject/utils" "^2.5.0"
+    "@renproject/interfaces" "^2.5.1"
+    "@renproject/utils" "^2.5.1"
+    "@types/node" ">=10"
+    axios "^0.21.1"
+    immutable "^4.0.0-rc.14"
+
+"@renproject/ren@^2.5.1":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@renproject/ren/-/ren-2.5.1.tgz#79351a42bb58a1b86778afaff5801f30fc3e5475"
+  integrity sha512-BSUlzRRbFqINvAyTenuD0qUEyn2VCRfWaH4Ov3IEvQItnxc77jY/W93NRpyCfdBe2DvNzFkSQsIZaRxr8CXuPg==
+  dependencies:
+    "@renproject/interfaces" "^2.5.1"
+    "@renproject/provider" "^2.5.1"
+    "@renproject/rpc" "^2.5.1"
+    "@renproject/utils" "^2.5.1"
     "@types/bn.js" "^5.1.0"
     "@types/node" ">=10"
     bignumber.js "^9.0.1"
@@ -1734,12 +1753,42 @@
     bignumber.js "^9.0.1"
     immutable "^4.0.0-rc.14"
 
+"@renproject/rpc@^2.5.1":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@renproject/rpc/-/rpc-2.5.1.tgz#4a2535576c49cb41d9498941af22ee49e712cc76"
+  integrity sha512-774QHEbLJfaHKd7Z8Z0MnvCBbIvFcXHp/+3HGRSMgOScOWl+eproKaWVZUPwRNVQUe9bDsAiqszBm4IWfKRdCw==
+  dependencies:
+    "@renproject/interfaces" "^2.5.1"
+    "@renproject/provider" "^2.5.1"
+    "@renproject/utils" "^2.5.1"
+    "@types/node" ">=10"
+    bignumber.js "^9.0.1"
+    immutable "^4.0.0-rc.14"
+
 "@renproject/utils@^2.5.0":
   version "2.5.0"
   resolved "https://registry.npmjs.org/@renproject/utils/-/utils-2.5.0.tgz"
   integrity sha512-0JUj5pwG/v/ah7vrgN+2ecuYJ0lJ/u5ClSKTOiEUGIeqw/6Tt/xW5WLJvNuqlhNM0pqGqIrJ8Ip1FYlghcIuyw==
   dependencies:
     "@renproject/interfaces" "^2.5.0"
+    "@types/create-hash" "1.2.2"
+    "@types/events" "3.0.0"
+    "@types/keccak" "^3.0.1"
+    "@types/node" ">=10"
+    axios "^0.21.1"
+    bignumber.js "^9.0.1"
+    create-hash "1.2.0"
+    ethers "^5.4.3"
+    events "^3.3.0"
+    immutable "^4.0.0-rc.14"
+    keccak "^3.0.1"
+
+"@renproject/utils@^2.5.1":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@renproject/utils/-/utils-2.5.1.tgz#e2b26211896d07250793a6e47e4c4e7330fef361"
+  integrity sha512-WFbVt3Iv0pO4BfzPc00bJ7T+TTu/rmfZqcsnnrKqGEh+oZr2Gu4g9ngYihxApQ7JYT65uh96Pr/6mgTu14jI1g==
+  dependencies:
+    "@renproject/interfaces" "^2.5.1"
     "@types/create-hash" "1.2.2"
     "@types/events" "3.0.0"
     "@types/keccak" "^3.0.1"

@@ -12,7 +12,7 @@ const { expect } = chai;
 import sinon from 'sinon';
 import 'mocha';
 
-describe.only('[Helper utils]', () => {
+describe('[Helper utils]', () => {
 	it('[getZeroContracts] should throw if contracts not found', async () => {
 		const signer = ethers.Wallet.createRandom().connect(
 			new ethers.providers.JsonRpcProvider('https://eth-kovan.alchemyapi.io/v2/FA67QTTYt3Id7cfmoQLTYvjtgeY6Q3y1'),
