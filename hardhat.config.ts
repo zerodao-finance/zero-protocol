@@ -4,6 +4,12 @@ require('hardhat-deploy-ethers');
 //require('hardhat-gas-reporter');
 require('@openzeppelin/hardhat-upgrades');
 
+const forks: { [index: string]: string } = {
+  MATIC: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
+  ETHEREUM: "https://eth-mainnet.alchemyapi.io/v2/opf1pfLThCfvgyUtE9Mj_NvZwY3yIVJx"
+}
+
+const forkingUrl = forks[process.env.CHAIN || "MATIC"];
 
 
 module.exports = {
@@ -38,11 +44,11 @@ module.exports = {
   networks: {
     hardhat: {
       forking: {
-        url: 'https://eth-mainnet.alchemyapi.io/v2/opf1pfLThCfvgyUtE9Mj_NvZwY3yIVJx'
+        url: forkingUrl
       }
     },
     matic: {
-      url: "https://rpc-mumbai.maticvigil.com"
+      url: "https://rpc-mumbai.maticvigil.com",
     },
     localhost: {
       url: 'http://localhost:8545',

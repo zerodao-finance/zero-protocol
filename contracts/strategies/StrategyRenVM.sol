@@ -21,8 +21,6 @@ contract StrategyRenVM {
 	using Address for address;
 	using SafeMath for uint256;
 
-	address public constant curveBTCPool = 0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714;
-	address public constant curveTriPool = 0x80466c64868E1ab14a1Ddf27A676C3fcBE638Fe5;
 	address public constant vault = address(0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E);
 	address public constant nativeWrapper = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
@@ -46,7 +44,11 @@ contract StrategyRenVM {
 		_;
 	}
 
-	constructor(address _controller) {
+	constructor(
+		address _controller,
+		address want,
+		address nativeWrapper
+	) {
 		governance = msg.sender;
 		strategist = msg.sender;
 		controller = _controller;
