@@ -6,7 +6,7 @@ require('@openzeppelin/hardhat-upgrades');
 
 const forks: { [index: string]: string } = {
   MATIC: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
-  ETHEREUM: "https://eth-mainnet.alchemyapi.io/v2/opf1pfLThCfvgyUtE9Mj_NvZwY3yIVJx"
+  ETHEREUM: "https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX"
 }
 
 const forkingUrl = forks[process.env.CHAIN || "MATIC"];

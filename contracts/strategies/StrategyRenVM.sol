@@ -22,9 +22,8 @@ contract StrategyRenVM {
 	using SafeMath for uint256;
 
 	address public constant vault = address(0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E);
-	address public constant nativeWrapper = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-
-	address public constant want = address(0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D);
+	address public immutable nativeWrapper;
+	address public immutable want;
 	int128 public constant wantIndex = 0;
 
 	address public constant vaultWant = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
@@ -46,9 +45,11 @@ contract StrategyRenVM {
 
 	constructor(
 		address _controller,
-		address want,
-		address nativeWrapper
+		address _want,
+		address _nativeWrapper
 	) {
+		nativeWrapper = _nativeWrapper;
+		want = _want;
 		governance = msg.sender;
 		strategist = msg.sender;
 		controller = _controller;

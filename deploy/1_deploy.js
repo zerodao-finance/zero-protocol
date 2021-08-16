@@ -89,7 +89,7 @@ module.exports = async ({
     from: deployer
   });
   const strategyRenVM = await deployments.deploy('StrategyRenVM', {
-    args: [zeroController.address, deployParameters[network]["renBTC"], deployParameters[network][""]],
+    args: [zeroController.address, deployParameters[network]["renBTC"], deployParameters[network]["wNative"]],
     contractName: 'StrategyRenVM',
     from: deployer
   });
