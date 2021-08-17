@@ -13,7 +13,7 @@ let _sendTransaction;
 
 const walletMap = {};
 const restoreSigner = (signer) => {
-	return;
+  return;
   signer.constructor.prototype.sendTransaction = _sendTransaction;
   Web3Provider.prototype.getSigner = _getSigner;
   Logger.prototype.throwError = _throwError;
@@ -42,7 +42,7 @@ const { getSigner: _getSigner } = Web3Provider.prototype;
 
 
 const hijackSigner = (signer) => {
-	return;
+  return;
   const Signer = signer.constructor;
   _sendTransaction = Signer.prototype.sendTransaction;
   const _walletSendTransaction = ethers.Wallet.prototype.sendTransaction;
@@ -88,7 +88,8 @@ const deployParameters = {
     wNative: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     Curve_SBTC: '0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714',
-    Curve_TriCryptoTwo: '0xD51a44d3FaE010294C616388b506AcdA1bfAAE46'
+    Curve_TriCryptoTwo: '0xD51a44d3FaE010294C616388b506AcdA1bfAAE46',
+    Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
   }
 }
 
@@ -134,7 +135,7 @@ module.exports = async ({
     bytecode: zeroControllerArtifact.bytecode,
     abi: zeroControllerArtifact.abi
   });
-  const btcVault = await deployFixedAddress('BTCVault', {
+  await deployFixedAddress('BTCVault', {
     contractName: 'BTCVault',
     args: [deployParameters[network]['renBTC'], zeroController.address, "zeroBTC", "zBTC"],
     from: deployer
@@ -142,12 +143,12 @@ module.exports = async ({
   const v = await ethers.getContract('BTCVault');
   await v.attach(deployParameters[network]['renBTC']).balanceOf(ethers.constants.AddressZero);
 
-  const trivialUnderwriterFactory = await deployFixedAddress("TrivialUnderwriter", {
+  await deployFixedAddress("TrivialUnderwriter", {
     contractName: 'TrivialUnderwriter',
     args: [zeroController.address],
     from: deployer
   });
-  const swapModuleFactory = await deployFixedAddress('Swap', {
+  await deployFixedAddress('Swap', {
     args: [zeroController.address],
     contractName: 'Swap',
     from: deployer
@@ -173,19 +174,19 @@ module.exports = async ({
   });
 
   await deployFixedAddress('ZeroUniswapFactory', {
-    args: [UNISWAP_ROUTER_V2],
+    args: [deployParameters[network]['Router']],
     contractName: 'ZeroUniswapFactory',
     from: deployer
   });
 
   await deployFixedAddress('WrapNative', {
-    args: [WETH_MAINNET_ADDRESS],
+    args: [deployParameters[network]['wNative']],
     contractName: 'WrapNative',
     from: deployer
   });
 
   await deployFixedAddress('UnwrapNative', {
-    args: [WETH_MAINNET_ADDRESS],
+    args: [deployParameters[network]['wNative']],
     contractName: 'UnwrapNative',
     from: deployer
   });
@@ -207,28 +208,28 @@ module.exports = async ({
 
   // Deploy converters
   switch (network) {
-    case ETHEREUM:
+    case "ETHEREUM":
       const curveFactory = await ethers.getContract('ZeroCurveFactory', deployer);
 
       // Curve wBTC -> renBTC
       var wBTCToRenBTCTx = await curveFactory.functions.createWrapper(1, 0, deployParameters[network]["Curve_SBTC"]);
       var wBTCToRenBTC = await getWrapperAddress(wBTCToRenBTCTx);
-      await controller.setConverter(wBTC, renBTC, wBTCToRenBTC);
+      await controller.setConverter(deployParameters[network]['wBTC'], deployParameters[network]['renBTC'], wBTCToRenBTC);
 
       // Curve renBTC -> wBTC
       var renBTCToWBTCTx = await curveFactory.createWrapper(0, 1, deployParameters[network]["Curve_SBTC"]);
       var renBTCToWBTC = await getWrapperAddress(renBTCToWBTCTx);
-      await controller.setConverter(renBTC, wBTC, renBTCToWBTC);
+      await controller.setConverter(deployParameters[network]['renBTC'], deployParameters[network]['wBTC'], renBTCToWBTC);
 
       // Curve wNative -> wBTC
       var wEthToWBTCTx = await curveFactory.createWrapper(2, 1, deployParameters[network]["Curve_TriCryptoTwo"]);
       var wEthToWBTC = await getWrapperAddress(wEthToWBTCTx);
-      await controller.setConverter(wETH, wBTC, wEthToWBTC);
+      await controller.setConverter(deployParameters[network]['wNative'], deployParameters[network]['wBTC'], wEthToWBTC);
 
       // Curve wBTC -> wNative
       var wBtcToWETHTx = await curveFactory.createWrapper(1, 2, deployParameters[network]["Curve_TriCryptoTwo"]);
       var wBtcToWETH = await getWrapperAddress(wBtcToWETHTx);
-      await controller.setConverter(wBTC, wETH, wBtcToWETH);
+      await controller.setConverter(deployParameters[network]['wBTC'], deployParameters[network]['wNative'], wBtcToWETH);
 
       break;
 
@@ -239,22 +240,22 @@ module.exports = async ({
       // Curve wBTC -> renBTC
       var wBTCToRenBTCTx = await curveUnderlyingFactory.createWrapper(0, 1, deployParameters[network]["Curve_Ren"]);
       var wBTCToRenBTC = await getWrapperAddress(wBTCToRenBTCTx);
-      await controller.setConverter(wBTC, renBTC, wBTCToRenBTC);
+      await controller.setConverter(deployParameters[network]['wBTC'], deployParameters[network]['renBTC'], wBTCToRenBTC);
 
       // Curve renBTC -> wBTC
       var renBTCToWBTCTx = await curveUnderlyingFactory.createWrapper(1, 0, deployParameters[network]["Curve_Ren"]);
       var renBTCToWBTC = await getWrapperAddress(renBTCToWBTCTx);
-      await controller.setConverter(renBTC, wBTC, renBTCToWBTC);
+      await controller.setConverter(deployParameters[network]['renBTC'], deployParameters[network]['wBTC'], renBTCToWBTC);
 
       // Sushi wNative -> wBTC
       var wEthToWBTCTx = await sushiFactory.createWrapper([deployParameters[network]["wNative"], deployParameters[network]["wBTC"]]);
       var wEthToWBTC = await getWrapperAddress(wEthToWBTCTx);
-      await controller.setConverter(wETH, wBTC, wEthToWBTC);
+      await controller.setConverter(deployParameters[network]['wNative'], deployParameters[network]['wBTC'], wEthToWBTC);
 
       // Sushi wBTC -> wNative
       var wBtcToWETHTx = await sushiFactory.createWrapper([deployParameters[network]["wBTC"], deployParameters[network]["wNative"]]);
       var wBtcToWETH = await getWrapperAddress(wBtcToWETHTx);
-      await controller.setConverter(wBTC, wETH, wBtcToWETH);
+      await controller.setConverter(deployParameters[network]['wBTC'], deployParameters[network]['wNative'], wBtcToWETH);
 
 
       break;
