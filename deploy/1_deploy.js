@@ -80,7 +80,8 @@ const deployParameters = {
     wNative: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
     USDC: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
     Router: '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F',
-    Curve_Ren: '0x445FE580eF8d70FF569aB36e80c647af338db351'
+    Curve_Ren: '0x445FE580eF8d70FF569aB36e80c647af338db351',
+    sushiRouter: '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F'
   },
   ETHEREUM: {
     renBTC: '0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D',
@@ -89,7 +90,8 @@ const deployParameters = {
     USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     Curve_SBTC: '0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714',
     Curve_TriCryptoTwo: '0xD51a44d3FaE010294C616388b506AcdA1bfAAE46',
-    Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
+    Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+    sushiRouter: '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F'
   }
 }
 
@@ -149,7 +151,14 @@ module.exports = async ({
     from: deployer
   });
   await deployFixedAddress('Swap', {
-    args: [zeroController.address],
+    args: [
+      zeroController.address, // Controller
+      deployParameters[network]['wNative'], // wNative
+      deployParameters[network]['wBTC'], // Want
+      deployParameters[network]['sushiRouter'], // Sushi Router
+      deployParameters[network]['USDC'], // Fiat
+      deployParameters[network]['renBTC'] // controllerWant
+    ],
     contractName: 'Swap',
     from: deployer
   });

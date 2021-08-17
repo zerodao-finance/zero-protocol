@@ -15,17 +15,29 @@ contract Swap {
 	address public immutable controller;
 	address public immutable governance;
 	uint256 public blockTimeout;
-	address public constant fiat = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48; //USDC
-	address public constant wNative = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; //wETH
-	address public constant want = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599; //wBTC
-	address public constant router = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; //Sushi V2
-	address public constant controllerWant = 0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D; //renBTC
+	address public immutable fiat; //USDC
+	address public immutable wNative; //wETH
+	address public immutable want; //wBTC
+	address public immutable router; //Sushi V2
+	address public immutable controllerWant; // Controller want (renBTC)
 
-	constructor(address _controller) {
+	constructor(
+		address _controller,
+		address _wNative,
+		address _want,
+		address _router,
+		address _fiat,
+		address _controllerWant
+	) {
 		controller = _controller;
+		wNative = _wNative;
+		want = _want;
+		router = _router;
+		fiat = _fiat;
+		controllerWant = _controllerWant;
 		governance = IController(_controller).governance();
-		IERC20(want).safeApprove(router, ~uint256(0));
-		IERC20(fiat).safeApprove(router, ~uint256(0));
+		IERC20(_want).safeApprove(_router, ~uint256(0));
+		IERC20(_fiat).safeApprove(_router, ~uint256(0));
 	}
 
 	function setBlockTimeout(uint256 _ct) public {
