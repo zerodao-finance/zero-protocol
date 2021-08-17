@@ -34,19 +34,19 @@ const mintRenBTC = async (amount: any, signer?: any) => {
 };
 
 const getContract = async (...args: any[]) => {
-  try {
-    return await ethers.getContract(...args);
-  } catch (e) {
-    return ethers.Contract(ethers.constants.AddressZero, [], (await ethers.getSigners())[0]);
-  }
+	try {
+		return await ethers.getContract(...args);
+	} catch (e) {
+		return ethers.Contract(ethers.constants.AddressZero, [], (await ethers.getSigners())[0]);
+	}
 };
 
 const getContractFactory = async (...args: any[]) => {
-  try {
-    return await ethers.getContractFactory(...args);
-  } catch (e) {
-    return await ethers.ContractFactory('0x', [], (await ethers.getSigners())[0]);
-  }
+	try {
+		return await ethers.getContractFactory(...args);
+	} catch (e) {
+		return await ethers.ContractFactory('0x', [], (await ethers.getSigners())[0]);
+	}
 };
 
 const convert = async (controller: any, tokenIn: any, tokenOut: any, amount: any, signer?: any): Promise<any> => {
@@ -124,7 +124,7 @@ const getFixtures = async () => {
 		wETH: new Contract(WETH_MAINNET_ADDRESS, erc20abi, signer),
 		usdc: new Contract(USDC_MAINNET_ADDRESS, erc20abi, signer),
 		wBTC: new Contract(WBTC_MAINNET_ADDRESS, erc20abi, signer),
-		yvWBTC: new Contract(YVWBTC_MAINNET_ADDRESS, erc20abi, signer),
+		yvWBTC: await getContract('DummyVault', signer),
 	};
 };
 
@@ -133,10 +133,10 @@ const getBalances = async () => {
 		await getFixtures();
 	const wallets: { [index: string]: string } = {
 		Wallet: signerAddress,
-		RenBTCVault: btcVault.address,
+		BTCVault: btcVault.address,
 		Controller: controller.address,
 		Strategy: strategy.address,
-		'yvWBTC Vault': yvWBTC.address,
+		yvWBTC: yvWBTC.address,
 		'Swap Module': swapModule.address
 	};
 	const tokens: { [index: string]: any } = {

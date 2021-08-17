@@ -21,12 +21,12 @@ contract StrategyRenVM {
 	using Address for address;
 	using SafeMath for uint256;
 
-	address public constant vault = address(0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E);
+	address public immutable vault;
 	address public immutable nativeWrapper;
 	address public immutable want;
 	int128 public constant wantIndex = 0;
 
-	address public constant vaultWant = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
+	address public immutable vaultWant;
 	int128 public constant vaultWantIndex = 1;
 
 	string public constant name = '0confirmation RenVM Strategy';
@@ -46,14 +46,18 @@ contract StrategyRenVM {
 	constructor(
 		address _controller,
 		address _want,
-		address _nativeWrapper
+		address _nativeWrapper,
+		address _vault,
+		address _vaultWant
 	) {
 		nativeWrapper = _nativeWrapper;
 		want = _want;
+		vault = _vault;
+		vaultWant = _vaultWant;
 		governance = msg.sender;
 		strategist = msg.sender;
 		controller = _controller;
-		IERC20(vaultWant).safeApprove(address(vault), type(uint256).max);
+		IERC20(_vaultWant).safeApprove(address(_vault), type(uint256).max);
 	}
 
 	receive() external payable {}

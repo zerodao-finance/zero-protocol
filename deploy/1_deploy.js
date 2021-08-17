@@ -79,9 +79,9 @@ const deployParameters = {
     wBTC: '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6',
     wNative: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
     USDC: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
-    Router: '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F',
+    Router: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
     Curve_Ren: '0x445FE580eF8d70FF569aB36e80c647af338db351',
-    sushiRouter: '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F'
+    sushiRouter: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506'
   },
   ETHEREUM: {
     renBTC: '0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D',
@@ -145,11 +145,21 @@ module.exports = async ({
   const v = await ethers.getContract('BTCVault');
   await v.attach(deployParameters[network]['renBTC']).balanceOf(ethers.constants.AddressZero);
 
+  const dummyVault = deployFixedAddress('DummyVault', {
+    contractName: 'DummyVault',
+    args: [deployParameters[network]['wBTC'], zeroController.address, "yearnBTC", "yvWBTC"],
+    from: deployer
+  });
+  const w = await ethers.getContract('DummyVault');
+  await w.attach(deployParameters[network]['wBTC']).balanceOf(ethers.constants.AddressZero);
+  //console.log("Deployed DummyVault to", dummyVault.address)
+
   await deployFixedAddress("TrivialUnderwriter", {
     contractName: 'TrivialUnderwriter',
     args: [zeroController.address],
     from: deployer
   });
+
   await deployFixedAddress('Swap', {
     args: [
       zeroController.address, // Controller
@@ -163,7 +173,13 @@ module.exports = async ({
     from: deployer
   });
   const strategyRenVM = await deployments.deploy('StrategyRenVM', {
-    args: [zeroController.address, deployParameters[network]["renBTC"], deployParameters[network]["wNative"]],
+    args: [
+      zeroController.address,
+      deployParameters[network]["renBTC"],
+      deployParameters[network]["wNative"],
+      dummyVault.address,
+      deployParameters[network]['wBTC']
+    ],
     contractName: 'StrategyRenVM',
     from: deployer
   });
@@ -181,6 +197,12 @@ module.exports = async ({
     contractName: 'ZeroCurveFactory',
     from: deployer
   });
+
+  await deployFixedAddress('ZeroCurveUnderlyingFactory', {
+    args: [],
+    contractName: 'ZeroCurveUnderlyingFactory',
+    from: deployer
+  })
 
   await deployFixedAddress('ZeroUniswapFactory', {
     args: [deployParameters[network]['Router']],
@@ -201,11 +223,6 @@ module.exports = async ({
   });
 
   //Deploy converters
-  const CURVE_SBTC_POOL = '0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714';
-  const renBTC = '0xeb4c2781e4eba804ce9a9803c67d0893436bb27d';
-  const wETH = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-  const wBTC = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599';
-
   const wrapper = await ethers.getContract('WrapNative', deployer);
   const unwrapper = await ethers.getContract('UnwrapNative', deployer);
 
