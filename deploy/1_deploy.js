@@ -145,14 +145,14 @@ module.exports = async ({
   const v = await ethers.getContract('BTCVault');
   await v.attach(deployParameters[network]['renBTC']).balanceOf(ethers.constants.AddressZero);
 
-  const dummyVault = deployFixedAddress('DummyVault', {
+  const dummyVault = await deployFixedAddress('DummyVault', {
     contractName: 'DummyVault',
     args: [deployParameters[network]['wBTC'], zeroController.address, "yearnBTC", "yvWBTC"],
     from: deployer
   });
   const w = await ethers.getContract('DummyVault');
   await w.attach(deployParameters[network]['wBTC']).balanceOf(ethers.constants.AddressZero);
-  //console.log("Deployed DummyVault to", dummyVault.address)
+  console.log("Deployed DummyVault to", dummyVault.address)
 
   await deployFixedAddress("TrivialUnderwriter", {
     contractName: 'TrivialUnderwriter',

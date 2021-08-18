@@ -284,6 +284,13 @@ describe('Zero', () => {
 		expect(Number(await renBTC.balanceOf(await signer.getAddress())) > 0, 'The swap amounts dont add up');
 	});
 
+	it('should return the number of decimals in the yearn vault', async () => {
+		const { yvWBTC } = await getFixtures();
+
+		const decimals = await yvWBTC.decimals();
+		console.log("yvWBTC decimals:", decimals);
+	});
+
 	it('should deposit funds then withdraw funds back from vault', async () => {
 		const { renBTC, btcVault } = await getFixtures();
 
