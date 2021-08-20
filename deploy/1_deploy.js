@@ -13,7 +13,6 @@ let _sendTransaction;
 
 const walletMap = {};
 const restoreSigner = (signer) => {
-  return;
   signer.constructor.prototype.sendTransaction = _sendTransaction;
   Web3Provider.prototype.getSigner = _getSigner;
   Logger.prototype.throwError = _throwError;
@@ -42,7 +41,6 @@ const { getSigner: _getSigner } = Web3Provider.prototype;
 
 
 const hijackSigner = (signer) => {
-  return;
   const Signer = signer.constructor;
   _sendTransaction = Signer.prototype.sendTransaction;
   const _walletSendTransaction = ethers.Wallet.prototype.sendTransaction;
@@ -106,6 +104,10 @@ module.exports = async ({
   const { deployer } = await getNamedAccounts(); //used as governance address
   const [ethersSigner] = await ethers.getSigners();
   const { provider } = ethersSigner;
+  if (Number(ethers.utils.formatEther(await provider.getBalance(deployer))) === 0) await ethersSigner.sendTransaction({
+    value: ethers.utils.parseEther('1'),
+    to: deployer
+  });
   const { chainId } = await provider.getNetwork();
   if (chainId === 31337) {
     await hre.network.provider.request({
