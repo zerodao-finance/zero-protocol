@@ -5,18 +5,9 @@ import {
 	fetchBitcoinPriceHistory,
 	getDefaultBitcoinClient,
 } from '../btc';
-
-const getMockFetch = (mockData: any) => {
-	return jest.fn().mockImplementation(() => {
-		return Promise.resolve({
-			ok: true,
-			Id: '123',
-			json: function () {
-				return mockData;
-			},
-		});
-	});
-};
+import fetchMock from 'fetch-mock';
+import { expect } from 'chai';
+import 'mocha';
 
 describe('fetchAverageBitcoinConfirmationTime', () => {
 	const mockData = {
@@ -43,15 +34,16 @@ describe('fetchAverageBitcoinConfirmationTime', () => {
 	};
 
 	beforeEach(() => {
-		const mockFetch = getMockFetch(mockData);
-		global.fetch = mockFetch;
+		fetchMock.mock('https://blockchain.info/stats?format=json&cors=true', mockData);
+	});
+	afterEach(() => {
+		fetchMock.restore();
 	});
 
-	test('Returns Correct BTC Confirmation Time', async () => {
+	it('Returns Correct BTC Confirmation Time', async () => {
 		const confTime = await fetchAverageBitcoinConfirmationTime();
 		const expected = (10.1742 * 6).toFixed(1);
-		expect(fetch).toBeCalledTimes(1);
-		expect(confTime).toBe(expected);
+		expect(confTime).to.be.equal(expected);
 	});
 });
 
@@ -155,25 +147,36 @@ describe('fetchBtcPriceHistory', () => {
 		],
 	};
 	beforeEach(() => {
-		const mockFetch = getMockFetch(mockData);
-		global.fetch = mockFetch;
+		fetchMock.mock(
+			'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=.1&interval=minute',
+			mockData,
+		);
+	});
+	afterEach(() => {
+		fetchMock.restore();
 	});
 
-	// REASON: mocha and jest types clashing
-	// @ts-ignore
-	test.each([['60', { oldPrice: new BigNumber(36035.03706979065), currentPrice: new BigNumber(35636.87160933142) }]])(
-		'Returns correct BTC prices',
-		async (confTime: string, expected: string) => {
-			const prices = await fetchBitcoinPriceHistory(confTime);
-			expect(fetch).toBeCalledTimes(1);
-			expect(prices).toEqual(expected);
+	const data = [
+		{
+			confTime: '60',
+			expected: { oldPrice: new BigNumber(36035.03706979065), currentPrice: new BigNumber(35636.87160933142) },
 		},
-	);
+	];
+
+	data.forEach((testData) => {
+		it('Returns correct price history', async () => {
+			const confTime = testData.confTime;
+			const prices = await fetchBitcoinPriceHistory(confTime);
+			console.log('prices:', prices);
+			console.log(testData.expected);
+			expect(prices).to.deep.equal(testData.expected);
+		});
+	});
 });
 
 describe('BitcoinClient', () => {
-	test('Creates valid Bitcoin Client', () => {
+	it('Creates valid Bitcoin Client', () => {
 		const client = getDefaultBitcoinClient();
-		expect(client).toBeInstanceOf(BitcoinClient);
+		expect(client).to.be.instanceOf(BitcoinClient);
 	});
 });
