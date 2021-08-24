@@ -107,6 +107,7 @@ const getFixtures = async () => {
 	const [signer] = await ethers.getSigners();
 	const controller = await getContract('ZeroController', signer);
 	const { abi: erc20abi } = await deployments.getArtifact('BTCVault');
+	const { chainId } = await controller.provider.getNetwork();
 
 	return {
 		signer: signer,
@@ -124,7 +125,7 @@ const getFixtures = async () => {
 		wETH: new Contract(WETH_MAINNET_ADDRESS, erc20abi, signer),
 		usdc: new Contract(USDC_MAINNET_ADDRESS, erc20abi, signer),
 		wBTC: new Contract(WBTC_MAINNET_ADDRESS, erc20abi, signer),
-		yvWBTC: await getContract('DummyVault', signer),
+		yvWBTC: chainId === 1 || chainId === 31337 ? new Contract('0xcB550A6D4C8e3517A939BC79d0c7093eb7cF56B5', erc20abi, signer) :  await getContract('DummyVault', signer),
 	};
 };
 
@@ -149,8 +150,15 @@ const getBalances = async () => {
 		zBTC: btcVault,
 	};
 	const getBalance = async (wallet: string, token: Contract) => {
-		const decimals = await token.decimals();
-		const balance = await token.balanceOf(wallet);
+
+	       let decimals, balance;
+	       console.log('token.address', token.address);
+	       try {
+                 decimals = await token.decimals();
+	       }	 catch (e) {
+		 console.log('failed to get decimals ' + token.address);
+		 }
+		 balance = await token.balanceOf(wallet);
 		return String((balance / 10 ** decimals).toFixed(2));
 	};
 	console.table(
@@ -288,7 +296,6 @@ describe('Zero', () => {
 		const { yvWBTC } = await getFixtures();
 
 		const decimals = await yvWBTC.decimals();
-		console.log("yvWBTC decimals:", decimals);
 	});
 
 	it('should deposit funds then withdraw funds back from vault', async () => {

@@ -24,6 +24,7 @@ const deployFixedAddress = async (...args) => {
   hijackSigner(signer);
   const result = await deployments.deploy(...args);
   restoreSigner(signer);
+  console.log('Deployed to ' + result.address);
   return result;
 };
 

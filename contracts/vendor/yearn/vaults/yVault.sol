@@ -22,7 +22,6 @@ contract yVault is ERC20 {
 
 	address public governance;
 	address public controller;
-	uint8 internal _decimals;
 
 	constructor(
 		address _token,
@@ -30,14 +29,13 @@ contract yVault is ERC20 {
 		string memory _name,
 		string memory _symbol
 	) ERC20(_name, _symbol) {
-		_decimals = ERC20(_token).decimals();
 		token = IERC20(_token);
 		governance = msg.sender;
 		controller = _controller;
 	}
 
 	function decimals() public view override returns (uint8) {
-		return _decimals;
+		return ERC20(address(token)).decimals();
 	}
 
 	function balance() public view returns (uint256) {

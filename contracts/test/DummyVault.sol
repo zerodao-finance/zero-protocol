@@ -18,13 +18,18 @@ contract DummyVault is ERC20 {
 		return _amount;
 	}
 
-	function deposit(uint256 _amount) public {
+	function deposit(uint256 _amount) public returns (uint256) {
 		IERC20(want).transferFrom(msg.sender, address(this), _amount);
 		_mint(msg.sender, _amount);
+		return _amount;
 	}
 
-	function withdraw(uint256 _amount) public {
+	function withdraw(uint256 _amount) public returns (uint256) {
 		IERC20(address(this)).transferFrom(msg.sender, address(this), _amount);
 		IERC20(want).transfer(msg.sender, _amount);
+		return _amount;
+	}
+	function pricePerShare() public pure returns (uint256) {
+          return uint256(1 ether);
 	}
 }
