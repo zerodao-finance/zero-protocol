@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { fetchData } from '../util/helpers';
+// @ts-ignore
 import Client from 'bitcoin-core';
 
 interface CgPriceResponse {
