@@ -125,7 +125,7 @@ const getFixtures = async () => {
 		wETH: new Contract(WETH_MAINNET_ADDRESS, erc20abi, signer),
 		usdc: new Contract(USDC_MAINNET_ADDRESS, erc20abi, signer),
 		wBTC: new Contract(WBTC_MAINNET_ADDRESS, erc20abi, signer),
-		yvWBTC: chainId === 1 || chainId === 31337 ? new Contract('0xcB550A6D4C8e3517A939BC79d0c7093eb7cF56B5', erc20abi, signer) : await getContract('DummyVault', signer),
+		yvWBTC: await getContract('DummyVault', signer),
 	};
 };
 

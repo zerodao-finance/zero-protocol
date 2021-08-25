@@ -36,11 +36,7 @@ contract ZeroCurveUnsignedWrapper {
 	}
 
 	function convert(address _module) external returns (uint256) {
-		console.log('Expected in: ', tokenInAddress);
-		console.log('Expected out: ', tokenOutAddress);
 		uint256 _balance = IERC20(tokenInAddress).balanceOf(address(this));
-		console.log('convert', _balance);
-		console.log(tokenInAddress);
 		uint256 _startOut = IERC20(tokenOutAddress).balanceOf(address(this));
 		ICurvePool(pool).exchange(tokenInIndex, tokenOutIndex, _balance, 1);
 		uint256 _actualOut = IERC20(tokenOutAddress).balanceOf(address(this)) - _startOut;

@@ -68,12 +68,9 @@ contract StrategyRenVM {
 		if (_want > wantReserve) {
 			// Then we can deposit excess tokens into the vault
 			address converter = IController(controller).converters(want, vaultWant);
-			console.log('converter', converter);
 			require(converter != address(0x0), '!converter');
 			uint256 _excess = _want.sub(wantReserve);
 			require(IERC20(want).transfer(converter, _excess), '!transfer');
-			console.log('strategy want', want);
-			console.log('vault want', vaultWant);
 			uint256 _amountOut = IConverter(converter).convert(address(0x0));
 			IyVault(vault).deposit(_amountOut);
 		}
@@ -84,13 +81,13 @@ contract StrategyRenVM {
 			// if ETH balance < ETH reserve
 			_gasWant = gasReserve.sub(_gasWant);
 			address _converter = IController(controller).converters(nativeWrapper, vaultWant);
-			uint256 _btcWant = IConverter(_converter).estimate(_gasWant); //_gasWant is converted from wETH to wBTC
-			uint256 _sharesDeficit = estimateShares(_btcWant); //Estimate shares of wBTC
+			uint256 _vaultWant = IConverter(_converter).estimate(_gasWant); //_gasWant is estimated from wETH to wBTC
+			uint256 _sharesDeficit = estimateShares(_vaultWant); //Estimate shares of wBTC
+			// Works up to this point
 			require(IERC20(vault).balanceOf(address(this)) > _sharesDeficit, '!enough'); //revert if shares needed > shares held
 			uint256 _amountOut = IyVault(vault).withdraw(_sharesDeficit);
 			address converter = IController(controller).converters(vaultWant, nativeWrapper);
 			IERC20(vaultWant).transfer(converter, _amountOut);
-			console.log("_amountOut", _amountOut);
 			_amountOut = IConverter(converter).convert(address(this));
 			address _unwrapper = IController(controller).converters(nativeWrapper, address(0x0));
 			IERC20(nativeWrapper).transfer(_unwrapper, _amountOut);
@@ -119,7 +116,6 @@ contract StrategyRenVM {
 
 	function permissionedEther(address payable _target, uint256 _amount) external virtual onlyController {
 		// _amount is the amount of ETH to refund
-		console.log('Entering permissioned ether');
 		if (_amount > gasReserve) {
 			_amount = IConverter(IController(controller).converters(nativeWrapper, vaultWant)).estimate(_amount);
 			uint256 _sharesDeficit = estimateShares(_amount);
@@ -147,7 +143,7 @@ contract StrategyRenVM {
 	}
 
 	function estimateShares(uint256 _amount) internal virtual returns (uint256) {
-		return _amount.mul(10**8).div(IyVault(vault).pricePerShare());
+		return _amount.mul(10**IyVault(vault).decimals()).div(IyVault(vault).pricePerShare());
 	}
 
 	function permissionedSend(address _module, uint256 _amount) external virtual onlyController returns (uint256) {

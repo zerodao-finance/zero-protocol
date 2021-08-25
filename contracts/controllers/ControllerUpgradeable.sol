@@ -101,6 +101,7 @@ contract ControllerUpgradeable {
 	}
 
 	function earn(address _token, uint256 _amount) public {
+		console.log('Earn called for ', _amount);
 		address _strategy = strategies[_token];
 		address _want = IStrategy(_strategy).want();
 		if (_want != _token) {

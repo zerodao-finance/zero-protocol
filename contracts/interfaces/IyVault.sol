@@ -14,4 +14,6 @@ abstract contract IyVault is IERC20 {
 	function withdraw(uint256 maxShares) external virtual returns (uint256);
 
 	function want() external virtual returns (address);
+
+	function decimals() external view virtual returns (uint8);
 }
