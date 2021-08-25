@@ -2,7 +2,7 @@
 	"name": "zeroflash-protocol",
 	"version": "0.1.0",
 	"description": "zeroflash Solidity contracts",
-	"main": "lib/zero.js",
+	"main": "lib/zero.ts",
 	"repository": "https://github.com/zeroflash/zeroflash-protocol",
 	"scripts": {
 		"test": "hardhat test",
