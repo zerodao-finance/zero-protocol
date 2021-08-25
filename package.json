@@ -2,7 +2,7 @@
 	"name": "zeroflash-protocol",
 	"version": "0.1.0",
 	"description": "zeroflash Solidity contracts",
-	"main": "lib/zero.js",
+	"main": "dist/lib/zero.js",
 	"repository": "https://github.com/zeroflash/zeroflash-protocol",
 	"scripts": {
 		"test": "hardhat test",
@@ -11,7 +11,8 @@
 		"test:rpc:unit": "NODE_ENV=test yarn mocha -r ts-node/register lib/rpc/test/btc.test.ts",
 		"test:external": "hardhat test --network localhost",
 		"start": "hardhat node",
-		"lint": "prettier --check \"lib/**/*.{js,jsx,ts,tsx}\""
+		"lint": "prettier --check \"lib/**/*.{js,jsx,ts,tsx}\"",
+		"build": "tsc -p ./tsconfig.json"
 	},
 	"author": "zeroflash",
 	"license": "MIT",
