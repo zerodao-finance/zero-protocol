@@ -10,6 +10,7 @@
 		"test:p2p:e2e": "NODE_ENV=integration yarn mocha -r ts-node/register lib/p2p/test/e2e.test.ts --timeout 0 --exit",
 		"test:rpc:unit": "NODE_ENV=test yarn mocha -r ts-node/register lib/rpc/test/btc.test.ts",
 		"test:external": "hardhat test --network localhost",
+		"test:sdk:unit": "NODE_ENV=test yarn mocha -r ts-node/register lib/test/sdk.test.ts",
 		"start": "hardhat node",
 		"lint": "prettier --check \"lib/**/*.{js,jsx,ts,tsx}\"",
 		"build": "tsc -p ./tsconfig.json"
@@ -57,6 +58,7 @@
 		"@typescript-eslint/parser": "^4.28.3",
 		"@uniswap/v2-periphery": "^1.1.0-beta.0",
 		"bignumber.js": "^9.0.1",
+		"bitcoin-address-validation": "^2.1.0",
 		"bitcoin-core": "^3.0.0",
 		"bitcore-lib": "^8.25.10",
 		"bluebird": "^3.7.2",
