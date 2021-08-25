@@ -94,11 +94,11 @@ const deployParameters = {
   }
 }
 
-const toAddress = (contractOrAddress) => contractOrAddress.address || contractOrAddress;
+const toAddress = (contractOrAddress) => ((contractOrAddress || {})).address || contractOrAddress;
 
 const setConverter = async (controller, source, target, converter) => {
   const [ sourceAddress, targetAddress ] = [ source, target ].map((v) => deployParameters[network][v] || v);
-  const tx = await setConverter(sourceAddress, targetAddress, toAddress(converter));
+  const tx = await controller.setConverter(sourceAddress, targetAddress, toAddress(converter));
   console.log('setConverter(' + sourceAddress + ',' + targetAddress + ',' + toAddress(converter));
   return tx;
 };
