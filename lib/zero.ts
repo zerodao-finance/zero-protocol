@@ -1,5 +1,5 @@
 import { BigNumber } from '@ethersproject/bignumber';
-import type { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signers';
+import type { SignerWithAddress } from "hardhat-deploy-ethers/dist/src/signers";
 import { BigNumberish, ethers } from 'ethers';
 import { signTypedDataUtils } from '@0x/utils';
 import { EIP712TypedData } from '@0x/types';
@@ -118,4 +118,15 @@ export function createZeroUser(connection: ZeroConnection, persistence?: Persist
 
 export function createZeroKeeper(connection: ZeroConnection) {
 	return new ZeroKeeper(connection);
+}
+
+export function createTransferRequest(moduleAddress: address, signerAddress: address, tokenAddress: address, underwriterAddress: address, amount: Bignumberish, data: string): TransferRequest {
+        return new TransferRequest(
+		moduleAddress,
+		signerAddress,
+		tokenAddress,
+		underwriterAddress,
+		amount,
+		data
+	);
 }
