@@ -94,6 +94,15 @@ const deployParameters = {
   }
 }
 
+const toAddress = (contractOrAddress) => contractOrAddress.address || contractOrAddress;
+
+const setConverter = async (controller, source, target, converter) => {
+  const [ sourceAddress, targetAddress ] = [ source, target ].map((v) => deployParameters[network][v]);
+  const tx = await setConverter(sourceAddress, targetAddress, toAddress(converter));
+  console.log('setConverter(' + sourceAddress + ',' + targetAddress + ',' + toAddress(converter));
+  return tx;
+};
+
 const network = process.env.CHAIN || 'MATIC'
 
 
@@ -243,22 +252,22 @@ module.exports = async ({
       // Curve wBTC -> renBTC
       var wBTCToRenBTCTx = await curveFactory.functions.createWrapper(1, 0, deployParameters[network]["Curve_SBTC"]);
       var wBTCToRenBTC = await getWrapperAddress(wBTCToRenBTCTx);
-      await controller.setConverter(deployParameters[network]['wBTC'], deployParameters[network]['renBTC'], wBTCToRenBTC);
+      await setConverter(controller, 'wBTC', 'renBTC', wBTCToRenBTC);
 
       // Curve renBTC -> wBTC
       var renBTCToWBTCTx = await curveFactory.createWrapper(0, 1, deployParameters[network]["Curve_SBTC"]);
       var renBTCToWBTC = await getWrapperAddress(renBTCToWBTCTx);
-      await controller.setConverter(deployParameters[network]['renBTC'], deployParameters[network]['wBTC'], renBTCToWBTC);
+      await setConverter(controller, 'renBTC', 'wBTC', renBTCToWBTC);
 
       // Curve wNative -> wBTC
       var wEthToWBTCTx = await curveFactory.createWrapper(2, 1, deployParameters[network]["Curve_TriCryptoTwo"]);
       var wEthToWBTC = await getWrapperAddress(wEthToWBTCTx);
-      await controller.setConverter(deployParameters[network]['wNative'], deployParameters[network]['wBTC'], wEthToWBTC);
+      await setConverter(controller, 'wNative', 'wBTC', wEthToWBTC);
 
       // Curve wBTC -> wNative
       var wBtcToWETHTx = await curveFactory.createWrapper(1, 2, deployParameters[network]["Curve_TriCryptoTwo"]);
       var wBtcToWETH = await getWrapperAddress(wBtcToWETHTx);
-      await controller.setConverter(deployParameters[network]['wBTC'], deployParameters[network]['wNative'], wBtcToWETH);
+      await setConverter(controller, 'wBTC', 'wNative', wBtcToWETH);
 
       break;
 
@@ -269,22 +278,22 @@ module.exports = async ({
       // Curve wBTC -> renBTC
       var wBTCToRenBTCTx = await curveUnderlyingFactory.createWrapper(0, 1, deployParameters[network]["Curve_Ren"]);
       var wBTCToRenBTC = await getWrapperAddress(wBTCToRenBTCTx);
-      await controller.setConverter(deployParameters[network]['wBTC'], deployParameters[network]['renBTC'], wBTCToRenBTC);
+      await setConverter(controller, 'wBTC', 'renBTC', wBTCToRenBTC);
 
       // Curve renBTC -> wBTC
       var renBTCToWBTCTx = await curveUnderlyingFactory.createWrapper(1, 0, deployParameters[network]["Curve_Ren"]);
       var renBTCToWBTC = await getWrapperAddress(renBTCToWBTCTx);
-      await controller.setConverter(deployParameters[network]['renBTC'], deployParameters[network]['wBTC'], renBTCToWBTC);
+      await setConverter(controller, 'renBTC', 'wBTC', renBTCToWBTC);
 
       // Sushi wNative -> wBTC
       var wEthToWBTCTx = await sushiFactory.createWrapper([deployParameters[network]["wNative"], deployParameters[network]["wBTC"]]);
       var wEthToWBTC = await getWrapperAddress(wEthToWBTCTx);
-      await controller.setConverter(deployParameters[network]['wNative'], deployParameters[network]['wBTC'], wEthToWBTC);
+      await setConverter(controller, 'wNative', 'wBTC', wEthToWBTC);
 
       // Sushi wBTC -> wNative
       var wBtcToWETHTx = await sushiFactory.createWrapper([deployParameters[network]["wBTC"], deployParameters[network]["wNative"]]);
       var wBtcToWETH = await getWrapperAddress(wBtcToWETHTx);
-      await controller.setConverter(deployParameters[network]['wBTC'], deployParameters[network]['wNative'], wBtcToWETH);
+      await setConverter(controller, 'wBTC', 'wNative', wBtcToWETH);
 
 
       break;
@@ -292,10 +301,10 @@ module.exports = async ({
   }
 
   // Wrapper ETH -> wETH
-  await controller.setConverter(ethers.constants.AddressZero, deployParameters[network]["wNative"], wrapper.address);
+  await setConverter(controller, ethers.constants.AddressZero, "wNative", wrapper.address);
 
   // Unwrapper wETH -> ETH
-  await controller.setConverter(deployParameters[network]["wNative"], ethers.constants.AddressZero, unwrapper.address);
+  await setConverter(controller, "wNative", ethers.constants.AddressZero, unwrapper.address);
 
 };
 

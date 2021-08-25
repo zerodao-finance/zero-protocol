@@ -87,6 +87,7 @@ contract StrategyRenVM {
 			uint256 _amountOut = IyVault(vault).withdraw(_sharesDeficit);
 			address converter = IController(controller).converters(vaultWant, nativeWrapper);
 			IERC20(vaultWant).transfer(converter, _amountOut);
+			console.log("_amountOut", _amountOut);
 			_amountOut = IConverter(converter).convert(address(this));
 			address _unwrapper = IController(controller).converters(nativeWrapper, address(0x0));
 			IERC20(nativeWrapper).transfer(_unwrapper, _amountOut);
