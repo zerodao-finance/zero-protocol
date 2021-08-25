@@ -244,11 +244,13 @@ module.exports = async ({
       var wBTCToRenBTCTx = await curveFactory.functions.createWrapper(1, 0, deployParameters[network]["Curve_SBTC"]);
       var wBTCToRenBTC = await getWrapperAddress(wBTCToRenBTCTx);
       await controller.setConverter(deployParameters[network]['wBTC'], deployParameters[network]['renBTC'], wBTCToRenBTC);
+      console.log("wBTC -> renBTC: ", wBTCToRenBTC);
 
       // Curve renBTC -> wBTC
       var renBTCToWBTCTx = await curveFactory.createWrapper(0, 1, deployParameters[network]["Curve_SBTC"]);
       var renBTCToWBTC = await getWrapperAddress(renBTCToWBTCTx);
       await controller.setConverter(deployParameters[network]['renBTC'], deployParameters[network]['wBTC'], renBTCToWBTC);
+      console.log("renBTC -> wBTC: ", renBTCToWBTC);
 
       // Curve wNative -> wBTC
       var wEthToWBTCTx = await curveFactory.createWrapper(2, 1, deployParameters[network]["Curve_TriCryptoTwo"]);

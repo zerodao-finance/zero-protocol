@@ -2,11 +2,11 @@
 
 pragma solidity >=0.7.0;
 
-
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
 import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
 import {ICurvePool} from '../interfaces/ICurvePool.sol';
 import {SafeMath} from 'oz410/math/SafeMath.sol';
+import {console} from 'hardhat/console.sol';
 
 contract ZeroCurveUnsignedWrapper {
 	uint256 public immutable tokenInIndex;
@@ -36,7 +36,11 @@ contract ZeroCurveUnsignedWrapper {
 	}
 
 	function convert(address _module) external returns (uint256) {
+		console.log('Expected in: ', tokenInAddress);
+		console.log('Expected out: ', tokenOutAddress);
 		uint256 _balance = IERC20(tokenInAddress).balanceOf(address(this));
+		console.log('convert', _balance);
+		console.log(tokenInAddress);
 		uint256 _startOut = IERC20(tokenOutAddress).balanceOf(address(this));
 		ICurvePool(pool).exchange(tokenInIndex, tokenOutIndex, _balance, 1);
 		uint256 _actualOut = IERC20(tokenOutAddress).balanceOf(address(this)) - _startOut;

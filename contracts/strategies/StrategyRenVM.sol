@@ -68,9 +68,12 @@ contract StrategyRenVM {
 		if (_want > wantReserve) {
 			// Then we can deposit excess tokens into the vault
 			address converter = IController(controller).converters(want, vaultWant);
+			console.log('converter', converter);
 			require(converter != address(0x0), '!converter');
 			uint256 _excess = _want.sub(wantReserve);
-			IERC20(want).transfer(converter, _excess);
+			require(IERC20(want).transfer(converter, _excess), '!transfer');
+			console.log('strategy want', want);
+			console.log('vault want', vaultWant);
 			uint256 _amountOut = IConverter(converter).convert(address(0x0));
 			IyVault(vault).deposit(_amountOut);
 		}
