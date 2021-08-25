@@ -1,6 +1,6 @@
-import BigNumber from 'bignumber.js';
+import { BigNumber } from '@ethersproject/bignumber';
 import type { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signers';
-import { ethers } from 'ethers';
+import { BigNumberish, ethers } from 'ethers';
 import { signTypedDataUtils } from '@0x/utils';
 import { EIP712TypedData } from '@0x/types';
 import { EIP712_TYPES } from './config/constants';
@@ -8,8 +8,9 @@ import RenVM from './util/renvm';
 import { computeP } from './util/helpers';
 import { createNode, ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
 import { PersistenceAdapter } from './persistence';
+import { GatewayAddressInput } from './types';
 
-class TransferRequest {
+export default class TransferRequest {
 	public module: string;
 	public to: string;
 	public underwriter: string;
@@ -17,26 +18,30 @@ class TransferRequest {
 	public nonce: string;
 	public pNonce: string;
 	public amount: string;
-	public data: any;
+	public data: string;
 
 	constructor(
 		module: string,
 		to: string,
 		underwriter: string,
 		asset: string,
-		amount: string,
-		data: any,
-		nonce?: string,
-		pNonce?: string,
+		amount: BigNumberish,
+		data: string,
+		nonce?: BigNumberish,
+		pNonce?: BigNumberish,
 	) {
 		this.module = module;
 		this.to = to;
 		this.underwriter = underwriter;
 		this.asset = asset;
-		this.amount = amount;
+		this.amount = amount.toString();
 		this.data = data;
-		this.nonce = nonce ?? ethers.utils.hexlify(ethers.utils.randomBytes(32));
-		this.pNonce = pNonce ?? ethers.utils.hexlify(ethers.utils.randomBytes(32));
+		this.nonce = nonce
+			? ethers.utils.formatBytes32String(nonce.toString())
+			: ethers.utils.hexlify(ethers.utils.randomBytes(32));
+		this.pNonce = pNonce
+			? ethers.utils.formatBytes32String(pNonce.toString())
+			: ethers.utils.hexlify(ethers.utils.randomBytes(32));
 	}
 
 	setUnderwriter(underwriter: string): boolean {
@@ -64,22 +69,22 @@ class TransferRequest {
 				amount: this.amount.toString(),
 				data: this.data,
 				underwriter: this.underwriter,
-				nonce: this.pNonce,
+				nonce: this.pNonce.toString(),
 			},
 			primaryType: 'TransferRequest',
 		};
 	}
 
-	toGatewayAddress({ mpkh, isTest }: any) {
+	toGatewayAddress(input: GatewayAddressInput) {
 		const renvm = new RenVM(null, {});
 		return renvm.computeGatewayAddress({
-			mpkh: mpkh,
-			isTestnet: isTest,
+			mpkh: input.mpkh,
+			isTestnet: input.isTest,
 			g: {
-				p: computeP(parseInt(this.pNonce), this.data),
+				p: computeP(this.pNonce, this.module, this.data),
 				nonce: this.nonce,
 				tokenAddress: this.asset,
-				to: this.module,
+				to: input.destination,
 			},
 		});
 	}
@@ -100,28 +105,6 @@ class TransferRequest {
 	}
 }
 
-export function createTransferRequest(
-	module: string,
-	to: string,
-	asset: string,
-	underwriter: string,
-	amount: string,
-	data: string,
-	nonce?: string,
-	pNonce?: string,
-): TransferRequest {
-	return new TransferRequest(
-		(module = module),
-		(to = to),
-		(underwriter = underwriter),
-		(asset = asset),
-		(amount = amount),
-		(data = data),
-		(nonce = nonce ?? null),
-		(pNonce = pNonce ?? null),
-	);
-}
-
 export async function createZeroConnection(address: string): Promise<ZeroConnection> {
 	const connOptions = {
 		multiaddr: address,
@@ -136,5 +119,3 @@ export function createZeroUser(connection: ZeroConnection, persistence?: Persist
 export function createZeroKeeper(connection: ZeroConnection) {
 	return new ZeroKeeper(connection);
 }
-
-export default { createTransferRequest, createZeroConnection, createZeroUser, createZeroKeeper };
