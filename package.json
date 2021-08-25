@@ -56,6 +56,7 @@
 		"@typescript-eslint/parser": "^4.28.3",
 		"@uniswap/v2-periphery": "^1.1.0-beta.0",
 		"bignumber.js": "^9.0.1",
+		"bitcoin-address-validation": "^2.1.0",
 		"bitcoin-core": "^3.0.0",
 		"bitcore-lib": "^8.25.10",
 		"bluebird": "^3.7.2",

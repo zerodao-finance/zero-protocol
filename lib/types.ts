@@ -1,12 +1,45 @@
-import BigNumber from 'bignumber.js';
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 
 export interface TransferRequest {
-	module: any;
+	module: string;
 	to: string;
 	underwriter: string;
 	asset: string;
-	nonce: number;
-	pNonce: number;
-	amount: BigNumber;
-	data: any;
+	nonce: BigNumberish;
+	pNonce: BigNumberish;
+	amount: BigNumberish;
+	data: string;
+}
+
+export interface PHashInput {
+	nonce: BigNumberish;
+	module: string;
+	data: string;
+}
+
+export interface GHashInput {
+	to: string;
+	tokenAddress: string;
+	p: string;
+	nonce: string;
+}
+
+export interface NHashInput {
+	txHash: string;
+	vOut: BigNumberish;
+	nonce: string;
+}
+
+export interface GatewayAddressInput {
+	mpkh: string;
+	destination: string;
+	isTest: boolean;
+}
+
+export interface DarknodeSignatureInput {
+	p: string | PHashInput;
+	n: string | NHashInput;
+	amount: BigNumberish;
+	to: string;
+	tokenAddress: string;
 }
