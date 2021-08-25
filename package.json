@@ -1,9 +1,9 @@
 {
-	"name": "zeroflash-protocol",
+	"name": "zero-sdk",
 	"version": "0.1.0",
-	"description": "zeroflash Solidity contracts",
+	"description": "zeroDAO Protocol SDK",
 	"main": "dist/lib/zero.js",
-	"repository": "https://github.com/zeroflash/zeroflash-protocol",
+	"repository": "https://github.com/zerodao-finance/zero-protocol",
 	"scripts": {
 		"test": "hardhat test",
 		"test:p2p:unit": "NODE_ENV=test yarn mocha -r ts-node/register lib/p2p/test/mockPubsub.test.ts lib/p2p/test/mockZero.test.ts --exit --timeout 0",
@@ -15,7 +15,7 @@
 		"lint": "prettier --check \"lib/**/*.{js,jsx,ts,tsx}\"",
 		"build": "tsc -p ./tsconfig.json"
 	},
-	"author": "zeroflash",
+	"author": "zeroDAO",
 	"license": "MIT",
 	"private": false,
 	"devDependencies": {
