@@ -15,9 +15,9 @@ export default class TransferRequest {
 	public to: string;
 	public underwriter: string;
 	public asset: string;
-	public nonce: BigNumberish;
-	public pNonce: BigNumberish;
-	public amount: string | BigNumber;
+	public nonce: string;
+	public pNonce: string;
+	public amount: string;
 	public data: string;
 
 	constructor(
@@ -25,16 +25,16 @@ export default class TransferRequest {
 		to: string,
 		underwriter: string,
 		asset: string,
-		amount: string | BigNumber,
+		amount: BigNumberish,
 		data: string,
-		nonce?: string,
-		pNonce?: string,
+		nonce?: BigNumberish,
+		pNonce?: BigNumberish,
 	) {
 		this.module = module;
 		this.to = to;
 		this.underwriter = underwriter;
 		this.asset = asset;
-		this.amount = amount;
+		this.amount = amount.toString();
 		this.data = data;
 		this.nonce = nonce
 			? ethers.utils.formatBytes32String(nonce.toString())
@@ -81,11 +81,7 @@ export default class TransferRequest {
 			mpkh: input.mpkh,
 			isTestnet: input.isTest,
 			g: {
-				p: computeP(
-					typeof this.pNonce !== 'string' ? this.pNonce.toString() : this.pNonce,
-					this.module,
-					this.data,
-				),
+				p: computeP(this.pNonce, this.module, this.data),
 				nonce: this.nonce,
 				tokenAddress: this.asset,
 				to: input.destination,

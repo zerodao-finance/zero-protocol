@@ -10,6 +10,7 @@
 		"test:p2p:e2e": "NODE_ENV=integration yarn mocha -r ts-node/register lib/p2p/test/e2e.test.ts --timeout 0 --exit",
 		"test:rpc:unit": "NODE_ENV=test yarn mocha -r ts-node/register lib/rpc/test/btc.test.ts",
 		"test:external": "hardhat test --network localhost",
+		"test:sdk:unit": "NODE_ENV=test yarn mocha -r ts-node/register lib/test/sdk.test.ts",
 		"start": "hardhat node",
 		"lint": "prettier --check \"lib/**/*.{js,jsx,ts,tsx}\""
 	},
