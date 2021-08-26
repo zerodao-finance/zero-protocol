@@ -95,7 +95,6 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		ZeroUnderwriterLock(lock).initialize(vault);
 		_mint(msg.sender, uint256(uint160(lock)));
 	}
-
 	function fallbackMint(
 		address underwriter,
 		address to,
@@ -221,11 +220,8 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 
 		ZeroUnderwriterLock(lockFor(msg.sender)).trackOut(params.module, actual);
 		uint256 _txGas = maxGasPrice.mul(maxGasRepay.add(maxGasLoan));
-		_txGas = IConverter(
-			converters[IStrategy(strategies[params.asset]).nativeWrapper()][
-				IStrategy(strategies[params.asset]).vaultWant()
-			]
-		).estimate(_txGas); //convert txGas from ETH to wBTC
+		address converter = converters[IStrategy(strategies[params.asset]).nativeWrapper()][IStrategy(strategies[params.asset]).vaultWant()];
+		_txGas = IConverter(converter).estimate(_txGas); //convert txGas from ETH to wBTC
 		_txGas = IConverter(converters[IStrategy(strategies[params.asset]).vaultWant()][params.asset]).estimate(_txGas);
 		// ^convert txGas from wBTC to renBTC
 		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(module, params.amount.sub(_txGas));

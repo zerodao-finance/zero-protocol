@@ -204,8 +204,8 @@ const generateTransferRequest = async (amount: number) => {
 	return new TransferRequest(
 		swapModule.address,
 		signerAddress,
-		RENBTC_MAINNET_ADDRESS,
 		underwriter.address,
+		RENBTC_MAINNET_ADDRESS,
 		String(amount),
 		'0x',
 	);
@@ -353,7 +353,7 @@ describe('Zero', () => {
 		const signature = await transferRequest.sign(signer, controller.address);
 
 		console.log('\nWriting a small loan');
-		await underwriterImpl.loan(
+		await underwriter.proxy(controller.address, controller.interface.encodeFunctionData('loan', [
 			transferRequest.to,
 			transferRequest.asset,
 			transferRequest.amount,
@@ -361,14 +361,14 @@ describe('Zero', () => {
 			transferRequest.module,
 			transferRequest.data,
 			signature,
-		);
+		]));
 		await getBalances();
 
 		console.log('\nRepaying loan...');
 		const nHash = utils.hexlify(utils.randomBytes(32));
 		const actualAmount = String(Number(transferRequest.amount) - 1000);
 		const renVMSignature = '0x';
-		await underwriterImpl.repay(
+		await underwriter.proxy(controller.address, controller.interface.encodeFunctionData('repay', [
 			underwriter.address, //underwriter
 			transferRequest.to, //to
 			transferRequest.asset, //asset
@@ -379,7 +379,7 @@ describe('Zero', () => {
 			nHash,
 			transferRequest.data,
 			renVMSignature, //signature
-		);
+		]));
 		await getBalances();
 	});
 

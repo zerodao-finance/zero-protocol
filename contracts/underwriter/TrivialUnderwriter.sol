@@ -30,6 +30,7 @@ contract TrivialUnderwriter is Ownable {
 	function proxy(address payable target, bytes memory data) public payable onlyOwner {
 		(bool success, bytes memory response) = target.call{value: msg.value}(data);
 		bubble(success, response);
+
 	}
 
 	/**
