@@ -2,15 +2,29 @@
 	"compilerOptions": {
 		"target": "ES2017",
 		"baseUrl": "src",
-		"lib": ["dom.iterable", "esnext", "es6", "dom"],
+		"lib": [
+			"dom.iterable",
+			"esnext",
+			"es6",
+			"dom"
+		],
 		"esModuleInterop": true,
 		"strictNullChecks": false,
 		"outDir": "dist",
 		"sourceMap": true,
 		"resolveJsonModule": true,
 		"strict": true,
-		"moduleResolution": "node"
+		"moduleResolution": "node",
+		"allowJs": true,
+		"checkJs": false,
 	},
-	"include": ["./deploy", "./lib", "./test"],
-	"files": ["./hardhat.config.ts"]
+	"include": [
+		"./deploy",
+		"./lib",
+		"./lib/**/*.js",
+		"./test"
+	],
+	"files": [
+		"./hardhat.config.ts"
+	]
 }
