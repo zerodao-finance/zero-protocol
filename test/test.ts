@@ -12,15 +12,35 @@ import { Wallet, Contract, providers, utils } from 'ethers';
 const { ethers, deployments } = hre;
 const gasnow = require('ethers-gasnow');
 
+const deployParameters = {
+	MATIC: {
+		btcGateway: '0x05Cadbf3128BcB7f2b89F3dD55E5B0a036a49e20',
+		renBTC: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501',
+		wBTC: '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6',
+		wNative: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
+		USDC: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+		Router: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
+		Curve_Ren: '0xC2d95EEF97Ec6C17551d45e77B590dc1F9117C67',
+		sushiRouter: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506'
+	},
+	ETHEREUM: {
+		btcGateway: '0xe4b679400F0f267212D5D812B95f58C83243EE71',
+		renBTC: '0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D',
+		wBTC: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+		wNative: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+		USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+		Curve_SBTC: '0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714',
+		Curve_TriCryptoTwo: '0xD51a44d3FaE010294C616388b506AcdA1bfAAE46',
+		Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+		sushiRouter: '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F'
+	}
+}
+
+const network = process.env.CHAIN || 'MATIC'
+
 ethers.providers.BaseProvider.prototype.getGasPrice = gasnow.createGetGasPrice('rapid');
-const BTCGATEWAY_MAINNET_ADDRESS = '0xe4b679400F0f267212D5D812B95f58C83243EE71';
-const RENBTC_MAINNET_ADDRESS = '0xeb4c2781e4eba804ce9a9803c67d0893436bb27d';
-const WETH_MAINNET_ADDRESS = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 const USDC_MAINNET_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
-const WBTC_MAINNET_ADDRESS = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599';
-const YVWBTC_MAINNET_ADDRESS = '0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E';
-const CURVE_SBTC_POOL = '0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714';
-const CURVE_TRICRYPTOTWO_POOL = '0xD51a44d3FaE010294C616388b506AcdA1bfAAE46';
+
 
 const toAddress = (contractOrAddress: any): string => contractOrAddress.address || contractOrAddress;
 const mintRenBTC = async (amount: any, signer?: any) => {
@@ -29,7 +49,8 @@ const mintRenBTC = async (amount: any, signer?: any) => {
 		'function mintFee() view returns (uint256)',
 	];
 	if (!signer) signer = (await ethers.getSigners())[0];
-	const btcGateway = new ethers.Contract(BTCGATEWAY_MAINNET_ADDRESS, abi, signer);
+	//@ts-ignore
+	const btcGateway = new ethers.Contract(deployParameters[network]["btcGateway"], abi, signer);
 	await btcGateway.mint(
 		ethers.utils.hexlify(ethers.utils.randomBytes(32)),
 		amount,
@@ -132,11 +153,16 @@ const getFixtures = async () => {
 		curveFactory: await getContract('ZeroCurveFactory', signer),
 		wrapper: await getContract('WrapNative', signer),
 		unwrapper: await getContract('UnwrapNative', signer),
-		gateway: new Contract(BTCGATEWAY_MAINNET_ADDRESS, GatewayLogicV1.abi, signer),
-		renBTC: new Contract(RENBTC_MAINNET_ADDRESS, erc20abi, signer),
-		wETH: new Contract(WETH_MAINNET_ADDRESS, erc20abi, signer),
-		usdc: new Contract(USDC_MAINNET_ADDRESS, erc20abi, signer),
-		wBTC: new Contract(WBTC_MAINNET_ADDRESS, erc20abi, signer),
+		//@ts-ignore
+		gateway: new Contract(deployParameters[network]["btcGateway"], GatewayLogicV1.abi, signer),
+		//@ts-ignore
+		renBTC: new Contract(deployParameters[network]["renBTC"], erc20abi, signer),
+		//@ts-ignore
+		wETH: new Contract(deployParameters[network]["wNative"], erc20abi, signer),
+		//@ts-ignore
+		usdc: new Contract(deployParameters[network]["USDC"], erc20abi, signer),
+		//@ts-ignore
+		wBTC: new Contract(deployParameters[network]["wBTC"], erc20abi, signer),
 		yvWBTC: await getContract('DummyVault', signer),
 	};
 };
@@ -205,7 +231,8 @@ const generateTransferRequest = async (amount: number) => {
 		swapModule.address,
 		signerAddress,
 		underwriter.address,
-		RENBTC_MAINNET_ADDRESS,
+		//@ts-ignore
+		deployParameters[network]['renBTC'],
 		String(amount),
 		'0x',
 	);
@@ -235,7 +262,8 @@ describe('Zero', () => {
 		await deployments.fixture();
 		await deployUnderwriter();
 		const artifact = await deployments.getArtifact('MockGatewayLogicV1');
-		const implementationAddress = await getImplementation(BTCGATEWAY_MAINNET_ADDRESS);
+		//@ts-ignore
+		const implementationAddress = await getImplementation(deployParameters[network]["btcGateway"]);
 		override(implementationAddress, artifact.deployedBytecode);
 		const { gateway } = await getFixtures();
 		await gateway.mint(utils.randomBytes(32), utils.parseUnits('50', 8), utils.randomBytes(32), '0x'); //mint renBTC to signer
@@ -263,8 +291,10 @@ describe('Zero', () => {
 		const { abi: erc20Abi } = await deployments.getArtifact('BTCVault');
 		const [signer] = await ethers.getSigners();
 		const signerAddress = await signer.getAddress();
-		const btcGateway = new ethers.Contract(BTCGATEWAY_MAINNET_ADDRESS, abi, signer);
-		const renbtc = new ethers.Contract(RENBTC_MAINNET_ADDRESS, erc20Abi, signer);
+		//@ts-ignore
+		const btcGateway = new ethers.Contract(deployParameters[network]["btcGateway"], abi, signer);
+		//@ts-ignore
+		const renbtc = new ethers.Contract(deployParameters[network]['renBTC'], erc20Abi, signer);
 		await btcGateway.mint(
 			ethers.utils.solidityKeccak256(
 				['bytes'],
