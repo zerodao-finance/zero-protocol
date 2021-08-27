@@ -9,6 +9,10 @@ import { ZeroCurveUnderlyingSignedWrapper } from "./ZeroCurveUnderlyingSignedWra
 import { ZeroCurveUnderlyingUnsignedWrapper } from "./ZeroCurveUnderlyingUnsignedWrapper.sol";
 import 'hardhat/console.sol';
 
+interface IUnderlyingCoins {
+  function underlying_coins(int128) external view returns (address);
+}
+
 contract ZeroCurveUnderlyingFactory {
 	event CreateWrapper(address _wrapper);
 
@@ -17,13 +21,13 @@ contract ZeroCurveUnderlyingFactory {
 		int128 _tokenOutIndex,
 		address _pool
 	) public returns (address) {
-		// Determine if signed112 or unsigned256
-		try new ZeroCurveUnderlyingSignedWrapper(_tokenInIndex, _tokenOutIndex, _pool) returns (
-			ZeroCurveUnderlyingSignedWrapper wrapper
-		) {
-			emit CreateWrapper(address(wrapper));
-			return address(wrapper);
-		} catch {
+		(bool success,) = _pool.staticcall(abi.encodeWithSelector(IUnderlyingCoins.underlying_coins.selector, int128(0)));
+		if (success) {
+  		// Determine if signed112 or unsigned256
+                		ZeroCurveUnderlyingSignedWrapper wrapper = new ZeroCurveUnderlyingSignedWrapper(_tokenInIndex, _tokenOutIndex, _pool);
+	       		 	emit CreateWrapper(address(wrapper));
+				return address(wrapper);
+		} else {
 			ZeroCurveUnderlyingUnsignedWrapper wrapper = new ZeroCurveUnderlyingUnsignedWrapper(
 				uint256(_tokenInIndex),
 				uint256(_tokenOutIndex),

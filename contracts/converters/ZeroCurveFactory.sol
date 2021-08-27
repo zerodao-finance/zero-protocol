@@ -8,6 +8,10 @@ import {SafeMath} from 'oz410/math/SafeMath.sol';
 import { ZeroCurveSignedWrapper } from "./ZeroCurveSignedWrapper.sol";
 import { ZeroCurveUnsignedWrapper } from "./ZeroCurveUnsignedWrapper.sol";
 
+interface ICurvePoolSigned {
+  function coins(int128) external view returns (address);
+}
+
 contract ZeroCurveFactory {
 	event CreateWrapper(address _wrapper);
 
@@ -17,10 +21,12 @@ contract ZeroCurveFactory {
 		address _pool
 	) public returns (address) {
 		// Determine if signed112 or unsigned256
-		try new ZeroCurveSignedWrapper(_tokenInIndex, _tokenOutIndex, _pool) returns (ZeroCurveSignedWrapper wrapper) {
+		(bool success,) = _pool.staticcall(abi.encodeWithSelector(ICurvePoolSigned.coins.selector, int128(0)));
+		if (success) {
+		        ZeroCurveSignedWrapper wrapper = new ZeroCurveSignedWrapper(_tokenInIndex, _tokenOutIndex, _pool);
 			emit CreateWrapper(address(wrapper));
 			return address(wrapper);
-		} catch {
+		} else {
 			ZeroCurveUnsignedWrapper wrapper = new ZeroCurveUnsignedWrapper(
 				uint256(_tokenInIndex),
 				uint256(_tokenOutIndex),
