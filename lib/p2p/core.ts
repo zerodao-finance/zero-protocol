@@ -160,4 +160,4 @@ class ZeroKeeper {
 	}
 }
 
-export { ZeroKeeper, ZeroUser, ZeroConnection }; // , MockZeroConnection };
+export { ZeroKeeper, ZeroUser, ZeroConnection };
