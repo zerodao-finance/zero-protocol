@@ -37,7 +37,6 @@ contract ZeroCurveUnderlyingUnsignedWrapper {
 	function convert(address _module) external returns (uint256) {
 		uint256 _balance = IERC20(tokenInAddress).balanceOf(address(this));
 		uint256 _startOut = IERC20(tokenOutAddress).balanceOf(address(this));
-		console.log("exchange_underlying _balance", _balance);
 		ICurvePool(pool).exchange_underlying(tokenInIndex, tokenOutIndex, _balance, 1);
 		uint256 _actualOut = IERC20(tokenOutAddress).balanceOf(address(this)) - _startOut;
 		IERC20(tokenOutAddress).safeTransfer(msg.sender, _actualOut);

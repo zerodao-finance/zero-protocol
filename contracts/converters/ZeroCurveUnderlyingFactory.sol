@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity >=0.7.0;
+import {ICurvePool} from '../interfaces/ICurvePool.sol';
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
 import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
 import {SafeMath} from 'oz410/math/SafeMath.sol';
@@ -8,10 +9,9 @@ import { ZeroCurveUnderlyingSignedWrapper } from "./ZeroCurveUnderlyingSignedWra
 import { ZeroCurveUnderlyingUnsignedWrapper } from "./ZeroCurveUnderlyingUnsignedWrapper.sol";
 import 'hardhat/console.sol';
 
-interface ICurvePool {
-  function exchange_underlying(int128 i, int128 j, uint256 dx, uint256 min_dy) external view returns (uint256);
+interface IUnderlyingCoins {
+  function underlying_coins(int128) external view returns (address);
 }
-
 
 contract ZeroCurveUnderlyingFactory {
 	event CreateWrapper(address _wrapper);
@@ -21,8 +21,8 @@ contract ZeroCurveUnderlyingFactory {
 		int128 _tokenOutIndex,
 		address _pool
 	) public returns (address) {
-                (bool success, bytes memory result) = _pool.call(abi.encodeWithSelector(ICurvePool.exchange_underlying.selector, int128(0), int128(1), uint256(0), uint256(int256(-1))));
-		if (success && result.length == 0x20) {
+		(bool success,) = _pool.staticcall(abi.encodeWithSelector(IUnderlyingCoins.underlying_coins.selector, int128(0)));
+		if (success) {
   		// Determine if signed112 or unsigned256
                 		ZeroCurveUnderlyingSignedWrapper wrapper = new ZeroCurveUnderlyingSignedWrapper(_tokenInIndex, _tokenOutIndex, _pool);
 	       		 	emit CreateWrapper(address(wrapper));
