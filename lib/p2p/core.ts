@@ -1,7 +1,7 @@
 'use strict';
 import libp2p from 'libp2p';
 import createLogger, { Logger } from '../logger';
-import { MockZeroConnection } from './mocks';
+//import { MockZeroConnection } from './mocks';
 import { fromJSONtoBuffer, fromBufferToJSON } from './util';
 import pipe from 'it-pipe';
 import lp from 'it-length-prefixed';
@@ -160,4 +160,4 @@ class ZeroKeeper {
 	}
 }
 
-export { ZeroKeeper, ZeroUser, ZeroConnection, MockZeroConnection };
+export { ZeroKeeper, ZeroUser, ZeroConnection }; // , MockZeroConnection };
