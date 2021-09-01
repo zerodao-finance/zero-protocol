@@ -19,55 +19,60 @@ contract ZeroCurveFactory {
 		bytes32 exchangeSelector;
 		bytes32 estimateSelector;
 
+		bytes4[] memory selectors = [
+			ICurvePoolUnsignedUint256
+		] 
+
+
 		if (_underlying) {
 			if (
 				ICurvePool(_pool).staticcall(
-					abi.encodeWithSelector(keccak256('underlying_coins(int128)')[0:4], int128(0))
+					abi.encodeWithSelector(keccak256('underlying_coins(int128)')[:4], int128(0))
 				)
 			) {
-				exchangeSelector = keccak256('get_dy_underlying(int128, int128, uint256)');
-				estimateSelector = keccak256('exchange_underlying(int128, int128, uint256, uint256)');
+				exchangeSelector = keccak256('get_dy_underlying(int128,int128,uint256)');
+				estimateSelector = keccak256('exchange_underlying(int128,int128,uint256,uint256)');
 			} else if (
 				ICurvePool(_pool).staticcall(
-					abi.encodeWithSelector(keccak256('underlying_coins(int256)')[0:4], int256(0))
+					abi.encodeWithSelector(keccak256('underlying_coins(int256)')[:4], int256(0))
 				)
 			) {
-				estimateSelector = keccak256('exchange_underlying(int128, int256, uint256, uint256)');
-				exchangeSelector = keccak256('get_dy_underlying(int256, int256, uint256)');
+				estimateSelector = keccak256('exchange_underlying(int128,int256,uint256,uint256)');
+				exchangeSelector = keccak256('get_dy_underlying(int256,int256,uint256)');
 			} else if (
 				ICurvePool(_pool).staticcall(
-					abi.encodeWithSelector(keccak256('underlying_coins(uint128)')[0:4], uint128(0))
+					abi.encodeWithSelector(keccak256('underlying_coins(uint128)')[:4], uint128(0))
 				)
 			) {
-				estimateSelector = keccak256('exchange_underlying(uint128, uint128, uint256, uint256)');
-				exchangeSelector = keccak256('get_dy_underlying(uint128, uint128, uint256)');
+				estimateSelector = keccak256('exchange_underlying(uint128,uint128,uint256,uint256)');
+				exchangeSelector = keccak256('get_dy_underlying(uint128,uint128,uint256)');
 			} else if (
 				ICurvePool(_pool).staticcall(
-					abi.encodeWithSelector(keccak256('underlying_coins(uint256)')[0:4], uint256(0))
+					abi.encodeWithSelector(keccak256('underlying_coins(uint256)')[:4], uint256(0))
 				)
 			) {
-				estimateSelector = keccak256('exchange_underlying(uint256, uint256, uint256, uint256)');
-				exchangeSelector = keccak256('get_dy_underlying(uint256, uint256, uint256)');
+				estimateSelector = keccak256('exchange_underlying(uint256,uint256,uint256,uint256)');
+				exchangeSelector = keccak256('get_dy_underlying(uint256,uint256,uint256)');
 			}
 		} else {
-			if (ICurvePool(_pool).staticcall(abi.encodeWithSelector(keccak256('coins(int128)')[0:4], int128(0)))) {
-				estimateSelector = keccak256('exchange(int128, int128, uint256, uint256)');
-				exchangeSelector = keccak256('get_dy(int128, int128, uint256)');
+			if (ICurvePool(_pool).staticcall(abi.encodeWithSelector(keccak256('coins(int128)')[:4], int128(0)))) {
+				estimateSelector = keccak256('exchange(int128,int128,uint256,uint256)');
+				exchangeSelector = keccak256('get_dy(int128,int128,uint256)');
 			} else if (
-				ICurvePool(_pool).staticcall(abi.encodeWithSelector(keccak256('coins(int256)')[0:4], int256(0)))
+				ICurvePool(_pool).staticcall(abi.encodeWithSelector(keccak256('coins(int256)')[:4], int256(0)))
 			) {
-				estimateSelector = keccak256('exchange(int256, int256, uint256, uint256)');
-				exchangeSelector = keccak256('get_dy(int256, int256, uint256)');
+				estimateSelector = keccak256('exchange(int256,int256,uint256,uint256)');
+				exchangeSelector = keccak256('get_dy(int256,int256,uint256)');
 			} else if (
-				ICurvePool(_pool).staticcall(abi.encodeWithSelector(keccak256('coins(uint128)')[0:4], uint128(0)))
+				ICurvePool(_pool).staticcall(abi.encodeWithSelector(keccak256('coins(uint128)')[:4], uint128(0)))
 			) {
-				estimateSelector = keccak256('exchange(uint128, uint128, uint256, uint256)');
-				exchangeSelector = keccak256('get_dy(uint128, uint128, uint256)');
+				estimateSelector = keccak256('exchange(uint128,uint128,uint256,uint256)');
+				exchangeSelector = keccak256('get_dy(uint128,uint128,uint256)');
 			} else if (
-				ICurvePool(_pool).staticcall(abi.encodeWithSelector(keccak256('coins(uint256)')[0:4], uint256(0)))
+				ICurvePool(_pool).staticcall(abi.encodeWithSelector(keccak256('coins(uint256)')[:4], uint256(0)))
 			) {
-				estimateSelector = keccak256('exchange(uint256, uint256, uint256, uint256)');
-				exchangeSelector = keccak256('get_dy(uint256, uint256, uint256)');
+				estimateSelector = keccak256('exchange(uint256,uint256,uint256,uint256)');
+				exchangeSelector = keccak256('get_dy(uint256,uint256,uint256)');
 			}
 			emit CreateWrapper(
 				address(
@@ -75,8 +80,8 @@ contract ZeroCurveFactory {
 						_tokenInIndex,
 						_tokenOutIndex,
 						_pool,
-						estimateSelector[0:4],
-						exchangeSelector[0:4]
+						estimateSelector[:4],
+						exchangeSelector[:4]
 					)
 				)
 			);
