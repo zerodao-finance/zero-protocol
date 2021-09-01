@@ -43,13 +43,13 @@ contract ZeroCurveWrapper {
 			abi.encodeWithSelector(estimateSelector, tokenInIndex, tokenOutIndex, _amount)
 		);
 		require(success, '!success');
-		result = uint256(data);
+		result = abi.decode(data, (uint256));
 	}
 
 	function convert(address _module) external returns (uint256 _actualOut) {
 		uint256 _balance = IERC20(tokenInAddress).balanceOf(address(this));
 		uint256 _startOut = IERC20(tokenOutAddress).balanceOf(address(this));
-		(bool success, bytes32 memory data) = pool.call(
+		(bool success, bytes memory data) = pool.call(
 			abi.encodeWithSelector(convertSelector, tokenInIndex, tokenOutIndex, _balance, 1)
 		);
 		require(success, '!success');
