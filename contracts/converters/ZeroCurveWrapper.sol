@@ -8,12 +8,14 @@ import {ICurvePool} from '../interfaces/ICurvePool.sol';
 import {SafeMath} from 'oz410/math/SafeMath.sol';
 import {console} from 'hardhat/console.sol';
 
-contract ZeroCurveUnsignedWrapper {
+contract ZeroCurveWrapper {
 	uint256 public immutable tokenInIndex;
 	uint256 public immutable tokenOutIndex;
 	address public immutable tokenInAddress;
 	address public immutable tokenOutAddress;
 	address public immutable pool;
+	bytes4 public immutable estimateSelector;
+	bytes4 public immutable convertSelector;
 
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
@@ -21,10 +23,15 @@ contract ZeroCurveUnsignedWrapper {
 	constructor(
 		uint256 _tokenInIndex,
 		uint256 _tokenOutIndex,
-		address _pool
+		address _pool,
+		bytes4 _estimateSelector,
+		bytes4 _convertSelector
 	) {
 		tokenInIndex = _tokenInIndex;
 		tokenOutIndex = _tokenOutIndex;
+		estimateSelector = _estimateSelector;
+		convertSelector = _convertSelector;
+
 		address _tokenInAddress = tokenInAddress = ICurvePool(_pool).coins(_tokenInIndex);
 		tokenOutAddress = ICurvePool(_pool).coins(_tokenOutIndex);
 		pool = _pool;
@@ -32,15 +39,21 @@ contract ZeroCurveUnsignedWrapper {
 	}
 
 	function estimate(uint256 _amount) public returns (uint256 result) {
-		result = ICurvePool(pool).get_dy(tokenInIndex, tokenOutIndex, _amount);
+		(bool success, bytes memory data) = pool.call(
+			abi.encodeWithSelector(estimateSelector, tokenInIndex, tokenOutIndex, _amount)
+		);
+		require(success, '!success');
+		result = uint256(data);
 	}
 
-	function convert(address _module) external returns (uint256) {
+	function convert(address _module) external returns (uint256 _actualOut) {
 		uint256 _balance = IERC20(tokenInAddress).balanceOf(address(this));
 		uint256 _startOut = IERC20(tokenOutAddress).balanceOf(address(this));
-		ICurvePool(pool).exchange(tokenInIndex, tokenOutIndex, _balance, 1);
+		(bool success, bytes32 memory data) = pool.call(
+			abi.encodeWithSelector(convertSelector, tokenInIndex, tokenOutIndex, _balance, 1)
+		);
+		require(success, '!success');
 		uint256 _actualOut = IERC20(tokenOutAddress).balanceOf(address(this)) - _startOut;
 		IERC20(tokenOutAddress).safeTransfer(msg.sender, _actualOut);
-		return _actualOut;
 	}
 }
