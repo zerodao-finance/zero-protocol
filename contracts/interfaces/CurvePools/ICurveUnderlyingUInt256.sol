@@ -15,4 +15,6 @@ interface ICurveUnderlyingUInt256 {
 		uint256,
 		uint256
 	) external returns (uint256);
+
+	function underlying_coins(uint256) external view returns (address);
 }

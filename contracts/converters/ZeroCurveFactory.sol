@@ -4,6 +4,14 @@ pragma solidity >=0.7.0;
 import {ICurvePool} from '../interfaces/ICurvePool.sol';
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
 import {ZeroCurveWrapper} from './ZeroCurveWrapper.sol';
+import {ICurveInt128} from '../interfaces/ICurveInt128.sol';
+import {ICurveInt256} from '../interfaces/ICurveInt128.sol';
+import {ICurveUInt128} from '../interfaces/ICurveUInt128.sol';
+import {ICurveUInt256} from '../interfaces/ICurveUInt256.sol';
+import {ICurveUnderlyingInt128} from '../interfaces/ICurveUnderlyingInt128.sol';
+import {ICurveUnderlyingInt256} from '../interfaces/ICurveUnderlyingInt256.sol';
+import {ICurveUnderlyingUInt128} from '../interfaces/ICurveUnderlyingUInt128.sol';
+import {ICurveUnderlyingUInt256} from '../interfaces/ICurveUnderlyingUInt256.sol';
 
 import {console} from 'hardhat/console.sol';
 

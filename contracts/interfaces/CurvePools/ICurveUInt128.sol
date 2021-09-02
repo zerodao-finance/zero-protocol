@@ -15,4 +15,6 @@ interface ICurveUInt128 {
 		uint256,
 		uint256
 	) external returns (uint256);
+
+	function coins(uint128) external view returns (address);
 }
