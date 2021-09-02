@@ -250,38 +250,38 @@ module.exports = async ({
       const curveFactory = await ethers.getContract('ZeroCurveFactory', deployer);
 
       // Curve wBTC -> renBTC
-      var wBTCToRenBTCTx = await curveFactory.functions.createWrapper(1, 0, deployParameters[network]["Curve_SBTC"]);
+      var wBTCToRenBTCTx = await curveFactory.functions.createWrapper(false, 1, 0, deployParameters[network]["Curve_SBTC"]);
       var wBTCToRenBTC = await getWrapperAddress(wBTCToRenBTCTx);
       await setConverter(controller, 'wBTC', 'renBTC', wBTCToRenBTC);
 
       // Curve renBTC -> wBTC
-      var renBTCToWBTCTx = await curveFactory.createWrapper(0, 1, deployParameters[network]["Curve_SBTC"]);
+      var renBTCToWBTCTx = await curveFactory.createWrapper(false, 0, 1, deployParameters[network]["Curve_SBTC"]);
       var renBTCToWBTC = await getWrapperAddress(renBTCToWBTCTx);
       await setConverter(controller, 'renBTC', 'wBTC', renBTCToWBTC);
 
       // Curve wNative -> wBTC
-      var wEthToWBTCTx = await curveFactory.createWrapper(2, 1, deployParameters[network]["Curve_TriCryptoTwo"]);
+      var wEthToWBTCTx = await curveFactory.createWrapper(false, 2, 1, deployParameters[network]["Curve_TriCryptoTwo"]);
       var wEthToWBTC = await getWrapperAddress(wEthToWBTCTx);
       await setConverter(controller, 'wNative', 'wBTC', wEthToWBTC);
 
       // Curve wBTC -> wNative
-      var wBtcToWETHTx = await curveFactory.createWrapper(1, 2, deployParameters[network]["Curve_TriCryptoTwo"]);
+      var wBtcToWETHTx = await curveFactory.createWrapper(false, 1, 2, deployParameters[network]["Curve_TriCryptoTwo"]);
       var wBtcToWETH = await getWrapperAddress(wBtcToWETHTx);
       await setConverter(controller, 'wBTC', 'wNative', wBtcToWETH);
 
       break;
 
     default:
+      const curveFactory = await ethers.getContract('ZeroCurveFactory', deployer);
       const sushiFactory = await ethers.getContract('ZeroUniswapFactory', deployer);
-      const curveUnderlyingFactory = await ethers.getContract('ZeroCurveUnderlyingFactory', deployer);
 
       // Curve wBTC -> renBTC
-      var wBTCToRenBTCTx = await curveUnderlyingFactory.createWrapper(0, 1, deployParameters[network]["Curve_Ren"]);
+      var wBTCToRenBTCTx = await curveFactory.createWrapper(true, 0, 1, deployParameters[network]["Curve_Ren"]);
       var wBTCToRenBTC = await getWrapperAddress(wBTCToRenBTCTx);
       await setConverter(controller, 'wBTC', 'renBTC', wBTCToRenBTC);
 
       // Curve renBTC -> wBTC
-      var renBTCToWBTCTx = await curveUnderlyingFactory.createWrapper(1, 0, deployParameters[network]["Curve_Ren"]);
+      var renBTCToWBTCTx = await curveFactory.createWrapper(true, 1, 0, deployParameters[network]["Curve_Ren"]);
       var renBTCToWBTC = await getWrapperAddress(renBTCToWBTCTx);
       await setConverter(controller, 'renBTC', 'wBTC', renBTCToWBTC);
 
