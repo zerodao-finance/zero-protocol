@@ -4,14 +4,14 @@ pragma solidity >=0.7.0;
 import {ICurvePool} from '../interfaces/ICurvePool.sol';
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
 import {ZeroCurveWrapper} from './ZeroCurveWrapper.sol';
-import {ICurveInt128} from '../interfaces/ICurveInt128.sol';
-import {ICurveInt256} from '../interfaces/ICurveInt128.sol';
-import {ICurveUInt128} from '../interfaces/ICurveUInt128.sol';
-import {ICurveUInt256} from '../interfaces/ICurveUInt256.sol';
-import {ICurveUnderlyingInt128} from '../interfaces/ICurveUnderlyingInt128.sol';
-import {ICurveUnderlyingInt256} from '../interfaces/ICurveUnderlyingInt256.sol';
-import {ICurveUnderlyingUInt128} from '../interfaces/ICurveUnderlyingUInt128.sol';
-import {ICurveUnderlyingUInt256} from '../interfaces/ICurveUnderlyingUInt256.sol';
+import {ICurveInt128} from '../interfaces/CurvePools/ICurveInt128.sol';
+import {ICurveInt256} from '../interfaces/CurvePools/ICurveInt256.sol';
+import {ICurveUInt128} from '../interfaces/CurvePools/ICurveUInt128.sol';
+import {ICurveUInt256} from '../interfaces/CurvePools/ICurveUInt256.sol';
+import {ICurveUnderlyingInt128} from '../interfaces/CurvePools/ICurveUnderlyingInt128.sol';
+import {ICurveUnderlyingInt256} from '../interfaces/CurvePools/ICurveUnderlyingInt256.sol';
+import {ICurveUnderlyingUInt128} from '../interfaces/CurvePools/ICurveUnderlyingUInt128.sol';
+import {ICurveUnderlyingUInt256} from '../interfaces/CurvePools/ICurveUnderlyingUInt256.sol';
 
 import {console} from 'hardhat/console.sol';
 
@@ -20,85 +20,67 @@ contract ZeroCurveFactory {
 
 	function createWrapper(
 		bool _underlying,
-		int128 _tokenInIndex,
-		int128 _tokenOutIndex,
+		uint256 _tokenInIndex,
+		uint256 _tokenOutIndex,
 		address _pool
 	) public {
-		bytes32 exchangeSelector;
-		bytes32 estimateSelector;
-
-		bytes4[] memory selectors = [
-			ICurveInt128.coins.selector,
-			ICurveInt256.coins.selector,
-			ICurveUInt128.coins.selector,
-			ICurveUInt256.coins.selector,
-			ICurveUnderlyingInt128.coins.selector,
-			ICurveUnderlyingInt256.coins.selector,
-			ICurveUnderlyingUInt128.coins.selector,
-			ICurveUnderlyingUInt256.coins.selector
-		] 
-
+		bytes4 exchangeSelector;
+		bytes4 estimateSelector;
 
 		if (_underlying) {
-			if (
-				ICurvePool(_pool).staticcall(
-					abi.encodeWithSelector(keccak256('underlying_coins(int128)')[:4], int128(0))
-				)
-			) {
-				exchangeSelector = keccak256('get_dy_underlying(int128,int128,uint256)');
-				estimateSelector = keccak256('exchange_underlying(int128,int128,uint256,uint256)');
-			} else if (
-				ICurvePool(_pool).staticcall(
-					abi.encodeWithSelector(keccak256('underlying_coins(int256)')[:4], int256(0))
-				)
-			) {
-				estimateSelector = keccak256('exchange_underlying(int128,int256,uint256,uint256)');
-				exchangeSelector = keccak256('get_dy_underlying(int256,int256,uint256)');
-			} else if (
-				ICurvePool(_pool).staticcall(
-					abi.encodeWithSelector(keccak256('underlying_coins(uint128)')[:4], uint128(0))
-				)
-			) {
-				estimateSelector = keccak256('exchange_underlying(uint128,uint128,uint256,uint256)');
-				exchangeSelector = keccak256('get_dy_underlying(uint128,uint128,uint256)');
-			} else if (
-				ICurvePool(_pool).staticcall(
-					abi.encodeWithSelector(keccak256('underlying_coins(uint256)')[:4], uint256(0))
-				)
-			) {
-				estimateSelector = keccak256('exchange_underlying(uint256,uint256,uint256,uint256)');
-				exchangeSelector = keccak256('get_dy_underlying(uint256,uint256,uint256)');
+			(bool pool128, ) = address(_pool).staticcall(
+				abi.encodeWithSelector(ICurveUnderlyingInt128.underlying_coins.selector, int128(0))
+			);
+			(bool pool256, ) = address(_pool).staticcall(
+				abi.encodeWithSelector(ICurveUnderlyingInt256.underlying_coins.selector, int256(0))
+			);
+			(bool poolu128, ) = address(_pool).staticcall(
+				abi.encodeWithSelector(ICurveUnderlyingUInt128.underlying_coins.selector, uint128(0))
+			);
+			(bool poolu256, ) = address(_pool).staticcall(
+				abi.encodeWithSelector(ICurveUnderlyingUInt256.underlying_coins.selector, uint256(0))
+			);
+			if (pool128) {
+				exchangeSelector = ICurveUnderlyingInt128.exchange_underlying.selector;
+				estimateSelector = ICurveUnderlyingInt128.get_dy_underlying.selector;
+			} else if (pool256) {
+				exchangeSelector = ICurveUnderlyingInt256.exchange_underlying.selector;
+				estimateSelector = ICurveUnderlyingInt256.get_dy_underlying.selector;
+			} else if (poolu128) {
+				exchangeSelector = ICurveUnderlyingUInt128.exchange_underlying.selector;
+				estimateSelector = ICurveUnderlyingUInt128.get_dy_underlying.selector;
+			} else if (poolu256) {
+				exchangeSelector = ICurveUnderlyingUInt256.exchange_underlying.selector;
+				estimateSelector = ICurveUnderlyingUInt256.get_dy_underlying.selector;
 			}
 		} else {
-			if (ICurvePool(_pool).staticcall(abi.encodeWithSelector(keccak256('coins(int128)')[:4], int128(0)))) {
-				estimateSelector = keccak256('exchange(int128,int128,uint256,uint256)');
-				exchangeSelector = keccak256('get_dy(int128,int128,uint256)');
-			} else if (
-				ICurvePool(_pool).staticcall(abi.encodeWithSelector(keccak256('coins(int256)')[:4], int256(0)))
-			) {
-				estimateSelector = keccak256('exchange(int256,int256,uint256,uint256)');
-				exchangeSelector = keccak256('get_dy(int256,int256,uint256)');
-			} else if (
-				ICurvePool(_pool).staticcall(abi.encodeWithSelector(keccak256('coins(uint128)')[:4], uint128(0)))
-			) {
-				estimateSelector = keccak256('exchange(uint128,uint128,uint256,uint256)');
-				exchangeSelector = keccak256('get_dy(uint128,uint128,uint256)');
-			} else if (
-				ICurvePool(_pool).staticcall(abi.encodeWithSelector(keccak256('coins(uint256)')[:4], uint256(0)))
-			) {
-				estimateSelector = keccak256('exchange(uint256,uint256,uint256,uint256)');
-				exchangeSelector = keccak256('get_dy(uint256,uint256,uint256)');
+			(bool pool128, ) = address(_pool).staticcall(
+				abi.encodeWithSelector(ICurveInt128.coins.selector, int128(0))
+			);
+			(bool pool256, ) = address(_pool).staticcall(
+				abi.encodeWithSelector(ICurveInt256.coins.selector, int256(0))
+			);
+			(bool poolu128, ) = address(_pool).staticcall(
+				abi.encodeWithSelector(ICurveUInt128.coins.selector, uint128(0))
+			);
+			(bool poolu256, ) = address(_pool).staticcall(
+				abi.encodeWithSelector(ICurveUInt256.coins.selector, uint256(0))
+			);
+			if (pool128) {
+				exchangeSelector = ICurveInt128.exchange.selector;
+				estimateSelector = ICurveInt128.get_dy.selector;
+			} else if (pool256) {
+				exchangeSelector = ICurveInt256.exchange.selector;
+				estimateSelector = ICurveInt256.get_dy.selector;
+			} else if (poolu128) {
+				exchangeSelector = ICurveUInt128.exchange.selector;
+				estimateSelector = ICurveUInt128.get_dy.selector;
+			} else if (poolu256) {
+				exchangeSelector = ICurveUInt256.exchange.selector;
+				estimateSelector = ICurveUInt256.get_dy.selector;
 			}
 			emit CreateWrapper(
-				address(
-					new ZeroCurveWrapper(
-						_tokenInIndex,
-						_tokenOutIndex,
-						_pool,
-						estimateSelector[:4],
-						exchangeSelector[:4]
-					)
-				)
+				address(new ZeroCurveWrapper(_tokenInIndex, _tokenOutIndex, _pool, estimateSelector, exchangeSelector))
 			);
 		}
 	}
