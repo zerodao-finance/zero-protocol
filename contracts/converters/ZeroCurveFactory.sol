@@ -28,7 +28,14 @@ contract ZeroCurveFactory {
 		bytes32 estimateSelector;
 
 		bytes4[] memory selectors = [
-			ICurvePoolUnsignedUint256
+			ICurveInt128.coins.selector,
+			ICurveInt256.coins.selector,
+			ICurveUInt128.coins.selector,
+			ICurveUInt256.coins.selector,
+			ICurveUnderlyingInt128.coins.selector,
+			ICurveUnderlyingInt256.coins.selector,
+			ICurveUnderlyingUInt128.coins.selector,
+			ICurveUnderlyingUInt256.coins.selector
 		] 
 
 
