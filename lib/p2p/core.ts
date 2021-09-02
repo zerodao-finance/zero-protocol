@@ -65,7 +65,7 @@ class ZeroUser {
 		try {
 			let ackReceived = false;
 			// should add handler for rejection
-			await this.conn.handle('/zero/user/confirmation', async ({ stream }) => {
+			await this.conn.handle('/zero/user/confirmation', async ({ stream }: { stream: any }) => {
 				pipe(stream.source, lp.decode(), async (rawData: any) => {
 					let string = [];
 					for await (const msg of rawData) {
