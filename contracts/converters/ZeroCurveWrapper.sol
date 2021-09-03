@@ -38,7 +38,8 @@ contract ZeroCurveWrapper {
 		);
 		console.log('first call worked');
 		require(success1, '!coins');
-		address _tokenInAddress = tokenInAddress = abi.decode(data1, (address));
+		(address _tokenInAddress) = abi.decode(data1, (address));
+		tokenInAddress = _tokenInAddress;
 		console.log('got token in address');
 		(bool success2, bytes memory data2) = address(_pool).call(
 			abi.encodeWithSelector(_coinsSelector, _tokenOutIndex)
