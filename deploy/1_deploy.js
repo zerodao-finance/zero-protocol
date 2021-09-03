@@ -210,12 +210,6 @@ module.exports = async ({
     from: deployer
   });
 
-  await deployFixedAddress('ZeroCurveUnderlyingFactory', {
-    args: [],
-    contractName: 'ZeroCurveUnderlyingFactory',
-    from: deployer
-  })
-
   await deployFixedAddress('ZeroUniswapFactory', {
     args: [deployParameters[network]['Router']],
     contractName: 'ZeroUniswapFactory',
@@ -237,6 +231,7 @@ module.exports = async ({
   //Deploy converters
   const wrapper = await ethers.getContract('WrapNative', deployer);
   const unwrapper = await ethers.getContract('UnwrapNative', deployer);
+  const curveFactory = await ethers.getContract('ZeroCurveFactory', deployer);
 
   const getWrapperAddress = async (tx) => {
     const { events } = await tx.wait();
@@ -247,7 +242,6 @@ module.exports = async ({
   // Deploy converters
   switch (network) {
     case "ETHEREUM":
-      const curveFactory = await ethers.getContract('ZeroCurveFactory', deployer);
 
       // Curve wBTC -> renBTC
       var wBTCToRenBTCTx = await curveFactory.functions.createWrapper(false, 1, 0, deployParameters[network]["Curve_SBTC"]);
@@ -272,7 +266,6 @@ module.exports = async ({
       break;
 
     default:
-      const curveFactory = await ethers.getContract('ZeroCurveFactory', deployer);
       const sushiFactory = await ethers.getContract('ZeroUniswapFactory', deployer);
 
       // Curve wBTC -> renBTC

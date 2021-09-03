@@ -24,6 +24,7 @@ contract ZeroCurveWrapper {
 		uint256 _tokenInIndex,
 		uint256 _tokenOutIndex,
 		address _pool,
+		bytes4 _coinsSelector,
 		bytes4 _estimateSelector,
 		bytes4 _convertSelector
 	) {
@@ -31,9 +32,19 @@ contract ZeroCurveWrapper {
 		tokenOutIndex = _tokenOutIndex;
 		estimateSelector = _estimateSelector;
 		convertSelector = _convertSelector;
-
-		address _tokenInAddress = tokenInAddress = ICurvePool(_pool).coins(_tokenInIndex);
-		tokenOutAddress = ICurvePool(_pool).coins(_tokenOutIndex);
+		console.log('assigned inputs');
+		(bool success1, bytes memory data1) = address(_pool).call(
+			abi.encodeWithSelector(_coinsSelector, _tokenInIndex)
+		);
+		console.log('first call worked');
+		require(success1, '!coins');
+		address _tokenInAddress = tokenInAddress = abi.decode(data1, (address));
+		console.log('got token in address');
+		(bool success2, bytes memory data2) = address(_pool).call(
+			abi.encodeWithSelector(_coinsSelector, _tokenOutIndex)
+		);
+		require(success2, '!coins');
+		tokenOutAddress = abi.decode(data2, (address));
 		pool = _pool;
 		IERC20(_tokenInAddress).safeApprove(_pool, type(uint256).max);
 	}
