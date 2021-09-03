@@ -17,13 +17,14 @@ import { RevertCaptureLib } from "./RevertCaptureLib.sol";
 library CurveLib { 
   struct ICurve {
     address pool;
+    bool underlying;
     bytes4 coinsSelector;
     bytes4 exchangeSelector;
     bytes4 getDySelector;
     bytes4 coinsUnderlyingSelector;
   }
   function coins(ICurve memory curve, uint256 i) internal view returns (address result) {
-    (bool success, bytes memory returnData) = curve.pool.staticcall(abi.encodeWithSelector(curve.coinsSelector, i));
+    (bool success, bytes memory returnData) = curve.pool.staticcall(abi.encodeWithSelector(curve.underlying ? curve.coinsUnderlyingSelector : curve.coinsSelector, i));
     require(success, "!coins");
     (result) = abi.decode(returnData, (address));
   }
@@ -41,21 +42,29 @@ library CurveLib {
     (bool success, bytes memory returnData) = curve.pool.call(abi.encodeWithSelector(curve.exchangeSelector, i, j, dx, min_dy));
     if (!success) revert(RevertCaptureLib.decodeError(returnData));
   }
-  function testSignatures(address target, bytes4[4] memory signatures, bytes memory callData) internal view returns (bytes4 result) {
+  function callOrStaticCall(bool _static, address target, bytes memory callData) internal returns (bytes memory returnData) {
+    if (_static) {
+      (, returnData) = target.staticcall(callData);
+    } else {
+      (, returnData) = target.call(callData);
+    }
+  }
+  function testSignatures(address target, bool staticCall, bytes4[4] memory signatures, bytes memory callData) internal returns (bytes4 result) {
     for (uint256 i = 0; i < signatures.length; i++) {
-      (, bytes memory returnData) = target.staticcall(abi.encodePacked(signatures[i], callData));
+      bytes memory returnData = callOrStaticCall(staticCall, target, abi.encodePacked(signatures[i], callData));
       if (returnData.length != 0) return signatures[i];
     }
     revert("signature not found in contract");
   }
-  function duckPool(address pool) internal view returns (ICurve memory result) {
+  function duckPool(address pool, bool underlying) internal returns (ICurve memory result) {
     result.pool = pool;
-    result.exchangeSelector = testSignatures(pool, [ ICurveInt128.exchange.selector, ICurveInt256.exchange.selector, ICurveUInt128.exchange.selector, ICurveUInt256.exchange.selector ], abi.encode(0, 1, 1, type(uint256).max));
-    result.getDySelector = testSignatures(pool, [ ICurveInt128.get_dy.selector, ICurveInt256.get_dy.selector, ICurveUInt128.get_dy.selector, ICurveUInt256.get_dy.selector ], abi.encode(0, 1, 1));
-    result.coinsSelector = testSignatures(pool, [ ICurveInt128.coins.selector, ICurveInt256.coins.selector, ICurveUInt128.coins.selector, ICurveUInt256.coins.selector ], abi.encode(0));
-    result.coinsUnderlyingSelector = testSignatures(pool, [ ICurveUnderlyingInt128.underlying_coins.selector, ICurveUnderlyingInt256.underlying_coins.selector, ICurveUnderlyingUInt128.underlying_coins.selector, ICurveUnderlyingUInt256.underlying_coins.selector ], abi.encode(0));
+    result.underlying = underlying;
+    result.exchangeSelector = testSignatures(pool, false, [ ICurveInt128.exchange.selector, ICurveInt256.exchange.selector, ICurveUInt128.exchange.selector, ICurveUInt256.exchange.selector ], abi.encode(0, 1, 1, type(uint256).max));
+    result.getDySelector = testSignatures(pool, true, [ ICurveInt128.get_dy.selector, ICurveInt256.get_dy.selector, ICurveUInt128.get_dy.selector, ICurveUInt256.get_dy.selector ], abi.encode(0, 1, 1));
+    result.coinsSelector = testSignatures(pool, true, [ ICurveInt128.coins.selector, ICurveInt256.coins.selector, ICurveUInt128.coins.selector, ICurveUInt256.coins.selector ], abi.encode(0));
+    if (underlying) result.coinsUnderlyingSelector = testSignatures(pool, true, [ ICurveUnderlyingInt128.underlying_coins.selector, ICurveUnderlyingInt256.underlying_coins.selector, ICurveUnderlyingUInt128.underlying_coins.selector, ICurveUnderlyingUInt256.underlying_coins.selector ], abi.encode(0));
    }
-   function fromSelectors(address pool, bytes4 coinsSelector, bytes4 coinsUnderlyingSelector, bytes4 exchangeSelector, bytes4 getDySelector) internal pure returns (ICurve memory result) {
+   function fromSelectors(address pool, bool underlying, bytes4 coinsSelector, bytes4 coinsUnderlyingSelector, bytes4 exchangeSelector, bytes4 getDySelector) internal pure returns (ICurve memory result) {
      result.pool = pool;
      result.coinsSelector = coinsSelector;
      result.coinsUnderlyingSelector = coinsUnderlyingSelector;

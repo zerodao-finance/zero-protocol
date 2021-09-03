@@ -5,66 +5,59 @@ pragma solidity >=0.7.0;
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
 import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
 import {ICurvePool} from '../interfaces/ICurvePool.sol';
+import { CurveLib } from "../libraries/CurveLib.sol";
 import {SafeMath} from 'oz410/math/SafeMath.sol';
 import {console} from 'hardhat/console.sol';
 
 contract ZeroCurveWrapper {
+	bool public immutable underlying;
 	uint256 public immutable tokenInIndex;
 	uint256 public immutable tokenOutIndex;
 	address public immutable tokenInAddress;
 	address public immutable tokenOutAddress;
 	address public immutable pool;
-	bytes4 public immutable estimateSelector;
-	bytes4 public immutable convertSelector;
+	bytes4 public immutable coinsUnderlyingSelector;
+	bytes4 public immutable coinsSelector;
+	bytes4 public immutable getDySelector;
+	bytes4 public immutable exchangeSelector;
 
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
+	using CurveLib for CurveLib.ICurve;
 
+	function getPool() internal view returns (CurveLib.ICurve memory result) {
+		result = CurveLib.fromSelectors(pool, underlying, coinsSelector, coinsUnderlyingSelector, exchangeSelector, getDySelector);
+	}
 	constructor(
 		uint256 _tokenInIndex,
 		uint256 _tokenOutIndex,
 		address _pool,
-		bytes4 _coinsSelector,
-		bytes4 _estimateSelector,
-		bytes4 _convertSelector
+		bool _underlying
 	) {
+		underlying = _underlying;
 		tokenInIndex = _tokenInIndex;
 		tokenOutIndex = _tokenOutIndex;
-		estimateSelector = _estimateSelector;
-		convertSelector = _convertSelector;
-		console.log('assigned inputs');
-		(bool success1, bytes memory data1) = address(_pool).call(
-			abi.encodeWithSelector(_coinsSelector, _tokenInIndex)
-		);
-		console.log('first call worked');
-		require(success1, '!coins');
-		(address _tokenInAddress) = abi.decode(data1, (address));
-		tokenInAddress = _tokenInAddress;
-		console.log('got token in address');
-		(bool success2, bytes memory data2) = address(_pool).call(
-			abi.encodeWithSelector(_coinsSelector, _tokenOutIndex)
-		);
-		require(success2, '!coins');
-		tokenOutAddress = abi.decode(data2, (address));
 		pool = _pool;
+		CurveLib.ICurve memory curve = CurveLib.duckPool(_pool, _underlying);
+		coinsUnderlyingSelector = curve.coinsUnderlyingSelector;
+		coinsSelector = curve.coinsSelector;
+		exchangeSelector = curve.exchangeSelector;
+		getDySelector = curve.getDySelector;
+		console.log('assigned inputs');
+		address _tokenInAddress = tokenInAddress = curve.coins(_tokenInIndex);
+		console.log('got token in address');
+		tokenOutAddress = curve.coins(_tokenOutIndex);
 		IERC20(_tokenInAddress).safeApprove(_pool, type(uint256).max);
 	}
 
 	function estimate(uint256 _amount) public returns (uint256 result) {
-		(bool success, bytes memory data) = pool.call(
-			abi.encodeWithSelector(estimateSelector, tokenInIndex, tokenOutIndex, _amount)
-		);
-		require(success, '!success');
-		result = abi.decode(data, (uint256));
+		result = getPool().get_dy(tokenInIndex, tokenOutIndex, _amount);
 	}
 
 	function convert(address _module) external returns (uint256 _actualOut) {
 		uint256 _balance = IERC20(tokenInAddress).balanceOf(address(this));
 		uint256 _startOut = IERC20(tokenOutAddress).balanceOf(address(this));
-		(bool success, bytes memory data) = pool.call(
-			abi.encodeWithSelector(convertSelector, tokenInIndex, tokenOutIndex, _balance, 1)
-		);
-		require(success, '!success');
+		getPool().exchange(tokenInIndex, tokenOutIndex, _balance, 1);
 		uint256 _actualOut = IERC20(tokenOutAddress).balanceOf(address(this)) - _startOut;
 		IERC20(tokenOutAddress).safeTransfer(msg.sender, _actualOut);
 	}
