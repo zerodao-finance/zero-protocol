@@ -12,7 +12,7 @@ import {ICurveUnderlyingInt128} from '../interfaces/CurvePools/ICurveUnderlyingI
 import {ICurveUnderlyingInt256} from '../interfaces/CurvePools/ICurveUnderlyingInt256.sol';
 import {ICurveUnderlyingUInt128} from '../interfaces/CurvePools/ICurveUnderlyingUInt128.sol';
 import {ICurveUnderlyingUInt256} from '../interfaces/CurvePools/ICurveUnderlyingUInt256.sol';
-import { CurveLib } from "../libraries/CurveLib.sol";
+import {CurveLib} from '../libraries/CurveLib.sol';
 
 import {console} from 'hardhat/console.sol';
 
@@ -25,15 +25,6 @@ contract ZeroCurveFactory {
 		uint256 _tokenOutIndex,
 		address _pool
 	) public {
-	    emit CreateWrapper(
-		address(
-	         	new ZeroCurveWrapper(
-				_tokenInIndex,
-				_tokenOutIndex,
-				_pool,
-                                _underlying
-			)
-		)
-        );
+		emit CreateWrapper(address(new ZeroCurveWrapper(_tokenInIndex, _tokenOutIndex, _pool, _underlying)));
 	}
 }
