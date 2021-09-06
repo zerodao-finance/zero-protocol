@@ -91,7 +91,7 @@ library CurveLib {
     }
     result.exchangeSelector = hasWETH(pool, result.coinsSelector) ? ICurveETHUInt256.exchange.selector : testSignatures(pool, false, toDynamic([ ICurveInt128.exchange.selector, ICurveInt256.exchange.selector, ICurveUInt128.exchange.selector, ICurveUInt256.exchange.selector ]), abi.encode(0, 1, 1, type(uint256).max, false));
     console.log("got exchangeSelector");
-    result.getDySelector = testSignatures(pool, true, toDynamic([ ICurveInt128.get_dy.selector, ICurveInt256.get_dy.selector, ICurveUInt128.get_dy.selector, ICurveUInt256.get_dy.selector ]), abi.encode(0, 1, 1));
+    result.getDySelector = testSignatures(pool, true, toDynamic([ ICurveInt128.get_dy.selector, ICurveInt256.get_dy.selector, ICurveUInt128.get_dy.selector, ICurveUInt256.get_dy.selector ]), abi.encode(0, 1, 1000000000));
     console.log("got getDySelector");
    }
    function fromSelectors(address pool, bool underlying, bytes4 coinsSelector, bytes4 coinsUnderlyingSelector, bytes4 exchangeSelector, bytes4 getDySelector) internal pure returns (ICurve memory result) {
