@@ -3,38 +3,29 @@
 pragma solidity >=0.7.0;
 import {ICurvePool} from '../interfaces/ICurvePool.sol';
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
-import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
-import {SafeMath} from 'oz410/math/SafeMath.sol';
-import { ZeroCurveSignedWrapper } from "./ZeroCurveSignedWrapper.sol";
-import { ZeroCurveUnsignedWrapper } from "./ZeroCurveUnsignedWrapper.sol";
+import {ZeroCurveWrapper} from './ZeroCurveWrapper.sol';
+import {ICurveInt128} from '../interfaces/CurvePools/ICurveInt128.sol';
+import {ICurveInt256} from '../interfaces/CurvePools/ICurveInt256.sol';
+import {ICurveUInt128} from '../interfaces/CurvePools/ICurveUInt128.sol';
+import {ICurveUInt256} from '../interfaces/CurvePools/ICurveUInt256.sol';
+import {ICurveUnderlyingInt128} from '../interfaces/CurvePools/ICurveUnderlyingInt128.sol';
+import {ICurveUnderlyingInt256} from '../interfaces/CurvePools/ICurveUnderlyingInt256.sol';
+import {ICurveUnderlyingUInt128} from '../interfaces/CurvePools/ICurveUnderlyingUInt128.sol';
+import {ICurveUnderlyingUInt256} from '../interfaces/CurvePools/ICurveUnderlyingUInt256.sol';
+import {CurveLib} from '../libraries/CurveLib.sol';
 
-interface ICurvePoolSigned {
-  function coins(int128) external view returns (address);
-}
+import {console} from 'hardhat/console.sol';
 
 contract ZeroCurveFactory {
 	event CreateWrapper(address _wrapper);
 
 	function createWrapper(
-		int128 _tokenInIndex,
-		int128 _tokenOutIndex,
+		bool _underlying,
+		uint256 _tokenInIndex,
+		uint256 _tokenOutIndex,
 		address _pool
-	) public returns (address) {
-		// Determine if signed112 or unsigned256
-		(bool success,) = _pool.staticcall(abi.encodeWithSelector(ICurvePoolSigned.coins.selector, int128(0)));
-		if (success) {
-		        ZeroCurveSignedWrapper wrapper = new ZeroCurveSignedWrapper(_tokenInIndex, _tokenOutIndex, _pool);
-			emit CreateWrapper(address(wrapper));
-			return address(wrapper);
-		} else {
-			ZeroCurveUnsignedWrapper wrapper = new ZeroCurveUnsignedWrapper(
-				uint256(_tokenInIndex),
-				uint256(_tokenOutIndex),
-				_pool
-			);
-			emit CreateWrapper(address(wrapper));
-			return address(wrapper);
-		}
+	) public payable {
+		emit CreateWrapper(address(new ZeroCurveWrapper(_tokenInIndex, _tokenOutIndex, _pool, _underlying)));
 	}
+	fallback() payable external { /* no op */ }
 }
-

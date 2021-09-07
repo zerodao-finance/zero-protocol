@@ -80,7 +80,8 @@ const deployParameters = {
     USDC: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
     Router: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
     Curve_Ren: '0xC2d95EEF97Ec6C17551d45e77B590dc1F9117C67',
-    sushiRouter: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506'
+    sushiRouter: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
+    gatewayRegistry: '0x21C482f153D0317fe85C60bE1F7fa079019fcEbD',
   },
   ETHEREUM: {
     renBTC: '0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D',
@@ -90,7 +91,8 @@ const deployParameters = {
     Curve_SBTC: '0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714',
     Curve_TriCryptoTwo: '0xD51a44d3FaE010294C616388b506AcdA1bfAAE46',
     Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
-    sushiRouter: '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F'
+    sushiRouter: '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F',
+    gatewayRegistry: '0xe80d347DF1209a76DD9d2319d62912ba98C54DDD'
   }
 }
 
@@ -98,8 +100,9 @@ const toAddress = (contractOrAddress) => ((contractOrAddress || {})).address || 
 
 const setConverter = async (controller, source, target, converter) => {
   const [sourceAddress, targetAddress] = [source, target].map((v) => deployParameters[network][v] || v);
-  const tx = await controller.setConverter(sourceAddress, targetAddress, toAddress(converter));
-  console.log('setConverter(' + sourceAddress + ',' + targetAddress + ',' + toAddress(converter));
+  console.log('setting converter');
+	const tx = await controller.setConverter(sourceAddress, targetAddress, toAddress(converter));
+	console.log('setConverter(' + sourceAddress + ',' + targetAddress + ',' + toAddress(converter));
   return tx;
 };
 
@@ -139,7 +142,7 @@ module.exports = async ({
       ZeroUnderwriterLockBytecodeLib: zeroUnderwriterLockBytecodeLib.address
     }
   }));
-  const zeroController = await deployProxyFixedAddress(zeroControllerFactory, ["0x0F4ee9631f4be0a63756515141281A3E2B293Bbe"], {
+  const zeroController = await deployProxyFixedAddress(zeroControllerFactory, ["0x0F4ee9631f4be0a63756515141281A3E2B293Bbe", deployParameters[network].gatewayRegistry], {
     unsafeAllowLinkedLibraries: true
   });
   const zeroControllerArtifact = await deployments.getArtifact('ZeroController');
@@ -210,12 +213,6 @@ module.exports = async ({
     from: deployer
   });
 
-  await deployFixedAddress('ZeroCurveUnderlyingFactory', {
-    args: [],
-    contractName: 'ZeroCurveUnderlyingFactory',
-    from: deployer
-  })
-
   await deployFixedAddress('ZeroUniswapFactory', {
     args: [deployParameters[network]['Router']],
     contractName: 'ZeroUniswapFactory',
@@ -237,6 +234,7 @@ module.exports = async ({
   //Deploy converters
   const wrapper = await ethers.getContract('WrapNative', deployer);
   const unwrapper = await ethers.getContract('UnwrapNative', deployer);
+  const curveFactory = await ethers.getContract('ZeroCurveFactory', deployer);
 
   const getWrapperAddress = async (tx) => {
     const { events } = await tx.wait();
@@ -247,25 +245,24 @@ module.exports = async ({
   // Deploy converters
   switch (network) {
     case "ETHEREUM":
-      const curveFactory = await ethers.getContract('ZeroCurveFactory', deployer);
 
       // Curve wBTC -> renBTC
-      var wBTCToRenBTCTx = await curveFactory.functions.createWrapper(1, 0, deployParameters[network]["Curve_SBTC"]);
+      var wBTCToRenBTCTx = await curveFactory.functions.createWrapper(false, 1, 0, deployParameters[network]["Curve_SBTC"]);
       var wBTCToRenBTC = await getWrapperAddress(wBTCToRenBTCTx);
       await setConverter(controller, 'wBTC', 'renBTC', wBTCToRenBTC);
 
       // Curve renBTC -> wBTC
-      var renBTCToWBTCTx = await curveFactory.createWrapper(0, 1, deployParameters[network]["Curve_SBTC"]);
+      var renBTCToWBTCTx = await curveFactory.createWrapper(false, 0, 1, deployParameters[network]["Curve_SBTC"]);
       var renBTCToWBTC = await getWrapperAddress(renBTCToWBTCTx);
       await setConverter(controller, 'renBTC', 'wBTC', renBTCToWBTC);
 
       // Curve wNative -> wBTC
-      var wEthToWBTCTx = await curveFactory.createWrapper(2, 1, deployParameters[network]["Curve_TriCryptoTwo"]);
+      var wEthToWBTCTx = await curveFactory.createWrapper(false, 2, 1, deployParameters[network]["Curve_TriCryptoTwo"], { gasLimit: 8e6 });
       var wEthToWBTC = await getWrapperAddress(wEthToWBTCTx);
       await setConverter(controller, 'wNative', 'wBTC', wEthToWBTC);
 
       // Curve wBTC -> wNative
-      var wBtcToWETHTx = await curveFactory.createWrapper(1, 2, deployParameters[network]["Curve_TriCryptoTwo"]);
+      var wBtcToWETHTx = await curveFactory.createWrapper(false, 1, 2, deployParameters[network]["Curve_TriCryptoTwo"], { gasLimit: 8e6 });
       var wBtcToWETH = await getWrapperAddress(wBtcToWETHTx);
       await setConverter(controller, 'wBTC', 'wNative', wBtcToWETH);
 
@@ -273,25 +270,24 @@ module.exports = async ({
 
     default:
       const sushiFactory = await ethers.getContract('ZeroUniswapFactory', deployer);
-      const curveUnderlyingFactory = await ethers.getContract('ZeroCurveUnderlyingFactory', deployer);
 
       // Curve wBTC -> renBTC
-      var wBTCToRenBTCTx = await curveUnderlyingFactory.createWrapper(0, 1, deployParameters[network]["Curve_Ren"]);
+      var wBTCToRenBTCTx = await curveFactory.createWrapper(true, 0, 1, deployParameters[network]["Curve_Ren"], { gasLimit: 5e6 });
       var wBTCToRenBTC = await getWrapperAddress(wBTCToRenBTCTx);
       await setConverter(controller, 'wBTC', 'renBTC', wBTCToRenBTC);
 
       // Curve renBTC -> wBTC
-      var renBTCToWBTCTx = await curveUnderlyingFactory.createWrapper(1, 0, deployParameters[network]["Curve_Ren"]);
+      var renBTCToWBTCTx = await curveFactory.createWrapper(true, 1, 0, deployParameters[network]["Curve_Ren"], { gasLimit: 5e6 });
       var renBTCToWBTC = await getWrapperAddress(renBTCToWBTCTx);
       await setConverter(controller, 'renBTC', 'wBTC', renBTCToWBTC);
 
       // Sushi wNative -> wBTC
-      var wEthToWBTCTx = await sushiFactory.createWrapper([deployParameters[network]["wNative"], deployParameters[network]["wBTC"]]);
+      var wEthToWBTCTx = await sushiFactory.createWrapper([deployParameters[network]["wNative"], deployParameters[network]["wBTC"]], { gasLimit: 5e6 });
       var wEthToWBTC = await getWrapperAddress(wEthToWBTCTx);
       await setConverter(controller, 'wNative', 'wBTC', wEthToWBTC);
 
       // Sushi wBTC -> wNative
-      var wBtcToWETHTx = await sushiFactory.createWrapper([deployParameters[network]["wBTC"], deployParameters[network]["wNative"]]);
+      var wBtcToWETHTx = await sushiFactory.createWrapper([deployParameters[network]["wBTC"], deployParameters[network]["wNative"]], { gasLimit: 5e6 });
       var wBtcToWETH = await getWrapperAddress(wBtcToWETHTx);
       await setConverter(controller, 'wBTC', 'wNative', wBtcToWETH);
 

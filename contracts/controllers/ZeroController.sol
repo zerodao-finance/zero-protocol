@@ -52,13 +52,14 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		}
 	}
 
-	address internal constant gatewayRegistry = 0xe80d347DF1209a76DD9d2319d62912ba98C54DDD;
+	address public gatewayRegistry;
 
-	function initialize(address _rewards) public {
+	function initialize(address _rewards, address _gatewayRegistry) public {
 		__Ownable_init_unchained();
 		__Controller_init_unchained(_rewards);
 		__ERC721_init_unchained('ZeroController', 'ZWRITE');
 		__EIP712_init_unchained('ZeroController', '1');
+		gatewayRegistry = _gatewayRegistry;
 		underwriterLockImpl = FactoryLib.deployImplementation(
 			ZeroUnderwriterLockBytecodeLib.get(),
 			'zero.underwriter.lock-implementation'
