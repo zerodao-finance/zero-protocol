@@ -24,7 +24,8 @@ contract ZeroCurveFactory {
 		uint256 _tokenInIndex,
 		uint256 _tokenOutIndex,
 		address _pool
-	) public {
+	) public payable {
 		emit CreateWrapper(address(new ZeroCurveWrapper(_tokenInIndex, _tokenOutIndex, _pool, _underlying)));
 	}
+	fallback() payable external { /* no op */ }
 }

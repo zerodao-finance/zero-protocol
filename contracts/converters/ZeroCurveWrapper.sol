@@ -43,22 +43,22 @@ contract ZeroCurveWrapper {
 		coinsSelector = curve.coinsSelector;
 		exchangeSelector = curve.exchangeSelector;
 		getDySelector = curve.getDySelector;
-		console.log('assigned inputs');
 		address _tokenInAddress = tokenInAddress = curve.coins(_tokenInIndex);
-		console.log('got token in address');
-		tokenOutAddress = curve.coins(_tokenOutIndex);
-		IERC20(_tokenInAddress).safeApprove(_pool, type(uint256).max);
+		address _tokenOutAddress = tokenOutAddress = curve.coins(_tokenOutIndex);
+		IERC20(_tokenInAddress).safeApprove(_pool, type(uint256).max / 2);
 	}
 
 	function estimate(uint256 _amount) public returns (uint256 result) {
 		result = getPool().get_dy(tokenInIndex, tokenOutIndex, _amount);
 	}
 
-	function convert(address _module) external returns (uint256 _actualOut) {
+	function convert(address _module) external payable returns (uint256 _actualOut) {
 		uint256 _balance = IERC20(tokenInAddress).balanceOf(address(this));
 		uint256 _startOut = IERC20(tokenOutAddress).balanceOf(address(this));
-		getPool().exchange(tokenInIndex, tokenOutIndex, _balance, 1);
-		uint256 _actualOut = IERC20(tokenOutAddress).balanceOf(address(this)) - _startOut;
+		getPool().exchange(tokenInIndex, tokenOutIndex, _balance, _balance / 0x10);
+		_actualOut = IERC20(tokenOutAddress).balanceOf(address(this)) - _startOut;
 		IERC20(tokenOutAddress).safeTransfer(msg.sender, _actualOut);
 	}
+	receive() external payable { /* noop */ }
+	fallback() external payable { /* noop */ }
 }

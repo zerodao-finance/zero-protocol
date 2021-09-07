@@ -25,7 +25,6 @@ contract DummyVault is ERC20 {
 	}
 
 	function deposit(uint256 _amount) public returns (uint256) {
-		console.log('Depositing', _amount);
 		IERC20(want).transferFrom(msg.sender, address(this), _amount);
 		_mint(msg.sender, _amount);
 		return _amount;
