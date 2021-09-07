@@ -36,7 +36,7 @@ library CurveLib {
 
 	function coins(ICurve memory curve, uint256 i) internal view returns (address result) {
 		(bool success, bytes memory returnData) = curve.pool.staticcall(
-			abi.encodeWithSelector(curve.underlying ? curve.coinsUnderlyingSelector : curve.coinsSelector, i)
+			abi.encodeWithSelector(curve.coinsSelector, i)
 		);
 		require(success, '!coins');
 		(result) = abi.decode(returnData, (address));
@@ -76,17 +76,6 @@ library CurveLib {
 		if (!success) revert(RevertCaptureLib.decodeError(returnData));
 	}
 
-	function callOrStaticCall(
-		bool _static,
-		address target,
-		bytes memory callData
-	) internal returns (bytes memory returnData) {
-		if (_static) {
-			(, returnData) = target.staticcall(callData);
-		} else {
-			(, returnData) = target.call(callData);
-		}
-	}
 
 	function toDynamic(bytes4[4] memory ary) internal pure returns (bytes4[] memory result) {
 		result = new bytes4[](ary.length);
@@ -104,12 +93,11 @@ library CurveLib {
 
 	function testSignatures(
 		address target,
-		bool staticCall,
 		bytes4[] memory signatures,
 		bytes memory callData
 	) internal returns (bytes4 result) {
 		for (uint256 i = 0; i < signatures.length; i++) {
-			bytes memory returnData = callOrStaticCall(staticCall, target, abi.encodePacked(signatures[i], callData));
+			(, bytes memory returnData) = target.staticcall(abi.encodePacked(signatures[i], callData));
 			if (returnData.length != 0) return signatures[i];
 		}
 		return bytes4(0x0);
@@ -117,7 +105,6 @@ library CurveLib {
 
 	function testExchangeSignatures(
 		address target,
-		bool staticCall,
 		bytes4[] memory signatures,
 		bytes memory callData
 	) internal returns (bytes4 result) {
@@ -141,23 +128,9 @@ library CurveLib {
 	function duckPool(address pool, bool underlying) internal returns (ICurve memory result) {
 		result.pool = pool;
 		result.underlying = underlying;
-		result.coinsSelector = testSignatures(
-			pool,
-			true,
-			toDynamic(
-				[
-					ICurveInt128.coins.selector,
-					ICurveInt256.coins.selector,
-					ICurveUInt128.coins.selector,
-					ICurveUInt256.coins.selector
-				]
-			),
-			abi.encode(0)
-		);
-		if (underlying) {
-			result.coinsUnderlyingSelector = testSignatures(
+		result.coinsSelector = result.underlying
+			? testSignatures(
 				pool,
-				true,
 				toDynamic(
 					[
 						ICurveUnderlyingInt128.underlying_coins.selector,
@@ -167,28 +140,48 @@ library CurveLib {
 					]
 				),
 				abi.encode(0)
+			)
+			: testSignatures(
+				pool,
+				toDynamic(
+					[
+						ICurveInt128.coins.selector,
+						ICurveInt256.coins.selector,
+						ICurveUInt128.coins.selector,
+						ICurveUInt256.coins.selector
+					]
+				),
+				abi.encode(0)
 			);
-			console.logBytes(toBytes(result.coinsUnderlyingSelector));
-		}
-		result.exchangeSelector = testExchangeSignatures(
-			pool,
-			false,
-			toDynamic(
-				[
-					ICurveUInt256.exchange.selector,
-					ICurveInt128.exchange.selector,
-					ICurveInt256.exchange.selector,
-					ICurveUInt128.exchange.selector,
-					ICurveETHUInt256.exchange.selector
-				]
-			),
-			abi.encode(0, 0, 1000000000, type(uint256).max / 0x10)
-		);
+		result.exchangeSelector = result.underlying
+			? testExchangeSignatures(
+				pool,
+				toDynamic(
+					[
+						ICurveUnderlyingUInt256.exchange_underlying.selector,
+						ICurveUnderlyingInt128.exchange_underlying.selector,
+						ICurveUnderlyingInt256.exchange_underlying.selector,
+						ICurveUnderlyingUInt128.exchange_underlying.selector
+					]
+				),
+				abi.encode(0, 0, 1000000000, type(uint256).max / 0x10, false)
+			)
+			: testExchangeSignatures(
+				pool,
+				toDynamic(
+					[
+						ICurveUInt256.exchange.selector,
+						ICurveInt128.exchange.selector,
+						ICurveInt256.exchange.selector,
+						ICurveUInt128.exchange.selector,
+						ICurveETHUInt256.exchange.selector
+					]
+				),
+				abi.encode(0, 0, 1000000000, type(uint256).max / 0x10, false)
+			);
 		if (result.exchangeSelector == bytes4(0x0)) result.exchangeSelector = ICurveUInt256.exchange.selector; //hasWETH(pool, result.coinsSelector) ? ICurveETHUInt256.exchange.selector : ICurveUInt256.exchange.selector;
-		console.logBytes(toBytes(result.exchangeSelector));
 		result.getDySelector = testSignatures(
 			pool,
-			true,
 			toDynamic(
 				[
 					ICurveInt128.get_dy.selector,
@@ -199,7 +192,6 @@ library CurveLib {
 			),
 			abi.encode(0, 1, 1000000000)
 		);
-		console.logBytes(toBytes(result.getDySelector));
 	}
 
 	function fromSelectors(
