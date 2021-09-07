@@ -49,6 +49,7 @@ module.exports = {
     },
     matic: {
       url: "https://rpc-mumbai.maticvigil.com",
+      accounts: [process.env.WALLET]
     },
     localhost: {
       url: 'http://localhost:8545',
