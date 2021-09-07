@@ -34,7 +34,7 @@ class ZeroUser {
 						from,
 					});
 					this.log.info(`Found keeper: ${from} with address ${address}`);
-				} catch (e) {
+				} catch (e: any) {
 					this.log.error(`Timed out finding keeper: ${from}`);
 					this.log.debug(e.message);
 				}
@@ -48,7 +48,7 @@ class ZeroUser {
 		this.log.debug('Keepers before unsubscription', this.keepers);
 		try {
 			await this.conn.pubsub.unsubscribe('zero.keepers');
-		} catch (e) {
+		} catch (e: any) {
 			this.log.error('Could not unsubscribe to keeper broadcasts');
 			this.log.debug(e.message);
 		}
@@ -65,7 +65,7 @@ class ZeroUser {
 		try {
 			let ackReceived = false;
 			// should add handler for rejection
-			await this.conn.handle('/zero/user/confirmation', async ({ stream }) => {
+			await this.conn.handle('/zero/user/confirmation', async ({ stream }: any) => {
 				pipe(stream.source, lp.decode(), async (rawData: any) => {
 					let string = [];
 					for await (const msg of rawData) {
@@ -88,7 +88,7 @@ class ZeroUser {
 						const { stream } = await this.conn.dialProtocol(peerAddr, '/zero/keeper/dispatch');
 						pipe(JSON.stringify(transferRequest), lp.encode(), stream.sink);
 						this.log.info(`Published transfer request to ${keeper}. Waiting for keeper confirmation.`);
-					} catch (e) {
+					} catch (e: any) {
 						this.log.error(`Failed dialing keeper: ${keeper} for txDispatch`);
 						this.log.debug(e.message);
 					}
@@ -96,7 +96,7 @@ class ZeroUser {
 					break;
 				}
 			}
-		} catch (e) {
+		} catch (e: any) {
 			this.log.error('Could not publish transfer request');
 			this.log.debug(e.message);
 			return;
@@ -126,7 +126,7 @@ class ZeroKeeper {
 					}),
 				);
 				this.log.debug(`Made presence known ${this.conn.peerId.toB58String()}`);
-			} catch (e) {
+			} catch (e: any) {
 				console.debug(e);
 				this.log.info('Could not make presence known. Retrying in 1s');
 				this.log.debug(e.message);
