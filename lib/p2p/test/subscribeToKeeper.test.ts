@@ -7,7 +7,7 @@ const wait = async (ms: number): Promise<void> => await new Promise((r) => setTi
 
 const connOptions = { multiaddr: '/dns4/stomp.dynv6.net/tcp/443/wss/p2p-webrtc-star/' };
 
-describe('subscribeKeeper', () => {
+describe('subscribeToKeeper', () => {
     afterEach(() => {
         sinon.restore();
     });

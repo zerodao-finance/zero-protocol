@@ -9,7 +9,7 @@
 		"test": "hardhat test",
 		"test:p2p:unit": "NODE_ENV=test yarn mocha -r ts-node/register lib/p2p/test/mockPubsub.test.ts lib/p2p/test/mockZero.test.ts --exit --timeout 0",
 		"test:p2p:e2e": "NODE_ENV=integration yarn mocha -r ts-node/register lib/p2p/test/e2e.test.ts --timeout 0 --exit",
-		"test:p2p:subscribeKeeper": "NODE_ENV=integration yarn mocha -r ts-node/register lib/p2p/test/subscribeKeeper.test.ts --timeout 0 --exit",
+		"test:p2p:subscribeToKeeper": "NODE_ENV=integration yarn mocha -r ts-node/register lib/p2p/test/subscribeToKeeper.test.ts --timeout 0 --exit",
 		"test:rpc:unit": "NODE_ENV=test yarn mocha -r ts-node/register lib/rpc/test/btc.test.ts",
 		"test:external": "hardhat test --network localhost",
 		"test:sdk:unit": "NODE_ENV=test yarn mocha -r ts-node/register lib/test/sdk.test.ts",
