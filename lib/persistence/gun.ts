@@ -28,7 +28,7 @@ export class GunPersistenceAdapter implements PersistenceAdapter<GunBackendType,
 
 	async set(transferRequest: TransferRequest): Promise<GunKeyType> {
 		const key = hash(transferRequest);
-		const status: TransferRequestWithStatus = { ...transferRequest, status: 'pending' };
+		const status: any = { ...transferRequest, status: 'pending' };
 		try {
 			await this.backend
 				.get('transferRequests')

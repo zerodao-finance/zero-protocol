@@ -13,7 +13,7 @@ export class InMemoryPersistenceAdapter implements PersistenceAdapter<InMemoryBa
 
 	async set(transferRequest: TransferRequest): Promise<InMemoryKeyType> {
 		const key = hash(transferRequest);
-		const status: TransferRequestWithStatus = { ...transferRequest, status: 'pending' };
+		const status: any = { ...transferRequest, status: 'pending' };
 		try {
 			await this.backend.set(key, status);
 			return key;
