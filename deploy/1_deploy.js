@@ -75,6 +75,7 @@ const SIGNER_ADDRESS = "0x0F4ee9631f4be0a63756515141281A3E2B293Bbe";
 const deployParameters = {
   MATIC: {
     renBTC: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501',
+    wETH: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
     wBTC: '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6',
     wNative: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
     USDC: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
@@ -85,6 +86,7 @@ const deployParameters = {
   },
   ETHEREUM: {
     renBTC: '0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D',
+    wETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     wBTC: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
     wNative: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
@@ -101,8 +103,8 @@ const toAddress = (contractOrAddress) => ((contractOrAddress || {})).address || 
 const setConverter = async (controller, source, target, converter) => {
   const [sourceAddress, targetAddress] = [source, target].map((v) => deployParameters[network][v] || v);
   console.log('setting converter');
-	const tx = await controller.setConverter(sourceAddress, targetAddress, toAddress(converter));
-	console.log('setConverter(' + sourceAddress + ',' + targetAddress + ',' + toAddress(converter));
+  const tx = await controller.setConverter(sourceAddress, targetAddress, toAddress(converter));
+  console.log('setConverter(' + sourceAddress + ',' + targetAddress + ',' + toAddress(converter));
   return tx;
 };
 
@@ -178,7 +180,7 @@ module.exports = async ({
   await deployFixedAddress('Swap', {
     args: [
       zeroController.address, // Controller
-      deployParameters[network]['wNative'], // wNative
+      deployParameters[network]['wETH'], // wNative
       deployParameters[network]['wBTC'], // Want
       deployParameters[network]['sushiRouter'], // Sushi Router
       deployParameters[network]['USDC'], // Fiat
