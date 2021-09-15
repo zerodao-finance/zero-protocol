@@ -13,10 +13,13 @@ let _sendTransaction;
 
 const walletMap = {};
 const restoreSigner = (signer) => {
+  return
   signer.constructor.prototype.sendTransaction = _sendTransaction;
   Web3Provider.prototype.getSigner = _getSigner;
   Logger.prototype.throwError = _throwError;
 };
+
+ethers.providers.BaseProvider.prototype.getGasPrice = async () => ethers.utils.parseEther('70', 9)
 
 const deployFixedAddress = async (...args) => {
   console.log('Deploying ' + args[0]);
@@ -30,10 +33,10 @@ const deployFixedAddress = async (...args) => {
 
 const deployProxyFixedAddress = async (...args) => {
   console.log('Deploying proxy');
-  const [signer] = await ethers.getSigners();
-  hijackSigner(signer);
+  //const [signer] = await ethers.getSigners();
+  //hijackSigner(signer);
   const result = await upgrades.deployProxy(...args);
-  restoreSigner(signer);
+  //restoreSigner(signer);
   return result;
 };
 
@@ -42,6 +45,7 @@ const { getSigner: _getSigner } = Web3Provider.prototype;
 
 
 const hijackSigner = (signer) => {
+  return
   const Signer = signer.constructor;
   _sendTransaction = Signer.prototype.sendTransaction;
   const _walletSendTransaction = ethers.Wallet.prototype.sendTransaction;
@@ -103,7 +107,7 @@ const toAddress = (contractOrAddress) => ((contractOrAddress || {})).address || 
 const setConverter = async (controller, source, target, converter) => {
   const [sourceAddress, targetAddress] = [source, target].map((v) => deployParameters[network][v] || v);
   console.log('setting converter');
-  const tx = await controller.setConverter(sourceAddress, targetAddress, toAddress(converter));
+  const tx = await controller.setConverter(sourceAddress, targetAddress, toAddress(converter), { gasLimit: '500000' });
   console.log('setConverter(' + sourceAddress + ',' + targetAddress + ',' + toAddress(converter));
   return tx;
 };
@@ -133,6 +137,13 @@ module.exports = async ({
   const signer = await ethers.getSigner(SIGNER_ADDRESS);
   const [deployerSigner] = await ethers.getSigners();
 
+  const zeroUnderwriterLockBytecodeLib = { address: '0xfFd2EF3D44a2ea1B5E88780C1c85bcf6B2Aa4Bb5' };
+  const zeroController = { address: '0x8322D8a9851f8a09193529B365c35553570E5921' };
+  const dummyVault = { address: '0x63080eE2C95CD5699d174A6ef92df285aCb2e2Cc' };
+  const strategyRenVM = { address: '0xCC981075EE9C1a84DbAE768406cFE53e3e39BdeD' };
+
+
+
   const zeroUnderwriterLockBytecodeLib = await deployFixedAddress('ZeroUnderwriterLockBytecodeLib', {
     contractName: 'ZeroUnderwriterLockBytecodeLib',
     args: [],
@@ -147,6 +158,7 @@ module.exports = async ({
   const zeroController = await deployProxyFixedAddress(zeroControllerFactory, ["0x0F4ee9631f4be0a63756515141281A3E2B293Bbe", deployParameters[network].gatewayRegistry], {
     unsafeAllowLinkedLibraries: true
   });
+
   const zeroControllerArtifact = await deployments.getArtifact('ZeroController');
   await deployments.save('ZeroController', {
     contractName: 'ZeroController',
@@ -154,6 +166,7 @@ module.exports = async ({
     bytecode: zeroControllerArtifact.bytecode,
     abi: zeroControllerArtifact.abi
   });
+
   await deployFixedAddress('BTCVault', {
     contractName: 'BTCVault',
     args: [deployParameters[network]['renBTC'], zeroController.address, "zeroBTC", "zBTC"],
@@ -189,6 +202,7 @@ module.exports = async ({
     contractName: 'Swap',
     from: deployer
   });
+
   const strategyRenVM = await deployments.deploy('StrategyRenVM', {
     args: [
       zeroController.address,
@@ -200,14 +214,21 @@ module.exports = async ({
     contractName: 'StrategyRenVM',
     from: deployer
   });
+
+
   const controller = await ethers.getContract('ZeroController');
-  hijackSigner(ethersSigner);
+
+  //hijackSigner(ethersSigner);
   await controller.setGovernance(await ethersSigner.getAddress())
-  restoreSigner(ethersSigner);
+  //restoreSigner(ethersSigner);
 
   await controller.approveStrategy(deployParameters[network]['renBTC'], strategyRenVM.address);
+
+
   await controller.setStrategy(deployParameters[network]['renBTC'], strategyRenVM.address);
-  restoreSigner(ethersSigner);
+
+
+  //restoreSigner(ethersSigner);
 
   await deployFixedAddress('ZeroCurveFactory', {
     args: [],
@@ -232,6 +253,7 @@ module.exports = async ({
     contractName: 'UnwrapNative',
     from: deployer
   });
+
 
   //Deploy converters
   const wrapper = await ethers.getContract('WrapNative', deployer);
@@ -286,7 +308,7 @@ module.exports = async ({
       // Sushi wNative -> wBTC
       var wEthToWBTCTx = await sushiFactory.createWrapper([deployParameters[network]["wNative"], deployParameters[network]["wBTC"]], { gasLimit: 5e6 });
       var wEthToWBTC = await getWrapperAddress(wEthToWBTCTx);
-      await setConverter(controller, 'wNative', 'wBTC', wEthToWBTC);
+      await setConverter(controller, 'wNative', 'wBTC', '0x7157d98368923a298C0882a503cF44353A847F37');
 
       // Sushi wBTC -> wNative
       var wBtcToWETHTx = await sushiFactory.createWrapper([deployParameters[network]["wBTC"], deployParameters[network]["wNative"]], { gasLimit: 5e6 });
@@ -297,12 +319,12 @@ module.exports = async ({
       break;
 
   }
-
+  /*
   // Wrapper ETH -> wETH
   await setConverter(controller, ethers.constants.AddressZero, "wNative", wrapper.address);
 
   // Unwrapper wETH -> ETH
   await setConverter(controller, "wNative", ethers.constants.AddressZero, unwrapper.address);
-
+  */
 };
 

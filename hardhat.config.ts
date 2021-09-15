@@ -48,8 +48,10 @@ module.exports = {
       }
     },
     matic: {
-      url: "https://rpc-mumbai.maticvigil.com",
-      accounts: [process.env.WALLET]
+      url: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
+      accounts: [process.env.WALLET],
+      gas: 20000000000,
+      gasPrice: 20000000000
     },
     localhost: {
       url: 'http://localhost:8545',
