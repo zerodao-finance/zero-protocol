@@ -1,10 +1,16 @@
-import hash from 'object-hash';
-export class InMemoryPersistenceAdapter {
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.InMemoryPersistenceAdapter = void 0;
+const object_hash_1 = __importDefault(require("object-hash"));
+class InMemoryPersistenceAdapter {
     constructor() {
         this.backend = new Map();
     }
     async set(transferRequest) {
-        const key = hash(transferRequest);
+        const key = (0, object_hash_1.default)(transferRequest);
         const status = Object.assign(Object.assign({}, transferRequest), { status: 'pending' });
         try {
             await this.backend.set(key, status);
@@ -76,4 +82,5 @@ export class InMemoryPersistenceAdapter {
         return Array.from(this.backend.values());
     }
 }
+exports.InMemoryPersistenceAdapter = InMemoryPersistenceAdapter;
 //# sourceMappingURL=inMemory.js.map

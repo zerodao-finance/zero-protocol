@@ -18,6 +18,7 @@ class ZeroUser {
 
 	constructor(connection: ConnectionTypes, persistence?: PersistenceAdapter<any, any>) {
 		this.conn = connection;
+		this.conn.on('peer:discovery', () => console.log('discovered!'));
 		this.keepers = [];
 		this.log = createLogger('zero.user');
 		this.storage = persistence ?? new InMemoryPersistenceAdapter();
@@ -113,6 +114,7 @@ class ZeroKeeper {
 
 	constructor(connection: ConnectionTypes) {
 		this.conn = connection;
+		this.conn.on('peer:discovery', () => console.log('discovered from keeper!'));
 		this.dispatches = [];
 		this.log = createLogger('zero.keeper');
 	}

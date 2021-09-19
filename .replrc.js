@@ -1,6 +1,4 @@
-var ethers = require('ethers');
-var f = function (sig) {
-  const c = new ethers.Contract(ethers.constants.AddressZero, [ sig ], new ethers.providers.InfuraProvider('mainnet'));
-  const key = Object.keys(c.interface.functions);
-  return c.interface.getSighash(c.interface.functions[key]);
-};
+
+var sdk = require('./');
+
+var makeKeeper = async () => sdk.createZeroKeeper(await sdk.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));

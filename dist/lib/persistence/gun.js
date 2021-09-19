@@ -1,12 +1,18 @@
-import Gun from 'gun';
-import hash from 'object-hash';
-export class GunPersistenceAdapter {
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.GunPersistenceAdapter = void 0;
+const gun_1 = __importDefault(require("gun"));
+const object_hash_1 = __importDefault(require("object-hash"));
+class GunPersistenceAdapter {
     constructor(address) {
         this.address = address;
-        this.backend = new Gun(['http://localhost:8765/gun']);
+        this.backend = new gun_1.default(['http://localhost:8765/gun']);
     }
     async set(transferRequest) {
-        const key = hash(transferRequest);
+        const key = (0, object_hash_1.default)(transferRequest);
         const status = Object.assign(Object.assign({}, transferRequest), { status: 'pending' });
         try {
             await this.backend
@@ -107,4 +113,5 @@ export class GunPersistenceAdapter {
         return values;
     }
 }
+exports.GunPersistenceAdapter = GunPersistenceAdapter;
 //# sourceMappingURL=gun.js.map

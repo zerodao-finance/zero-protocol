@@ -1,10 +1,16 @@
-import { ethers } from 'ethers';
-import { signTypedDataUtils } from '@0x/utils';
-import { EIP712_TYPES } from './config/constants';
-import RenVM from './util/renvm';
-import { computeP } from './util/helpers';
-import { createNode, ZeroKeeper, ZeroUser } from './p2p';
-export default class TransferRequest {
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createZeroKeeper = exports.createZeroUser = exports.createZeroConnection = void 0;
+const ethers_1 = require("ethers");
+const utils_1 = require("@0x/utils");
+const constants_1 = require("./config/constants");
+const renvm_1 = __importDefault(require("./util/renvm"));
+const helpers_1 = require("./util/helpers");
+const p2p_1 = require("./p2p");
+class TransferRequest {
     constructor(module, to, underwriter, asset, amount, data, nonce, pNonce) {
         this.module = module;
         this.to = to;
@@ -13,29 +19,29 @@ export default class TransferRequest {
         this.amount = amount.toString();
         this.data = data;
         this.nonce = nonce
-            ? ethers.utils.formatBytes32String(nonce.toString())
-            : ethers.utils.hexlify(ethers.utils.randomBytes(32));
+            ? ethers_1.ethers.utils.formatBytes32String(nonce.toString())
+            : ethers_1.ethers.utils.hexlify(ethers_1.ethers.utils.randomBytes(32));
         this.pNonce = pNonce
-            ? ethers.utils.formatBytes32String(pNonce.toString())
-            : ethers.utils.hexlify(ethers.utils.randomBytes(32));
+            ? ethers_1.ethers.utils.formatBytes32String(pNonce.toString())
+            : ethers_1.ethers.utils.hexlify(ethers_1.ethers.utils.randomBytes(32));
     }
     setUnderwriter(underwriter) {
-        if (!ethers.utils.isAddress(underwriter))
+        if (!ethers_1.ethers.utils.isAddress(underwriter))
             return false;
-        this.underwriter = ethers.utils.getAddress(underwriter);
+        this.underwriter = ethers_1.ethers.utils.getAddress(underwriter);
         return true;
     }
     toEIP712Digest(contractAddress, chainId = 1) {
-        return signTypedDataUtils.generateTypedDataHash(this.toEIP712(contractAddress, chainId));
+        return utils_1.signTypedDataUtils.generateTypedDataHash(this.toEIP712(contractAddress, chainId));
     }
     toEIP712(contractAddress, chainId = 1) {
         return {
-            types: EIP712_TYPES,
+            types: constants_1.EIP712_TYPES,
             domain: {
                 name: 'ZeroController',
                 version: '1',
                 chainId: chainId.toString() || '1',
-                verifyingContract: contractAddress || ethers.constants.AddressZero,
+                verifyingContract: contractAddress || ethers_1.ethers.constants.AddressZero,
             },
             message: {
                 module: this.module,
@@ -49,12 +55,12 @@ export default class TransferRequest {
         };
     }
     toGatewayAddress(input) {
-        const renvm = new RenVM(null, {});
+        const renvm = new renvm_1.default(null, {});
         return renvm.computeGatewayAddress({
             mpkh: input.mpkh,
             isTestnet: input.isTest,
             g: {
-                p: computeP(this.pNonce, this.module, this.data),
+                p: (0, helpers_1.computeP)(this.pNonce, this.module, this.data),
                 nonce: this.nonce,
                 tokenAddress: this.asset,
                 to: input.destination,
@@ -73,20 +79,24 @@ export default class TransferRequest {
         catch (e) {
             console.error(e);
             // in case this is not available in the signer
-            return await signer.signMessage(ethers.utils.hexlify(this.toEIP712Digest(contractAddress, chainId)));
+            return await signer.signMessage(ethers_1.ethers.utils.hexlify(this.toEIP712Digest(contractAddress, chainId)));
         }
     }
 }
-export async function createZeroConnection(address) {
+exports.default = TransferRequest;
+async function createZeroConnection(address) {
     const connOptions = {
         multiaddr: address,
     };
-    return await createNode(connOptions);
+    return await (0, p2p_1.createNode)(connOptions);
 }
-export function createZeroUser(connection, persistence) {
-    return new ZeroUser(connection, persistence);
+exports.createZeroConnection = createZeroConnection;
+function createZeroUser(connection, persistence) {
+    return new p2p_1.ZeroUser(connection, persistence);
 }
-export function createZeroKeeper(connection) {
-    return new ZeroKeeper(connection);
+exports.createZeroUser = createZeroUser;
+function createZeroKeeper(connection) {
+    return new p2p_1.ZeroKeeper(connection);
 }
+exports.createZeroKeeper = createZeroKeeper;
 //# sourceMappingURL=zero.js.map

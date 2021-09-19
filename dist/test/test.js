@@ -1,11 +1,16 @@
-import hre from 'hardhat';
-import TransferRequest from '../lib/zero';
-import { expect } from 'chai';
-import { override } from '../lib/test/inject-mock';
-import GatewayLogicV1 from '../artifacts/contracts/test/GatewayLogicV1.sol/GatewayLogicV1.json';
-import { Contract, utils } from 'ethers';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const hardhat_1 = __importDefault(require("hardhat"));
+const zero_1 = __importDefault(require("../lib/zero"));
+const chai_1 = require("chai");
+const inject_mock_1 = require("../lib/test/inject-mock");
+const GatewayLogicV1_json_1 = __importDefault(require("../artifacts/contracts/test/GatewayLogicV1.sol/GatewayLogicV1.json"));
+const ethers_1 = require("ethers");
 // @ts-expect-error
-const { ethers, deployments } = hre;
+const { ethers, deployments } = hardhat_1.default;
 const gasnow = require('ethers-gasnow');
 const deployParameters = {
     MATIC: {
@@ -79,7 +84,7 @@ const convert = async (controller, tokenIn, tokenOut, amount, signer) => {
 };
 const getImplementation = async (proxyAddress) => {
     const [{ provider }] = await ethers.getSigners();
-    return utils.getAddress((await provider.getStorageAt(proxyAddress, '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc')).substr((await provider.getNetwork()).chainId === 1337 ? 0 : 26));
+    return ethers_1.utils.getAddress((await provider.getStorageAt(proxyAddress, '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc')).substr((await provider.getNetwork()).chainId === 1337 ? 0 : 26));
 };
 var underwriterAddress = '0x0';
 const deployUnderwriter = async () => {
@@ -119,15 +124,15 @@ const getFixtures = async () => {
         wrapper: await getContract('WrapNative', signer),
         unwrapper: await getContract('UnwrapNative', signer),
         //@ts-ignore
-        gateway: new Contract(deployParameters[network]["btcGateway"], GatewayLogicV1.abi, signer),
+        gateway: new ethers_1.Contract(deployParameters[network]["btcGateway"], GatewayLogicV1_json_1.default.abi, signer),
         //@ts-ignore
-        renBTC: new Contract(deployParameters[network]["renBTC"], erc20abi, signer),
+        renBTC: new ethers_1.Contract(deployParameters[network]["renBTC"], erc20abi, signer),
         //@ts-ignore
-        wETH: new Contract(deployParameters[network]["wNative"], erc20abi, signer),
+        wETH: new ethers_1.Contract(deployParameters[network]["wNative"], erc20abi, signer),
         //@ts-ignore
-        usdc: new Contract(deployParameters[network]["USDC"], erc20abi, signer),
+        usdc: new ethers_1.Contract(deployParameters[network]["USDC"], erc20abi, signer),
         //@ts-ignore
-        wBTC: new Contract(deployParameters[network]["wBTC"], erc20abi, signer),
+        wBTC: new ethers_1.Contract(deployParameters[network]["wBTC"], erc20abi, signer),
         yvWBTC: await getContract('DummyVault', signer),
     };
 };
@@ -168,7 +173,7 @@ const getBalances = async () => {
             Object.fromEntries(await Promise.all(Object.keys(tokens).map(async (token) => {
                 if (token === 'ETH') {
                     const balance = await wETH.provider.getBalance(wallet);
-                    return [token, String(Number(utils.formatEther(balance)).toFixed(2))];
+                    return [token, String(Number(ethers_1.utils.formatEther(balance)).toFixed(2))];
                 }
                 else {
                     const tokenContract = tokens[token];
@@ -181,7 +186,7 @@ const getBalances = async () => {
 const generateTransferRequest = async (amount) => {
     const { swapModule, signerAddress } = await getFixtures();
     const { underwriter } = await getUnderwriter();
-    return new TransferRequest(swapModule.address, signerAddress, underwriter.address, 
+    return new zero_1.default(swapModule.address, signerAddress, underwriter.address, 
     //@ts-ignore
     deployParameters[network]['renBTC'], String(amount), '0x');
 };
@@ -191,15 +196,15 @@ const getUnderwriter = async () => {
     return {
         underwriterFactory,
         underwriterAddress,
-        underwriter: new Contract(underwriterAddress, underwriterFactory.interface, signer),
-        underwriterImpl: new Contract(underwriterAddress, controller.interface, signer),
+        underwriter: new ethers_1.Contract(underwriterAddress, underwriterFactory.interface, signer),
+        underwriterImpl: new ethers_1.Contract(underwriterAddress, controller.interface, signer),
         lock: await controller.lockFor(underwriterAddress),
     };
 };
 const getWrapperContract = async (address) => {
     const { signer } = await getFixtures();
     const wrapperAbi = (await deployments.getArtifact('ZeroUniswapWrapper')).abi;
-    return new Contract(address, wrapperAbi, signer);
+    return new ethers_1.Contract(address, wrapperAbi, signer);
 };
 describe('Zero', () => {
     var prop;
@@ -209,9 +214,9 @@ describe('Zero', () => {
         const artifact = await deployments.getArtifact('MockGatewayLogicV1');
         //@ts-ignore
         const implementationAddress = await getImplementation(deployParameters[network]["btcGateway"]);
-        override(implementationAddress, artifact.deployedBytecode);
+        (0, inject_mock_1.override)(implementationAddress, artifact.deployedBytecode);
         const { gateway } = await getFixtures();
-        await gateway.mint(utils.randomBytes(32), utils.parseUnits('50', 8), utils.randomBytes(32), '0x'); //mint renBTC to signer
+        await gateway.mint(ethers_1.utils.randomBytes(32), ethers_1.utils.parseUnits('50', 8), ethers_1.utils.randomBytes(32), '0x'); //mint renBTC to signer
     });
     beforeEach(async function () {
         console.log('\n');
@@ -238,7 +243,7 @@ describe('Zero', () => {
         //@ts-ignore
         const renbtc = new ethers.Contract(deployParameters[network]['renBTC'], erc20Abi, signer);
         await btcGateway.mint(ethers.utils.solidityKeccak256(['bytes'], [ethers.utils.defaultAbiCoder.encode(['uint256', 'bytes'], [0, '0x'])]), ethers.utils.parseUnits('50', 8), ethers.utils.solidityKeccak256(['string'], ['random ninputs']), '0x');
-        expect(Number(ethers.utils.formatUnits(await renbtc.balanceOf(signerAddress), 8))).to.be.gt(0);
+        (0, chai_1.expect)(Number(ethers.utils.formatUnits(await renbtc.balanceOf(signerAddress), 8))).to.be.gt(0);
     });
     it('Swap ETH -> wETH -> ETH', async () => {
         const { wETH, controller, signer } = await getFixtures();
@@ -250,7 +255,7 @@ describe('Zero', () => {
         await getBalances();
         await convert(controller, wETH, ethers.constants.AddressZero, amount);
         console.log('Swapped wETH to ETH');
-        expect(originalBalance === (await signer.provider.getBalance(signerAddress)), 'balance before not same as balance after');
+        (0, chai_1.expect)(originalBalance === (await signer.provider.getBalance(signerAddress)), 'balance before not same as balance after');
     });
     it('Swap renBTC -> wBTC -> renBTC', async () => {
         const { renBTC, wBTC, controller, signer } = await getFixtures();
@@ -261,7 +266,7 @@ describe('Zero', () => {
         const newAmount = Number(await wBTC.balanceOf(await signer.getAddress()));
         await convert(controller, wBTC, renBTC, newAmount);
         console.log('Converted wBTC to renBTC');
-        expect(Number(await renBTC.balanceOf(await signer.getAddress())) > 0, 'The swap amounts dont add up');
+        (0, chai_1.expect)(Number(await renBTC.balanceOf(await signer.getAddress())) > 0, 'The swap amounts dont add up');
     });
     it('should return the number of decimals in the yearn vault', async () => {
         const { yvWBTC } = await getFixtures();
@@ -277,7 +282,7 @@ describe('Zero', () => {
         await getBalances();
         await btcVault.withdrawAll();
         console.log('Withdrew funds from vault');
-        expect(beforeBalance + Number(addedAmount) == afterBalance, 'Balances not adding up');
+        (0, chai_1.expect)(beforeBalance + Number(addedAmount) == afterBalance, 'Balances not adding up');
     });
     it('should transfer overflow funds to strategy vault', async () => {
         const { btcVault, renBTC } = await getFixtures();
@@ -312,7 +317,7 @@ describe('Zero', () => {
         ]));
         await getBalances();
         console.log('\nRepaying loan...');
-        const nHash = utils.hexlify(utils.randomBytes(32));
+        const nHash = ethers_1.utils.hexlify(ethers_1.utils.randomBytes(32));
         const actualAmount = String(Number(transferRequest.amount) - 1000);
         const renVMSignature = '0x';
         await underwriter.proxy(controller.address, controller.interface.encodeFunctionData('repay', [
@@ -355,7 +360,7 @@ describe('Zero', () => {
         String(Number(transferRequest.amount) - 1000), //actualAmount
         transferRequest.pNonce, //nonce
         transferRequest.module, //module
-        utils.hexlify(utils.randomBytes(32)), //nHash
+        ethers_1.utils.hexlify(ethers_1.utils.randomBytes(32)), //nHash
         transferRequest.data, signature);
         await getBalances();
     });
@@ -376,7 +381,7 @@ describe('Zero', () => {
         String(Number(transferRequest.amount) - 1000), //actualAmount
         transferRequest.pNonce, //nonce
         transferRequest.module, //module
-        utils.hexlify(utils.randomBytes(32)), //nHash
+        ethers_1.utils.hexlify(ethers_1.utils.randomBytes(32)), //nHash
         transferRequest.data, //data
         signature);
         await getBalances();

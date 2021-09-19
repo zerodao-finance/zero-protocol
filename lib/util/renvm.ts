@@ -1,4 +1,3 @@
-// @ts-expect-error
 import { Script, Networks } from 'bitcore-lib';
 import { stripHexPrefix, maybeCoerceToGHash, encodeInitializationActions } from './helpers';
 import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';

@@ -9,6 +9,7 @@ const forks: { [index: string]: string } = {
   ETHEREUM: "https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX"
 }
 
+const ethers = require('ethers');
 const forkingUrl = forks[process.env.CHAIN || "MATIC"];
 
 
@@ -49,7 +50,7 @@ module.exports = {
     },
     matic: {
       url: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
-      accounts: [process.env.WALLET],
+      accounts: [process.env.WALLET || ethers.Wallet.createRandom().privateKey],
       gas: 20000000000,
       gasPrice: 20000000000
     },

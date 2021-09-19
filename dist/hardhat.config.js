@@ -1,4 +1,3 @@
-"use strict";
 require('@nomiclabs/hardhat-ethers');
 require('hardhat-deploy');
 require('hardhat-deploy-ethers');
@@ -8,6 +7,7 @@ const forks = {
     MATIC: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
     ETHEREUM: "https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX"
 };
+const ethers = require('ethers');
 const forkingUrl = forks[process.env.CHAIN || "MATIC"];
 module.exports = {
     solidity: {
@@ -45,7 +45,10 @@ module.exports = {
             }
         },
         matic: {
-            url: "https://rpc-mumbai.maticvigil.com",
+            url: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
+            accounts: [process.env.WALLET || ethers.Wallet.createRandom().privateKey],
+            gas: 20000000000,
+            gasPrice: 20000000000
         },
         localhost: {
             url: 'http://localhost:8545',

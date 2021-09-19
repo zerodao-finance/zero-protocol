@@ -6,26 +6,33 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
     function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
     function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
 };
-import libp2p from 'libp2p';
-import createLogger from '../logger';
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ZeroConnection = exports.ZeroUser = exports.ZeroKeeper = void 0;
+const libp2p_1 = __importDefault(require("libp2p"));
+const logger_1 = __importDefault(require("../logger"));
 //import { MockZeroConnection } from './mocks';
-import { fromJSONtoBuffer, fromBufferToJSON } from './util';
-import pipe from 'it-pipe';
-import lp from 'it-length-prefixed';
-import { InMemoryPersistenceAdapter } from '../persistence';
-class ZeroConnection extends libp2p {
+const util_1 = require("./util");
+const it_pipe_1 = __importDefault(require("it-pipe"));
+const it_length_prefixed_1 = __importDefault(require("it-length-prefixed"));
+const persistence_1 = require("../persistence");
+class ZeroConnection extends libp2p_1.default {
 }
+exports.ZeroConnection = ZeroConnection;
 class ZeroUser {
     constructor(connection, persistence) {
         this.conn = connection;
+        this.conn.on('peer:discovery', () => console.log('discovered!'));
         this.keepers = [];
-        this.log = createLogger('zero.user');
-        this.storage = persistence !== null && persistence !== void 0 ? persistence : new InMemoryPersistenceAdapter();
+        this.log = (0, logger_1.default)('zero.user');
+        this.storage = persistence !== null && persistence !== void 0 ? persistence : new persistence_1.InMemoryPersistenceAdapter();
     }
     async subscribeKeepers() {
         this.conn.pubsub.on('zero.keepers', async (message) => {
             const { data, from } = message;
-            const { address } = fromBufferToJSON(data);
+            const { address } = (0, util_1.fromBufferToJSON)(data);
             if (!this.keepers.includes(from)) {
                 try {
                     this.keepers.push(from);
@@ -65,7 +72,7 @@ class ZeroUser {
             let ackReceived = false;
             // should add handler for rejection
             await this.conn.handle('/zero/user/confirmation', async ({ stream }) => {
-                pipe(stream.source, lp.decode(), async (rawData) => {
+                (0, it_pipe_1.default)(stream.source, it_length_prefixed_1.default.decode(), async (rawData) => {
                     var e_1, _a;
                     let string = [];
                     try {
@@ -96,7 +103,7 @@ class ZeroUser {
                         const signallingServer = this.conn.transportManager.getAddrs()[0];
                         const peerAddr = `${signallingServer}/p2p/${keeper}`;
                         const { stream } = await this.conn.dialProtocol(peerAddr, '/zero/keeper/dispatch');
-                        pipe(JSON.stringify(transferRequest), lp.encode(), stream.sink);
+                        (0, it_pipe_1.default)(JSON.stringify(transferRequest), it_length_prefixed_1.default.encode(), stream.sink);
                         this.log.info(`Published transfer request to ${keeper}. Waiting for keeper confirmation.`);
                     }
                     catch (e) {
@@ -116,16 +123,18 @@ class ZeroUser {
         }
     }
 }
+exports.ZeroUser = ZeroUser;
 class ZeroKeeper {
     constructor(connection) {
         this.conn = connection;
+        this.conn.on('peer:discovery', () => console.log('discovered from keeper!'));
         this.dispatches = [];
-        this.log = createLogger('zero.keeper');
+        this.log = (0, logger_1.default)('zero.keeper');
     }
     async advertiseAsKeeper(address) {
         this.active = setInterval(async () => {
             try {
-                await this.conn.pubsub.publish('zero.keepers', fromJSONtoBuffer({
+                await this.conn.pubsub.publish('zero.keepers', (0, util_1.fromJSONtoBuffer)({
                     address,
                 }));
                 this.log.debug(`Made presence known ${this.conn.peerId.toB58String()}`);
@@ -141,11 +150,11 @@ class ZeroKeeper {
     async setTxDispatcher(callback) {
         const handler = async (duplex) => {
             const stream = duplex.stream;
-            pipe(stream.source, lp.decode(), async (rawData) => {
+            (0, it_pipe_1.default)(stream.source, it_length_prefixed_1.default.decode(), async (rawData) => {
                 var e_2, _a;
                 // TODO: match handle and dialProtocol spec
                 if ((process === null || process === void 0 ? void 0 : process.env.NODE_ENV) === 'test') {
-                    callback(fromBufferToJSON(stream.source));
+                    callback((0, util_1.fromBufferToJSON)(stream.source));
                     return;
                 }
                 let string = [];
@@ -172,5 +181,5 @@ class ZeroKeeper {
         clearTimeout(this.active);
     }
 }
-export { ZeroKeeper, ZeroUser, ZeroConnection };
+exports.ZeroKeeper = ZeroKeeper;
 //# sourceMappingURL=core.js.map

@@ -1,8 +1,13 @@
-import BigNumber from 'bignumber.js';
-import { BitcoinClient, fetchAverageBitcoinConfirmationTime, fetchBitcoinPriceHistory, getDefaultBitcoinClient, } from '../btc';
-import fetchMock from 'fetch-mock';
-import { expect } from 'chai';
-import 'mocha';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const bignumber_js_1 = __importDefault(require("bignumber.js"));
+const btc_1 = require("../btc");
+const fetch_mock_1 = __importDefault(require("fetch-mock"));
+const chai_1 = require("chai");
+require("mocha");
 describe('fetchAverageBitcoinConfirmationTime', () => {
     const mockData = {
         timestamp: 1.623085464e12,
@@ -27,15 +32,15 @@ describe('fetchAverageBitcoinConfirmationTime', () => {
         trade_volume_usd: 2.973043719968e8,
     };
     beforeEach(() => {
-        fetchMock.mock('https://blockchain.info/stats?format=json&cors=true', mockData);
+        fetch_mock_1.default.mock('https://blockchain.info/stats?format=json&cors=true', mockData);
     });
     afterEach(() => {
-        fetchMock.restore();
+        fetch_mock_1.default.restore();
     });
     it('Returns Correct BTC Confirmation Time', async () => {
-        const confTime = await fetchAverageBitcoinConfirmationTime();
+        const confTime = await (0, btc_1.fetchAverageBitcoinConfirmationTime)();
         const expected = (10.1742 * 6).toFixed(1);
-        expect(confTime).to.be.equal(expected);
+        (0, chai_1.expect)(confTime).to.be.equal(expected);
     });
 });
 describe('fetchBtcPriceHistory', () => {
@@ -138,31 +143,31 @@ describe('fetchBtcPriceHistory', () => {
         ],
     };
     beforeEach(() => {
-        fetchMock.mock('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=.1&interval=minute', mockData);
+        fetch_mock_1.default.mock('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=.1&interval=minute', mockData);
     });
     afterEach(() => {
-        fetchMock.restore();
+        fetch_mock_1.default.restore();
     });
     const data = [
         {
             confTime: '60',
-            expected: { oldPrice: new BigNumber(36035.03706979065), currentPrice: new BigNumber(35636.87160933142) },
+            expected: { oldPrice: new bignumber_js_1.default(36035.03706979065), currentPrice: new bignumber_js_1.default(35636.87160933142) },
         },
     ];
     data.forEach((testData) => {
         it('Returns correct price history', async () => {
             const confTime = testData.confTime;
-            const prices = await fetchBitcoinPriceHistory(confTime);
+            const prices = await (0, btc_1.fetchBitcoinPriceHistory)(confTime);
             console.log('prices:', prices);
             console.log(testData.expected);
-            expect(prices).to.deep.equal(testData.expected);
+            (0, chai_1.expect)(prices).to.deep.equal(testData.expected);
         });
     });
 });
 describe('BitcoinClient', () => {
     it('Creates valid Bitcoin Client', () => {
-        const client = getDefaultBitcoinClient();
-        expect(client).to.be.instanceOf(BitcoinClient);
+        const client = (0, btc_1.getDefaultBitcoinClient)();
+        (0, chai_1.expect)(client).to.be.instanceOf(btc_1.BitcoinClient);
     });
 });
 //# sourceMappingURL=btc.test.js.map

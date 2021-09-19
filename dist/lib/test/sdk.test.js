@@ -1,62 +1,67 @@
-import TransferRequest from '../zero';
-import { constants, utils } from 'ethers';
-import { computeP, computePHash, computePHashFromP, maybeCoerceToGHash, computeNHash } from '../util/helpers';
-import { expect } from 'chai';
-import { validate } from 'bitcoin-address-validation';
-import 'mocha';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const zero_1 = __importDefault(require("../zero"));
+const ethers_1 = require("ethers");
+const helpers_1 = require("../util/helpers");
+const chai_1 = require("chai");
+const bitcoin_address_validation_1 = require("bitcoin-address-validation");
+require("mocha");
 describe('computeP unit test', () => {
     it('has a correct return for computeP', () => {
         const expected = '0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000';
-        const pReturn = computeP('1', constants.AddressZero, '0x00');
-        expect(pReturn).to.be.eq(expected);
+        const pReturn = (0, helpers_1.computeP)('1', ethers_1.constants.AddressZero, '0x00');
+        (0, chai_1.expect)(pReturn).to.be.eq(expected);
     });
     it('has a correct return for computePHashFromP', () => {
         const p = '0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000';
         const expected = '0xabaf29967fbafb35d97cab780a1333c0583f2ce39b1eaf0c7da0260baf57650d';
-        const pHash = computePHashFromP(p);
-        expect(pHash).to.be.eq(expected);
+        const pHash = (0, helpers_1.computePHashFromP)(p);
+        (0, chai_1.expect)(pHash).to.be.eq(expected);
     });
     it('has a correct return from computePHash', () => {
         const expected = '0xabaf29967fbafb35d97cab780a1333c0583f2ce39b1eaf0c7da0260baf57650d';
-        const pHash = computePHash({ nonce: '1', module: constants.AddressZero, data: '0x00' });
-        expect(pHash).to.be.eq(expected);
+        const pHash = (0, helpers_1.computePHash)({ nonce: '1', module: ethers_1.constants.AddressZero, data: '0x00' });
+        (0, chai_1.expect)(pHash).to.be.eq(expected);
     });
     it('converts an object to a ghash', () => {
         const expected = '0x1802dfcb2df77afef24f20ce516bd6ec50cec35aa1ed6359a81fd6d950006902';
         const p = '0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000';
-        const gHash = maybeCoerceToGHash({
-            to: constants.AddressZero,
-            tokenAddress: constants.AddressZero,
+        const gHash = (0, helpers_1.maybeCoerceToGHash)({
+            to: ethers_1.constants.AddressZero,
+            tokenAddress: ethers_1.constants.AddressZero,
             p: p,
-            nonce: utils.formatBytes32String('1'),
+            nonce: ethers_1.utils.formatBytes32String('1'),
         });
-        expect(gHash).to.be.eq(expected);
+        (0, chai_1.expect)(gHash).to.be.eq(expected);
     });
     it("doesn't modify a ghash passed through", () => {
         const expected = '0x1802dfcb2df77afef24f20ce516bd6ec50cec35aa1ed6359a81fd6d950006902';
-        const gHash = maybeCoerceToGHash(expected);
-        expect(gHash).to.be.eq(expected);
+        const gHash = (0, helpers_1.maybeCoerceToGHash)(expected);
+        (0, chai_1.expect)(gHash).to.be.eq(expected);
     });
     it('creates a correct NHash', () => {
-        const nHash = computeNHash({
-            nonce: utils.formatBytes32String('1'),
-            txHash: utils.formatBytes32String('1'),
+        const nHash = (0, helpers_1.computeNHash)({
+            nonce: ethers_1.utils.formatBytes32String('1'),
+            txHash: ethers_1.utils.formatBytes32String('1'),
             vOut: 1,
         });
     });
     it('creates a correct TransferRequest', () => {
-        const transferRequest = new TransferRequest(constants.AddressZero, constants.AddressZero, constants.AddressZero, constants.AddressZero, '1', '0x00');
-        expect(transferRequest).to.be.instanceof(TransferRequest);
+        const transferRequest = new zero_1.default(ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, '1', '0x00');
+        (0, chai_1.expect)(transferRequest).to.be.instanceof(zero_1.default);
     });
     it('creates a valid gateway address', () => {
-        const transferRequest = new TransferRequest(constants.AddressZero, constants.AddressZero, constants.AddressZero, constants.AddressZero, '1', '0x00');
+        const transferRequest = new zero_1.default(ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, '1', '0x00');
         const gatewayAddress = transferRequest.toGatewayAddress({
-            mpkh: constants.AddressZero,
+            mpkh: ethers_1.constants.AddressZero,
             isTest: true,
-            destination: constants.AddressZero,
+            destination: ethers_1.constants.AddressZero,
         });
-        const isValidAddress = validate(gatewayAddress);
-        expect(isValidAddress).to.be.true;
+        const isValidAddress = (0, bitcoin_address_validation_1.validate)(gatewayAddress);
+        (0, chai_1.expect)(isValidAddress).to.be.true;
     });
     it('creates a valid EIP721 response', () => {
         const expected = {
@@ -122,9 +127,9 @@ describe('computeP unit test', () => {
             },
             primaryType: 'TransferRequest',
         };
-        const transferRequest = new TransferRequest(constants.AddressZero, constants.AddressZero, constants.AddressZero, constants.AddressZero, '1', '0x00', '1', '1');
-        const EIP712 = transferRequest.toEIP712(constants.AddressZero, 1);
-        expect(EIP712).to.be.deep.eq(expected);
+        const transferRequest = new zero_1.default(ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, '1', '0x00', '1', '1');
+        const EIP712 = transferRequest.toEIP712(ethers_1.constants.AddressZero, 1);
+        (0, chai_1.expect)(EIP712).to.be.deep.eq(expected);
     });
 });
 //# sourceMappingURL=sdk.test.js.map

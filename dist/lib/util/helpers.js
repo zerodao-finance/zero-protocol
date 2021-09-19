@@ -1,22 +1,30 @@
-import { Buffer } from 'safe-buffer';
-import { defaultAbiCoder as abi } from '@ethersproject/abi';
-import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
-import { BYTES_TYPES } from '../config/constants';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.computeHashForDarknodeSignature = exports.computeNHash = exports.computeShiftInTxHash = exports.encodeInitializationActions = exports.maybeCoerceToGHash = exports.computeP = exports.computePHashFromP = exports.computePHash = exports.fetchData = exports.toHex = exports.fromBase64 = exports.toBase64 = exports.addHexPrefix = exports.stripHexPrefix = void 0;
+const safe_buffer_1 = require("safe-buffer");
+const abi_1 = require("@ethersproject/abi");
+const solidity_1 = require("@ethersproject/solidity");
+const constants_1 = require("../config/constants");
 /*
 ===========================================
 ============= GENERAL HELPERS =============
 ===========================================
 */
-export const stripHexPrefix = (s) => (s.substr(0, 2) === '0x' ? s.substr(2) : s);
-export const addHexPrefix = (s) => '0x' + stripHexPrefix(s);
-export const toBase64 = (input) => (Buffer.isBuffer(input) ? input : Buffer.from(stripHexPrefix(input), 'hex')).toString('base64');
-export const fromBase64 = (input) => Buffer.from(input, 'base64');
-export const toHex = (input) => addHexPrefix(Buffer.from(input).toString('hex'));
+const stripHexPrefix = (s) => (s.substr(0, 2) === '0x' ? s.substr(2) : s);
+exports.stripHexPrefix = stripHexPrefix;
+const addHexPrefix = (s) => '0x' + (0, exports.stripHexPrefix)(s);
+exports.addHexPrefix = addHexPrefix;
+const toBase64 = (input) => (safe_buffer_1.Buffer.isBuffer(input) ? input : safe_buffer_1.Buffer.from((0, exports.stripHexPrefix)(input), 'hex')).toString('base64');
+exports.toBase64 = toBase64;
+const fromBase64 = (input) => safe_buffer_1.Buffer.from(input, 'base64');
+exports.fromBase64 = fromBase64;
+const toHex = (input) => (0, exports.addHexPrefix)(safe_buffer_1.Buffer.from(input).toString('hex'));
+exports.toHex = toHex;
 /* General purpose fetch that returns a JSON formatted response or null if there's an error
  * @param request = Promise to await
  * @return JSON formatted response
  */
-export const fetchData = async (request) => {
+const fetchData = async (request) => {
     try {
         const response = await request();
         if (!response.ok) {
@@ -30,37 +38,46 @@ export const fetchData = async (request) => {
         return null;
     }
 };
+exports.fetchData = fetchData;
 /*
 ===========================================
 ============= SOLIDITY HELPERS ============
 ===========================================
 */
-export const computePHash = (input) => {
-    const p = computeP(input.nonce.toString(), input.module, input.data);
+const computePHash = (input) => {
+    const p = (0, exports.computeP)(input.nonce.toString(), input.module, input.data);
     if (!p) {
         throw Error('Error computing P while computing P hash');
     }
-    return solidityKeccak256(['bytes'], [p]);
+    return (0, solidity_1.keccak256)(['bytes'], [p]);
 };
-export const computePHashFromP = (p) => solidityKeccak256(['bytes'], [p]);
-export const computeP = (nonce, module, data) => abi.encode(['uint256', 'address', 'bytes'], [nonce, module, data]);
-export const maybeCoerceToGHash = (input) => typeof input === 'string' ? input : computeGHash(input);
-const computeGHash = (input) => keccakAbiEncoded(['bytes32', 'address', 'address', 'bytes32'], [computePHashFromP(input.p), input.tokenAddress, input.to, input.nonce]);
-const keccakAbiEncoded = (types, values) => solidityKeccak256(BYTES_TYPES, [abi.encode(types, values)]);
-export const encodeInitializationActions = (input, InitializationActionsABI) => abi.encode([InitializationActionsABI], [
+exports.computePHash = computePHash;
+const computePHashFromP = (p) => (0, solidity_1.keccak256)(['bytes'], [p]);
+exports.computePHashFromP = computePHashFromP;
+const computeP = (nonce, module, data) => abi_1.defaultAbiCoder.encode(['uint256', 'address', 'bytes'], [nonce, module, data]);
+exports.computeP = computeP;
+const maybeCoerceToGHash = (input) => typeof input === 'string' ? input : computeGHash(input);
+exports.maybeCoerceToGHash = maybeCoerceToGHash;
+const computeGHash = (input) => keccakAbiEncoded(['bytes32', 'address', 'address', 'bytes32'], [(0, exports.computePHashFromP)(input.p), input.tokenAddress, input.to, input.nonce]);
+const keccakAbiEncoded = (types, values) => (0, solidity_1.keccak256)(constants_1.BYTES_TYPES, [abi_1.defaultAbiCoder.encode(types, values)]);
+const encodeInitializationActions = (input, InitializationActionsABI) => abi_1.defaultAbiCoder.encode([InitializationActionsABI], [
     input.map((v) => ({
         txData: v.calldata,
         to: v.to,
     })),
 ]);
-export const computeShiftInTxHash = ({ renContract, utxo, g }) => toBase64(solidityKeccak256(['string'], [`txHash_${renContract}_${toBase64(maybeCoerceToGHash(g))}_${toBase64(utxo.txHash)}_${utxo.vOut}`]));
-export const computeNHash = (input) => keccakAbiEncoded(['bytes32', 'bytes32', 'uint256'], [input.nonce, input.txHash, input.vOut]);
-const maybeCoerceToNHash = (input) => (typeof input === 'object' ? computeNHash(input) : input);
-export const computeHashForDarknodeSignature = (input) => keccakAbiEncoded(['bytes32', 'uint256', 'address', 'address', 'bytes32'], [
-    typeof input.p === 'string' ? computePHashFromP(input.p) : computePHash(input.p),
+exports.encodeInitializationActions = encodeInitializationActions;
+const computeShiftInTxHash = ({ renContract, utxo, g }) => (0, exports.toBase64)((0, solidity_1.keccak256)(['string'], [`txHash_${renContract}_${(0, exports.toBase64)((0, exports.maybeCoerceToGHash)(g))}_${(0, exports.toBase64)(utxo.txHash)}_${utxo.vOut}`]));
+exports.computeShiftInTxHash = computeShiftInTxHash;
+const computeNHash = (input) => keccakAbiEncoded(['bytes32', 'bytes32', 'uint256'], [input.nonce, input.txHash, input.vOut]);
+exports.computeNHash = computeNHash;
+const maybeCoerceToNHash = (input) => (typeof input === 'object' ? (0, exports.computeNHash)(input) : input);
+const computeHashForDarknodeSignature = (input) => keccakAbiEncoded(['bytes32', 'uint256', 'address', 'address', 'bytes32'], [
+    typeof input.p === 'string' ? (0, exports.computePHashFromP)(input.p) : (0, exports.computePHash)(input.p),
     input.amount,
     input.tokenAddress,
     input.to,
     maybeCoerceToNHash(input.n),
 ]);
+exports.computeHashForDarknodeSignature = computeHashForDarknodeSignature;
 //# sourceMappingURL=helpers.js.map
