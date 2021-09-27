@@ -13,6 +13,8 @@ var handler = async (o) => {
 
 var makeKeeper = async () => {
   const keeper = await sdk.createZeroKeeper(await sdk.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
+  keeper.conn.start();
+  keeper.advertiseAsKeeper();
   keeper.setTxDispatcher(handler);
   return keeper;
 };
