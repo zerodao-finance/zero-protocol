@@ -18,6 +18,7 @@ const util_1 = require("./util");
 const it_pipe_1 = __importDefault(require("it-pipe"));
 const it_length_prefixed_1 = __importDefault(require("it-length-prefixed"));
 const persistence_1 = require("../persistence");
+const peerId = require("peer-id");
 class ZeroConnection extends libp2p_1.default {
 }
 exports.ZeroConnection = ZeroConnection;
@@ -100,8 +101,7 @@ class ZeroUser {
                 // @ts-expect-error
                 if (ackReceived !== true) {
                     try {
-                        const signallingServer = this.conn.transportManager.getAddrs()[0];
-                        const peerAddr = `${signallingServer}/p2p/${keeper}`;
+                        const peerAddr = await this.conn.peerRouting.findPeer(await peerId.createFromB58String(keeper));
                         const { stream } = await this.conn.dialProtocol(peerAddr, '/zero/keeper/dispatch');
                         (0, it_pipe_1.default)(JSON.stringify(transferRequest), it_length_prefixed_1.default.encode(), stream.sink);
                         this.log.info(`Published transfer request to ${keeper}. Waiting for keeper confirmation.`);

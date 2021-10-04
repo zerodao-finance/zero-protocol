@@ -8,6 +8,7 @@ import lp from 'it-length-prefixed';
 import { ConnectionTypes } from './types';
 import { TransferRequest } from '../types';
 import { PersistenceAdapter, InMemoryPersistenceAdapter } from '../persistence';
+import peerId = require('peer-id');
 class ZeroConnection extends libp2p {}
 
 class ZeroUser {
@@ -85,8 +86,7 @@ class ZeroUser {
 				// @ts-expect-error
 				if (ackReceived !== true) {
 					try {
-						const signallingServer = this.conn.transportManager.getAddrs()[0];
-						const peerAddr = `${signallingServer}/p2p/${keeper}`;
+						const peerAddr = await this.conn.peerRouting.findPeer(await peerId.createFromB58String(keeper));
 						const { stream } = await this.conn.dialProtocol(peerAddr, '/zero/keeper/dispatch');
 						pipe(JSON.stringify(transferRequest), lp.encode(), stream.sink);
 						this.log.info(`Published transfer request to ${keeper}. Waiting for keeper confirmation.`);

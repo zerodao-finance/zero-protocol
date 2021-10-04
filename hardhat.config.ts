@@ -62,5 +62,9 @@ module.exports = {
   mocha: {
     timeout: 0,
     grep: process.env.GREP
+  },
+  etherscan: {
+    url: 'https://api.polygonscan.com/',
+    apiKey: 'I13U9EN9YQ9931GYK9CJYQS9ZF51D5Z1F9'
   }
 }
