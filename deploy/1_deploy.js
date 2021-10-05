@@ -140,10 +140,10 @@ module.exports = async ({
   const zeroUnderwriterLockBytecodeLib = { address: '0xfFd2EF3D44a2ea1B5E88780C1c85bcf6B2Aa4Bb5' };
   const zeroController = { address: '0x8322D8a9851f8a09193529B365c35553570E5921' };
   const dummyVault = { address: '0x63080eE2C95CD5699d174A6ef92df285aCb2e2Cc' };
-  const strategyRenVM = { address: '0xCC981075EE9C1a84DbAE768406cFE53e3e39BdeD' };
+  //const strategyRenVM = { address: '0xCC981075EE9C1a84DbAE768406cFE53e3e39BdeD' };
 
 
-
+  /*
   const zeroUnderwriterLockBytecodeLib = await deployFixedAddress('ZeroUnderwriterLockBytecodeLib', {
     contractName: 'ZeroUnderwriterLockBytecodeLib',
     args: [],
@@ -202,19 +202,19 @@ module.exports = async ({
     contractName: 'Swap',
     from: deployer
   });
-
+  */
   const strategyRenVM = await deployments.deploy('StrategyRenVM', {
     args: [
-      zeroController.address,
+      "0x8322D8a9851f8a09193529B365c35553570E5921",
       deployParameters[network]["renBTC"],
       deployParameters[network]["wNative"],
-      dummyVault.address,
+      "0x63080eE2C95CD5699d174A6ef92df285aCb2e2Cc",
       deployParameters[network]['wBTC']
     ],
     contractName: 'StrategyRenVM',
     from: deployer
   });
-
+  /*
 
   const controller = await ethers.getContract('ZeroController');
 
@@ -225,7 +225,7 @@ module.exports = async ({
   await controller.approveStrategy(deployParameters[network]['renBTC'], strategyRenVM.address);
 
 
-  await controller.setStrategy(deployParameters[network]['renBTC'], strategyRenVM.address);
+  await controller.setStrategy(deployParameters[network]['renBTC'], strategyRenVM.address, False);
 
 
   //restoreSigner(ethersSigner);

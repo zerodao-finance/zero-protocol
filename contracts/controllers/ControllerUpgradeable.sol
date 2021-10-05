@@ -89,12 +89,16 @@ contract ControllerUpgradeable {
 		converters[_input][_output] = _converter;
 	}
 
-	function setStrategy(address _token, address _strategy) public {
+	function setStrategy(
+		address _token,
+		address _strategy,
+		bool _abandon
+	) public {
 		require(msg.sender == strategist || msg.sender == governance, '!strategist');
 		require(approvedStrategies[_token][_strategy] == true, '!approved');
 
 		address _current = strategies[_token];
-		if (_current != address(0)) {
+		if (_current != address(0) || _abandon) {
 			IStrategy(_current).withdrawAll();
 		}
 		strategies[_token] = _strategy;

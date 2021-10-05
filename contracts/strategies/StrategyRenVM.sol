@@ -32,7 +32,7 @@ contract StrategyRenVM {
 	string public constant name = '0confirmation RenVM Strategy';
 	bool public constant isActive = true;
 
-	uint256 public constant wantReserve = 200000000;
+	uint256 public constant wantReserve = 5000000;
 	uint256 public constant gasReserve = uint256(5 ether);
 	address public immutable controller;
 	address public governance;
@@ -97,6 +97,9 @@ contract StrategyRenVM {
 
 	function _withdraw(uint256 _amount, address _asset) private returns (uint256) {
 		require(_asset == want || _asset == vaultWant, 'asset not supported');
+		if (_amount == 0) {
+			return 0;
+		}
 		address converter = IController(controller).converters(want, vaultWant);
 		// _asset is wBTC and want is renBTC
 		if (_asset == want) {
