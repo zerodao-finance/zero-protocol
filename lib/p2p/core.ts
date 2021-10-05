@@ -86,7 +86,7 @@ class ZeroUser {
 				// @ts-expect-error
 				if (ackReceived !== true) {
 					try {
-						const peerAddr = await this.conn.peerRouting.findPeer(await peerId.createFromB58String(keeper));
+						const peerAddr = await this.conn.peerRouting.findPeer(await peerId.createFromB58String(keeper)) as any;
 						const { stream } = await this.conn.dialProtocol(peerAddr, '/zero/keeper/dispatch');
 						pipe(JSON.stringify(transferRequest), lp.encode(), stream.sink);
 						this.log.info(`Published transfer request to ${keeper}. Waiting for keeper confirmation.`);
