@@ -138,9 +138,9 @@ module.exports = async ({
   const [deployerSigner] = await ethers.getSigners();
 
   const zeroUnderwriterLockBytecodeLib = { address: '0xfFd2EF3D44a2ea1B5E88780C1c85bcf6B2Aa4Bb5' };
-  //const zeroController = { address: '0x8322D8a9851f8a09193529B365c35553570E5921' };
-  //const dummyVault = { address: '0x63080eE2C95CD5699d174A6ef92df285aCb2e2Cc' };
-  //const strategyRenVM = { address: '0xCC981075EE9C1a84DbAE768406cFE53e3e39BdeD' };
+  const zeroController = { address: '0xba227751e973C6DfEb4A56F811215F847EFEfC3E' };
+  const dummyVault = { address: '0x9eDDC94bB952117342cB1f556ea0591363F7B833' };
+  const strategyRenVM = { address: '0x4615b36Cb20E9707c3e4dc8376ea6863C38c14Cc' };
 
 
   /*
@@ -149,7 +149,7 @@ module.exports = async ({
     args: [],
     from: deployer
   });
-  */
+  
 
   const zeroControllerFactory = (await hre.ethers.getContractFactory("ZeroController", {
     libraries: {
@@ -159,7 +159,7 @@ module.exports = async ({
   const zeroController = await deployProxyFixedAddress(zeroControllerFactory, ["0x0F4ee9631f4be0a63756515141281A3E2B293Bbe", deployParameters[network].gatewayRegistry], {
     unsafeAllowLinkedLibraries: true
   });
-
+  */
   const zeroControllerArtifact = await deployments.getArtifact('ZeroController');
   await deployments.save('ZeroController', {
     contractName: 'ZeroController',
@@ -169,6 +169,9 @@ module.exports = async ({
   });
   /*
   
+
+
+
   await deployFixedAddress('BTCVault', {
     contractName: 'BTCVault',
     args: [deployParameters[network]['renBTC'], zeroController.address, "zeroBTC", "zBTC"],
@@ -176,6 +179,8 @@ module.exports = async ({
   });
   const v = await ethers.getContract('BTCVault');
   await v.attach(deployParameters[network]['renBTC']).balanceOf(ethers.constants.AddressZero);
+  
+
 
   const dummyVault = await deployFixedAddress('DummyVault', {
     contractName: 'DummyVault',
@@ -185,13 +190,16 @@ module.exports = async ({
   const w = await ethers.getContract('DummyVault');
   await w.attach(deployParameters[network]['wBTC']).balanceOf(ethers.constants.AddressZero);
   console.log("Deployed DummyVault to", dummyVault.address)
+  
+
 
   await deployFixedAddress("TrivialUnderwriter", {
     contractName: 'TrivialUnderwriter',
     args: [zeroController.address],
     from: deployer
   });
-
+  
+  
   await deployFixedAddress('Swap', {
     args: [
       zeroController.address, // Controller
@@ -204,18 +212,20 @@ module.exports = async ({
     contractName: 'Swap',
     from: deployer
   });
-
+  
+  
   const strategyRenVM = await deployments.deploy('StrategyRenVM', {
     args: [
-      "0x8322D8a9851f8a09193529B365c35553570E5921",
+      zeroController.address,
       deployParameters[network]["renBTC"],
       deployParameters[network]["wNative"],
-      "0x63080eE2C95CD5699d174A6ef92df285aCb2e2Cc",
+      dummyVault.address,
       deployParameters[network]['wBTC']
     ],
     contractName: 'StrategyRenVM',
     from: deployer
   });
+  */
 
 
   const controller = await ethers.getContract('ZeroController');
@@ -224,6 +234,7 @@ module.exports = async ({
   await controller.setGovernance(await ethersSigner.getAddress())
   //restoreSigner(ethersSigner);
 
+  /*
   await controller.approveStrategy(deployParameters[network]['renBTC'], strategyRenVM.address);
 
 

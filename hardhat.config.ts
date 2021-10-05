@@ -51,8 +51,8 @@ module.exports = {
     matic: {
       url: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
       accounts: [process.env.WALLET || ethers.Wallet.createRandom().privateKey],
-      gas: 20000000000,
-      gasPrice: 20000000000
+      gas: 60000000000,
+      gasPrice: 10000000000
     },
     localhost: {
       url: 'http://localhost:8545',
