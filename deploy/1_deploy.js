@@ -99,14 +99,6 @@ module.exports = async ({
   }
   const signer = await ethers.getSigner(SIGNER_ADDRESS);
   const [deployerSigner] = await ethers.getSigners();
-  const { sendTransaction } = deployerSigner;
-  deployerSigner.sendTransaction = async function (...args) {
-    const tx = await sendTransaction.apply(this, args);
-    console.log('sent tx ' + tx.hash + ' -- waiting');
-    await tx.wait();
-    console.log('done!');
-    return tx;
-  };
 
 	/*
   const zeroUnderwriterLockBytecodeLib = { address: '0xfFd2EF3D44a2ea1B5E88780C1c85bcf6B2Aa4Bb5' };
@@ -209,7 +201,7 @@ module.exports = async ({
   await controller.approveStrategy(deployParameters[network]['renBTC'], strategyRenVM.address);
 
 
-  await controller.setStrategy(deployParameters[network]['renBTC'], strategyRenVM.address, false);
+  await (await controller.setStrategy(deployParameters[network]['renBTC'], strategyRenVM.address, false)).wait();
 
 
   //restoreSigner(ethersSigner);
@@ -245,8 +237,10 @@ module.exports = async ({
   const curveFactory = await ethers.getContract('ZeroCurveFactory', deployer);
 
   const getWrapperAddress = async (tx) => {
-    const { events } = await tx.wait();
-    const lastEvent = events[events.length - 1];
+    const receipt = await tx.wait();
+    console.log(require('util').inspect(receipt, { colors: true, depth: 15 }));
+    const { events } = receipt;
+    const lastEvent = events[events.length - 2];
     return lastEvent.args._wrapper;
   };
 
