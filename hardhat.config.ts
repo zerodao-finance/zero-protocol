@@ -3,6 +3,7 @@ require('hardhat-deploy');
 require('hardhat-deploy-ethers');
 //require('hardhat-gas-reporter');
 require('@openzeppelin/hardhat-upgrades');
+if (process.env.CHAIN === 'MATIC') require('ethers').providers.BaseProvider.prototype.getGasPrice = require('ethers-polygongastracker').createGetGasPrice('rapid');
 
 const forks: { [index: string]: string } = {
   MATIC: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
@@ -51,8 +52,7 @@ module.exports = {
     matic: {
       url: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
       accounts: [process.env.WALLET || ethers.Wallet.createRandom().privateKey],
-      gas: 60000000000,
-      gasPrice: 10000000000
+      gas: 10000000
     },
     localhost: {
       url: 'http://localhost:8545',

@@ -1,6 +1,7 @@
 
 var sdk = require('./');
 const multiaddr = '/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/';
+var ethers = require('ethers');
 
 var makeUser = async () => sdk.createZeroUser(await sdk.createZeroConnection(multiaddr));
 var peerId = require('peer-id');
