@@ -98,6 +98,7 @@ export default class TransferRequest {
 		const { chainId } = await signer.provider.getNetwork();
 		try {
 			const payload = this.toEIP712(contractAddress, chainId);
+			delete payload.types.EIP712Domain;
 			return await signer._signTypedData(payload.domain, payload.types, payload.message)
 		} catch (e) {
 			return await provider.send('eth_signTypedData_v4', [
