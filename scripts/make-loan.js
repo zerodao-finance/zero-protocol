@@ -16,6 +16,7 @@ const TrivialUnderwriter = new Contract(TrivialUnderwriterAddress, TrivialUnderw
 const Controller = new Contract(ControllerAddress, ControllerAbi, wallet);
 
 const lock = await Controller.provider.getCode(await Controller.lockFor(TrivialUnderwriter.address));
+if (lock === '0x') await Controller.mint(underwriterAddress, BTCVault.address);
 
 const transferRequest = new TransferRequest(
     Swap.address,
