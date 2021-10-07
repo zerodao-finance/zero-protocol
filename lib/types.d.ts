@@ -4,7 +4,7 @@ import { ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
 import { PersistenceAdapter } from './persistence';
 import { EIP712TypedData } from '@0x/types';
 
-export declare class TransferRequest {
+export default class TransferRequest {
 	constructor(
 		module: string,
 		to: string,
