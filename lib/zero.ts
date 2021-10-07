@@ -1,4 +1,6 @@
 import { BigNumber } from '@ethersproject/bignumber';
+import { Wallet } from "@ethersproject/wallet";
+import { Signer } from "@ethersproject/abstract-signer";
 import type { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signers';
 import { BigNumberish, ethers } from 'ethers';
 import { signTypedDataUtils } from '@0x/utils';
@@ -9,6 +11,8 @@ import { computeP } from './util/helpers';
 import { createNode, ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
 import { PersistenceAdapter } from './persistence';
 import { GatewayAddressInput } from './types';
+
+type ZeroSigner = Wallet & SignerWithAddress & Signer;
 
 export default class TransferRequest {
 	public module: string;
@@ -89,18 +93,17 @@ export default class TransferRequest {
 		});
 	}
 
-	async sign(signer: SignerWithAddress, contractAddress: string) {
+	async sign(signer: ZeroSigner, contractAddress: string) {
 		const provider = signer.provider as ethers.providers.JsonRpcProvider;
 		const { chainId } = await signer.provider.getNetwork();
 		try {
+			const payload = this.toEIP712(contractAddress, chainId);
+			return await signer._signTypedData(payload.domain, payload.types, payload.message)
+		} catch (e) {
 			return await provider.send('eth_signTypedData_v4', [
 				await signer.getAddress(),
 				this.toEIP712(contractAddress, chainId),
 			]);
-		} catch (e) {
-			console.error(e);
-			// in case this is not available in the signer
-			return await signer.signMessage(ethers.utils.hexlify(this.toEIP712Digest(contractAddress, chainId)));
 		}
 	}
 }

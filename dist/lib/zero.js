@@ -71,15 +71,14 @@ class TransferRequest {
         const provider = signer.provider;
         const { chainId } = await signer.provider.getNetwork();
         try {
+            const payload = this.toEIP712(contractAddress, chainId);
+            return await signer._signTypedData(payload.domain, payload.types, payload.message);
+        }
+        catch (e) {
             return await provider.send('eth_signTypedData_v4', [
                 await signer.getAddress(),
                 this.toEIP712(contractAddress, chainId),
             ]);
-        }
-        catch (e) {
-            console.error(e);
-            // in case this is not available in the signer
-            return await signer.signMessage(ethers_1.ethers.utils.hexlify(this.toEIP712Digest(contractAddress, chainId)));
         }
     }
 }

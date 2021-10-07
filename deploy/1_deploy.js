@@ -240,7 +240,7 @@ module.exports = async ({
     const receipt = await tx.wait();
     console.log(require('util').inspect(receipt, { colors: true, depth: 15 }));
     const { events } = receipt;
-    const lastEvent = events[events.length - 2];
+    const lastEvent = events.find((v) => (v.args || {})._wrapper);
     return lastEvent.args._wrapper;
   };
 
