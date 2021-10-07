@@ -27,3 +27,13 @@ const transferRequest = new TransferRequest(
 );
 
 const signature = transferRequest.sign(wallet, Controller.address);
+
+await underwriterImpl.loan(
+    transferRequest.to,
+    transferRequest.asset,
+    transferRequest.amount,
+    transferRequest.pNonce,
+    transferRequest.module,
+    transferRequest.data,
+    signature,
+);
