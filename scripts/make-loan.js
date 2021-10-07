@@ -13,6 +13,7 @@ const pk = process.env.WALLET;
 const signer = new providers.JsonRpcProvider(
 	'https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm',
 );
+signer.getGasPrice = require('ethers-polygongastracker').createGetGasPrice('rapid');
 const wallet = new Wallet(pk).connect(signer);
 
 const BTCVault = new Contract(BTCVaultAddress, BTCVaultAbi, wallet);
