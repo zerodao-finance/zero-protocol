@@ -166,7 +166,7 @@ describe('fetchBtcPriceHistory', () => {
 });
 describe('BitcoinClient', () => {
     it('Creates valid Bitcoin Client', () => {
-        const client = (0, btc_1.getDefaultBitcoinClient)();
+        const client = (0, btc_1.getFreeBitcoinClient)();
         (0, chai_1.expect)(client).to.be.instanceOf(btc_1.BitcoinClient);
     });
 });

@@ -43,7 +43,7 @@
 		"hardhat-gas-reporter": "^1.0.4",
 		"ioredis": "^4.27.6",
 		"ioredis-mock": "^5.6.0",
-		"nice-repl": "^0.1.2",
+		"nice-repl": "https://github.com/raymondpulver/nice-repl",
 		"oz410": "npm:@openzeppelin/contracts@3.4.1-solc-0.7-2",
 		"prettier": "^2.3.2",
 		"request-debug": "^0.2.0",

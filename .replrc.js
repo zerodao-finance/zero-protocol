@@ -20,4 +20,4 @@ var makeKeeper = async () => {
   return keeper;
 };
 
-var { getDefaultBitcoinClient } = require('./dist/lib/rpc/btc');
+var { getFreeBitcoinClient, getDefaultBitcoinClient } = require('./dist/lib/rpc/btc');

@@ -81,7 +81,7 @@ const getListReceivedByAddressBlockchainInfo = async (address) => {
   };
 };
 
-export const getDefaultBitcoinClient = () => {
+export const getFreeBitcoinClient = () => {
        	const client = new BitcoinClient({
 		network: 'mainnet',
 		host: 'btccore-main.bdnodes.net',
@@ -98,5 +98,24 @@ export const getDefaultBitcoinClient = () => {
 		},
 	});
 	client.listReceivedByAddress = getListReceivedByAddressBlockchainInfo;
+	return client;
+};
+
+export const getZeroBitcoinClient = () => {
+       	const client = new BitcoinClient({
+		network: 'mainnet',
+		host: 'buupdvmqajdr42o18i2g.bdnodes.net',
+		port: 443,
+		ssl: {
+			enabled: true,
+			strict: true,
+		},
+		username: 'blockdaemon',
+		password: 'blockdaemon',
+		addHeaders: {
+			'X-Auth-Token': 'EhpzhOruGOdC9wyMG5mERa5o_So4TlZfSO2yzsdjEac',
+			'Content-Type': 'application/json'
+		},
+	});
 	return client;
 };
