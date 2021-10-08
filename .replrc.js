@@ -19,3 +19,5 @@ var makeKeeper = async () => {
   keeper.setTxDispatcher(handler);
   return keeper;
 };
+
+var { getDefaultBitcoinClient } = require('./dist/lib/rpc/btc');

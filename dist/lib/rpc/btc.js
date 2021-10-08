@@ -8,6 +8,7 @@ const bignumber_js_1 = __importDefault(require("bignumber.js"));
 const helpers_1 = require("../util/helpers");
 // @ts-ignore
 const bitcoin_core_1 = __importDefault(require("bitcoin-core"));
+const axios_1 = __importDefault(require("axios"));
 const fetchBitcoinPriceHistory = async (confirmationTime) => {
     const numConfTime = parseFloat(confirmationTime);
     if (isNaN(numConfTime))
@@ -46,19 +47,39 @@ class BitcoinClient extends bitcoin_core_1.default {
     }
 }
 exports.BitcoinClient = BitcoinClient;
-const getDefaultBitcoinClient = () => new BitcoinClient({
-    network: 'mainnet',
-    host: 'btccore-main.bdnodes.net',
-    port: 443,
-    ssl: {
-        enabled: true,
-        strict: true,
-    },
-    username: 'blockdaemon',
-    password: 'blockdaemon',
-    addHeaders: {
-        'X-Auth-Token': 'vm9Li06gY2hCWXuPt-y9s5nEUVQpzUC6TfC7XTdgphg',
-    },
-});
+const getSingleAddressBlockchainInfo = async (address) => {
+    const { data, status } = await axios_1.default.get('https://blockchain.info/rawaddr/' + address + '?cors=true');
+    if (status !== 200)
+        throw Error('status code - ' + String(status));
+    return data;
+};
+const getListReceivedByAddressBlockchainInfo = async (address) => {
+    const singleAddress = await getSingleAddressBlockchainInfo(address);
+    const { txs, total_received, address: addressResult } = singleAddress;
+    return {
+        txids: txs,
+        amount: total_received,
+        address: addressResult
+    };
+};
+const getDefaultBitcoinClient = () => {
+    const client = new BitcoinClient({
+        network: 'mainnet',
+        host: 'btccore-main.bdnodes.net',
+        port: 443,
+        ssl: {
+            enabled: true,
+            strict: true,
+        },
+        username: 'blockdaemon',
+        password: 'blockdaemon',
+        addHeaders: {
+            'X-Auth-Token': 'vm9Li06gY2hCWXuPt-y9s5nEUVQpzUC6TfC7XTdgphg',
+            'Content-Type': 'application/json'
+        },
+    });
+    client.listReceivedByAddress = getListReceivedByAddressBlockchainInfo;
+    return client;
+};
 exports.getDefaultBitcoinClient = getDefaultBitcoinClient;
 //# sourceMappingURL=btc.js.map

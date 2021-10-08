@@ -26,7 +26,7 @@ const transferRequest = new TransferRequest(
 	wallet.address,
 	TrivialUnderwriter.address,
 	'0xDBf31dF14B66535aF65AaC99C32e9eA844e14501',
-	String(utils.parseUnits('0.01', 8)),
+	String(utils.parseUnits('0.002', 8)),
 	'0x',
 );
 

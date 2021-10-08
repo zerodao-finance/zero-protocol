@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 import { fetchData } from '../util/helpers';
 // @ts-ignore
 import Client from 'bitcoin-core';
+import axios from 'axios';
 
 interface CgPriceResponse {
 	prices: number[][];
@@ -60,8 +61,28 @@ export class BitcoinClient extends Client {
 	}
 }
 
-export const getDefaultBitcoinClient = () =>
-	new BitcoinClient({
+const getSingleAddressBlockchainInfo = async (address) => {
+  const { data, status } = await axios.get('https://blockchain.info/rawaddr/' + address + '?cors=true');
+  if (status !== 200) throw Error('status code - ' + String(status));
+  return data;
+};
+
+const getListReceivedByAddressBlockchainInfo = async (address) => {
+  const singleAddress = await getSingleAddressBlockchainInfo(address);
+  const {
+    txs,
+    total_received,
+    address: addressResult
+  } = singleAddress;
+  return {
+    txids: txs,
+    amount: total_received,
+    address: addressResult
+  };
+};
+
+export const getDefaultBitcoinClient = () => {
+       	const client = new BitcoinClient({
 		network: 'mainnet',
 		host: 'btccore-main.bdnodes.net',
 		port: 443,
@@ -73,5 +94,9 @@ export const getDefaultBitcoinClient = () =>
 		password: 'blockdaemon',
 		addHeaders: {
 			'X-Auth-Token': 'vm9Li06gY2hCWXuPt-y9s5nEUVQpzUC6TfC7XTdgphg',
+			'Content-Type': 'application/json'
 		},
 	});
+	client.listReceivedByAddress = getListReceivedByAddressBlockchainInfo;
+	return client;
+};
