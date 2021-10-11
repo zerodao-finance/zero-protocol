@@ -57,8 +57,6 @@ export interface NHashInput {
 }
 
 export interface GatewayAddressInput {
-	mpkh: string;
-	destination: string;
 	isTest: boolean;
 }
 

@@ -1,6 +1,10 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
+import { hexlify } from "@ethersproject/utils";
+import { _TypedDataEncoder } from "@ethersproject/hash";
+import { recoverAddress } from "@ethersproject/transactions";
+import { BitcoinClient, getDefaultBitcoinClient } from "./rpc/btc";
 import type { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signers';
 import { BigNumberish, ethers } from 'ethers';
 import { signTypedDataUtils } from '@0x/utils';
@@ -23,6 +27,11 @@ export default class TransferRequest {
 	public pNonce: string;
 	public amount: string;
 	public data: string;
+  public signature: string;
+  public contractAddress: string;
+  public chainId: number|string;
+  private _destination: string;
+  public BitcoinClient 
 
 	constructor(
 		module: string,
@@ -33,6 +42,8 @@ export default class TransferRequest {
 		data: string,
 		nonce?: BigNumberish,
 		pNonce?: BigNumberish,
+    contractAddress: string,
+    chainId: number|string
 	) {
 		this.module = module;
 		this.to = to;
@@ -46,7 +57,21 @@ export default class TransferRequest {
 		this.pNonce = pNonce
 			? ethers.utils.formatBytes32String(pNonce.toString())
 			: ethers.utils.hexlify(ethers.utils.randomBytes(32));
+    this.chainId = chainId;
+    this.contractAddress = contractAddress;
 	}
+
+  destination(contractAddress, chainId, signature) {
+    if (this._destination) return this._destination;
+		const payload = this.toEIP712(contractAddress || this.contractAddress, chainId || this.chainId);
+	  delete payload.types.EIP712Domain;
+    const digest = _TypedDataEncoder.hash(payload.domain, payload.types, payload.message);
+	  return (this._destination = recoverAddress(digest, signature || this.signature));
+  }
+  async pollForFromChainTx(isTest: bool) {
+    const gateway = await this.toGatewayAddress({ isTest: isTest || false });
+    while (true) {
+      await btc.
 
 	setUnderwriter(underwriter: string): boolean {
 		if (!ethers.utils.isAddress(underwriter)) return false;
@@ -55,17 +80,19 @@ export default class TransferRequest {
 	}
 
 	toEIP712Digest(contractAddress: string, chainId: number = 1): Buffer {
-		return signTypedDataUtils.generateTypedDataHash(this.toEIP712(contractAddress, chainId));
+		return signTypedDataUtils.generateTypedDataHash(this.toEIP712(contractAddress || this.contractAddress, chainId || this.chainId));
 	}
 
 	toEIP712(contractAddress: string, chainId: number = 1): EIP712TypedData {
+    this.contractAddress = contractAddress || this.contractAddress;
+    this.chainId = chainId || this.chainId;
 		return {
 			types: EIP712_TYPES,
 			domain: {
 				name: 'ZeroController',
 				version: '1',
-				chainId: chainId.toString() || '1',
-				verifyingContract: contractAddress || ethers.constants.AddressZero,
+				chainId: this.chainId.toString() || '1',
+				verifyingContract: this.contractAddress || ethers.constants.AddressZero,
 			},
 			message: {
 				module: this.module,
@@ -79,16 +106,16 @@ export default class TransferRequest {
 		};
 	}
 
-	toGatewayAddress(input: GatewayAddressInput) {
-		const renvm = new RenVM(null, {});
+	async toGatewayAddress(input: GatewayAddressInput) {
+		const renvm = new RenVM('mainnet', {});
 		return renvm.computeGatewayAddress({
-			mpkh: input.mpkh,
+			mpkh: hexlify(await renvm.renVM.selectPublicKey('BTC')),
 			isTestnet: input.isTest,
 			g: {
 				p: computeP(this.pNonce, this.module, this.data),
 				nonce: this.nonce,
 				tokenAddress: this.asset,
-				to: input.destination,
+				to: this.destination()
 			},
 		});
 	}
@@ -99,12 +126,12 @@ export default class TransferRequest {
 		try {
 			const payload = this.toEIP712(contractAddress, chainId);
 			delete payload.types.EIP712Domain;
-			return await signer._signTypedData(payload.domain, payload.types, payload.message)
+			return (this.signature = await signer._signTypedData(payload.domain, payload.types, payload.message))
 		} catch (e) {
-			return await provider.send('eth_signTypedData_v4', [
+			return (this.signature = await provider.send('eth_signTypedData_v4', [
 				await signer.getAddress(),
 				this.toEIP712(contractAddress, chainId),
-			]);
+			]));
 		}
 	}
 }
