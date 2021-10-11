@@ -5,6 +5,7 @@ import { hexlify } from "@ethersproject/utils";
 import { _TypedDataEncoder } from "@ethersproject/hash";
 import { recoverAddress } from "@ethersproject/transactions";
 import { BitcoinClient, getDefaultBitcoinClient } from "./rpc/btc";
+import { Buffer } from "buffer";
 import type { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signers';
 import { BigNumberish, ethers } from 'ethers';
 import { signTypedDataUtils } from '@0x/utils';
@@ -16,7 +17,11 @@ import { createNode, ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
 import { PersistenceAdapter } from './persistence';
 import { GatewayAddressInput } from './types';
 
+const toBuffer = (hex) => Buffer.from(hex.substr(2), 'hex');
+
 type ZeroSigner = Wallet & SignerWithAddress & Signer;
+
+import { mintParamsType } from "@renproject/rpc/v2/transaction";
 
 export default class TransferRequest {
 	public module: string;
@@ -31,8 +36,6 @@ export default class TransferRequest {
   public contractAddress: string;
   public chainId: number|string;
   private _destination: string;
-  public BitcoinClient 
-
 	constructor(
 		module: string,
 		to: string,
@@ -68,11 +71,47 @@ export default class TransferRequest {
     const digest = _TypedDataEncoder.hash(payload.domain, payload.types, payload.message);
 	  return (this._destination = recoverAddress(digest, signature || this.signature));
   }
+  async submitToRenVM() {
+    const renvm = new RenJS('mainnet');
+    const { hash, vout } = await this.pollForFromChainTx(isTest || false);
+    const nHash = toBuffer(helpers.computeNHash({
+      txHash: hash,
+      vOut: vout,
+      nonce: this.nonce
+    }));
+    return await renvm.renVM.v2.submitMint({
+      selector: 'BTC/toEthereum',
+      gHash: toBuffer(this._computeGHash()),
+      gPubKey: toBuffer(await this.getGPubKey()),
+      nHash: toBuffer(await this._getNHash(false)),
+      nonce: toBuffer(this.nonce),
+      output: {
+        txid: toBuffer(hash),
+        txindex: hexlify(vout)
+      } // not done
+    });
+  }
   async pollForFromChainTx(isTest: bool) {
     const gateway = await this.toGatewayAddress({ isTest: isTest || false });
     while (true) {
-      await btc.
-
+      try {
+        if (process.env.NODE_ENV === 'development') console.log('poll ' + gateway);
+        const result = await getDefaultBitcoinClient().listReceivedByAddress(gateway);
+        if (result) {
+          const { txids } = result;
+          const tx = txids.find((v) => v.out.find((v) => v.addr === gateway));
+          return {
+            hash: tx.hash,
+            vout: tx.out.findIndex((v) => v.addr === gateway)
+          };
+        } else {
+          await new Promise((resolve) => setTimeout(resolve, 10000));
+        }
+      } catch (e) {
+        if (process.env.NODE_ENV === 'development') console.error(e);
+      }
+    }
+  }
 	setUnderwriter(underwriter: string): boolean {
 		if (!ethers.utils.isAddress(underwriter)) return false;
 		this.underwriter = ethers.utils.getAddress(underwriter);
@@ -105,7 +144,18 @@ export default class TransferRequest {
 			primaryType: 'TransferRequest',
 		};
 	}
-
+  _computeGHash() {
+    return helpers.maybeComputeGHash({
+      p: helpers.computeP(this.pNonce, this.module, this.data),
+      nonce: this.nonce,
+      to: this.destination()
+      tokenAddress: this.asset
+    });
+  }
+  async getGPubKey() {
+    const renvm = new RenJS('mainnet');
+	  return hexlify(await renvm.renVM.selectPublicKey('BTC')),
+  }
 	async toGatewayAddress(input: GatewayAddressInput) {
 		const renvm = new RenVM('mainnet', {});
 		return renvm.computeGatewayAddress({
