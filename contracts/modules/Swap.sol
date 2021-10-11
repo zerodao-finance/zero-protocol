@@ -46,7 +46,7 @@ contract Swap {
 	}
 
 	function defaultLoan(uint256 _nonce) public {
-		require(blockTimeout >= _nonce, '!blockTimeout');
+		require(block.number >= outstanding[_nonce].when + blockTimeout);
 		require(outstanding[_nonce].qty != 0, '!outstanding');
 		uint256 _amountSwapped = swapTokens(fiat, controllerWant, outstanding[_nonce].qty);
 		IERC20(controllerWant).safeTransfer(controller, _amountSwapped);
