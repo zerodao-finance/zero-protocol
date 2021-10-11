@@ -3,7 +3,7 @@ import {
 	BitcoinClient,
 	fetchAverageBitcoinConfirmationTime,
 	fetchBitcoinPriceHistory,
-	getFreeBitcoinClient,
+	getDefaultBitcoinClient,
 } from '../btc';
 import fetchMock from 'fetch-mock';
 import { expect } from 'chai';
@@ -176,7 +176,7 @@ describe('fetchBtcPriceHistory', () => {
 
 describe('BitcoinClient', () => {
 	it('Creates valid Bitcoin Client', () => {
-		const client = getFreeBitcoinClient();
+		const client = getDefaultBitcoinClient();
 		expect(client).to.be.instanceOf(BitcoinClient);
 	});
 });

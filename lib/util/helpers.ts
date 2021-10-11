@@ -1,5 +1,5 @@
 import { Buffer } from 'safe-buffer';
-import { defaultAbiCoder as abi } from '@ethersproject/abi';
+import { defaultAbiCoder as abi, Interface } from '@ethersproject/abi';
 import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
 import { BYTES_TYPES } from '../config/constants';
 import { DarknodeSignatureInput, GHashInput, NHashInput, PHashInput } from '../types';
@@ -50,7 +50,7 @@ export const computePHash = (input: PHashInput): string => {
 export const computePHashFromP = (p: string) => solidityKeccak256(['bytes'], [p]);
 
 export const computeP = (nonce: string, module: string, data: string): string =>
-	new ethers.utils.Interface(['function zeroCall(uint256, address, bytes)']).encodeFunctionData('zeroCall', [nonce, module, data]);
+	new Interface(['function zeroCall(uint256, address, bytes)']).encodeFunctionData('zeroCall', [nonce, module, data]);
 
 export const maybeCoerceToGHash = (input: GHashInput | string) =>
 	typeof input === 'string' ? input : computeGHash(input);
