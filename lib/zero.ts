@@ -107,7 +107,8 @@ export default class TransferRequest {
           type: 'bytes',
           name: 'data'
         }]
-      }]
+      }],
+      tags: []
     });
   }
   async pollForFromChainTx(isTest: bool) {
