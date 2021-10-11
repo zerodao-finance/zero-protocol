@@ -88,7 +88,26 @@ export default class TransferRequest {
       output: {
         txid: toBuffer(hash),
         txindex: hexlify(vout)
-      } // not done
+      },
+      amount: hexlify(this.amount),
+      payload: toBuffer('0x' + helpers.computeP(this.pNonce, this.module, this.data).substr(10)),
+      pHash: toBuffer(solidityKeccak256(['bytes'], [ helpers.computeP(this.pNonce, this.module, this.data) ])),
+      to: this.contractAddress,
+      asset: this.asset,
+      fn: 'zeroCall',
+      fnAbi: [{
+        name: 'zeroCall',
+        inputs: [{
+          type: 'uint256',
+          name: 'pNonce'
+        }, {
+          type: 'address',
+          name: 'module'
+        }, {
+          type: 'bytes',
+          name: 'data'
+        }]
+      }]
     });
   }
   async pollForFromChainTx(isTest: bool) {
