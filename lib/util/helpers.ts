@@ -50,7 +50,7 @@ export const computePHash = (input: PHashInput): string => {
 export const computePHashFromP = (p: string) => solidityKeccak256(['bytes'], [p]);
 
 export const computeP = (nonce: string, module: string, data: string): string =>
-	abi.encode(['uint256', 'address', 'bytes'], [nonce, module, data]);
+	new ethers.utils.Interface(['function zeroCall(uint256, address, bytes)']).encodeFunctionData('zeroCall', [nonce, module, data]);
 
 export const maybeCoerceToGHash = (input: GHashInput | string) =>
 	typeof input === 'string' ? input : computeGHash(input);

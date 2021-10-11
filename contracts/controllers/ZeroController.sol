@@ -7,6 +7,7 @@ import {EIP712Upgradeable} from '@openzeppelin/contracts-upgradeable/drafts/EIP7
 import {IERC20} from 'oz410/token/ERC20/ERC20.sol';
 import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
 import {IZeroModule} from '../interfaces/IZeroModule.sol';
+import {IZeroCall} from "../interfaces/IZeroCall.sol";
 import {ZeroUnderwriterLock} from '../underwriter/ZeroUnderwriterLock.sol';
 import {ZeroLib} from '../libraries/ZeroLib.sol';
 import {OwnableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
@@ -119,7 +120,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		bytes32 digest = toTypedDataHash(params, underwriter);
 		require(loanStatus[digest].status == ZeroLib.LoanStatusCode.UNINITIALIZED, 'loan already exists');
 		uint256 _actualAmount = IGateway(IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset)).mint(
-			keccak256(abi.encode(nonce, module, data)),
+			keccak256(abi.encodeWithSelector(IZeroCall.zeroCall.selector, nonce, module, data)),
 			actualAmount,
 			nHash,
 			signature
@@ -156,7 +157,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 		lock.trackIn(actualAmount);
 		IZeroModule(module).repayLoan(params.to, asset, actualAmount, nonce, data);
 		IGateway(IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset)).mint(
-			keccak256(abi.encode(nonce, module, data)),
+			keccak256(abi.encodeWithSelector(IZeroCall.zeroCall.selector, nonce, module, data)),
 			actualAmount,
 			nHash,
 			signature
