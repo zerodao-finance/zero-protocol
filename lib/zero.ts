@@ -1,9 +1,11 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
-import { hexlify } from "@ethersproject/utils";
+import { hexlify } from "@ethersproject/bytes";
+import { randomBytes } from "@ethersproject/random";
 import { _TypedDataEncoder } from "@ethersproject/hash";
 import { recoverAddress } from "@ethersproject/transactions";
+import { formatBytes32String } from "@ethersproject/strings";
 import { BitcoinClient, getDefaultBitcoinClient } from "./rpc/btc";
 import { Buffer } from "buffer";
 import type { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signers';
@@ -37,7 +39,7 @@ export default class TransferRequest {
 	public contractAddress: string;
 	public chainId: number | string;
 	private _destination: string;
-	constructor(
+	constructor(params: {
 		module: string,
 		to: string,
 		underwriter: string,
@@ -47,27 +49,27 @@ export default class TransferRequest {
 		nonce?: BigNumberish,
 		pNonce?: BigNumberish,
 		contractAddress: string,
-		chainId: number | string
-	) {
-		this.module = module;
-		this.to = to;
-		this.underwriter = underwriter;
-		this.asset = asset;
-		this.amount = amount.toString();
-		this.data = data;
-		this.nonce = nonce
-			? ethers.utils.formatBytes32String(nonce.toString())
-			: ethers.utils.hexlify(ethers.utils.randomBytes(32));
-		this.pNonce = pNonce
-			? ethers.utils.formatBytes32String(pNonce.toString())
-			: ethers.utils.hexlify(ethers.utils.randomBytes(32));
-		this.chainId = chainId;
-		this.contractAddress = contractAddress;
+		chainId: number
+  }) {
+		this.module = params.module;
+		this.to = params.to;
+		this.underwriter = params.underwriter;
+		this.asset = params.asset;
+		this.amount = params.amount.toString();
+		this.data = params.data;
+		this.nonce = params.nonce
+			? formatBytes32String(params.nonce.toString())
+			: hexlify(randomBytes(32));
+		this.pNonce = params.pNonce
+			? formatBytes32String(params.pNonce.toString())
+			: hexlify(randomBytes(32));
+		this.chainId = params.chainId;
+		this.contractAddress = params.contractAddress;
 	}
 
-	destination(contractAddress, chainId, signature) {
+	destination(contractAddress?: string, chainId?: number|string, signature?: string) {
 		if (this._destination) return this._destination;
-		const payload = this.toEIP712(contractAddress || this.contractAddress, chainId || this.chainId);
+		const payload = this.toEIP712(contractAddress || this.contractAddress, Number(chainId || this.chainId));
 		delete payload.types.EIP712Domain;
 		const digest = _TypedDataEncoder.hash(payload.domain, payload.types, payload.message);
 		return (this._destination = recoverAddress(digest, signature || this.signature));
@@ -94,21 +96,23 @@ export default class TransferRequest {
 			payload: toBuffer('0x' + computeP(this.pNonce, this.module, this.data).substr(10)),
 			pHash: toBuffer(utils.solidityKeccak256(['bytes'], [computeP(this.pNonce, this.module, this.data)])),
 			to: this.contractAddress,
-			asset: this.asset,
+      token: this.asset,
 			fn: 'zeroCall',
-			fnAbi: [{
-				name: 'zeroCall',
-				inputs: [{
-					type: 'uint256',
-					name: 'pNonce'
-				}, {
-					type: 'address',
-					name: 'module'
-				}, {
-					type: 'bytes',
-					name: 'data'
-				}]
-			}],
+			fnABI: [{
+        name: 'zeroCall',
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [{
+  			  type: 'uint256',
+  			  name: 'pNonce'
+   			}, {
+  				type: 'address',
+  				name: 'module'
+  			}, {
+  				type: 'bytes',
+  				name: 'data'
+  			}]
+      }],
 			tags: []
 		});
 	}
@@ -117,7 +121,7 @@ export default class TransferRequest {
 		while (true) {
 			try {
 				if (process.env.NODE_ENV === 'development') console.log('poll ' + gateway);
-				const result = await getDefaultBitcoinClient().listReceivedByAddress(gateway);
+				const result = await (getDefaultBitcoinClient() as any).listReceivedByAddress(gateway);
 				if (result) {
 					const { txids } = result;
 					const tx = txids.find((v) => v.out.find((v) => v.addr === gateway));
@@ -140,7 +144,7 @@ export default class TransferRequest {
 	}
 
 	toEIP712Digest(contractAddress: string, chainId: number = 1): Buffer {
-		return signTypedDataUtils.generateTypedDataHash(this.toEIP712(contractAddress || this.contractAddress, chainId || this.chainId));
+		return signTypedDataUtils.generateTypedDataHash(this.toEIP712(contractAddress || this.contractAddress, Number(chainId || this.chainId)));
 	}
 
 	toEIP712(contractAddress: string, chainId: number = 1): EIP712TypedData {
@@ -175,12 +179,12 @@ export default class TransferRequest {
 	}
 	async getGPubKey() {
 		const renvm = new RenJS('mainnet');
-		return hexlify(await renvm.renVM.selectPublicKey('BTC'))
+		return hexlify(await renvm.renVM.selectPublicKey('BTC', ''))
 	}
-	async toGatewayAddress(input: GatewayAddressInput) {
+	async toGatewayAddress(input: GatewayAddressInput): Promise<string> {
 		const renvm = new RenVM('mainnet', {});
 		return renvm.computeGatewayAddress({
-			mpkh: hexlify(await renvm.renVM.selectPublicKey('BTC')),
+			mpkh: hexlify((await (renvm as any).renVM.selectPublicKey('BTC', ''))),
 			isTestnet: input.isTest,
 			g: {
 				p: computeP(this.pNonce, this.module, this.data),
@@ -190,8 +194,7 @@ export default class TransferRequest {
 			},
 		});
 	}
-
-	async sign(signer: ZeroSigner, contractAddress: string) {
+	async sign(signer: ZeroSigner, contractAddress: string): Promise<string> {
 		const provider = signer.provider as ethers.providers.JsonRpcProvider;
 		const { chainId } = await signer.provider.getNetwork();
 		try {

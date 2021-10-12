@@ -53,6 +53,11 @@
 	},
 	"dependencies": {
 		"@0x/utils": "^6.4.3",
+		"@ethersproject/bytes": "^5.4.0",
+		"@ethersproject/hash": "^5.4.0",
+		"@ethersproject/random": "^5.4.0",
+		"@ethersproject/strings": "^5.4.0",
+		"@ethersproject/transactions": "^5.4.0",
 		"@nomiclabs/buidler": "^1.4.8",
 		"@openzeppelin/hardhat-upgrades": "^1.8.2",
 		"@types/gun": "^0.9.3",
