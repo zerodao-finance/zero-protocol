@@ -1,5 +1,5 @@
 import BigNumber from '@ethersproject/bignumber';
-import TransferRequest from '../zero';
+import { TransferRequest } from '../zero';
 import { constants, utils } from 'ethers';
 import { computeP, computePHash, computePHashFromP, maybeCoerceToGHash, computeNHash } from '../util/helpers';
 import { expect } from 'chai';

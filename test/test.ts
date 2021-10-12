@@ -1,5 +1,5 @@
 import hre from 'hardhat';
-import TransferRequest from '../lib/zero';
+import { TransferRequest } from '../lib/zero';
 import { expect } from 'chai';
 import { override } from '../lib/test/inject-mock';
 import GatewayLogicV1 from '../artifacts/contracts/test/GatewayLogicV1.sol/GatewayLogicV1.json';

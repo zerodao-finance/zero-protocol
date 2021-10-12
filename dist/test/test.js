@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const hardhat_1 = __importDefault(require("hardhat"));
-const zero_1 = __importDefault(require("../lib/zero"));
+const zero_1 = require("../lib/zero");
 const chai_1 = require("chai");
 const inject_mock_1 = require("../lib/test/inject-mock");
 const GatewayLogicV1_json_1 = __importDefault(require("../artifacts/contracts/test/GatewayLogicV1.sol/GatewayLogicV1.json"));
@@ -186,7 +186,7 @@ const getBalances = async () => {
 const generateTransferRequest = async (amount) => {
     const { swapModule, signerAddress } = await getFixtures();
     const { underwriter } = await getUnderwriter();
-    return new zero_1.default({
+    return new zero_1.TransferRequest({
         module: swapModule.address,
         to: signerAddress,
         underwriter: underwriter.address,

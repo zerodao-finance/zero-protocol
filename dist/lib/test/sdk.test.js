@@ -1,9 +1,6 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const zero_1 = __importDefault(require("../zero"));
+const zero_1 = require("../zero");
 const ethers_1 = require("ethers");
 const helpers_1 = require("../util/helpers");
 const chai_1 = require("chai");
@@ -50,7 +47,7 @@ describe('computeP unit test', () => {
         });
     });
     it('creates a correct TransferRequest', () => {
-        const transferRequest = new zero_1.default({
+        const transferRequest = new zero_1.TransferRequest({
             asset: ethers_1.constants.AddressZero,
             module: ethers_1.constants.AddressZero,
             to: ethers_1.constants.AddressZero,
@@ -60,10 +57,10 @@ describe('computeP unit test', () => {
             contractAddress: ethers_1.constants.AddressZero,
             chainId: 1
         });
-        (0, chai_1.expect)(transferRequest).to.be.instanceof(zero_1.default);
+        (0, chai_1.expect)(transferRequest).to.be.instanceof(zero_1.TransferRequest);
     });
     it('creates a valid gateway address', async () => {
-        const transferRequest = new zero_1.default({
+        const transferRequest = new zero_1.TransferRequest({
             asset: ethers_1.constants.AddressZero,
             module: ethers_1.constants.AddressZero,
             to: ethers_1.constants.AddressZero,
@@ -143,7 +140,7 @@ describe('computeP unit test', () => {
             },
             primaryType: 'TransferRequest',
         };
-        const transferRequest = new zero_1.default({
+        const transferRequest = new zero_1.TransferRequest({
             asset: ethers_1.constants.AddressZero,
             module: ethers_1.constants.AddressZero,
             to: ethers_1.constants.AddressZero,

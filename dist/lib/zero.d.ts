@@ -9,7 +9,7 @@ import { ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
 import { PersistenceAdapter } from './persistence';
 import { GatewayAddressInput } from './types';
 declare type ZeroSigner = Wallet & SignerWithAddress & Signer;
-export default class TransferRequest {
+export declare class TransferRequest {
     module: string;
     to: string;
     underwriter: string;

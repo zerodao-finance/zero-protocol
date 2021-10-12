@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createZeroKeeper = exports.createZeroUser = exports.createZeroConnection = void 0;
+exports.createZeroKeeper = exports.createZeroUser = exports.createZeroConnection = exports.TransferRequest = void 0;
 const bytes_1 = require("@ethersproject/bytes");
 const random_1 = require("@ethersproject/random");
 const hash_1 = require("@ethersproject/hash");
@@ -222,7 +222,7 @@ class TransferRequest {
         }
     }
 }
-exports.default = TransferRequest;
+exports.TransferRequest = TransferRequest;
 async function createZeroConnection(address) {
     const connOptions = {
         multiaddr: address,

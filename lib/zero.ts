@@ -26,7 +26,7 @@ type ZeroSigner = Wallet & SignerWithAddress & Signer;
 
 import { use } from 'chai';
 
-export default class TransferRequest {
+export class TransferRequest {
 	public module: string;
 	public to: string;
 	public underwriter: string;
