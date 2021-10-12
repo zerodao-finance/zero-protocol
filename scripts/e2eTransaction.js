@@ -1,10 +1,19 @@
 var sdk = require('../');
-var TransferRequest = require('../dist/lib/zero').default;
-const controllerABI = require('../artifacts/contracts/controllers/ZeroController.sol/ZeroController.json');
-import { Contract } from 'ethers';
+const { TransferRequest } = require('../dist/lib/zero');
+const { ZeroController, ZeroUnderwriterImpl, Swap } = require("../dist/lib/util/deployed-contracts");
+const { Wallet, providers, utils } = require("ethers");
 
-// Constants
-TRIVIAL_UNDERWRITER_ADDRESS = '0x7771db3eC689378272E8647Cd3201610FF684c40'
+const urls = {
+    MATIC: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
+    ETHEREUM: "https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX"
+}
+
+const chain = process.env.CHAIN || 'MATIC';
+const privateKey = process.env.WALLET;
+
+const provider = new providers.JsonRpcProvider(urls[chain]);
+const signer = new Wallet(privateKey, provider)
+
 
 var makeUser = async () => {
     const user = sdk.createZeroUser(await sdk.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
@@ -13,21 +22,21 @@ var makeUser = async () => {
     return user;
 }
 
-const getUnderwriterImpl = async (signer) => {
-    return new Contract(TRIVIAL_UNDERWRITER_ADDRESS, controllerABI, signer);
-}
-
 const main = async () => {
     const user = await makeUser();
 
-    const transferRequest = new TransferRequest(
-        '0x7015e79E82A8CBA16f70559747191F177B0B6b0A',
-        '0x',
-        '0x',
-        '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501',
-        String(1e16),
-        '0x',
-    );
+    const transferRequest = new TransferRequest({
+        module: Swap.address,
+        to: signer.address,
+        underwriter: ZeroUnderwriterImpl.address,
+        asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', // renBTC on MATIC
+        amount: String(utils.parseUnits('0.001', 8)),
+        data: '0x'
+    });
+
+    transferRequest.setUnderwriter(ZeroUnderwriterImpl.address);
+    await transferRequest.sign(signer, ZeroController.address);
+
     user.conn.on('peer:discovery', async () => await user.publishTransferRequest(transferRequest));
 }
 

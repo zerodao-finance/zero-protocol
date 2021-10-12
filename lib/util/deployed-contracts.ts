@@ -1,15 +1,15 @@
 const { Contract, Wallet, providers } = require("ethers");
 
-const BTCVaultJson = require("../../deployments/matic/BTCVault.json");
-const DummyVaultJson = require("../../deployments/matic/DummyVault.json");
-const StrategyRenVMJson = require("../../deployments/matic/StrategyRenVM.json");
-const SwapJson = require("../../deployments/matic/Swap.json");
-const TrivialUnderwriterJson = require("../../deployments/matic/TrivialUnderwriter.json");
-const UnwrapNativeJson = require("../../deployments/matic/UnwrapNative.json");
-const WrapNativeJson = require("../../deployments/matic/WrapNative.json");
-const ZeroControllerJson = require("../../deployments/matic/ZeroController.json");
-const ZeroCurveFactoryJson = require("../../deployments/matic/ZeroCurveFactory.json");
-const ZeroUniswapFactoryJson = require("../../deployments/matic/ZeroUniswapFactory.json");
+const BTCVaultJson = require("../../../deployments/matic/BTCVault.json");
+const DummyVaultJson = require("../../../deployments/matic/DummyVault.json");
+const StrategyRenVMJson = require("../../../deployments/matic/StrategyRenVM.json");
+const SwapJson = require("../../../deployments/matic/Swap.json");
+const TrivialUnderwriterJson = require("../../../deployments/matic/TrivialUnderwriter.json");
+const UnwrapNativeJson = require("../../../deployments/matic/UnwrapNative.json");
+const WrapNativeJson = require("../../../deployments/matic/WrapNative.json");
+const ZeroControllerJson = require("../../../deployments/matic/ZeroController.json");
+const ZeroCurveFactoryJson = require("../../../deployments/matic/ZeroCurveFactory.json");
+const ZeroUniswapFactoryJson = require("../../../deployments/matic/ZeroUniswapFactory.json");
 
 const url = "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm";
 const provider = new providers.JsonRpcProvider(url);
