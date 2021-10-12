@@ -74,6 +74,44 @@ export default class TransferRequest {
 		const digest = _TypedDataEncoder.hash(payload.domain, payload.types, payload.message);
 		return (this._destination = recoverAddress(digest, signature || this.signature));
 	}
+  async waitForSignature(isTest) {
+    const txHash = await this.computeMintTxHash(isTest);
+		const renvm = new RenJS('mainnet', { useV2TransactionFormat: true });
+    while (true) {
+      console.log('poll RenVM ...');
+      const result = await (renvm.renVM as any).queryTx(txHash); 
+      if (!result) {
+        await new Promise((resolve) => setTimeout(resolve, 10000));
+      } else {
+        return result;
+      }
+    }
+  }
+  async computeMintTxHash(isTest) {
+		const renvm = new RenJS('mainnet', { useV2TransactionFormat: true });
+		const { hash, vout } = await this.pollForFromChainTx(isTest || false);
+		const nHash = toBuffer(computeNHash({
+			txHash: hash,
+			vOut: vout,
+			nonce: this.nonce
+		}));
+		return renvm.renVM.mintTxHash({
+			selector: 'BTC/toEthereum',
+			gHash: toBuffer(this._computeGHash()),
+			gPubKey: toBuffer(await this.getGPubKey()),
+			nHash,
+			nonce: toBuffer(this.nonce),
+			output: {
+				txid: toBuffer(hash),
+				txindex: hexlify(vout)
+			},
+			amount: hexlify(this.amount),
+			payload: toBuffer('0x' + computeP(this.pNonce, this.module, this.data).substr(10)),
+			pHash: toBuffer(utils.solidityKeccak256(['bytes'], [computeP(this.pNonce, this.module, this.data)])),
+			to: this.contractAddress,
+      outputHashFormat: 'b64'
+    });
+	}
 	async submitToRenVM(isTest) {
 		const renvm = new RenJS('mainnet', { useV2TransactionFormat: true });
 		const { hash, vout } = await this.pollForFromChainTx(isTest || false);
