@@ -48,8 +48,8 @@ export default class TransferRequest {
 		data: string,
 		nonce?: BigNumberish,
 		pNonce?: BigNumberish,
-		contractAddress: string,
-		chainId: number
+		contractAddress?: string,
+		chainId?: number
   }) {
 		this.module = params.module;
 		this.to = params.to;

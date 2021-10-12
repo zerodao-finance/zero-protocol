@@ -54,7 +54,7 @@ const computePHash = (input) => {
 exports.computePHash = computePHash;
 const computePHashFromP = (p) => (0, solidity_1.keccak256)(['bytes'], [p]);
 exports.computePHashFromP = computePHashFromP;
-const computeP = (nonce, module, data) => abi_1.defaultAbiCoder.encode(['uint256', 'address', 'bytes'], [nonce, module, data]);
+const computeP = (nonce, module, data) => new abi_1.Interface(['function zeroCall(uint256, address, bytes)']).encodeFunctionData('zeroCall', [nonce, module, data]);
 exports.computeP = computeP;
 const maybeCoerceToGHash = (input) => typeof input === 'string' ? input : computeGHash(input);
 exports.maybeCoerceToGHash = maybeCoerceToGHash;

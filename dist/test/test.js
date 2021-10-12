@@ -186,9 +186,15 @@ const getBalances = async () => {
 const generateTransferRequest = async (amount) => {
     const { swapModule, signerAddress } = await getFixtures();
     const { underwriter } = await getUnderwriter();
-    return new zero_1.default(swapModule.address, signerAddress, underwriter.address, 
-    //@ts-ignore
-    deployParameters[network]['renBTC'], String(amount), '0x');
+    return new zero_1.default({
+        module: swapModule.address,
+        to: signerAddress,
+        underwriter: underwriter.address,
+        //@ts-ignore
+        asset: deployParameters[network]['renBTC'],
+        amount: String(amount),
+        data: '0x',
+    });
 };
 const getUnderwriter = async () => {
     const { signer, controller } = await getFixtures();

@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
+import { Buffer } from "buffer";
 import type { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signers';
 import { BigNumberish } from 'ethers';
 import { EIP712TypedData } from '@0x/types';
@@ -17,12 +18,37 @@ export default class TransferRequest {
     pNonce: string;
     amount: string;
     data: string;
-    constructor(module: string, to: string, underwriter: string, asset: string, amount: BigNumberish, data: string, nonce?: BigNumberish, pNonce?: BigNumberish);
+    signature: string;
+    contractAddress: string;
+    chainId: number | string;
+    private _destination;
+    constructor(params: {
+        module: string;
+        to: string;
+        underwriter: string;
+        asset: string;
+        amount: BigNumberish;
+        data: string;
+        nonce?: BigNumberish;
+        pNonce?: BigNumberish;
+        contractAddress?: string;
+        chainId?: number;
+    });
+    destination(contractAddress?: string, chainId?: number | string, signature?: string): string;
+    waitForSignature(isTest: any): Promise<any>;
+    computeMintTxHash(isTest: any): Promise<Buffer>;
+    submitToRenVM(isTest: any): Promise<Buffer>;
+    pollForFromChainTx(isTest: boolean): Promise<{
+        hash: any;
+        vout: any;
+    }>;
     setUnderwriter(underwriter: string): boolean;
     toEIP712Digest(contractAddress: string, chainId?: number): Buffer;
     toEIP712(contractAddress: string, chainId?: number): EIP712TypedData;
-    toGatewayAddress(input: GatewayAddressInput): any;
-    sign(signer: ZeroSigner, contractAddress: string): Promise<any>;
+    _computeGHash(): string;
+    getGPubKey(): Promise<string>;
+    toGatewayAddress(input: GatewayAddressInput): Promise<string>;
+    sign(signer: ZeroSigner, contractAddress: string): Promise<string>;
 }
 export declare function createZeroConnection(address: string): Promise<ZeroConnection>;
 export declare function createZeroUser(connection: ZeroConnection, persistence?: PersistenceAdapter<any, any>): ZeroUser;

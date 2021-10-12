@@ -14,5 +14,4 @@ export declare class BitcoinClient extends Client {
     };
     constructor(o: any);
 }
-export declare const getFreeBitcoinClient: () => BitcoinClient;
-export declare const getZeroBitcoinClient: () => BitcoinClient;
+export declare const getDefaultBitcoinClient: () => BitcoinClient;

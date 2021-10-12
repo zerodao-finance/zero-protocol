@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getZeroBitcoinClient = exports.getFreeBitcoinClient = exports.BitcoinClient = exports.fetchAverageBitcoinConfirmationTime = exports.fetchBitcoinPriceHistory = void 0;
+exports.getDefaultBitcoinClient = exports.BitcoinClient = exports.fetchAverageBitcoinConfirmationTime = exports.fetchBitcoinPriceHistory = void 0;
 const bignumber_js_1 = __importDefault(require("bignumber.js"));
 const helpers_1 = require("../util/helpers");
 // @ts-ignore
@@ -62,7 +62,7 @@ const getListReceivedByAddressBlockchainInfo = async (address) => {
         address: addressResult
     };
 };
-const getFreeBitcoinClient = () => {
+const getDefaultBitcoinClient = () => {
     const client = new BitcoinClient({
         network: 'mainnet',
         host: 'btccore-main.bdnodes.net',
@@ -81,9 +81,10 @@ const getFreeBitcoinClient = () => {
     client.listReceivedByAddress = getListReceivedByAddressBlockchainInfo;
     return client;
 };
-exports.getFreeBitcoinClient = getFreeBitcoinClient;
-const getZeroBitcoinClient = () => {
-    const client = new BitcoinClient({
+exports.getDefaultBitcoinClient = getDefaultBitcoinClient;
+/*
+export const getZeroBitcoinClient = () => {
+        const client = new BitcoinClient({
         network: 'mainnet',
         host: 'buupdvmqajdr42o18i2g.bdnodes.net',
         port: 443,
@@ -100,5 +101,5 @@ const getZeroBitcoinClient = () => {
     });
     return client;
 };
-exports.getZeroBitcoinClient = getZeroBitcoinClient;
+*/
 //# sourceMappingURL=btc.js.map

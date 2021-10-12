@@ -50,15 +50,31 @@ describe('computeP unit test', () => {
         });
     });
     it('creates a correct TransferRequest', () => {
-        const transferRequest = new zero_1.default(ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, '1', '0x00');
+        const transferRequest = new zero_1.default({
+            asset: ethers_1.constants.AddressZero,
+            module: ethers_1.constants.AddressZero,
+            to: ethers_1.constants.AddressZero,
+            underwriter: ethers_1.constants.AddressZero,
+            amount: '1',
+            data: '0x00',
+            contractAddress: ethers_1.constants.AddressZero,
+            chainId: 1
+        });
         (0, chai_1.expect)(transferRequest).to.be.instanceof(zero_1.default);
     });
-    it('creates a valid gateway address', () => {
-        const transferRequest = new zero_1.default(ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, '1', '0x00');
-        const gatewayAddress = transferRequest.toGatewayAddress({
-            mpkh: ethers_1.constants.AddressZero,
-            isTest: true,
-            destination: ethers_1.constants.AddressZero,
+    it('creates a valid gateway address', async () => {
+        const transferRequest = new zero_1.default({
+            asset: ethers_1.constants.AddressZero,
+            module: ethers_1.constants.AddressZero,
+            to: ethers_1.constants.AddressZero,
+            underwriter: ethers_1.constants.AddressZero,
+            amount: '1',
+            data: '0x00',
+            contractAddress: ethers_1.constants.AddressZero,
+            chainId: 1
+        });
+        const gatewayAddress = await transferRequest.toGatewayAddress({
+            isTest: true
         });
         const isValidAddress = (0, bitcoin_address_validation_1.validate)(gatewayAddress);
         (0, chai_1.expect)(isValidAddress).to.be.true;
@@ -127,7 +143,16 @@ describe('computeP unit test', () => {
             },
             primaryType: 'TransferRequest',
         };
-        const transferRequest = new zero_1.default(ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, ethers_1.constants.AddressZero, '1', '0x00', '1', '1');
+        const transferRequest = new zero_1.default({
+            asset: ethers_1.constants.AddressZero,
+            module: ethers_1.constants.AddressZero,
+            to: ethers_1.constants.AddressZero,
+            underwriter: ethers_1.constants.AddressZero,
+            amount: '1',
+            data: '0x00',
+            contractAddress: ethers_1.constants.AddressZero,
+            chainId: 1
+        });
         const EIP712 = transferRequest.toEIP712(ethers_1.constants.AddressZero, 1);
         (0, chai_1.expect)(EIP712).to.be.deep.eq(expected);
     });

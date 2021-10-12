@@ -62,7 +62,7 @@ describe('computeP unit test', () => {
     });
 		expect(transferRequest).to.be.instanceof(TransferRequest);
 	});
-	it('creates a valid gateway address', () => {
+	it('creates a valid gateway address', async () => {
 		const transferRequest = new TransferRequest({
 			asset: constants.AddressZero,
 			module: constants.AddressZero,
@@ -73,10 +73,8 @@ describe('computeP unit test', () => {
       contractAddress: constants.AddressZero,
       chainId: 1
     });
-		const gatewayAddress = transferRequest.toGatewayAddress({
-			mpkh: constants.AddressZero,
-			isTest: true,
-			destination: constants.AddressZero,
+		const gatewayAddress = await transferRequest.toGatewayAddress({
+			isTest: true
 		});
 		const isValidAddress = validate(gatewayAddress);
 		expect(isValidAddress).to.be.true;
