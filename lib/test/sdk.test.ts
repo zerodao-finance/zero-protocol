@@ -50,25 +50,29 @@ describe('computeP unit test', () => {
 		});
 	});
 	it('creates a correct TransferRequest', () => {
-		const transferRequest = new TransferRequest(
-			constants.AddressZero,
-			constants.AddressZero,
-			constants.AddressZero,
-			constants.AddressZero,
-			'1',
-			'0x00',
-		);
+		const transferRequest = new TransferRequest({
+			asset: constants.AddressZero,
+			module: constants.AddressZero,
+ 			to: constants.AddressZero,
+			underwriter: constants.AddressZero,
+			amount: '1',
+			data: '0x00',
+      contractAddress: constants.AddressZero,
+      chainId: 1
+    });
 		expect(transferRequest).to.be.instanceof(TransferRequest);
 	});
 	it('creates a valid gateway address', () => {
-		const transferRequest = new TransferRequest(
-			constants.AddressZero,
-			constants.AddressZero,
-			constants.AddressZero,
-			constants.AddressZero,
-			'1',
-			'0x00',
-		);
+		const transferRequest = new TransferRequest({
+			asset: constants.AddressZero,
+			module: constants.AddressZero,
+ 			to: constants.AddressZero,
+			underwriter: constants.AddressZero,
+			amount: '1',
+			data: '0x00',
+      contractAddress: constants.AddressZero,
+      chainId: 1
+    });
 		const gatewayAddress = transferRequest.toGatewayAddress({
 			mpkh: constants.AddressZero,
 			isTest: true,
@@ -141,16 +145,16 @@ describe('computeP unit test', () => {
 			},
 			primaryType: 'TransferRequest',
 		};
-		const transferRequest = new TransferRequest(
-			constants.AddressZero,
-			constants.AddressZero,
-			constants.AddressZero,
-			constants.AddressZero,
-			'1',
-			'0x00',
-			'1',
-			'1',
-		);
+		const transferRequest = new TransferRequest({
+			asset: constants.AddressZero,
+			module: constants.AddressZero,
+ 			to: constants.AddressZero,
+			underwriter: constants.AddressZero,
+			amount: '1',
+			data: '0x00',
+      contractAddress: constants.AddressZero,
+      chainId: 1
+    });
 		const EIP712 = transferRequest.toEIP712(constants.AddressZero, 1);
 		expect(EIP712).to.be.deep.eq(expected);
 	});
