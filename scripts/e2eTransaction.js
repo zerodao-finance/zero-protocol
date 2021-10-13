@@ -22,20 +22,25 @@ var makeUser = async () => {
     return user;
 }
 
+const transferRequest = new TransferRequest({
+    module: Swap.address,
+    to: signer.address,
+    underwriter: ZeroUnderwriterImpl.address,
+    asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', // renBTC on MATIC
+    amount: String(utils.parseUnits('0.001', 8)),
+    data: '0x'
+});
+
 const main = async () => {
     const user = await makeUser();
 
-    const transferRequest = new TransferRequest({
-        module: Swap.address,
-        to: signer.address,
-        underwriter: ZeroUnderwriterImpl.address,
-        asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', // renBTC on MATIC
-        amount: String(utils.parseUnits('0.001', 8)),
-        data: '0x'
-    });
+
 
     transferRequest.setUnderwriter(ZeroUnderwriterImpl.address);
     await transferRequest.sign(signer, ZeroController.address);
+
+    const gatewayAddress = await transferRequest.toGatewayAddress();
+    console.log("Deposit BTC to", gatewayAddress)
 
     user.conn.on('peer:discovery', async () => await user.publishTransferRequest(transferRequest));
 }
