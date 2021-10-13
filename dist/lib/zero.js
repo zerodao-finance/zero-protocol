@@ -1,7 +1,4 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createZeroKeeper = exports.createZeroUser = exports.createZeroConnection = exports.TransferRequest = void 0;
 const bytes_1 = require("@ethersproject/bytes");
@@ -14,11 +11,11 @@ const buffer_1 = require("buffer");
 const ethers_1 = require("ethers");
 const utils_1 = require("@0x/utils");
 const constants_1 = require("./config/constants");
-const renvm_1 = __importDefault(require("./util/renvm"));
 const helpers_1 = require("./util/helpers");
 const p2p_1 = require("./p2p");
-const ren_1 = __importDefault(require("@renproject/ren"));
 const toBuffer = (hex) => buffer_1.Buffer.from(hex.substr(2), 'hex');
+const RenSDK = require("@renproject/ren");
+const RenJS = RenSDK.RenJS;
 class TransferRequest {
     constructor(params) {
         this.module = params.module;
@@ -46,7 +43,7 @@ class TransferRequest {
     }
     async waitForSignature(isTest) {
         const txHash = await this.computeMintTxHash(isTest);
-        const renvm = new ren_1.default('mainnet', { useV2TransactionFormat: true });
+        const renvm = new RenJS('mainnet', { useV2TransactionFormat: true });
         while (true) {
             console.log('poll RenVM ...');
             const result = await renvm.renVM.queryTx(txHash);
@@ -59,7 +56,7 @@ class TransferRequest {
         }
     }
     async computeMintTxHash(isTest) {
-        const renvm = new ren_1.default('mainnet', { useV2TransactionFormat: true });
+        const renvm = new RenJS('mainnet', { useV2TransactionFormat: true });
         const { hash, vout } = await this.pollForFromChainTx(isTest || false);
         const nHash = toBuffer((0, helpers_1.computeNHash)({
             txHash: hash,
@@ -84,7 +81,7 @@ class TransferRequest {
         });
     }
     async submitToRenVM(isTest) {
-        const renvm = new ren_1.default('mainnet', { useV2TransactionFormat: true });
+        const renvm = new RenJS('mainnet', { useV2TransactionFormat: true });
         const { hash, vout } = await this.pollForFromChainTx(isTest || false);
         const nHash = toBuffer((0, helpers_1.computeNHash)({
             txHash: hash,
@@ -190,11 +187,12 @@ class TransferRequest {
         });
     }
     async getGPubKey() {
-        const renvm = new ren_1.default('mainnet');
+        const renvm = new RenJS('mainnet');
         return (0, bytes_1.hexlify)(await renvm.renVM.selectPublicKey('BTC', ''));
     }
     async toGatewayAddress(input) {
-        const renvm = new renvm_1.default('mainnet', {});
+        const renvm = new RenJS('mainnet', {});
+        input = input || { isTest: false };
         return renvm.computeGatewayAddress({
             mpkh: (0, bytes_1.hexlify)((await renvm.renVM.selectPublicKey('BTC', ''))),
             isTestnet: input.isTest,

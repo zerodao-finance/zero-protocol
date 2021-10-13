@@ -36,8 +36,8 @@ export declare class TransferRequest {
     });
     destination(contractAddress?: string, chainId?: number | string, signature?: string): string;
     waitForSignature(isTest: any): Promise<any>;
-    computeMintTxHash(isTest: any): Promise<Buffer>;
-    submitToRenVM(isTest: any): Promise<Buffer>;
+    computeMintTxHash(isTest: any): Promise<any>;
+    submitToRenVM(isTest: any): Promise<any>;
     pollForFromChainTx(isTest: boolean): Promise<{
         hash: any;
         vout: any;

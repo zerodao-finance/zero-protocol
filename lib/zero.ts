@@ -18,13 +18,16 @@ import { computeP, computeNHash, maybeCoerceToGHash } from './util/helpers';
 import { createNode, ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
 import { PersistenceAdapter } from './persistence';
 import { GatewayAddressInput } from './types';
-import RenJS from "@renproject/ren";
 
 const toBuffer = (hex) => Buffer.from(hex.substr(2), 'hex');
 
 type ZeroSigner = Wallet & SignerWithAddress & Signer;
+import RenSDK = require("@renproject/ren");
+
 
 import { use } from 'chai';
+
+const RenJS = (RenSDK as any).RenJS;
 
 export class TransferRequest {
 	public module: string;
@@ -76,7 +79,7 @@ export class TransferRequest {
 	}
   async waitForSignature(isTest) {
     const txHash = await this.computeMintTxHash(isTest);
-		const renvm = new RenJS('mainnet', { useV2TransactionFormat: true });
+		const renvm = new (RenJS as any)('mainnet', { useV2TransactionFormat: true });
     while (true) {
       console.log('poll RenVM ...');
       const result = await (renvm.renVM as any).queryTx(txHash); 
@@ -88,7 +91,7 @@ export class TransferRequest {
     }
   }
   async computeMintTxHash(isTest) {
-		const renvm = new RenJS('mainnet', { useV2TransactionFormat: true });
+		const renvm = new (RenJS as any)('mainnet', { useV2TransactionFormat: true });
 		const { hash, vout } = await this.pollForFromChainTx(isTest || false);
 		const nHash = toBuffer(computeNHash({
 			txHash: hash,
@@ -113,7 +116,7 @@ export class TransferRequest {
     });
 	}
 	async submitToRenVM(isTest) {
-		const renvm = new RenJS('mainnet', { useV2TransactionFormat: true });
+		const renvm = new (RenJS as any)('mainnet', { useV2TransactionFormat: true });
 		const { hash, vout } = await this.pollForFromChainTx(isTest || false);
 		const nHash = toBuffer(computeNHash({
 			txHash: hash,
@@ -216,11 +219,12 @@ export class TransferRequest {
 		});
 	}
 	async getGPubKey() {
-		const renvm = new RenJS('mainnet');
+		const renvm = new (RenJS as any)('mainnet');
 		return hexlify(await renvm.renVM.selectPublicKey('BTC', ''))
 	}
 	async toGatewayAddress(input: GatewayAddressInput): Promise<string> {
-		const renvm = new RenVM('mainnet', {});
+		const renvm = new (RenJS as any)('mainnet', {});
+		input = input || { isTest: false };
 		return renvm.computeGatewayAddress({
 			mpkh: hexlify((await (renvm as any).renVM.selectPublicKey('BTC', ''))),
 			isTestnet: input.isTest,
