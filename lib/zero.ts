@@ -53,7 +53,7 @@ export class TransferRequest {
 		pNonce?: BigNumberish,
 		contractAddress?: string,
 		chainId?: number
-  }) {
+	}) {
 		this.module = params.module;
 		this.to = params.to;
 		this.underwriter = params.underwriter;
@@ -70,27 +70,27 @@ export class TransferRequest {
 		this.contractAddress = params.contractAddress;
 	}
 
-	destination(contractAddress?: string, chainId?: number|string, signature?: string) {
+	destination(contractAddress?: string, chainId?: number | string, signature?: string) {
 		if (this._destination) return this._destination;
 		const payload = this.toEIP712(contractAddress || this.contractAddress, Number(chainId || this.chainId));
 		delete payload.types.EIP712Domain;
 		const digest = _TypedDataEncoder.hash(payload.domain, payload.types, payload.message);
 		return (this._destination = recoverAddress(digest, signature || this.signature));
 	}
-  async waitForSignature(isTest) {
-    const txHash = await this.computeMintTxHash(isTest);
+	async waitForSignature(isTest) {
+		const txHash = await this.computeMintTxHash(isTest);
 		const renvm = new (RenJS as any)('mainnet', { useV2TransactionFormat: true });
-    while (true) {
-      console.log('poll RenVM ...');
-      const result = await (renvm.renVM as any).queryTx(txHash); 
-      if (!result) {
-        await new Promise((resolve) => setTimeout(resolve, 10000));
-      } else {
-        return result;
-      }
-    }
-  }
-  async computeMintTxHash(isTest) {
+		while (true) {
+			console.log('poll RenVM ...');
+			const result = await (renvm.renVM as any).queryTx(txHash);
+			if (!result) {
+				await new Promise((resolve) => setTimeout(resolve, 10000));
+			} else {
+				return result;
+			}
+		}
+	}
+	async computeMintTxHash(isTest) {
 		const renvm = new (RenJS as any)('mainnet', { useV2TransactionFormat: true });
 		const { hash, vout } = await this.pollForFromChainTx(isTest || false);
 		const nHash = toBuffer(computeNHash({
@@ -112,8 +112,8 @@ export class TransferRequest {
 			payload: toBuffer('0x' + computeP(this.pNonce, this.module, this.data).substr(10)),
 			pHash: toBuffer(utils.solidityKeccak256(['bytes'], [computeP(this.pNonce, this.module, this.data)])),
 			to: this.contractAddress,
-      outputHashFormat: 'b64'
-    });
+			outputHashFormat: 'b64'
+		});
 	}
 	async submitToRenVM(isTest) {
 		const renvm = new (RenJS as any)('mainnet', { useV2TransactionFormat: true });
@@ -137,23 +137,23 @@ export class TransferRequest {
 			payload: toBuffer('0x' + computeP(this.pNonce, this.module, this.data).substr(10)),
 			pHash: toBuffer(utils.solidityKeccak256(['bytes'], [computeP(this.pNonce, this.module, this.data)])),
 			to: this.contractAddress,
-      token: this.asset,
+			token: this.asset,
 			fn: 'zeroCall',
 			fnABI: [{
-        name: 'zeroCall',
-        type: 'function',
-        stateMutability: 'nonpayable',
-        inputs: [{
-  			  type: 'uint256',
-  			  name: 'pNonce'
-   			}, {
-  				type: 'address',
-  				name: 'module'
-  			}, {
-  				type: 'bytes',
-  				name: 'data'
-  			}]
-      }],
+				name: 'zeroCall',
+				type: 'function',
+				stateMutability: 'nonpayable',
+				inputs: [{
+					type: 'uint256',
+					name: 'pNonce'
+				}, {
+					type: 'address',
+					name: 'module'
+				}, {
+					type: 'bytes',
+					name: 'data'
+				}]
+			}],
 			tags: []
 		});
 	}
@@ -225,7 +225,7 @@ export class TransferRequest {
 	async toGatewayAddress(input: GatewayAddressInput): Promise<string> {
 		const renvm = new (RenJS as any)('mainnet', {});
 		input = input || { isTest: false };
-		return renvm.computeGatewayAddress({
+		return (new RenVM(null, null)).computeGatewayAddress({
 			mpkh: hexlify((await (renvm as any).renVM.selectPublicKey('BTC', ''))),
 			isTestnet: input.isTest,
 			g: {
