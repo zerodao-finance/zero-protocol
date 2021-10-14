@@ -102,14 +102,13 @@ class ZeroUser {
                 if (ackReceived !== true) {
                     try {
                         const peer = await peerId.createFromB58String(keeper);
-                        const peerAddr = await this.conn.peerRouting.findPeer(peer);
-                        const { stream } = await this.conn.dialProtocol(peerAddr, '/zero/keeper/dispatch');
+                        const { stream } = await this.conn.dialProtocol(peer, '/zero/keeper/dispatch');
                         (0, it_pipe_1.default)(JSON.stringify(transferRequest), it_length_prefixed_1.default.encode(), stream.sink);
                         this.log.info(`Published transfer request to ${keeper}. Waiting for keeper confirmation.`);
                     }
                     catch (e) {
                         this.log.error(`Failed dialing keeper: ${keeper} for txDispatch`);
-                        this.log.debug(e.message);
+                        this.log.debug(e.stack);
                     }
                 }
                 else {
