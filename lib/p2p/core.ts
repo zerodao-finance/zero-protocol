@@ -8,7 +8,10 @@ import lp from 'it-length-prefixed';
 import { ConnectionTypes } from './types';
 import { TransferRequest } from '../types';
 import { PersistenceAdapter, InMemoryPersistenceAdapter } from '../persistence';
+import { Buffer } from 'buffer';
 import peerId = require('peer-id');
+import peerInfo = require('peer-info');
+
 class ZeroConnection extends libp2p {}
 
 class ZeroUser {
@@ -86,13 +89,13 @@ class ZeroUser {
 				// @ts-expect-error
 				if (ackReceived !== true) {
 					try {
-						const peerAddr = await this.conn.peerRouting.findPeer(await peerId.createFromB58String(keeper)) as any;
-						const { stream } = await this.conn.dialProtocol(peerAddr, '/zero/keeper/dispatch');
+						const peer = await peerId.createFromB58String(keeper);
+						const { stream } = await this.conn.dialProtocol(peer, '/zero/keeper/dispatch');
 						pipe(JSON.stringify(transferRequest), lp.encode(), stream.sink);
 						this.log.info(`Published transfer request to ${keeper}. Waiting for keeper confirmation.`);
 					} catch (e: any) {
 						this.log.error(`Failed dialing keeper: ${keeper} for txDispatch`);
-						this.log.debug(e.message);
+						this.log.debug(e.stack);
 					}
 				} else {
 					break;
