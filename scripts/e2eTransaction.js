@@ -15,12 +15,6 @@ const provider = new providers.JsonRpcProvider(urls[chain]);
 const signer = new Wallet(privateKey, provider)
 
 
-var makeUser = async () => {
-    const user = sdk.createZeroUser(await sdk.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
-    await user.conn.start();
-    await user.subscribeKeepers();
-    return user;
-}
 
 const transferRequest = new TransferRequest({
     module: Swap.address,
@@ -31,10 +25,28 @@ const transferRequest = new TransferRequest({
     data: '0x'
 });
 
+const keeperCallback = (msg) => {
+    console.log("IMPORTANT CALLBACK:", msg);
+}
+
+const makeUser = async () => {
+    const user = sdk.createZeroUser(await sdk.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
+    await user.conn.start();
+    await user.subscribeKeepers();
+    return user;
+}
+
+const makeKeeper = async () => {
+    const keeper = sdk.createZeroKeeper(await sdk.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
+    await keeper.setTxDispatcher(keeperCallback);
+    await keeper.conn.start();
+    await keeper.advertiseAsKeeper();
+    return keeper;
+}
+
 const main = async () => {
+    const keeper = await makeKeeper();
     const user = await makeUser();
-
-
 
     transferRequest.setUnderwriter(ZeroUnderwriterImpl.address);
     await transferRequest.sign(signer, ZeroController.address);

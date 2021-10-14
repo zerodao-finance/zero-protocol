@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createZeroKeeper = exports.createZeroUser = exports.createZeroConnection = exports.TransferRequest = void 0;
 const bytes_1 = require("@ethersproject/bytes");
@@ -11,6 +14,7 @@ const buffer_1 = require("buffer");
 const ethers_1 = require("ethers");
 const utils_1 = require("@0x/utils");
 const constants_1 = require("./config/constants");
+const renvm_1 = __importDefault(require("./util/renvm"));
 const helpers_1 = require("./util/helpers");
 const p2p_1 = require("./p2p");
 const toBuffer = (hex) => buffer_1.Buffer.from(hex.substr(2), 'hex');
@@ -193,7 +197,7 @@ class TransferRequest {
     async toGatewayAddress(input) {
         const renvm = new RenJS('mainnet', {});
         input = input || { isTest: false };
-        return renvm.computeGatewayAddress({
+        return (new renvm_1.default(null, null)).computeGatewayAddress({
             mpkh: (0, bytes_1.hexlify)((await renvm.renVM.selectPublicKey('BTC', ''))),
             isTestnet: input.isTest,
             g: {
