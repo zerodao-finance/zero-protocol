@@ -9,6 +9,7 @@ const helpers_1 = require("../util/helpers");
 // @ts-ignore
 const bitcoin_core_1 = __importDefault(require("bitcoin-core"));
 const axios_1 = __importDefault(require("axios"));
+const BTCHandler_1 = require("send-crypto/build/main/handlers/BTC/BTCHandler");
 const fetchBitcoinPriceHistory = async (confirmationTime) => {
     const numConfTime = parseFloat(confirmationTime);
     if (isNaN(numConfTime))
@@ -47,6 +48,62 @@ class BitcoinClient extends bitcoin_core_1.default {
     }
 }
 exports.BitcoinClient = BitcoinClient;
+const resultToJsonRpc = async (id, fn) => {
+    try {
+        return {
+            jsonrpc: '2.0',
+            id,
+            result: await fn()
+        };
+    }
+    catch (e) {
+        return {
+            jsonrpc: '2.0',
+            id,
+            error: e
+        };
+    }
+};
+class BTCBackend {
+    constructor(options) {
+        this.testnet = options.network && options.network === 'testnet';
+        this.handler = BTCHandler_1.BTCHandler;
+        this.name = 'btc';
+        this.prefixes = ['btc'];
+        this.id = 0;
+    }
+    async sendPromise({ id, method, params }) {
+        switch (method) {
+            case 'btc_getUTXOs':
+                return await resultToJsonRpc(id, async () => await this.handler.getUTXOs(this.testnet, ...params));
+        }
+    }
+    send(o, cb) {
+        this.sendPromise(o).then((result) => cb(null, result)).catch((err) => cb(err));
+    }
+    async sendWrapped(method, params) {
+        const response = await new Promise((resolve, reject) => this.send({
+            id: this.id++,
+            method,
+            params,
+            jsonrpc: '2.0'
+        }, (err, result) => err ? reject(err) : resolve(result)));
+        if (response.error)
+            throw response.error;
+        return response.result;
+    }
+    async listReceivedByAddress(params) {
+        return await this.sendWrapped('btc_getUTXOs', [{
+                confirmations: params.confirmations || 1,
+                address: params.address
+            }]);
+    }
+}
+const getDefaultBitcoinClient = () => {
+    const network = process.env.CHAIN;
+    return new BTCBackend({ network });
+};
+exports.getDefaultBitcoinClient = getDefaultBitcoinClient;
 const getSingleAddressBlockchainInfo = async (address) => {
     const { data, status } = await axios_1.default.get('https://blockchain.info/rawaddr/' + address + '?cors=true');
     if (status !== 200)
@@ -64,7 +121,7 @@ const getListReceivedByAddressBlockchainInfo = async (address) => {
 };
 /*
 export const getDefaultBitcoinClient = () => {
-        const client = new BitcoinClient({
+              const client = new BitcoinClient({
         network: 'mainnet',
         host: 'btccore-main.bdnodes.net',
         port: 443,
@@ -83,7 +140,7 @@ export const getDefaultBitcoinClient = () => {
     return client;
 };
 */
-const getDefaultBitcoinClient = () => {
+/*export const getDefaultBitcoinClient = () => {
     const client = new BitcoinClient({
         network: 'mainnet',
         host: 'buupdvmqajdr42o18i2g.bdnodes.net',
@@ -101,5 +158,5 @@ const getDefaultBitcoinClient = () => {
     });
     return client;
 };
-exports.getDefaultBitcoinClient = getDefaultBitcoinClient;
+*/ 
 //# sourceMappingURL=btc.js.map

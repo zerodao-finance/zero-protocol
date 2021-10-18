@@ -161,22 +161,21 @@ export class TransferRequest {
 	}
 	async pollForFromChainTx(isTest: boolean) {
 		const gateway = await this.toGatewayAddress({ isTest: isTest || false });
-		await (getDefaultBitcoinClient() as any).importAddress(gateway);
+		//await (getDefaultBitcoinClient() as any).importAddress(gateway);
 		console.log('imported');
 		console.log(gateway);
 		while (true) {
 			try {
 				if (process.env.NODE_ENV === 'development') console.log('poll ' + gateway);
-				const result = await (getDefaultBitcoinClient() as any).listReceivedByAddress(1, false, true, gateway);
+				const result = await (getDefaultBitcoinClient() as any).listReceivedByAddress({ address: gateway });
 				if (result && result.length) {
-					console.log(result)
-					console.log(require('util').inspect(result, { depth: 15, colors: true }));
-					const { txids } = result;
-					const tx = txids.find((v) => v.out.find((v) => v.addr === gateway));
-					if (tx) return {
-						hash: tx.hash,
-						vout: tx.out.findIndex((v) => v.addr === gateway)
-					};
+					const [tx] = result;
+					return {
+						hash: tx.txHash,
+						amount: tx.amount,
+						vout: tx.vOut,
+						confirmations: tx.confirmations
+					}
 				} else {
 					await new Promise((resolve) => setTimeout(resolve, 20000));
 				}

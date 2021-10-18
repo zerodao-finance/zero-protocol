@@ -41,7 +41,9 @@ export declare class TransferRequest {
     submitToRenVM(isTest: any): Promise<any>;
     pollForFromChainTx(isTest: boolean): Promise<{
         hash: any;
+        amount: any;
         vout: any;
+        confirmations: any;
     }>;
     setUnderwriter(underwriter: string): boolean;
     toEIP712Digest(contractAddress: string, chainId?: number): Buffer;

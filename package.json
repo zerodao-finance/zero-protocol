@@ -95,6 +95,7 @@
 		"peer-id": "^0.15.3",
 		"pull-stream": "^3.6.14",
 		"rpc-bitcoin": "^2.0.0",
+		"send-crypto": "^0.2.33",
 		"tslint-config-prettier": "^1.18.0",
 		"winston": "^3.3.3",
 		"wrtc": "^0.4.7"

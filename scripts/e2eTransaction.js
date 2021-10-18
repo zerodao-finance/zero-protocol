@@ -1,7 +1,16 @@
 var sdk = require('../');
 const { TransferRequest } = require('../dist/lib/zero');
-const { ZeroController, ZeroUnderwriterImpl, Swap } = require("../dist/lib/util/deployed-contracts");
-const { Wallet, providers, utils } = require("ethers");
+const { ZeroController, Swap } = require("../dist/lib/util/deployed-contracts");
+const { Contract, Wallet, providers, utils } = require("ethers");
+const {
+    abi: TrivialUnderwriterAbi,
+    address: underwriterAddress,
+} = require('../deployments/matic/TrivialUnderwriter.json');
+const { abi: ControllerAbi, address: ControllerAddress } = require('../deployments/matic/ZeroController.json');
+const { abi: BTCVaultAbi, address: BTCVaultAddress } = require('../deployments/matic/BTCVault.json');
+const { ethers } = require('hardhat');
+
+
 
 const urls = {
     MATIC: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
@@ -14,17 +23,19 @@ const privateKey = process.env.WALLET;
 const provider = new providers.JsonRpcProvider(urls[chain]);
 const signer = new Wallet(privateKey, provider)
 
+const TrivialUnderwriter = new Contract(underwriterAddress, TrivialUnderwriterAbi, signer);
+const Controller = new Contract(ControllerAddress, ControllerAbi, signer);
+const BTCVault = new Contract(BTCVaultAddress, BTCVaultAbi, signer);
 
+const underwriterImpl = new Contract(underwriterAddress, ControllerAbi, signer);
 
 const transferRequest = new TransferRequest({
     module: Swap.address,
     to: signer.address,
-    underwriter: ZeroUnderwriterImpl.address,
+    underwriter: TrivialUnderwriter.address,
     asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', // renBTC on MATIC
     amount: String(utils.parseUnits('0.0001', 8)),
     data: '0x',
-    nonce: '0x3f08d051c9c13645dee6853ee00ff6a6181ef3665e14e2ba6d343d24a61726a1',
-    pNonce: '0x1087ef19141539b84e2087f265709db228af8015c61c26dfcddf615e9d57ddd2'
 });
 
 function delay(time) {
@@ -35,10 +46,22 @@ let done;
 const keeperCallback = async (msg) => {
     if (done) return;
     done = true;
-
-    console.log("IMPORTANT CALLBACK:", msg);
+    console.log("Transfer Request: ", msg)
     const tr = new TransferRequest(msg);
-    console.log(await tr.pollForFromChainTx());
+    const tx = await tr.pollForFromChainTx();
+    if (tx.amount >= tr.amount) {
+        const tx = await underwriterImpl.loan(
+            tr.to,
+            tr.asset,
+            tr.amount,
+            tr.pNonce,
+            tr.module,
+            tr.data,
+            tr.signature,
+            { gasPrice: ethers.utils.parseUnits('400', 'gwei'), gasLimit: '500000' }
+        );
+        console.log("Transaction:", tx);
+    }
 }
 
 const makeUser = async () => {
@@ -60,8 +83,10 @@ const main = async () => {
     const keeper = await makeKeeper();
     const user = await makeUser();
 
-    transferRequest.setUnderwriter(ZeroUnderwriterImpl.address);
-    await transferRequest.sign(signer, ZeroController.address);
+    transferRequest.setUnderwriter(underwriterImpl.address);
+    const lock = await Controller.provider.getCode(await Controller.lockFor(TrivialUnderwriter.address, { gasPrice: ethers.utils.parseUnits('400', 'gwei'), gasLimit: '500000' }));
+    if (lock === '0x') await Controller.mint(underwriterAddress, BTCVault.address, { gasPrice: ethers.utils.parseUnits('400', 'gwei'), gasLimit: '500000' });
+    await transferRequest.sign(signer, Controller.address);
 
     const gatewayAddress = await transferRequest.toGatewayAddress();
     console.log("Deposit BTC to", gatewayAddress);

@@ -14,4 +14,31 @@ export declare class BitcoinClient extends Client {
     };
     constructor(o: any);
 }
-export declare const getDefaultBitcoinClient: () => BitcoinClient;
+declare class BTCBackend {
+    testnet: boolean;
+    handler: any;
+    name: string;
+    prefixes: any[];
+    id: number;
+    constructor(options: any);
+    sendPromise({ id, method, params }: {
+        id: any;
+        method: any;
+        params: any;
+    }): Promise<{
+        jsonrpc: string;
+        id: any;
+        result: any;
+        error?: undefined;
+    } | {
+        jsonrpc: string;
+        id: any;
+        error: any;
+        result?: undefined;
+    }>;
+    send(o: any, cb: any): void;
+    sendWrapped(method: any, params: any): Promise<any>;
+    listReceivedByAddress(params: any): Promise<any>;
+}
+export declare const getDefaultBitcoinClient: () => BTCBackend;
+export {};
