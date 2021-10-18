@@ -153,10 +153,10 @@ class ZeroKeeper {
             (0, it_pipe_1.default)(stream.source, it_length_prefixed_1.default.decode(), async (rawData) => {
                 var e_2, _a;
                 // TODO: match handle and dialProtocol spec
-                if ((process === null || process === void 0 ? void 0 : process.env.NODE_ENV) === 'test') {
-                    callback((0, util_1.fromBufferToJSON)(stream.source));
+                /*if (process?.env.NODE_ENV === 'test') {
+                    callback(fromBufferToJSON(stream.source));
                     return;
-                }
+                }*/
                 let string = [];
                 try {
                     for (var rawData_2 = __asyncValues(rawData), rawData_2_1; rawData_2_1 = await rawData_2.next(), !rawData_2_1.done;) {

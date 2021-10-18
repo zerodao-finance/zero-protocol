@@ -12,7 +12,7 @@ import { Buffer } from 'buffer';
 import peerId = require('peer-id');
 import peerInfo = require('peer-info');
 
-class ZeroConnection extends libp2p {}
+class ZeroConnection extends libp2p { }
 
 class ZeroUser {
 	conn: ConnectionTypes;
@@ -146,10 +146,10 @@ class ZeroKeeper {
 			const stream: any = duplex.stream;
 			pipe(stream.source, lp.decode(), async (rawData: any) => {
 				// TODO: match handle and dialProtocol spec
-				if (process?.env.NODE_ENV === 'test') {
+				/*if (process?.env.NODE_ENV === 'test') {
 					callback(fromBufferToJSON(stream.source));
 					return;
-				}
+				}*/
 				let string = [];
 				for await (const msg of rawData) {
 					string.push(msg.toString());
