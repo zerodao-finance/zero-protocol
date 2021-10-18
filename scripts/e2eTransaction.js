@@ -21,9 +21,13 @@ const transferRequest = new TransferRequest({
     to: signer.address,
     underwriter: ZeroUnderwriterImpl.address,
     asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', // renBTC on MATIC
-    amount: String(utils.parseUnits('0.001', 8)),
+    amount: String(utils.parseUnits('0.0001', 8)),
     data: '0x'
 });
+
+function delay(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
+}
 
 const keeperCallback = (msg) => {
     console.log("IMPORTANT CALLBACK:", msg);
@@ -52,9 +56,14 @@ const main = async () => {
     await transferRequest.sign(signer, ZeroController.address);
 
     const gatewayAddress = await transferRequest.toGatewayAddress();
-    console.log("Deposit BTC to", gatewayAddress)
+    console.log("Deposit BTC to", gatewayAddress);
 
-    user.conn.on('peer:discovery', async () => await user.publishTransferRequest(transferRequest));
+    user.conn.on('peer:discovery', async () => {
+        console.log("discovered peer")
+        await delay(5000);
+        console.log("publishing transfer request to peer")
+        await user.publishTransferRequest(transferRequest);
+    });
 }
 
 const signLoan = async (msg) => {
