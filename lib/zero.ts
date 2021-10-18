@@ -161,6 +161,8 @@ export class TransferRequest {
 	}
 	async pollForFromChainTx(isTest: boolean) {
 		const gateway = await this.toGatewayAddress({ isTest: isTest || false });
+		await (getDefaultBitcoinClient() as any).importAddress(gateway);
+		console.log('imported');
 		console.log(gateway);
 		while (true) {
 			try {

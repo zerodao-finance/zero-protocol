@@ -109,25 +109,27 @@ class TransferRequest {
             token: this.asset,
             fn: 'zeroCall',
             fnABI: [{
-                    name: 'zeroCall',
-                    type: 'function',
-                    stateMutability: 'nonpayable',
-                    inputs: [{
-                            type: 'uint256',
-                            name: 'pNonce'
-                        }, {
-                            type: 'address',
-                            name: 'module'
-                        }, {
-                            type: 'bytes',
-                            name: 'data'
-                        }]
-                }],
+                name: 'zeroCall',
+                type: 'function',
+                stateMutability: 'nonpayable',
+                inputs: [{
+                    type: 'uint256',
+                    name: 'pNonce'
+                }, {
+                    type: 'address',
+                    name: 'module'
+                }, {
+                    type: 'bytes',
+                    name: 'data'
+                }]
+            }],
             tags: []
         });
     }
     async pollForFromChainTx(isTest) {
         const gateway = await this.toGatewayAddress({ isTest: isTest || false });
+        await (0, btc_1.getDefaultBitcoinClient)().importAddress(gateway);
+        console.log('imported');
         console.log(gateway);
         while (true) {
             try {
