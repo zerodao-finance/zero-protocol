@@ -16,3 +16,33 @@ var f = async () => {
   await user.publishTransferRequest({});
   return user;
 };
+
+var btc = getDefaultBitcoinClient();
+
+var { TransferRequest } = zero;
+var ethers = require('ethers');
+var wallet = ethers.Wallet.createRandom();
+
+var connectToMainnet = function (signer) {
+  wallet = wallet.connect(new ethers.providers.InfuraProvider('mainnet'));
+};
+
+connectToMainnet();
+
+var transferRequest = new TransferRequest({
+  asset: ethers.constants.AddressZero,
+  amount: '1',
+  nonce: '0x00',
+  pNonce: '0x00',
+  data: '0x',
+  underwriter: ethers.constants.AddressZero,
+  module: ethers.constants.AddressZero
+});
+
+
+
+
+/*
+var testAddress = '3Pu8uiAF2FvtiBaxDbvxhC2z7GsgDFWqHD';
+transferRequest.toGatewayAddress = () => testAddress;
+*/

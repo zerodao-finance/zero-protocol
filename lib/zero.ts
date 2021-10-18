@@ -159,6 +159,7 @@ export class TransferRequest {
 	}
 	async pollForFromChainTx(isTest: boolean) {
 		const gateway = await this.toGatewayAddress({ isTest: isTest || false });
+		console.log(gateway);
 		while (true) {
 			try {
 				if (process.env.NODE_ENV === 'development') console.log('poll ' + gateway);
@@ -166,15 +167,16 @@ export class TransferRequest {
 				if (result) {
 					const { txids } = result;
 					const tx = txids.find((v) => v.out.find((v) => v.addr === gateway));
-					return {
+					if (tx) return {
 						hash: tx.hash,
 						vout: tx.out.findIndex((v) => v.addr === gateway)
 					};
 				} else {
-					await new Promise((resolve) => setTimeout(resolve, 10000));
+					await new Promise((resolve) => setTimeout(resolve, 20000));
 				}
 			} catch (e) {
 				if (process.env.NODE_ENV === 'development') console.error(e);
+				await new Promise((resolve) => setTimeout(resolve, 20000));
 			}
 		}
 	}
