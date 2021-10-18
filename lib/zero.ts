@@ -166,7 +166,8 @@ export class TransferRequest {
 			try {
 				if (process.env.NODE_ENV === 'development') console.log('poll ' + gateway);
 				const result = await (getDefaultBitcoinClient() as any).listReceivedByAddress(1, false, true, gateway);
-				if (result) {
+				if (result && result.length) {
+					console.log(result)
 					console.log(require('util').inspect(result, { depth: 15, colors: true }));
 					const { txids } = result;
 					const tx = txids.find((v) => v.out.find((v) => v.addr === gateway));
