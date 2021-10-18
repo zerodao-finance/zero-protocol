@@ -28,9 +28,15 @@ const transferRequest = new TransferRequest({
 function delay(time) {
     return new Promise(resolve => setTimeout(resolve, time));
 }
+let done;
 
-const keeperCallback = (msg) => {
+const keeperCallback = async (msg) => {
+	if (done) return;
+	done = true;
+    
     console.log("IMPORTANT CALLBACK:", msg);
+    const tr = new TransferRequest(msg);
+    console.log(await tr.pollForFromChainTx());
 }
 
 const makeUser = async () => {

@@ -81,6 +81,7 @@ const getListReceivedByAddressBlockchainInfo = async (address) => {
   };
 };
 
+/*
 export const getDefaultBitcoinClient = () => {
        	const client = new BitcoinClient({
 		network: 'mainnet',
@@ -100,9 +101,9 @@ export const getDefaultBitcoinClient = () => {
 	(client as any).listReceivedByAddress = getListReceivedByAddressBlockchainInfo;
 	return client;
 };
+*/
 
-/*
-export const getZeroBitcoinClient = () => {
+export const getDefaultBitcoinClient = () => {
        	const client = new BitcoinClient({
 		network: 'mainnet',
 		host: 'buupdvmqajdr42o18i2g.bdnodes.net',
@@ -120,4 +121,3 @@ export const getZeroBitcoinClient = () => {
 	});
 	return client;
 };
-*/

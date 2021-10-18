@@ -38,9 +38,9 @@ export class TransferRequest {
 	public pNonce: string;
 	public amount: string;
 	public data: string;
-	public signature: string;
 	public contractAddress: string;
 	public chainId: number | string;
+	public signature: string;
 	private _destination: string;
 	constructor(params: {
 		module: string,
@@ -52,7 +52,8 @@ export class TransferRequest {
 		nonce?: BigNumberish,
 		pNonce?: BigNumberish,
 		contractAddress?: string,
-		chainId?: number
+		chainId?: number,
+		signature?: string
 	}) {
 		this.module = params.module;
 		this.to = params.to;
@@ -61,13 +62,14 @@ export class TransferRequest {
 		this.amount = params.amount.toString();
 		this.data = params.data;
 		this.nonce = params.nonce
-			? formatBytes32String(params.nonce.toString())
+			? hexlify(params.nonce)
 			: hexlify(randomBytes(32));
 		this.pNonce = params.pNonce
-			? formatBytes32String(params.pNonce.toString())
+			? hexlify(params.pNonce.toString())
 			: hexlify(randomBytes(32));
 		this.chainId = params.chainId;
 		this.contractAddress = params.contractAddress;
+		this.signature = params.signature;
 	}
 
 	destination(contractAddress?: string, chainId?: number | string, signature?: string) {
@@ -163,8 +165,9 @@ export class TransferRequest {
 		while (true) {
 			try {
 				if (process.env.NODE_ENV === 'development') console.log('poll ' + gateway);
-				const result = await (getDefaultBitcoinClient() as any).listReceivedByAddress(gateway);
+				const result = await (getDefaultBitcoinClient() as any).listReceivedByAddress(1, false, true, gateway);
 				if (result) {
+					console.log(require('util').inspect(result, { depth: 15, colors: true }));
 					const { txids } = result;
 					const tx = txids.find((v) => v.out.find((v) => v.addr === gateway));
 					if (tx) return {

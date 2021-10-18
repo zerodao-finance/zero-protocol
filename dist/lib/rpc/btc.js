@@ -62,8 +62,9 @@ const getListReceivedByAddressBlockchainInfo = async (address) => {
         address: addressResult
     };
 };
-const getDefaultBitcoinClient = () => {
-    const client = new BitcoinClient({
+/*
+export const getDefaultBitcoinClient = () => {
+        const client = new BitcoinClient({
         network: 'mainnet',
         host: 'btccore-main.bdnodes.net',
         port: 443,
@@ -78,13 +79,12 @@ const getDefaultBitcoinClient = () => {
             'Content-Type': 'application/json'
         },
     });
-    client.listReceivedByAddress = getListReceivedByAddressBlockchainInfo;
+    (client as any).listReceivedByAddress = getListReceivedByAddressBlockchainInfo;
     return client;
 };
-exports.getDefaultBitcoinClient = getDefaultBitcoinClient;
-/*
-export const getZeroBitcoinClient = () => {
-        const client = new BitcoinClient({
+*/
+const getDefaultBitcoinClient = () => {
+    const client = new BitcoinClient({
         network: 'mainnet',
         host: 'buupdvmqajdr42o18i2g.bdnodes.net',
         port: 443,
@@ -101,5 +101,5 @@ export const getZeroBitcoinClient = () => {
     });
     return client;
 };
-*/
+exports.getDefaultBitcoinClient = getDefaultBitcoinClient;
 //# sourceMappingURL=btc.js.map

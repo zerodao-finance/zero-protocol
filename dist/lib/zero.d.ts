@@ -18,9 +18,9 @@ export declare class TransferRequest {
     pNonce: string;
     amount: string;
     data: string;
-    signature: string;
     contractAddress: string;
     chainId: number | string;
+    signature: string;
     private _destination;
     constructor(params: {
         module: string;
@@ -33,6 +33,7 @@ export declare class TransferRequest {
         pNonce?: BigNumberish;
         contractAddress?: string;
         chainId?: number;
+        signature?: string;
     });
     destination(contractAddress?: string, chainId?: number | string, signature?: string): string;
     waitForSignature(isTest: any): Promise<any>;

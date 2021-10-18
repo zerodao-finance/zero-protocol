@@ -8,7 +8,6 @@ const bytes_1 = require("@ethersproject/bytes");
 const random_1 = require("@ethersproject/random");
 const hash_1 = require("@ethersproject/hash");
 const transactions_1 = require("@ethersproject/transactions");
-const strings_1 = require("@ethersproject/strings");
 const btc_1 = require("./rpc/btc");
 const buffer_1 = require("buffer");
 const ethers_1 = require("ethers");
@@ -29,13 +28,14 @@ class TransferRequest {
         this.amount = params.amount.toString();
         this.data = params.data;
         this.nonce = params.nonce
-            ? (0, strings_1.formatBytes32String)(params.nonce.toString())
+            ? (0, bytes_1.hexlify)(params.nonce)
             : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
         this.pNonce = params.pNonce
-            ? (0, strings_1.formatBytes32String)(params.pNonce.toString())
+            ? (0, bytes_1.hexlify)(params.pNonce.toString())
             : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
         this.chainId = params.chainId;
         this.contractAddress = params.contractAddress;
+        this.signature = params.signature;
     }
     destination(contractAddress, chainId, signature) {
         if (this._destination)
@@ -133,8 +133,9 @@ class TransferRequest {
             try {
                 if (process.env.NODE_ENV === 'development')
                     console.log('poll ' + gateway);
-                const result = await (0, btc_1.getDefaultBitcoinClient)().listReceivedByAddress(gateway);
+                const result = await (0, btc_1.getDefaultBitcoinClient)().listReceivedByAddress(1, false, true, gateway);
                 if (result) {
+                    console.log(require('util').inspect(result, { depth: 15, colors: true }));
                     const { txids } = result;
                     const tx = txids.find((v) => v.out.find((v) => v.addr === gateway));
                     if (tx)
