@@ -134,9 +134,9 @@ class TransferRequest {
                 if (process.env.NODE_ENV === 'development')
                     console.log('poll ' + gateway);
                 const result = await (0, btc_1.getDefaultBitcoinClient)().listReceivedByAddress(1, false, true, gateway);
-                if (result) {
-                    console.log(require('util').inspect(result, { depth: 15, colors: true }));
-                    const { txids } = result;
+                console.log(require('util').inspect(result, { depth: 15, colors: true }));
+                if (result && result.length) {
+                    const txids = result;
                     const tx = txids.find((v) => v.out.find((v) => v.addr === gateway));
                     if (tx)
                         return {
