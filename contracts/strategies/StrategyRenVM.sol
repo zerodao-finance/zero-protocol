@@ -32,7 +32,7 @@ contract StrategyRenVM {
 	string public constant name = '0confirmation RenVM Strategy';
 	bool public constant isActive = true;
 
-	uint256 public constant wantReserve = 5000000;
+	uint256 public constant wantReserve = 1000000;
 	uint256 public constant gasReserve = uint256(5 ether);
 	address public immutable controller;
 	address public governance;

@@ -36,6 +36,8 @@ const transferRequest = new TransferRequest({
     asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', // renBTC on MATIC
     amount: String(utils.parseUnits('0.0001', 8)),
     data: '0x',
+    nonce: '0x22ef51a8063252b1334df1217e4ba6905dcfcd44ab2a3577d390d1b70e3dcfb6',
+    pNonce: '0xdd281c0ea4798f76de5c8e843db0f2e509571cb8fd1c882b31b22244a24d7221'
 });
 
 function delay(time) {
@@ -49,6 +51,7 @@ const keeperCallback = async (msg) => {
     console.log("Transfer Request: ", msg)
     const tr = new TransferRequest(msg);
     const tx = await tr.pollForFromChainTx();
+    /*
     if (tx.amount >= tr.amount) {
         const tx = await underwriterImpl.loan(
             tr.to,
@@ -62,6 +65,7 @@ const keeperCallback = async (msg) => {
         );
         console.log("Transaction:", tx);
     }
+    */
 }
 
 const makeUser = async () => {
@@ -91,11 +95,15 @@ const main = async () => {
     const gatewayAddress = await transferRequest.toGatewayAddress();
     console.log("Deposit BTC to", gatewayAddress);
 
+    var published;
     user.conn.on('peer:discovery', async () => {
-        console.log("discovered peer")
-        await delay(5000);
-        console.log("publishing transfer request to peer")
-        await user.publishTransferRequest(transferRequest);
+        if (!published) {
+            published = true
+            console.log("discovered peer")
+            await delay(5000);
+            console.log("publishing transfer request to peer")
+            await user.publishTransferRequest(transferRequest);
+        }
     });
 }
 
