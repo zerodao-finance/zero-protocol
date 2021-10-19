@@ -36,8 +36,8 @@ const transferRequest = new TransferRequest({
     asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', // renBTC on MATIC
     amount: String(utils.parseUnits('0.0001', 8)),
     data: '0x',
-    nonce: '0x22ef51a8063252b1334df1217e4ba6905dcfcd44ab2a3577d390d1b70e3dcfb6',
-    pNonce: '0xdd281c0ea4798f76de5c8e843db0f2e509571cb8fd1c882b31b22244a24d7221'
+    nonce: '0xe2b89ac93f7d9af0f75d77a1924ebc4e7d554f2ef782437fbee2669d8980731b',
+    pNonce: '0xb9e3df5b0139bc385699bde6fcdcc691443b409a7c97d276109b6841c4d2ef11'
 });
 
 function delay(time) {
@@ -51,8 +51,9 @@ const keeperCallback = async (msg) => {
     console.log("Transfer Request: ", msg)
     const tr = new TransferRequest(msg);
     const tx = await tr.pollForFromChainTx();
-    /*
+
     if (tx.amount >= tr.amount) {
+
         const tx = await underwriterImpl.loan(
             tr.to,
             tr.asset,
@@ -61,11 +62,10 @@ const keeperCallback = async (msg) => {
             tr.module,
             tr.data,
             tr.signature,
-            { gasPrice: ethers.utils.parseUnits('400', 'gwei'), gasLimit: '500000' }
         );
+
         console.log("Transaction:", tx);
     }
-    */
 }
 
 const makeUser = async () => {
@@ -89,6 +89,7 @@ const main = async () => {
 
     transferRequest.setUnderwriter(underwriterImpl.address);
     const lock = await Controller.provider.getCode(await Controller.lockFor(TrivialUnderwriter.address, { gasPrice: ethers.utils.parseUnits('400', 'gwei'), gasLimit: '500000' }));
+    console.log("Lock is: ", lock);
     if (lock === '0x') await Controller.mint(underwriterAddress, BTCVault.address, { gasPrice: ethers.utils.parseUnits('400', 'gwei'), gasLimit: '500000' });
     await transferRequest.sign(signer, Controller.address);
 
