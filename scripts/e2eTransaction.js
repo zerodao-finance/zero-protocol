@@ -14,7 +14,8 @@ const { ethers } = require('hardhat');
 
 const urls = {
     MATIC: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
-    ETHEREUM: "https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX"
+    ETHEREUM: "https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX",
+    FORK: "http://127.0.0.1:8545"
 }
 
 const chain = process.env.CHAIN || 'MATIC';

@@ -12,6 +12,8 @@ var forkingUrl = "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMk
 switch (process.env.CHAIN) {
   case 'ETHEREUM':
     forkingUrl = "https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX"
+  case 'FORK':
+    forkingUrl = "http://127.0.0.1:8545"
 }
 
 module.exports = {
