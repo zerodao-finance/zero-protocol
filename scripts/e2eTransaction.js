@@ -47,15 +47,14 @@ function delay(time) {
 let done;
 
 const keeperCallback = async (msg) => {
-    if (done) return;
+/*    if (done) return;
     done = true;
+    */
     console.log("Transfer Request: ", msg)
     const tr = new TransferRequest(msg);
-    const tx = await tr.pollForFromChainTx();
+    const btcUtxo = await tr.pollForFromChainTx();
 
-    if (tx.amount >= tr.amount) {
-
-        const tx = await underwriterImpl.loan(
+    const tx = await underwriterImpl.loan(
             tr.to,
             tr.asset,
             tr.amount,
@@ -66,8 +65,7 @@ const keeperCallback = async (msg) => {
         );
 
         console.log("Transaction:", tx);
-    }
-}
+    };
 
 const makeUser = async () => {
     const user = sdk.createZeroUser(await sdk.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
@@ -84,10 +82,34 @@ const makeKeeper = async () => {
     return keeper;
 }
 
+const makeDeferred = () => {
+  let resolve, reject;
+  const promise = new Promise((_resolve, _reject) => { resolve = _resolve; reject = _reject; });
+  return {
+    promise,
+    resolve,
+    reject
+  };
+};
+
 const main = async () => {
     const keeper = await makeKeeper();
     const user = await makeUser();
 
+    var published;
+    const deferred = makeDeferred();
+    user.conn.on('peer:discovery', async () => {
+	    console.log('got peer:discovery');
+        if (!published) {
+            published = true
+            console.log("discovered peer")
+            await delay(5000);
+            console.log("publishing transfer request to peer")
+		console.log('peer:discovery waiting to be handled');
+            await deferred.promise;
+            await user.publishTransferRequest(transferRequest);
+        }
+    });
     transferRequest.setUnderwriter(underwriterImpl.address);
     const lock = await Controller.provider.getCode(await Controller.lockFor(TrivialUnderwriter.address, { gasPrice: ethers.utils.parseUnits('400', 'gwei'), gasLimit: '500000' }));
     console.log("Lock is: ", lock);
@@ -96,17 +118,9 @@ const main = async () => {
 
     const gatewayAddress = await transferRequest.toGatewayAddress();
     console.log("Deposit BTC to", gatewayAddress);
+    console.log('handling peer discovery');
+    deferred.resolve();
 
-    var published;
-    user.conn.on('peer:discovery', async () => {
-        if (!published) {
-            published = true
-            console.log("discovered peer")
-            await delay(5000);
-            console.log("publishing transfer request to peer")
-            await user.publishTransferRequest(transferRequest);
-        }
-    });
 }
 
 const signLoan = async (msg) => {
