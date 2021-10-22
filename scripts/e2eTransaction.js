@@ -69,16 +69,29 @@ const keeperCallback = async (msg) => {
 
 const makeUser = async () => {
     const user = sdk.createZeroUser(await sdk.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
-    await user.conn.start();
-    await user.subscribeKeepers();
+    user.start = async () => {
+      await user.conn.start();
+    };
+    user.waitForKeeper = async () => await new Promise(async (resolve, reject) => {
+      user.keepers.push = function (v) {
+        [].push.call(this, v);
+        user.keepers.push = [].push;
+        resolve();
+      };
+      try {
+        await user.subscribeKeepers();
+      } catch (e) { reject(e); }
+    });
     return user;
 }
 
 const makeKeeper = async () => {
     const keeper = sdk.createZeroKeeper(await sdk.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
     await keeper.setTxDispatcher(keeperCallback);
-    await keeper.conn.start();
-    await keeper.advertiseAsKeeper();
+    keeper.start = async () => {
+      await keeper.conn.start();
+      await keeper.advertiseAsKeeper();
+    };
     return keeper;
 }
 
@@ -99,11 +112,7 @@ const main = async () => {
     var published;
     const deferred = makeDeferred();
 
-    keeper.conn.on('peer:discovery', () => {
-        console.log('keeper discovered peer')
-    })
-
-    user.conn.on('peer:discovery', async () => {
+    const handlePeer = async () => {
         console.log('got peer:discovery');
         if (!published) {
             published = true
@@ -112,9 +121,14 @@ const main = async () => {
             console.log("publishing transfer request to peer")
             console.log('peer:discovery waiting to be handled');
             await deferred.promise;
+            await user.waitForKeeper();
             await user.publishTransferRequest(transferRequest);
         }
-    });
+    };
+    keeper.conn.on('peer:discovery', handlePeer);
+    user.conn.on('peer:discovery', handlePeer);
+    await keeper.start();
+    await user.start();
     transferRequest.setUnderwriter(underwriterImpl.address);
     const lock = await Controller.provider.getCode(await Controller.lockFor(TrivialUnderwriter.address, { gasPrice: ethers.utils.parseUnits('400', 'gwei'), gasLimit: '500000' }));
     console.log("Lock is: ", lock);
