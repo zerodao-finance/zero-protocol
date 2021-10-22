@@ -4,13 +4,12 @@ const { ZeroController, Swap } = require("../dist/lib/util/deployed-contracts");
 const { Contract, Wallet, providers, utils } = require("ethers");
 const {
     abi: TrivialUnderwriterAbi,
-    address: underwriterAddress,
 } = require('../deployments/matic/TrivialUnderwriter.json');
 const { abi: ControllerAbi, address: ControllerAddress } = require('../deployments/matic/ZeroController.json');
 const { abi: BTCVaultAbi, address: BTCVaultAddress } = require('../deployments/matic/BTCVault.json');
 const { ethers } = require('hardhat');
 
-
+const underwriterAddress = '0xcDb584d7c6f4c5Cae485Ed62b2038703dC59E158';
 
 const urls = {
     MATIC: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
@@ -37,8 +36,8 @@ const transferRequest = new TransferRequest({
     asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', // renBTC on MATIC
     amount: String(utils.parseUnits('0.0001', 8)),
     data: '0x',
-    nonce: '0xe2b89ac93f7d9af0f75d77a1924ebc4e7d554f2ef782437fbee2669d8980731b',
-    pNonce: '0xb9e3df5b0139bc385699bde6fcdcc691443b409a7c97d276109b6841c4d2ef11'
+    nonce: '0x53fc9b778460077468d2e8fd44eb0d9c66810e551c9e983569f092133f37db3d',
+    pNonce: '0x36cbcf365ecad2171742b1adeecb4b3d74eb0fddb8988b690117bf550a9b19c6'
 });
 
 function delay(time) {
@@ -54,6 +53,7 @@ const keeperCallback = async (msg) => {
     const tr = new TransferRequest(msg);
     const btcUtxo = await tr.pollForFromChainTx();
 
+    const mint = await transferRequest.submitToRenVM()
     const tx = await underwriterImpl.loan(
         tr.to,
         tr.asset,
@@ -70,17 +70,17 @@ const keeperCallback = async (msg) => {
 const makeUser = async () => {
     const user = sdk.createZeroUser(await sdk.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
     user.start = async () => {
-      await user.conn.start();
+        await user.conn.start();
     };
     user.waitForKeeper = async () => await new Promise(async (resolve, reject) => {
-      user.keepers.push = function (v) {
-        [].push.call(this, v);
-        user.keepers.push = [].push;
-        resolve();
-      };
-      try {
-        await user.subscribeKeepers();
-      } catch (e) { reject(e); }
+        user.keepers.push = function (v) {
+            [].push.call(this, v);
+            user.keepers.push = [].push;
+            resolve();
+        };
+        try {
+            await user.subscribeKeepers();
+        } catch (e) { reject(e); }
     });
     return user;
 }
@@ -89,8 +89,8 @@ const makeKeeper = async () => {
     const keeper = sdk.createZeroKeeper(await sdk.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
     await keeper.setTxDispatcher(keeperCallback);
     keeper.start = async () => {
-      await keeper.conn.start();
-      await keeper.advertiseAsKeeper();
+        await keeper.conn.start();
+        await keeper.advertiseAsKeeper();
     };
     return keeper;
 }
