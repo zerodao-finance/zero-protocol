@@ -1,9 +1,9 @@
-import { BigNumber } from '@ethersproject/bignumber';
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
 import { hexlify } from "@ethersproject/bytes";
 import { randomBytes } from "@ethersproject/random";
 import { _TypedDataEncoder } from "@ethersproject/hash";
+import { BigNumber } from "@ethersproject/bignumber";
 import { recoverAddress } from "@ethersproject/transactions";
 import { formatBytes32String } from "@ethersproject/strings";
 import { BitcoinClient, getDefaultBitcoinClient } from "./rpc/btc";
@@ -108,9 +108,9 @@ export class TransferRequest {
 			nonce: toBuffer(this.nonce),
 			output: {
 				txid: toBuffer(hash),
-				txindex: hexlify(vout)
+				txindex: String(Number(vout))
 			},
-			amount: hexlify(this.amount),
+			amount: (BigNumber.from(this.amount)).toString(),
 			payload: toBuffer('0x' + computeP(this.pNonce, this.module, this.data).substr(10)),
 			pHash: toBuffer(utils.solidityKeccak256(['bytes'], [computeP(this.pNonce, this.module, this.data)])),
 			to: this.contractAddress,
@@ -120,8 +120,9 @@ export class TransferRequest {
 	async submitToRenVM(isTest) {
 		const renvm = new (RenJS as any)('mainnet', { useV2TransactionFormat: true });
 		const { hash, vout } = await this.pollForFromChainTx(isTest || false);
+    console.log('hash', hash);
 		const nHash = toBuffer(computeNHash({
-			txHash: hash,
+			txHash: '0x' + hash,
 			vOut: vout,
 			nonce: this.nonce
 		}));
@@ -133,9 +134,9 @@ export class TransferRequest {
 			nonce: toBuffer(this.nonce),
 			output: {
 				txid: toBuffer(hash),
-				txindex: hexlify(vout)
+				txindex: String(Number(vout))
 			},
-			amount: hexlify(this.amount),
+			amount: (BigNumber.from(this.amount)).toString(),
 			payload: toBuffer('0x' + computeP(this.pNonce, this.module, this.data).substr(10)),
 			pHash: toBuffer(utils.solidityKeccak256(['bytes'], [computeP(this.pNonce, this.module, this.data)])),
 			to: this.contractAddress,
@@ -232,12 +233,13 @@ export class TransferRequest {
 	async toGatewayAddress(input: GatewayAddressInput): Promise<string> {
 		const renvm = new (RenJS as any)('mainnet', {});
 		input = input || { isTest: false };
+    console.log('gatewayAddress');
 		return (new RenVM(null, null)).computeGatewayAddress({
 			mpkh: hexlify((await (renvm as any).renVM.selectPublicKey('BTC', ''))),
 			isTestnet: input.isTest,
 			g: {
 				p: computeP(this.pNonce, this.module, this.data),
-				nonce: this.nonce,
+				nonce: hexlify(this.nonce),
 				tokenAddress: this.asset,
 				to: this.destination()
 			},

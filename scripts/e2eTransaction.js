@@ -1,12 +1,13 @@
-var sdk = require('../');
-const { TransferRequest } = require('../dist/lib/zero');
+require('ts-node').register(require('nice-repl/lib/ts-node-config'));
+var sdk = require('../lib/zero');
+const { TransferRequest } = require('../lib/zero');
 const { ZeroController, Swap } = require("../dist/lib/util/deployed-contracts");
 const { Contract, Wallet, providers, utils } = require("ethers");
 const {
     abi: TrivialUnderwriterAbi,
 } = require('../deployments/matic/TrivialUnderwriter.json');
 const { abi: ControllerAbi, address: ControllerAddress } = require('../deployments/matic/ZeroController.json');
-const { abi: BTCVaultAbi, address: BTCVaultAddress } = require('../deployments/matic/BTCVault.json');
+const { abi: BTCVaultAbi, address: BTCVaultAddress } = require('../deployments/matic/BTCVault');
 const { ethers } = require('hardhat');
 
 const underwriterAddress = '0xcDb584d7c6f4c5Cae485Ed62b2038703dC59E158';
