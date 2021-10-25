@@ -54,7 +54,7 @@ const keeperCallback = async (msg) => {
     const btcUtxo = await tr.pollForFromChainTx();
 
     const mint = await transferRequest.submitToRenVM()
-    const tx = await underwriterImpl.loan(
+    /*const tx = await underwriterImpl.loan(
         tr.to,
         tr.asset,
         tr.amount,
@@ -62,9 +62,9 @@ const keeperCallback = async (msg) => {
         tr.module,
         tr.data,
         tr.signature,
-    );
+    );*/
 
-    console.log("Transaction:", tx);
+    console.log("Mint:", mint);
 };
 
 const makeUser = async () => {
