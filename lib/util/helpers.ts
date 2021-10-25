@@ -3,7 +3,7 @@ import { defaultAbiCoder as abi, Interface } from '@ethersproject/abi';
 import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
 import { BYTES_TYPES } from '../config/constants';
 import { DarknodeSignatureInput, GHashInput, NHashInput, PHashInput } from '../types';
-import { generateNHash } from "@renproject/utils";
+import { fromHex, generateNHash } from "@renproject/utils";
 
 /*
 ===========================================
@@ -82,7 +82,7 @@ export const computeShiftInTxHash = ({ renContract, utxo, g }: any) =>
 		),
 	);
 
-export const computeNHash = (input: NHashInput) => '0x' + (generateNHash as any)(Buffer.from(input.nonce.substr(2), 'hex'), Buffer.from(input.txHash.substr(2), 'hex'), input.vOut, true ).toString('hex');
+export const computeNHash = (input: NHashInput) => (generateNHash as any)(fromHex(input.nonce), fromHex(input.txHash), input.vOut, true);
 const maybeCoerceToNHash = (input: NHashInput | string) => (typeof input === 'object' ? computeNHash(input) : input);
 
 export const computeHashForDarknodeSignature = (input: DarknodeSignatureInput) =>

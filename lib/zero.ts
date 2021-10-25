@@ -5,6 +5,7 @@ import { randomBytes } from "@ethersproject/random";
 import { _TypedDataEncoder } from "@ethersproject/hash";
 import { BigNumber } from "@ethersproject/bignumber";
 import { recoverAddress } from "@ethersproject/transactions";
+import { toURLBase64 } from "@renproject/utils";
 import { formatBytes32String } from "@ethersproject/strings";
 import { BitcoinClient, getDefaultBitcoinClient } from "./rpc/btc";
 import { Buffer } from "buffer";
@@ -119,20 +120,21 @@ export class TransferRequest {
 			payload: toBuffer('0x' + computeP(this.pNonce, this.module, this.data).substr(10)),
 			pHash: toBuffer(utils.solidityKeccak256(['bytes'], [computeP(this.pNonce, this.module, this.data)])),
 			to: this.contractAddress,
-			outputHashFormat: 'b64'
+			outputHashFormat: 'b64',
+      version: 2
 		});
 	}
 	async submitToRenVM(isTest) {
 		const renvm = new (RenJS as any)('mainnet', { useV2TransactionFormat: true });
 		const { hash, vout } = await this.pollForFromChainTx(isTest || false);
     console.log('hash', hash);
-		const nHash = toBuffer(computeNHash({
+		const nHash = computeNHash({
 			txHash: '0x' + hash,
 			vOut: vout,
 			nonce: this.nonce
-		}));
+		});
     console.log('computed NHash without toBuffer', computeNHash({ txHash: '0x' + hash, vOut: vout, nonce: this.nonce }));
-    console.log('computed NHash', nHash.toString('base64'));
+    console.log('computed NHash', toURLBase64(nHash));
     console.log('this.nonce', this.nonce);
     console.log('hash', '0x' + hash);
     console.log('vout', vout);
