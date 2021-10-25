@@ -96,10 +96,15 @@ export class TransferRequest {
 		const renvm = new (RenJS as any)('mainnet', { useV2TransactionFormat: true });
 		const { hash, vout } = await this.pollForFromChainTx(isTest || false);
 		const nHash = toBuffer(computeNHash({
-			txHash: hash,
+			txHash: '0x' + hash,
 			vOut: vout,
 			nonce: this.nonce
 		}));
+    console.log('this.nonce', this.nonce);
+    console.log('hash', '0x' + hash);
+    console.log('vout', vout);
+    console.log('computed NHash without toBuffer', computeNHash({ txHash: '0x' + hash, vOut: vout, nonce: this.nonce }));
+    console.log('computed NHash', nHash.toString('base64'));
 		return renvm.renVM.mintTxHash({
 			selector: 'BTC/toEthereum',
 			gHash: toBuffer(this._computeGHash()),
@@ -107,7 +112,7 @@ export class TransferRequest {
 			nHash,
 			nonce: toBuffer(this.nonce),
 			output: {
-				txid: toBuffer(hash),
+				txid: toBuffer('0x' + hash),
 				txindex: String(Number(vout))
 			},
 			amount: (BigNumber.from(this.amount)).toString(),
@@ -126,6 +131,11 @@ export class TransferRequest {
 			vOut: vout,
 			nonce: this.nonce
 		}));
+    console.log('computed NHash without toBuffer', computeNHash({ txHash: '0x' + hash, vOut: vout, nonce: this.nonce }));
+    console.log('computed NHash', nHash.toString('base64'));
+    console.log('this.nonce', this.nonce);
+    console.log('hash', '0x' + hash);
+    console.log('vout', vout);
 		return await renvm.renVM.submitMint({
 			selector: 'BTC/toEthereum',
 			gHash: toBuffer(this._computeGHash()),
@@ -137,7 +147,7 @@ export class TransferRequest {
 				txindex: String(Number(vout))
 			},
 			amount: (BigNumber.from(this.amount)).toString(),
-			payload: toBuffer('0x' + computeP(this.pNonce, this.module, this.data).substr(10)),
+			payload: toBuffer(computeP(this.pNonce, this.module, this.data)),
 			pHash: toBuffer(utils.solidityKeccak256(['bytes'], [computeP(this.pNonce, this.module, this.data)])),
 			to: this.contractAddress,
 			token: this.asset,
