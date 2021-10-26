@@ -21,6 +21,11 @@ contract Swap {
 	address public immutable router; //Sushi V2
 	address public immutable controllerWant; // Controller want (renBTC)
 
+	modifier onlyController() {
+		require(msg.sender == controller, '!controller');
+		_;
+	}
+
 	constructor(
 		address _controller,
 		address _wNative,
@@ -90,7 +95,7 @@ contract Swap {
 		uint256 _actualAmount,
 		uint256 _nonce,
 		bytes memory _data
-	) public {
+	) public onlyController {
 		require(outstanding[_nonce].qty != 0, '!outstanding');
 		IERC20(fiat).safeTransfer(_to, outstanding[_nonce].qty);
 		delete outstanding[_nonce];
