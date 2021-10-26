@@ -3,13 +3,16 @@ require('hardhat-deploy');
 require('hardhat-deploy-ethers');
 //require('hardhat-gas-reporter');
 require('@openzeppelin/hardhat-upgrades');
-//if (process.env.CHAIN === 'MATIC') require('ethers').providers.BaseProvider.prototype.getGasPrice = require('ethers-polygongastracker').createGetGasPrice('rapid');
-const forks = {
-    MATIC: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
-    ETHEREUM: "https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX"
-};
 const ethers = require('ethers');
-const forkingUrl = forks[process.env.CHAIN || "MATIC"];
+if (process.env.CHAIN === 'MATIC')
+    require('ethers').providers.BaseProvider.prototype.getGasPrice = require('ethers-polygongastracker').createGetGasPrice('rapid');
+var forkingUrl = "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm";
+switch (process.env.CHAIN) {
+    case 'ETHEREUM':
+        forkingUrl = "https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX";
+    case 'FORK':
+        forkingUrl = "http://127.0.0.1:8545";
+}
 module.exports = {
     solidity: {
         compilers: [{

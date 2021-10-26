@@ -12,5 +12,5 @@ export declare const computeP: (nonce: string, module: string, data: string) => 
 export declare const maybeCoerceToGHash: (input: GHashInput | string) => string;
 export declare const encodeInitializationActions: (input: any, InitializationActionsABI: any) => string;
 export declare const computeShiftInTxHash: ({ renContract, utxo, g }: any) => string;
-export declare const computeNHash: (input: NHashInput) => string;
+export declare const computeNHash: (input: NHashInput) => any;
 export declare const computeHashForDarknodeSignature: (input: DarknodeSignatureInput) => string;

@@ -22,6 +22,9 @@ export declare class TransferRequest {
     chainId: number | string;
     signature: string;
     private _destination;
+    private _contractFn;
+    private _contractParams;
+    private _ren;
     constructor(params: {
         module: string;
         to: string;
@@ -36,20 +39,10 @@ export declare class TransferRequest {
         signature?: string;
     });
     destination(contractAddress?: string, chainId?: number | string, signature?: string): string;
-    waitForSignature(isTest: any): Promise<any>;
-    computeMintTxHash(isTest: any): Promise<any>;
-    submitToRenVM(isTest: any): Promise<any>;
-    pollForFromChainTx(isTest: boolean): Promise<{
-        hash: any;
-        amount: any;
-        vout: any;
-        confirmations: any;
-    }>;
+    submitToRenVM(isTest: any): Promise<import("@renproject/ren").LockAndMint<any, import("@renproject/chains").BtcDeposit, any, any, any>>;
     setUnderwriter(underwriter: string): boolean;
     toEIP712Digest(contractAddress: string, chainId?: number): Buffer;
     toEIP712(contractAddress: string, chainId?: number): EIP712TypedData;
-    _computeGHash(): string;
-    getGPubKey(): Promise<string>;
     toGatewayAddress(input: GatewayAddressInput): Promise<string>;
     sign(signer: ZeroSigner, contractAddress: string): Promise<string>;
 }

@@ -37,8 +37,6 @@ const transferRequest = new TransferRequest({
     asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', // renBTC on MATIC
     amount: String(utils.parseUnits('0.0001', 8)),
     data: '0x',
-    nonce: '0x53fc9b778460077468d2e8fd44eb0d9c66810e551c9e983569f092133f37db3d',
-    pNonce: '0x36cbcf365ecad2171742b1adeecb4b3d74eb0fddb8988b690117bf550a9b19c6'
 });
 
 function delay(time) {
@@ -47,25 +45,40 @@ function delay(time) {
 let done;
 
 const keeperCallback = async (msg) => {
-    /*    if (done) return;
-        done = true;
-        */
-    console.log("Transfer Request: ", msg)
+    //console.log("Transfer Request: ", msg)
     const tr = new TransferRequest(msg);
-    const btcUtxo = await tr.pollForFromChainTx();
+    const mint = await transferRequest.submitToRenVM();
+    console.log(`(TransferRequest) Deposit ${utils.formatUnits(tr.amount, 8)} BTC to ${mint.gatewayAddress}`);
+    mint.on("deposit", async (deposit) => {
+        const hash = deposit.txHash();
+        const depositLog = (msg) => console.log(`RenVM Hash: ${hash}\nStatus: ${deposit.status}\n${msg}`);
 
-    const mint = await transferRequest.submitToRenVM()
-    /*const tx = await underwriterImpl.loan(
-        tr.to,
-        tr.asset,
-        tr.amount,
-        tr.pNonce,
-        tr.module,
-        tr.data,
-        tr.signature,
-    );*/
+        /*
+        deposit.confirmed().then(async () => {
+            console.log("Executing loan");
+            const tx = await underwriterImpl.loan(
+                tr.to,
+                tr.asset,
+                tr.amount,
+                tr.pNonce,
+                tr.module,
+                tr.data,
+                tr.signature,
+            );
+            console.log(tx);
+        })
+        */
 
-    console.log("Mint:", mint);
+        await deposit.confirmed()
+            .on("target", (target) => depositLog(`0/${target} confirmations`))
+            .on("confirmations", (confs, target) =>
+                depositLog(`${confs}/${target} confirmations`)
+            );
+        await deposit.signed()
+            .on("status", (status) => depositLog(`Status: ${status}`));
+
+
+    });
 };
 
 const makeUser = async () => {
@@ -88,7 +101,7 @@ const makeUser = async () => {
 
 const makeKeeper = async () => {
     const keeper = sdk.createZeroKeeper(await sdk.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
-    await keeper.setTxDispatcher(keeperCallback);
+    await keeper.setTxDispatcher(keeperCallback); //TODO change back to keeper callback
     keeper.start = async () => {
         await keeper.conn.start();
         await keeper.advertiseAsKeeper();
@@ -116,10 +129,10 @@ const main = async () => {
     const handlePeer = async () => {
         console.log('got peer:discovery');
         if (!published) {
-            published = true
-            console.log("discovered peer")
+            published = true;
+            console.log("discovered peer");
             await delay(5000);
-            console.log("publishing transfer request to peer")
+            console.log("publishing transfer request to peer");
             console.log('peer:discovery waiting to be handled');
             await deferred.promise;
             await user.waitForKeeper();
@@ -132,13 +145,12 @@ const main = async () => {
     await user.start();
     transferRequest.setUnderwriter(underwriterImpl.address);
     const lock = await Controller.provider.getCode(await Controller.lockFor(TrivialUnderwriter.address, { gasPrice: ethers.utils.parseUnits('400', 'gwei'), gasLimit: '500000' }));
-    console.log("Lock is: ", lock);
     if (lock === '0x') await Controller.mint(underwriterAddress, BTCVault.address, { gasPrice: ethers.utils.parseUnits('400', 'gwei'), gasLimit: '500000' });
     await transferRequest.sign(signer, Controller.address);
 
+    console.log("Generating deposit address...");
     const gatewayAddress = await transferRequest.toGatewayAddress();
-    console.log("Deposit BTC to", gatewayAddress);
-    console.log('handling peer discovery');
+    console.log(`(TransferRequest) Deposit ${utils.formatUnits(transferRequest.amount, 8)} BTC to ${gatewayAddress}`);
 
     // logic for deferred promise
     deferred.resolve();

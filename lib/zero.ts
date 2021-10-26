@@ -5,7 +5,7 @@ import { randomBytes } from "@ethersproject/random";
 import { _TypedDataEncoder } from "@ethersproject/hash";
 import { BigNumber } from "@ethersproject/bignumber";
 import { recoverAddress } from "@ethersproject/transactions";
-import { generateNHash, fromHex, toURLBase64 } from "@renproject/utils";
+import { generateNHash, generatePHash, generateGHash, fromHex, toURLBase64 } from "@renproject/utils";
 import { formatBytes32String } from "@ethersproject/strings";
 import { BitcoinClient, getDefaultBitcoinClient } from "./rpc/btc";
 import { Buffer } from "buffer";
@@ -19,18 +19,21 @@ import { computeP, computeNHash, maybeCoerceToGHash } from './util/helpers';
 import { createNode, ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
 import { PersistenceAdapter } from './persistence';
 import { GatewayAddressInput } from './types';
-
+import { Bitcoin, Polygon, Ethereum } from "@renproject/chains"
+import RenJS from "@renproject/ren";
+import { EthArgs } from "@renproject/interfaces";
 
 
 type ZeroSigner = Wallet & SignerWithAddress & Signer;
-import RenSDK = require("@renproject/ren");
-
-
-import { use } from 'chai';
 
 const logger = { debug(v) { console.error(v); } };
 
-const RenJS = (RenSDK as any).RenJS;
+const providers = {
+	MATIC: Polygon(new ethers.providers.JsonRpcProvider("https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm"), 'mainnet'),
+	ETHEREUM: Ethereum(new ethers.providers.JsonRpcProvider("https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX"), 'mainnet')
+}
+const provider = providers[process.env.CHAIN || "MATIC"]
+
 
 export class TransferRequest {
 	public module: string;
@@ -45,6 +48,10 @@ export class TransferRequest {
 	public chainId: number | string;
 	public signature: string;
 	private _destination: string;
+	private _contractFn: string;
+	private _contractParams: EthArgs;
+	private _ren: RenJS;
+
 	constructor(params: {
 		module: string,
 		to: string,
@@ -73,6 +80,26 @@ export class TransferRequest {
 		this.chainId = params.chainId;
 		this.contractAddress = params.contractAddress;
 		this.signature = params.signature;
+		//this._config = 
+		this._ren = new (RenJS as any)('mainnet', { useV2TransactionFormat: true, loadCompletedDeposits: true });
+		this._contractFn = "zeroCall";
+		this._contractParams = [
+			{
+				name: "pNonce",
+				type: "uint256",
+				value: this.pNonce
+			},
+			{
+				name: "module",
+				type: "address",
+				value: this.module
+			},
+			{
+				name: "data",
+				type: "bytes",
+				value: this.data
+			}
+		]
 	}
 
 	destination(contractAddress?: string, chainId?: number | string, signature?: string) {
@@ -82,118 +109,18 @@ export class TransferRequest {
 		const digest = _TypedDataEncoder.hash(payload.domain, payload.types, payload.message);
 		return (this._destination = recoverAddress(digest, signature || this.signature));
 	}
-	async waitForSignature(isTest) {
-		const txHash = await this.computeMintTxHash(isTest);
-		const renvm = new (RenJS as any)('mainnet', { transactionVersion: '2', useV2TransactionFormat: true });
-		while (true) {
-			console.log('poll RenVM ...');
-			const result = await (renvm.renVM as any).queryTx(txHash);
-			if (!result) {
-				await new Promise((resolve) => setTimeout(resolve, 10000));
-			} else {
-				return result;
-			}
-		}
-	}
+
 	async submitToRenVM(isTest) {
-		const renvm = new (RenJS as any)('mainnet', { transactionVersion: '2', useV2TransactionFormat: true });
-		const { hash, vout } = await this.pollForFromChainTx(isTest || false);
-    console.log('hash', hash);
-		const nHash = generateNHash(fromHex(this.nonce), fromHex('0x' + hash), String(Number(vout)),  true);
-    console.log('computed NHash without fromHex', computeNHash({ txHash: '0x' + hash, vOut: vout, nonce: this.nonce }));
-    console.log('computed NHash', toURLBase64(nHash));
-    console.log('this.nonce', this.nonce);
-    console.log('hash', '0x' + hash);
-    console.log('vout', vout);
-		const result = await renvm.renVM.submitMint({
-      logger,
-			selector: 'BTC/toEthereum',
-			gHash: fromHex(this._computeGHash()),
-			gPubKey: fromHex(await this.getGPubKey()),
-			nHash,
-			nonce: fromHex(this.nonce),
-			output: {
-				txid: fromHex(hash),
-				txindex: String(Number(vout))
-			},
-			amount: (BigNumber.from(this.amount)).toString(),
-			payload: fromHex(computeP(this.pNonce, this.module, this.data)),
-			pHash: fromHex(utils.solidityKeccak256(['bytes'], [computeP(this.pNonce, this.module, this.data)])),
-			to: this.contractAddress,
-			token: this.asset,
-			fn: 'zeroCall',
-			fnABI: [{
-				name: 'zeroCall',
-				type: 'function',
-				stateMutability: 'nonpayable',
-				inputs: [{
-					type: 'uint256',
-					name: 'pNonce'
-				}, {
-					type: 'address',
-					name: 'module'
-				}, {
-					type: 'bytes',
-					name: 'data'
-				}]
-			}],
-			tags: [],
-      transactionVersion: '2'
+		return await this._ren.lockAndMint({
+			asset: "BTC",
+			from: Bitcoin(),
+			nonce: this.nonce,
+			to: provider.Contract({
+				sendTo: this.contractAddress,
+				contractFn: this._contractFn,
+				contractParams: this._contractParams
+			})
 		});
-    console.log(result);
-    console.log('done');
-	}
-	async computeMintTxHash(isTest) {
-		const renvm = new (RenJS as any)('mainnet', { useV2TransactionFormat: true });
-		const { hash, vout } = await this.pollForFromChainTx(isTest || false);
-		const nHash = generateNHash(fromHex(this.nonce), fromHex(hash), String(Number(vout)), true);
-    console.log('this.nonce', this.nonce);
-    console.log('hash', '0x' + hash);
-    console.log('vout', vout);
-    console.log('computed NHash', nHash.toString('base64'));
-		return renvm.renVM.mintTxHash({
-			selector: 'BTC/toEthereum',
-			gHash: fromHex(this._computeGHash()),
-			gPubKey: fromHex(await this.getGPubKey()),
-			nHash,
-			nonce: fromHex(this.nonce),
-			output: {
-				txid: fromHex('0x' + hash),
-				txindex: String(Number(vout))
-			},
-			amount: (BigNumber.from(this.amount)).toString(),
-			payload: fromHex('0x' + computeP(this.pNonce, this.module, this.data).substr(10)),
-			pHash: fromHex(utils.solidityKeccak256(['bytes'], [computeP(this.pNonce, this.module, this.data)])),
-			to: this.contractAddress,
-			outputHashFormat: 'b64',
-      version: 2
-		});
-	}
-	async pollForFromChainTx(isTest: boolean) {
-		const gateway = await this.toGatewayAddress({ isTest: isTest || false });
-		//await (getDefaultBitcoinClient() as any).importAddress(gateway);
-		console.log('imported');
-		console.log(gateway);
-		while (true) {
-			try {
-				if (process.env.NODE_ENV === 'development') console.log('poll ' + gateway);
-				const result = await (getDefaultBitcoinClient() as any).listReceivedByAddress({ address: gateway });
-				if (result && result.length) {
-					const [tx] = result;
-					return {
-						hash: tx.txHash,
-						amount: tx.amount,
-						vout: tx.vOut,
-						confirmations: tx.confirmations
-					}
-				} else {
-					await new Promise((resolve) => setTimeout(resolve, 20000));
-				}
-			} catch (e) {
-				if (process.env.NODE_ENV === 'development') console.error(e);
-				await new Promise((resolve) => setTimeout(resolve, 20000));
-			}
-		}
 	}
 	setUnderwriter(underwriter: string): boolean {
 		if (!ethers.utils.isAddress(underwriter)) return false;
@@ -227,32 +154,9 @@ export class TransferRequest {
 			primaryType: 'TransferRequest',
 		};
 	}
-	_computeGHash() {
-		return maybeCoerceToGHash({
-			p: computeP(this.pNonce, this.module, this.data),
-			nonce: this.nonce,
-			to: this.destination(),
-			tokenAddress: this.asset
-		});
-	}
-	async getGPubKey() {
-		const renvm = new (RenJS as any)('mainnet');
-		return hexlify(await renvm.renVM.selectPublicKey('BTC', ''))
-	}
 	async toGatewayAddress(input: GatewayAddressInput): Promise<string> {
-		const renvm = new (RenJS as any)('mainnet', {});
-		input = input || { isTest: false };
-    console.log('gatewayAddress');
-		return (new RenVM(null, null)).computeGatewayAddress({
-			mpkh: hexlify((await (renvm as any).renVM.selectPublicKey('BTC', ''))),
-			isTestnet: input.isTest,
-			g: {
-				p: computeP(this.pNonce, this.module, this.data),
-				nonce: hexlify(this.nonce),
-				tokenAddress: this.asset,
-				to: this.destination()
-			},
-		});
+		const mint = await this.submitToRenVM(false);
+		return mint.gatewayAddress;
 	}
 	async sign(signer: ZeroSigner, contractAddress: string): Promise<string> {
 		const provider = signer.provider as ethers.providers.JsonRpcProvider;

@@ -5,6 +5,7 @@ const safe_buffer_1 = require("safe-buffer");
 const abi_1 = require("@ethersproject/abi");
 const solidity_1 = require("@ethersproject/solidity");
 const constants_1 = require("../config/constants");
+const utils_1 = require("@renproject/utils");
 /*
 ===========================================
 ============= GENERAL HELPERS =============
@@ -54,7 +55,7 @@ const computePHash = (input) => {
 exports.computePHash = computePHash;
 const computePHashFromP = (p) => (0, solidity_1.keccak256)(['bytes'], [p]);
 exports.computePHashFromP = computePHashFromP;
-const computeP = (nonce, module, data) => new abi_1.Interface(['function zeroCall(uint256, address, bytes)']).encodeFunctionData('zeroCall', [nonce, module, data]);
+const computeP = (nonce, module, data) => new abi_1.Interface(['function zeroCall(uint256,address,bytes)']).encodeFunctionData('zeroCall', [nonce, module, data]);
 exports.computeP = computeP;
 const maybeCoerceToGHash = (input) => typeof input === 'string' ? input : computeGHash(input);
 exports.maybeCoerceToGHash = maybeCoerceToGHash;
@@ -69,7 +70,7 @@ const encodeInitializationActions = (input, InitializationActionsABI) => abi_1.d
 exports.encodeInitializationActions = encodeInitializationActions;
 const computeShiftInTxHash = ({ renContract, utxo, g }) => (0, exports.toBase64)((0, solidity_1.keccak256)(['string'], [`txHash_${renContract}_${(0, exports.toBase64)((0, exports.maybeCoerceToGHash)(g))}_${(0, exports.toBase64)(utxo.txHash)}_${utxo.vOut}`]));
 exports.computeShiftInTxHash = computeShiftInTxHash;
-const computeNHash = (input) => keccakAbiEncoded(['bytes32', 'bytes32', 'uint256'], [input.nonce, input.txHash, input.vOut]);
+const computeNHash = (input) => utils_1.generateNHash((0, utils_1.fromHex)(input.nonce), (0, utils_1.fromHex)(input.txHash), input.vOut, true);
 exports.computeNHash = computeNHash;
 const maybeCoerceToNHash = (input) => (typeof input === 'object' ? (0, exports.computeNHash)(input) : input);
 const computeHashForDarknodeSignature = (input) => keccakAbiEncoded(['bytes32', 'uint256', 'address', 'address', 'bytes32'], [
