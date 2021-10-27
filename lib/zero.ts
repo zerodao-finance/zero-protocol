@@ -111,6 +111,7 @@ export class TransferRequest {
 	}
 
 	async submitToRenVM(isTest) {
+		console.log('submitToRenVM this.nonce', this.nonce);
 		return await this._ren.lockAndMint({
 			asset: "BTC",
 			from: Bitcoin(),

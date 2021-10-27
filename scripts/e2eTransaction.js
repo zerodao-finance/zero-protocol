@@ -35,6 +35,7 @@ const transferRequest = new TransferRequest({
     to: signer.address,
     underwriter: TrivialUnderwriter.address,
     asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', // renBTC on MATIC
+    nonce: '0x53fc9b778460077468d2e8fd44eb0d9c66810e551c9e983569f092133f37db3d',
     amount: String(utils.parseUnits('0.0001', 8)),
     data: '0x',
 });
