@@ -82,7 +82,7 @@ export class TransferRequest {
 		this.contractAddress = params.contractAddress;
 		this.signature = params.signature;
 		//this._config = 
-		this._ren = new (RenJS as any)('mainnet', { useV2TransactionFormat: true, loadCompletedDeposits: true });
+		this._ren = new (RenJS as any)('mainnet', { loadCompletedDeposits: true });
 		this._contractFn = "zeroCall";
 		this._contractParams = [
 			{
@@ -120,13 +120,14 @@ export class TransferRequest {
 		const result = await this._ren.lockAndMint(this.ln({
 			asset: "BTC",
 			from: Bitcoin(),
+      nonce: this.nonce,
 			to: provider.Contract({
 				sendTo: this.contractAddress,
 				contractFn: this._contractFn,
 				contractParams: this._contractParams
 			})
 		}));
-    result.params.nonce = this.nonce;
+//    result.params.nonce = this.nonce;
     return result;
 	}
 	setUnderwriter(underwriter: string): boolean {
