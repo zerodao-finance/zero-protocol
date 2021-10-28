@@ -137,7 +137,13 @@ export class TransferRequest {
       (mint as any).on('error', reject);
     });
     await deposit.signed();
-    return hexlify(deposit._state.queryTxResult.out.signature);
+    const { signature, nhash, phash, amount } = deposit._state.queryTxResult.out;
+    return {
+      amount: String(amount),
+      nHash: hexlify(nhash),
+      pHash: hexlify(phash),
+      signature: hexlify(signature)
+    };
   }
 	setUnderwriter(underwriter: string): boolean {
 		if (!ethers.utils.isAddress(underwriter)) return false;
