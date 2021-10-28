@@ -130,6 +130,15 @@ export class TransferRequest {
 //    result.params.nonce = this.nonce;
     return result;
 	}
+  async waitForSignature() {
+    const mint = await this.submitToRenVM(false);
+    const deposit: any = await new Promise((resolve, reject) => {
+      mint.on('deposit', resolve);
+      (mint as any).on('error', reject);
+    });
+    await deposit.signed();
+    return hexlify(deposit._state.queryTxResult.out.signature);
+  }
 	setUnderwriter(underwriter: string): boolean {
 		if (!ethers.utils.isAddress(underwriter)) return false;
 		this.underwriter = ethers.utils.getAddress(underwriter);

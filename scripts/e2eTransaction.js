@@ -82,6 +82,7 @@ const keeperCallback = async (msg) => {
 
 
     });
+    console.log(await transferRequest.waitForSignature());
 };
 
 const makeUser = async () => {
