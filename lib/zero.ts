@@ -71,6 +71,7 @@ export class TransferRequest {
 		this.asset = params.asset;
 		this.amount = params.amount.toString();
 		this.data = params.data;
+    console.log('params.nonce', params.nonce);
 		this.nonce = params.nonce
 			? hexlify(params.nonce)
 			: hexlify(randomBytes(32));
@@ -110,18 +111,23 @@ export class TransferRequest {
 		return (this._destination = recoverAddress(digest, signature || this.signature));
 	}
 
+  ln(v) {
+    console.log(v);
+    return v;
+  }
 	async submitToRenVM(isTest) {
 		console.log('submitToRenVM this.nonce', this.nonce);
-		return await this._ren.lockAndMint({
+		const result = await this._ren.lockAndMint(this.ln({
 			asset: "BTC",
 			from: Bitcoin(),
-			nonce: this.nonce,
 			to: provider.Contract({
 				sendTo: this.contractAddress,
 				contractFn: this._contractFn,
 				contractParams: this._contractParams
 			})
-		});
+		}));
+    result.params.nonce = this.nonce;
+    return result;
 	}
 	setUnderwriter(underwriter: string): boolean {
 		if (!ethers.utils.isAddress(underwriter)) return false;
