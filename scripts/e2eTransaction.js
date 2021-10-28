@@ -49,7 +49,7 @@ let done;
 const keeperCallback = async (msg) => {
     //console.log("Transfer Request: ", msg)
     const tr = new TransferRequest(msg);
-  console.log(tr.nonce);
+    console.log(tr.nonce);
     const mint = await transferRequest.submitToRenVM();
     console.log(`(TransferRequest) Deposit ${utils.formatUnits(tr.amount, 8)} BTC to ${mint.gatewayAddress}`);
     mint.on("deposit", async (deposit) => {
@@ -82,7 +82,22 @@ const keeperCallback = async (msg) => {
 
 
     });
-    console.log(await transferRequest.waitForSignature());
+    const { amount, nHash, pHash, signature } = tr.waitForSignature();
+    const tx = await underwriterImpl.repay(
+        TrivialUnderwriter.address, //underwriter
+        tr.to, //to
+        tr.asset, //asset
+        tr.amount, //amount
+        amount, //actualAmount
+        tr.pNonce, //nonce
+        tr.module, //module
+        nHash, //nHash
+        tr.data, //data
+        signature, //signature
+    );
+    console.log("tx submitted")
+    console.log(tx);
+
 };
 
 const makeUser = async () => {
