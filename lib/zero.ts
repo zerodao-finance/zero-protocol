@@ -1,6 +1,7 @@
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
 import { hexlify } from "@ethersproject/bytes";
+import { Contract } from "@ethersproject/contracts";
 import { randomBytes } from "@ethersproject/random";
 import { _TypedDataEncoder } from "@ethersproject/hash";
 import { BigNumber } from "@ethersproject/bignumber";
@@ -110,14 +111,9 @@ export class TransferRequest {
 		const digest = _TypedDataEncoder.hash(payload.domain, payload.types, payload.message);
 		return (this._destination = recoverAddress(digest, signature || this.signature));
 	}
-
-	ln(v) {
-		console.log(v);
-		return v;
-	}
 	async submitToRenVM(isTest) {
 		console.log('submitToRenVM this.nonce', this.nonce);
-		const result = await this._ren.lockAndMint(this.ln({
+		const result = await this._ren.lockAndMint({
 			asset: "BTC",
 			from: Bitcoin(),
 			nonce: this.nonce,
@@ -126,7 +122,7 @@ export class TransferRequest {
 				contractFn: this._contractFn,
 				contractParams: this._contractParams
 			})
-		}));
+		});
 		//    result.params.nonce = this.nonce;
 		return result;
 	}
@@ -196,6 +192,22 @@ export class TransferRequest {
 		}
 	}
 }
+
+export class TrivialUnderwriterTransferRequest extends TransferRequest {
+  getTrivialUnderwriter(signer) {
+    return new Contract(this.underwriter, [ 'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)', 'function loan(address, address, uint256, uint256, address, bytes, bytes)' ], signer);
+  }
+  async loan(signer) {
+    const underwriter = this.getTrivialUnderwriter(signer);
+    return await underwriter.loan(this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature);
+  }
+  async repay(signer) {
+    const underwriter = this.getTrivialUnderwriter(signer);
+    const { amount: actualAmount, nHash, signature } = await this.waitForSignature();
+    return await underwriter.repay(this.underwriter, this.destination(), this.asset, this.amount, actualAmount, this.pNonce, this.module, nHash, this.data, signature);
+  }
+}
+
 
 export async function createZeroConnection(address: string): Promise<ZeroConnection> {
 	const connOptions = {

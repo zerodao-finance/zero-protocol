@@ -1,6 +1,6 @@
 require('ts-node').register(require('nice-repl/lib/ts-node-config'));
 var sdk = require('../lib/zero');
-const { TransferRequest } = require('../lib/zero');
+const { TrivialUnderwriterTransferRequest, TransferRequest } = require('../lib/zero');
 const { ZeroController, Swap } = require("../dist/lib/util/deployed-contracts");
 const { Contract, Wallet, providers, utils } = require("ethers");
 const {
@@ -35,9 +35,9 @@ const transferRequest = new TransferRequest({
     to: signer.address,
     underwriter: TrivialUnderwriter.address,
     asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', // renBTC on MATIC
-    nonce: '0x53fc9b778460077468d2e8fd44eb0d9c66810e551c9e983569f092133f37db3d',
-    pNonce: '0x36cbcf365ecad2171742b1adeecb4b3d74eb0fddb8988b690117bf550a9b19c6',
-    amount: String(utils.parseUnits('0.0001', 8)),
+    nonce: '0x53fc9b778460077468d2e8fd44eb0d9c66810e551c9e983569f092133f37db3e',
+    pNonce: '0x36cbcf365ecad2171742b1adeecb4b3d74eb0fddb8988b690117bf550a9b19c7',
+    amount: String(utils.parseUnits('0.0016', 8)),
     data: '0x',
 });
 
@@ -48,7 +48,7 @@ let done;
 
 const keeperCallback = async (msg) => {
     //console.log("Transfer Request: ", msg)
-    const tr = new TransferRequest(msg);
+    const tr = new TrivialUnderwriterTransferRequest(msg);
     console.log(tr.nonce);
     const mint = await transferRequest.submitToRenVM();
     console.log(`(TransferRequest) Deposit ${utils.formatUnits(tr.amount, 8)} BTC to ${mint.gatewayAddress}`);
@@ -82,21 +82,20 @@ const keeperCallback = async (msg) => {
 
 
     });
-    const { amount, nHash, pHash, signature } = tr.waitForSignature();
-    const tx = await underwriterImpl.repay(
-        TrivialUnderwriter.address, //underwriter
-        tr.to, //to
-        tr.asset, //asset
-        tr.amount, //amount
-        amount, //actualAmount
-        tr.pNonce, //nonce
-        tr.module, //module
-        nHash, //nHash
-        tr.data, //data
-        signature, //signature
-    );
+    const loanTx = await tr.loan(signer);
+    console.log('loaned!');
+    console.log(loanTx);
+    console.log('awaiting receipt');
+    console.log(await loanTx.wait());
+    const waitedSignature = await tr.waitForSignature();
+    console.log('got signature!');
+    console.log(waitedSignature);
+    console.log('repaying');
+    const tx = await tr.repay(signer);
     console.log("tx submitted")
     console.log(tx);
+    console.log('awaiting receipt');
+    console.log(await tx.wait());
 
 };
 
