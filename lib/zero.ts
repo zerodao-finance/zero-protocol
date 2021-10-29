@@ -52,6 +52,8 @@ export class TransferRequest {
 	private _contractFn: string;
 	private _contractParams: EthArgs;
 	private _ren: RenJS;
+  public _queryTxResult: any;
+  public _mint: any;
 
 	constructor(params: {
 		module: string,
@@ -113,7 +115,8 @@ export class TransferRequest {
 	}
 	async submitToRenVM(isTest) {
 		console.log('submitToRenVM this.nonce', this.nonce);
-		const result = await this._ren.lockAndMint({
+    if (this._mint) return this._mint;
+		const result = this._mint = await this._ren.lockAndMint({
 			asset: "BTC",
 			from: Bitcoin(),
 			nonce: this.nonce,
@@ -127,6 +130,7 @@ export class TransferRequest {
 		return result;
 	}
 	async waitForSignature() {
+    if (this._queryTxResult) return this._queryTxResult;
 		const mint = await this.submitToRenVM(false);
 		const deposit: any = await new Promise((resolve, reject) => {
 			mint.on('deposit', resolve);
@@ -134,12 +138,13 @@ export class TransferRequest {
 		});
 		await deposit.signed();
 		const { signature, nhash, phash, amount } = deposit._state.queryTxResult.out;
-		return {
+    const result = this._queryTxResult = {
 			amount: String(amount),
 			nHash: hexlify(nhash),
 			pHash: hexlify(phash),
 			signature: hexlify(signature)
 		};
+    return result;
 	}
 	setUnderwriter(underwriter: string): boolean {
 		if (!ethers.utils.isAddress(underwriter)) return false;
@@ -201,10 +206,10 @@ export class TrivialUnderwriterTransferRequest extends TransferRequest {
     const underwriter = this.getTrivialUnderwriter(signer);
     return await underwriter.loan(this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature);
   }
-  async repay(signer) {
+  async repay(signer, params = {}) {
     const underwriter = this.getTrivialUnderwriter(signer);
     const { amount: actualAmount, nHash, signature } = await this.waitForSignature();
-    return await underwriter.repay(this.underwriter, this.destination(), this.asset, this.amount, actualAmount, this.pNonce, this.module, nHash, this.data, signature);
+    return await underwriter.repay(this.underwriter, this.destination(), this.asset, this.amount, actualAmount, this.pNonce, this.module, nHash, this.data, signature, params);
   }
 }
 

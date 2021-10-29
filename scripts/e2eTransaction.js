@@ -82,16 +82,16 @@ const keeperCallback = async (msg) => {
 
 
     });
-    const loanTx = await tr.loan(signer);
+//    const loanTx = await tr.loan(signer);
     console.log('loaned!');
-    console.log(loanTx);
-    console.log('awaiting receipt');
-    console.log(await loanTx.wait());
+//    console.log(loanTx);
+//    console.log('awaiting receipt');
+//    console.log(await loanTx.wait());
     const waitedSignature = await tr.waitForSignature();
     console.log('got signature!');
     console.log(waitedSignature);
     console.log('repaying');
-    const tx = await tr.repay(signer);
+    const tx = await tr.repay(signer, { gasLimit: 500e3 });
     console.log("tx submitted")
     console.log(tx);
     console.log('awaiting receipt');
