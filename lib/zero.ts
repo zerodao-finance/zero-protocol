@@ -199,8 +199,17 @@ export class TransferRequest {
 }
 
 export class TrivialUnderwriterTransferRequest extends TransferRequest {
+  async getController(signer) {
+    const underwriter = this.getTrivialUnderwriter(signer);
+    return new Contract(await underwriter.controller(), [ 'function fallbackMint(address underwriter, address to, address asset, uint256 amount, uint256 actualAmount, uint256 nonce, address module, bytes32 nHash, bytes data, bytes signature)' ], signer);
+  }
+  async fallbackMint(signer, params = {}) {
+    const controller = await this.getController(signer);
+    const queryTxResult = await this.waitForSignature();
+    return await controller.fallbackMint(this.underwriter, this.destination(), this.asset, this.amount, queryTxResult.amount, this.pNonce, this.module, queryTxResult.nHash, this.data, queryTxResult.signature, params);
+  }
   getTrivialUnderwriter(signer) {
-    return new Contract(this.underwriter, [ 'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)', 'function loan(address, address, uint256, uint256, address, bytes, bytes)' ], signer);
+    return new Contract(this.underwriter, [ 'function controller() view returns (address)', 'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)', 'function loan(address, address, uint256, uint256, address, bytes, bytes)' ], signer);
   }
   async loan(signer) {
     const underwriter = this.getTrivialUnderwriter(signer);
