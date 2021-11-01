@@ -4,12 +4,11 @@ const hre = require('hardhat');
 const { TrivialUnderwriterTransferRequest, TransferRequest } = require('../lib/zero');
 const { ZeroController, Swap } = require('../dist/lib/util/deployed-contracts');
 const { Contract, Wallet, providers, utils } = require('ethers');
-const { abi: TrivialUnderwriterAbi } = require('../deployments/matic/TrivialUnderwriter.json');
+const { address: underwriterAddress, abi: TrivialUnderwriterAbi } = require('../deployments/matic/TrivialUnderwriter.json');
 const { abi: ControllerAbi, address: ControllerAddress } = require('../deployments/matic/ZeroController.json');
 const { abi: BTCVaultAbi, address: BTCVaultAddress } = require('../deployments/matic/BTCVault');
 const { ethers } = require('hardhat');
 
-const underwriterAddress = '0xcDb584d7c6f4c5Cae485Ed62b2038703dC59E158';
 const makeDeferred = () => {
 	let resolve, reject;
 	const promise = new Promise((_resolve, _reject) => {
@@ -60,7 +59,7 @@ const keeperCallback = async (msg) => {
 		console.log(tr.nonce);
 		const mint = await transferRequest.submitToRenVM();
 		console.log(`(TransferRequest) Deposit ${utils.formatUnits(tr.amount, 8)} BTC to ${mint.gatewayAddress}`);
-		mint.on('deposit', async (deposit) => {
+		await new Promise((resolve, reject) => mint.on('deposit', async (deposit) => {
 			const hash = deposit.txHash();
 			const depositLog = (msg) => console.log(`RenVM Hash: ${hash}\nStatus: ${deposit.status}\n${msg}`);
 
@@ -82,17 +81,21 @@ const keeperCallback = async (msg) => {
 
 			await deposit
 				.confirmed()
-				.on('target', (target) => depositLog(`0/${target} confirmations`))
+				.on('target', (target) => {
+          depositLog(`0/${target} confirmations`);
+          resolve(deposit);
+        })
 				.on('confirmation', (confs, target) => depositLog(`${confs}/${target} confirmations`));
 			await deposit.signed().on('status', (status) => depositLog(`Status: ${status}`));
-		});
-		//    const loanTx = await tr.loan(signer);
+		}));
+		const loanTx = await tr.loan(signer);
 		console.log('loaned!');
-		//    console.log(loanTx);
-		//    console.log('awaiting receipt');
-		//    console.log(await loanTx.wait());
-		tr._queryTxResult = _queryTxResult;
+		console.log(loanTx);
+		console.log('awaiting receipt');
+		console.log(await loanTx.wait());
+		/*tr._queryTxResult = _queryTxResult;
 		tr._mint = {};
+    */
 		const waitedSignature = await tr.waitForSignature();
 		console.log('got signature!');
 		console.log(waitedSignature);

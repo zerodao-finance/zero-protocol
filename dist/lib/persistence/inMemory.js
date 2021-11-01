@@ -10,8 +10,11 @@ class InMemoryPersistenceAdapter {
         this.backend = new Map();
     }
     async set(transferRequest) {
-        const key = (0, object_hash_1.default)(transferRequest);
-        const status = Object.assign(Object.assign({}, transferRequest), { status: 'pending' });
+        const tr = Object.assign({}, transferRequest);
+        delete tr._mint;
+        delete tr._queryTxResult;
+        const key = (0, object_hash_1.default)(tr);
+        const status = Object.assign(Object.assign({}, tr), { status: 'pending' });
         try {
             await this.backend.set(key, status);
             return key;
