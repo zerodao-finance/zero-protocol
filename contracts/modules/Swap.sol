@@ -97,7 +97,7 @@ contract Swap {
 		bytes memory _data
 	) public onlyController {
 		require(outstanding[_nonce].qty != 0, '!outstanding');
-		IERC20(fiat).safeTransfer(_to, outstanding[_nonce].qty);
+		IERC20(fiat).safeTransfer(_to, _actualAmount);
 		delete outstanding[_nonce];
 	}
 
