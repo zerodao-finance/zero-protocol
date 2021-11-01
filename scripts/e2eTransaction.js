@@ -88,11 +88,13 @@ const keeperCallback = async (msg) => {
 				.on('confirmation', (confs, target) => depositLog(`${confs}/${target} confirmations`));
 			await deposit.signed().on('status', (status) => depositLog(`Status: ${status}`));
 		}));
+    /*
 		const loanTx = await tr.loan(signer);
 		console.log('loaned!');
 		console.log(loanTx);
 		console.log('awaiting receipt');
 		console.log(await loanTx.wait());
+    */
 		/*tr._queryTxResult = _queryTxResult;
 		tr._mint = {};
     */
