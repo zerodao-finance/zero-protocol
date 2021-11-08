@@ -12,8 +12,11 @@ export class InMemoryPersistenceAdapter implements PersistenceAdapter<InMemoryBa
 	}
 
 	async set(transferRequest: TransferRequest): Promise<InMemoryKeyType> {
-		const key = hash(transferRequest);
-		const status: any = { ...transferRequest, status: 'pending' };
+    const tr: any = { ...transferRequest };
+    delete tr._mint;
+    delete tr._queryTxResult;
+		const key = hash(tr);
+		const status: any = { ...tr, status: 'pending' };
 		try {
 			await this.backend.set(key, status);
 			return key;

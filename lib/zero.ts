@@ -1,6 +1,7 @@
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
 import { hexlify } from "@ethersproject/bytes";
+import { Contract } from "@ethersproject/contracts";
 import { randomBytes } from "@ethersproject/random";
 import { _TypedDataEncoder } from "@ethersproject/hash";
 import { BigNumber } from "@ethersproject/bignumber";
@@ -51,6 +52,8 @@ export class TransferRequest {
 	private _contractFn: string;
 	private _contractParams: EthArgs;
 	private _ren: RenJS;
+  public _queryTxResult: any;
+  public _mint: any;
 
 	constructor(params: {
 		module: string,
@@ -110,14 +113,10 @@ export class TransferRequest {
 		const digest = _TypedDataEncoder.hash(payload.domain, payload.types, payload.message);
 		return (this._destination = recoverAddress(digest, signature || this.signature));
 	}
-
-	ln(v) {
-		console.log(v);
-		return v;
-	}
 	async submitToRenVM(isTest) {
 		console.log('submitToRenVM this.nonce', this.nonce);
-		const result = await this._ren.lockAndMint(this.ln({
+    if (this._mint) return this._mint;
+		const result = this._mint = await this._ren.lockAndMint({
 			asset: "BTC",
 			from: Bitcoin(),
 			nonce: this.nonce,
@@ -126,11 +125,12 @@ export class TransferRequest {
 				contractFn: this._contractFn,
 				contractParams: this._contractParams
 			})
-		}));
+		});
 		//    result.params.nonce = this.nonce;
 		return result;
 	}
 	async waitForSignature() {
+    if (this._queryTxResult) return this._queryTxResult;
 		const mint = await this.submitToRenVM(false);
 		const deposit: any = await new Promise((resolve, reject) => {
 			mint.on('deposit', resolve);
@@ -138,12 +138,13 @@ export class TransferRequest {
 		});
 		await deposit.signed();
 		const { signature, nhash, phash, amount } = deposit._state.queryTxResult.out;
-		return {
+    const result = this._queryTxResult = {
 			amount: String(amount),
 			nHash: hexlify(nhash),
 			pHash: hexlify(phash),
 			signature: hexlify(signature)
 		};
+    return result;
 	}
 	setUnderwriter(underwriter: string): boolean {
 		if (!ethers.utils.isAddress(underwriter)) return false;
@@ -196,6 +197,31 @@ export class TransferRequest {
 		}
 	}
 }
+
+export class TrivialUnderwriterTransferRequest extends TransferRequest {
+  async getController(signer) {
+    const underwriter = this.getTrivialUnderwriter(signer);
+    return new Contract(await underwriter.controller(), [ 'function fallbackMint(address underwriter, address to, address asset, uint256 amount, uint256 actualAmount, uint256 nonce, address module, bytes32 nHash, bytes data, bytes signature)' ], signer);
+  }
+  async fallbackMint(signer, params = {}) {
+    const controller = await this.getController(signer);
+    const queryTxResult = await this.waitForSignature();
+    return await controller.fallbackMint(this.underwriter, this.destination(), this.asset, this.amount, queryTxResult.amount, this.pNonce, this.module, queryTxResult.nHash, this.data, queryTxResult.signature, params);
+  }
+  getTrivialUnderwriter(signer) {
+    return new Contract(this.underwriter, [ 'function controller() view returns (address)', 'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)', 'function loan(address, address, uint256, uint256, address, bytes, bytes)' ], signer);
+  }
+  async loan(signer) {
+    const underwriter = this.getTrivialUnderwriter(signer);
+    return await underwriter.loan(this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature);
+  }
+  async repay(signer, params = {}) {
+    const underwriter = this.getTrivialUnderwriter(signer);
+    const { amount: actualAmount, nHash, signature } = await this.waitForSignature();
+    return await underwriter.repay(this.underwriter, this.destination(), this.asset, this.amount, actualAmount, this.pNonce, this.module, nHash, this.data, signature, params);
+  }
+}
+
 
 export async function createZeroConnection(address: string): Promise<ZeroConnection> {
 	const connOptions = {

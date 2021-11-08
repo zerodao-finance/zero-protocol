@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
+import { Contract } from "@ethersproject/contracts";
 import { Buffer } from "buffer";
 import type { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signers';
 import { BigNumberish } from 'ethers';
@@ -25,6 +26,8 @@ export declare class TransferRequest {
     private _contractFn;
     private _contractParams;
     private _ren;
+    _queryTxResult: any;
+    _mint: any;
     constructor(params: {
         module: string;
         to: string;
@@ -39,12 +42,20 @@ export declare class TransferRequest {
         signature?: string;
     });
     destination(contractAddress?: string, chainId?: number | string, signature?: string): string;
-    submitToRenVM(isTest: any): Promise<import("@renproject/ren").LockAndMint<any, import("@renproject/chains").BtcDeposit, any, any, any>>;
+    submitToRenVM(isTest: any): Promise<any>;
+    waitForSignature(): Promise<any>;
     setUnderwriter(underwriter: string): boolean;
     toEIP712Digest(contractAddress: string, chainId?: number): Buffer;
     toEIP712(contractAddress: string, chainId?: number): EIP712TypedData;
     toGatewayAddress(input: GatewayAddressInput): Promise<string>;
     sign(signer: ZeroSigner, contractAddress: string): Promise<string>;
+}
+export declare class TrivialUnderwriterTransferRequest extends TransferRequest {
+    getController(signer: any): Promise<Contract>;
+    fallbackMint(signer: any, params?: {}): Promise<any>;
+    getTrivialUnderwriter(signer: any): Contract;
+    loan(signer: any): Promise<any>;
+    repay(signer: any, params?: {}): Promise<any>;
 }
 export declare function createZeroConnection(address: string): Promise<ZeroConnection>;
 export declare function createZeroUser(connection: ZeroConnection, persistence?: PersistenceAdapter<any, any>): ZeroUser;

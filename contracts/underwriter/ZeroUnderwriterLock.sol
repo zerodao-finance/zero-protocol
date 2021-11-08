@@ -115,10 +115,11 @@ contract ZeroUnderwriterLock is Initializable {
 	function trackIn(uint256 amount) public {
 		require(msg.sender == address(controller), '!controller');
 		uint256 _owed = owed();
-		_balanceSheet.required = _owed < amount
+    uint256 _adjusted = uint256(_balanceSheet.required).mul(_owed).div(uint256(1 ether));
+		_balanceSheet.required = _owed < amount || _adjusted < amount
 			? uint128(0)
 			: uint128(
-				uint256(_balanceSheet.required).mul(_owed).div(uint256(1 ether)).sub(amount).mul(uint256(1 ether)).div(
+				_adjusted.sub(amount).mul(uint256(1 ether)).div(
 					_owed.sub(amount)
 				)
 			);
