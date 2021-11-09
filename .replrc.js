@@ -1,4 +1,5 @@
 
+var Zero = require('./');
 var { RenJS } = require('@renproject/ren');
 
 var deployments = require('./deployments/deployments');

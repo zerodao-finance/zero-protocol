@@ -182,7 +182,7 @@ export class TransferRequest {
 		const mint = await this.submitToRenVM(false);
 		return mint.gatewayAddress;
 	}
-	async sign(signer: ZeroSigner, contractAddress: string): Promise<string> {
+	async sign(signer: Wallet & Signer, contractAddress: string): Promise<string> {
 		const provider = signer.provider as ethers.providers.JsonRpcProvider;
 		const { chainId } = await signer.provider.getNetwork();
 		try {

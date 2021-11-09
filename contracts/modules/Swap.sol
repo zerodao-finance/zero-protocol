@@ -87,6 +87,7 @@ contract Swap {
 			address(this),
 			block.timestamp
 		)[_path.length - 1];
+console.log("amountOut", _amountOut);
 		return _amountOut;
 	}
 

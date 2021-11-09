@@ -155,7 +155,6 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, ERC721Upgr
 
 		ZeroUnderwriterLock lock = ZeroUnderwriterLock(lockFor(msg.sender));
 		lock.trackIn(actualAmount);
-		IZeroModule(module).repayLoan(params.to, asset, actualAmount, nonce, data);
 		uint256 _mintAmount = IGateway(IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset)).mint(
 			keccak256(abi.encode(nonce, module, data)),
 
