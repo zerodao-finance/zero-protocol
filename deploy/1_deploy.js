@@ -196,6 +196,7 @@ module.exports = async ({
 
   //hijackSigner(ethersSigner);
   await controller.setGovernance(await ethersSigner.getAddress());
+  await controller.setFee(ethers.utils.parseEther('0.003'));
   //restoreSigner(ethersSigner);
 
   await controller.approveStrategy(deployParameters[network]['renBTC'], strategyRenVM.address);
