@@ -38,6 +38,7 @@ export interface TransferRequest {
 }
 
 export interface PHashInput {
+  to: string;
 	nonce: BigNumberish;
 	module: string;
 	data: string;
