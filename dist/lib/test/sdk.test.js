@@ -9,7 +9,7 @@ require("mocha");
 describe('computeP unit test', () => {
     it('has a correct return for computeP', () => {
         const expected = '0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000';
-        const pReturn = (0, helpers_1.computeP)('1', ethers_1.constants.AddressZero, '0x00');
+        const pReturn = (0, helpers_1.computeP)('0x00', '1', ethers_1.constants.AddressZero, '0x00');
         (0, chai_1.expect)(pReturn).to.be.eq(expected);
     });
     it('has a correct return for computePHashFromP', () => {
@@ -20,7 +20,7 @@ describe('computeP unit test', () => {
     });
     it('has a correct return from computePHash', () => {
         const expected = '0xabaf29967fbafb35d97cab780a1333c0583f2ce39b1eaf0c7da0260baf57650d';
-        const pHash = (0, helpers_1.computePHash)({ nonce: '1', module: ethers_1.constants.AddressZero, data: '0x00' });
+        const pHash = (0, helpers_1.computePHash)({ nonce: '1', module: ethers_1.constants.AddressZero, data: '0x00', to: '0x00' });
         (0, chai_1.expect)(pHash).to.be.eq(expected);
     });
     it('converts an object to a ghash', () => {
