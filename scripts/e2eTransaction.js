@@ -32,9 +32,9 @@ const _queryTxResult = {
 
 /*
 const urls = {
-    MATIC: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
-    ETHEREUM: "https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX",
-    FORK: "http://127.0.0.1:8545"
+	MATIC: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
+	ETHEREUM: "https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX",
+	FORK: "http://127.0.0.1:8545"
 }
 */
 
@@ -63,41 +63,38 @@ const keeperCallback = async (msg) => {
 			const hash = deposit.txHash();
 			const depositLog = (msg) => console.log(`RenVM Hash: ${hash}\nStatus: ${deposit.status}\n${msg}`);
 
-			/*
-        deposit.confirmed().then(async () => {
-            console.log("Executing loan");
-            const tx = await underwriterImpl.loan(
-                tr.to,
-                tr.asset,
-                tr.amount,
-                tr.pNonce,
-                tr.module,
-                tr.data,
-                tr.signature,
-            );
-            console.log(tx);
-        })
-        */
+			deposit.confirmed().then(async () => {
+				console.log("Executing loan");
+				const tx = await underwriterImpl.loan(
+					tr.to,
+					tr.asset,
+					tr.amount,
+					tr.pNonce,
+					tr.module,
+					tr.data,
+					tr.signature,
+				);
+				console.log(tx);
+			})
 
 			await deposit
 				.confirmed()
 				.on('target', (target) => {
-          depositLog(`0/${target} confirmations`);
-          resolve(deposit);
-        })
+					depositLog(`0/${target} confirmations`);
+					resolve(deposit);
+				})
 				.on('confirmation', (confs, target) => depositLog(`${confs}/${target} confirmations`));
 			await deposit.signed().on('status', (status) => depositLog(`Status: ${status}`));
 		}));
-    /*
 		const loanTx = await tr.loan(signer);
 		console.log('loaned!');
 		console.log(loanTx);
 		console.log('awaiting receipt');
 		console.log(await loanTx.wait());
-    */
-		/*tr._queryTxResult = _queryTxResult;
+		/*
+		tr._queryTxResult = _queryTxResult;
 		tr._mint = {};
-    */
+		*/
 		const waitedSignature = await tr.waitForSignature();
 		console.log('got signature!');
 		console.log(waitedSignature);
@@ -170,7 +167,7 @@ const main = async () => {
 		asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', // renBTC on MATIC
 		nonce: '0x53fc9b778460077468d2e8fd44eb0d9c66810e551c9e983569f092133f37db3e',
 		pNonce: '0x36cbcf365ecad2171742b1adeecb4b3d74eb0fddb8988b690117bf550a9b19c7',
-		amount: String(utils.parseUnits('0.0016', 8)),
+		amount: String(utils.parseUnits('0.001', 8)),
 		data: '0x',
 	});
 
