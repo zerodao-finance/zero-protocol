@@ -18,7 +18,7 @@ const main = async () => {
     value: '0x0',
     to: hre.ethers.constants.AddressZero,
     gasLimit: 2000000,
-    nonce: 144
+    nonce: 343
   });
   console.log(tx);
   console.log('sent tx, waiting');
