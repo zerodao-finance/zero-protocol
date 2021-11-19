@@ -6,6 +6,8 @@
 	"repository": "https://github.com/zerodao-finance/zero-protocol",
 	"types": "./lib/types.d.ts",
 	"scripts": {
+    "verify": "hardhat etherscan-verify --license MIT",
+    "verify:implementation": "bash -c 'hardhat verify `node scripts/get-implementation` --libraries scripts/libraries.js'",
 		"test": "hardhat test",
 		"test:p2p:unit": "NODE_ENV=test yarn mocha -r ts-node/register lib/p2p/test/mockPubsub.test.ts lib/p2p/test/mockZero.test.ts --exit --timeout 0",
 		"test:p2p:e2e": "NODE_ENV=integration yarn mocha -r ts-node/register lib/p2p/test/e2e.test.ts --timeout 0 --exit",
@@ -23,7 +25,7 @@
 	"devDependencies": {
 		"@babel/preset-typescript": "^7.14.5",
 		"@nomiclabs/hardhat-ethers": "^2.0.2",
-		"@nomiclabs/hardhat-etherscan": "^2.1.2",
+		"@nomiclabs/hardhat-etherscan": "^2.1.7",
 		"@openzeppelin/contracts": "3.4.0",
 		"@openzeppelin/contracts-upgradeable": "3.4.1-solc-0.7-2",
 		"@renproject/ren": "^2.5.1",
