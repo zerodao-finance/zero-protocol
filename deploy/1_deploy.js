@@ -39,31 +39,7 @@ const { getSigner: _getSigner } = JsonRpcProvider.prototype;
 
 const SIGNER_ADDRESS = "0x0F4ee9631f4be0a63756515141281A3E2B293Bbe";
 
-const deployParameters = {
-  MATIC: {
-    renBTC: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501',
-    wETH: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
-    wBTC: '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6',
-    wNative: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
-    USDC: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
-    Router: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
-    Curve_Ren: '0xC2d95EEF97Ec6C17551d45e77B590dc1F9117C67',
-    sushiRouter: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
-    gatewayRegistry: '0x21C482f153D0317fe85C60bE1F7fa079019fcEbD',
-  },
-  ETHEREUM: {
-    renBTC: '0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D',
-    wETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-    wBTC: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-    wNative: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-    USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-    Curve_SBTC: '0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714',
-    Curve_TriCryptoTwo: '0xD51a44d3FaE010294C616388b506AcdA1bfAAE46',
-    Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
-    sushiRouter: '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F',
-    gatewayRegistry: '0xe80d347DF1209a76DD9d2319d62912ba98C54DDD'
-  }
-}
+const deployParameters = require('../lib/fixtures');
 
 const toAddress = (contractOrAddress) => ((contractOrAddress || {})).address || contractOrAddress;
 
@@ -162,9 +138,10 @@ module.exports = async ({
     args: [zeroController.address],
     from: deployer,
   });
+  const controller = await ethers.getContract('ZeroController');
   
   
-  await deployFixedAddress('Swap', {
+  const module = process.env.CHAIN === 'ARBITRUM' ? await deployFixedAddress('ArbitrumConvert', { args: [ zeroController.address ], contractName: 'ArbitrumConvert', from: deployer }) : await deployFixedAddress('Swap', {
     args: [
       zeroController.address, // Controller
       deployParameters[network]['wETH'], // wNative
@@ -176,14 +153,14 @@ module.exports = async ({
     contractName: 'Swap',
     from: deployer
   });
+  await controller.approveModule(module.address, true);
   
   
   const strategyRenVM = await deployments.deploy('StrategyRenVM', {
     args: [
       zeroController.address,
       deployParameters[network]["renBTC"],
-      deployParameters[network]["wNative"],
-      dummyVault.address,
+      deployParameters[network]["wNative"], dummyVault.address,
       deployParameters[network]['wBTC']
     ],
     contractName: 'StrategyRenVM',
@@ -192,7 +169,6 @@ module.exports = async ({
   });
 
 
-  const controller = await ethers.getContract('ZeroController');
 
   //hijackSigner(ethersSigner);
   await controller.setGovernance(await ethersSigner.getAddress());
@@ -271,7 +247,7 @@ module.exports = async ({
 
       break;
 
-    default:
+    case 'MATIC':
       const sushiFactory = await ethers.getContract('ZeroUniswapFactory', deployer);
 
       // Curve wBTC -> renBTC
@@ -296,6 +272,21 @@ module.exports = async ({
 
 
       break;
+    case 'ARBITRUM':
+      var wETHToWBTCArbTx = await curveFactory.createWrapper(false, 1, 2, '0x960ea3e3C7FB317332d990873d354E18d7645590')
+      var wETHToWBTCArb = await getWrapperAddress(wETHToWBTCArbTx);
+      await setConverter(controller, 'wNative', 'wBTC', wETHToWBTCArb);
+      var wBtcToWETHArbTx = await curveFactory.createWrapper(false, 2, 1, '0x960ea3e3C7FB317332d990873d354E18d7645590');
+      var wBtcToWETHArb = await getWrapperAddress(wBtcToWETHArbTx);
+      // Curve wBTC -> renBTC
+      var wBTCToRenBTCArbTx = await curveFactory.createWrapper(false, 0, 1, deployParameters[network]["Curve_Ren"], { gasLimit: 5e6 });
+      var wBTCToRenBTCArb = await getWrapperAddress(wBTCToRenBTCArbTx);
+      await setConverter(controller, 'wBTC', 'renBTC', wBTCToRenBTCArb);
+
+      // Curve renBTC -> wBTC
+      var renBTCToWBTCArbTx = await curveFactory.createWrapper(false, 1, 0, deployParameters[network]["Curve_Ren"], { gasLimit: 5e6 });
+      var renBTCToWBTCArb = await getWrapperAddress(renBTCToWBTCArbTx);
+      await setConverter(controller, 'renBTC', 'wBTC', renBTCToWBTCArb);
 
   }
 
