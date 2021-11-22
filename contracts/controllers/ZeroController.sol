@@ -61,7 +61,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
     fee = _fee;
   }
   function approveModule(address module, bool isApproved) public {
-    require(msg.sender = governance, "!governance");
+    require(msg.sender == governance, "!governance");
     approvedModules[module] = isApproved;
   }
   function setBaseFeeByAsset(address _asset, uint256 _fee) public {
