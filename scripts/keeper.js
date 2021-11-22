@@ -81,6 +81,9 @@ const run = async () => {
     const keeper = createZeroKeeper(
         await createZeroConnection(KEEPER_URL)
     )
+    await keeper.setTxDispatcher(handleTransferRequest);
+    await keeper.conn.start();
+    await keeper.advertiseAsKeeper();
 
 
 }
