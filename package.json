@@ -15,6 +15,7 @@
 		"test:external": "hardhat test --network localhost",
 		"test:sdk:unit": "NODE_ENV=test yarn mocha -r ts-node/register lib/test/sdk.test.ts",
 		"script:e2e": "NODE_ENV=development hardhat run scripts/e2eTransaction.js",
+		"script:keeper": "hardhat run scripts/keeper.js",
 		"start": "hardhat node",
 		"lint": "prettier --check \"lib/**/*.{js,jsx,ts,tsx}\"",
 		"build": "tsc -p ./tsconfig.json"
