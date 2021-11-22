@@ -65,7 +65,7 @@ contract Swap {
 		uint256 _actual,
 		uint256 _nonce,
 		bytes memory _data
-	) public {
+	) public onlyController {
 		uint256 amountSwapped = swapTokens(want, fiat, _actual);
 		outstanding[_nonce] = SwapLib.SwapRecord({qty: amountSwapped, when: uint64(block.timestamp), token: _asset});
 	}
@@ -99,7 +99,7 @@ console.log("amountOut", _amountOut);
 		bytes memory _data
 	) public onlyController {
 		require(outstanding[_nonce].qty != 0, '!outstanding');
-		IERC20(fiat).safeTransfer(_to, _actualAmount);
+		IERC20(fiat).safeTransfer(_to, outstanding[_nonce].qty);
 		delete outstanding[_nonce];
 	}
 

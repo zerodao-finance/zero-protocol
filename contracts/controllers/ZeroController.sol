@@ -49,6 +49,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
   uint256 public fee;
   address public gatewayRegistry;
   mapping (address => uint256) public baseFeeByAsset;
+  mapping (address => bool) public approvedModules;
 	function getChainId() internal view returns (uint8 response) {
 		assembly {
 			response := chainid()
@@ -58,6 +59,10 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
   function setFee(uint256 _fee) public {
     require(msg.sender == governance, "!governance");
     fee = _fee;
+  }
+  function approveModule(address module, bool isApproved) public {
+    require(msg.sender = governance, "!governance");
+    approvedModules[module] = isApproved;
   }
   function setBaseFeeByAsset(address _asset, uint256 _fee) public {
     require(msg.sender == governance, "!governance");
@@ -218,6 +223,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		bytes memory data,
 		bytes memory userSignature
 	) public onlyUnderwriter {
+    require(approvedModules[module], "!approved");
 		uint256 _gasBefore = gasleft();
 		ZeroLib.LoanParams memory params = ZeroLib.LoanParams({
 			to: to,

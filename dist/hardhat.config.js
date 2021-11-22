@@ -3,6 +3,7 @@ require('hardhat-deploy');
 require('hardhat-deploy-ethers');
 //require('hardhat-gas-reporter');
 require('@openzeppelin/hardhat-upgrades');
+require('@nomiclabs/hardhat-etherscan');
 const ethers = require('ethers');
 if (process.env.CHAIN === 'MATIC')
     require('ethers').providers.BaseProvider.prototype.getGasPrice = require('ethers-polygongastracker').createGetGasPrice('rapid');

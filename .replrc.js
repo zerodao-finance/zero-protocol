@@ -20,6 +20,8 @@ var renbtc = new ethers.Contract('0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', [
   'function balanceOf(address) view returns (uint256)',
   'function transfer(address, uint256) returns (bool)'
 ], wallet);
+var usdc = new ethers.Contract('0x2791bca1f2de4661ed88a30c99a7a9449aa84174', [ 'function transfer(address, uint256)', 'function balanceOf(address) view returns (uint256)' ], wallet);
+var wbtc = new ethers.Contract('0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6', [ 'function transfer(address, uint256)', 'function balanceOf(address) view returns (uint256)' ], wallet);
 var controller = getContract('ZeroController');
 var vault = getContract('BTCVault');
 var trivial = getContract('TrivialUnderwriter');

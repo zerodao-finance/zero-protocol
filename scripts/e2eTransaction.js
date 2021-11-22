@@ -154,9 +154,9 @@ const main = async () => {
 		to: await signer.getAddress(),
 		underwriter: TrivialUnderwriter.address,
 		asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', // renBTC on MATIC
-		nonce: '0x53fc9b778460077468d2e8fd44eb0d9c66810e551c9e983569f092133f37db3a',
-		pNonce: '0x36cbcf365ecad2171742b1adeecb4b3d74eb0fddb8988b690117bf550a9b19c9',
-		amount: String(utils.parseUnits('0.015', 8)),
+		nonce: '0x53fc9b778460077468d2e8fd44eb0d9c66810e551c9e983569f092133f37db2b',
+		pNonce: '0x36cbcf365ecad2171742b1adeecb4b3d74eb0fddb8988b690117bf550a9b19e9',
+		amount: String(utils.parseUnits('0.004', 8)),
 		data: '0x',
 	});
 
