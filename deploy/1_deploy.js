@@ -278,6 +278,7 @@ module.exports = async ({
       await setConverter(controller, 'wNative', 'wBTC', wETHToWBTCArb);
       var wBtcToWETHArbTx = await curveFactory.createWrapper(false, 2, 1, '0x960ea3e3C7FB317332d990873d354E18d7645590');
       var wBtcToWETHArb = await getWrapperAddress(wBtcToWETHArbTx);
+      await setConverter(controller, 'wBTC', 'wNative', wBtcToWETHArb);
       // Curve wBTC -> renBTC
       var wBTCToRenBTCArbTx = await curveFactory.createWrapper(false, 0, 1, deployParameters[network]["Curve_Ren"], { gasLimit: 5e6 });
       var wBTCToRenBTCArb = await getWrapperAddress(wBTCToRenBTCArbTx);

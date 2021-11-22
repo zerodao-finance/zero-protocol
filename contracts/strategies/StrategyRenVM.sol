@@ -81,6 +81,7 @@ contract StrategyRenVM {
 			// if ETH balance < ETH reserve
 			_gasWant = gasReserve.sub(_gasWant);
 			address _converter = IController(controller).converters(nativeWrapper, vaultWant);
+      console.log(_gasWant);
 			uint256 _vaultWant = IConverter(_converter).estimate(_gasWant); //_gasWant is estimated from wETH to wBTC
 			uint256 _sharesDeficit = estimateShares(_vaultWant); //Estimate shares of wBTC
 			// Works up to this point
