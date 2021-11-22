@@ -11,7 +11,7 @@ var ethers = require('ethers');
 var provider = new ethers.providers.JsonRpcProvider("https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm");
 var wallet = new ethers.Wallet(process.env.WALLET).connect(provider);
 var getContract = (contract) => {
-  return new ethers.Contract(contracts[contract].address, contracts[contract].abi, wallet);
+  return new ethers.Contract(require('./deployments/matic/' + contract).address, require('./deployments/matic/' + contract).abi, wallet);
 };
 var renVMStrategy = getContract('StrategyRenVM');
 var dummy = getContract('DummyVault');
@@ -20,15 +20,12 @@ var renbtc = new ethers.Contract('0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', [
   'function balanceOf(address) view returns (uint256)',
   'function transfer(address, uint256) returns (bool)'
 ], wallet);
-var controller = new ethers.Contract(contracts.ZeroController.address, [
-  'function governance() view returns (address)',
-  'function inCaseTokensGetStuck(address, uint256)',
-  'function withdrawAll(address)',
-  'function mint(address, address)',
-  'function lockFor(address) view returns (address)'
-], wallet);
+var usdc = new ethers.Contract('0x2791bca1f2de4661ed88a30c99a7a9449aa84174', [ 'function transfer(address, uint256)', 'function balanceOf(address) view returns (uint256)' ], wallet);
+var wbtc = new ethers.Contract('0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6', [ 'function transfer(address, uint256)', 'function balanceOf(address) view returns (uint256)' ], wallet);
+var controller = getContract('ZeroController');
 var vault = getContract('BTCVault');
 var trivial = getContract('TrivialUnderwriter');
+controller = new ethers.Contract(controller.address, [ 'function setFee(uint256)', 'function setBaseFeeByAsset(address, uint256)' ], wallet);
 //var makeKeeper = async () => await zero.createZeroKeeper(await zero.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
 
 //var makeUser = async () => await zero.createZeroUser(await zero.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
