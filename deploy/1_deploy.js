@@ -273,10 +273,10 @@ module.exports = async ({
 
       break;
     case 'ARBITRUM':
-      var wETHToWBTCArbTx = await curveFactory.createWrapper(false, 1, 2, '0x960ea3e3C7FB317332d990873d354E18d7645590')
+      var wETHToWBTCArbTx = await curveFactory.createWrapper(false, 2, 1, '0x960ea3e3C7FB317332d990873d354E18d7645590')
       var wETHToWBTCArb = await getWrapperAddress(wETHToWBTCArbTx);
       await setConverter(controller, 'wNative', 'wBTC', wETHToWBTCArb);
-      var wBtcToWETHArbTx = await curveFactory.createWrapper(false, 2, 1, '0x960ea3e3C7FB317332d990873d354E18d7645590');
+      var wBtcToWETHArbTx = await curveFactory.createWrapper(false, 1, 2, '0x960ea3e3C7FB317332d990873d354E18d7645590');
       var wBtcToWETHArb = await getWrapperAddress(wBtcToWETHArbTx);
       await setConverter(controller, 'wBTC', 'wNative', wBtcToWETHArb);
       // Curve wBTC -> renBTC

@@ -56,6 +56,11 @@ library CurveLib {
 		uint256 j,
 		uint256 amount
 	) internal view returns (uint256 result) {
+		console.logBytes(abi.encodePacked(curve.getDySelector));
+		console.logAddress(curve.pool);
+		console.logUint(i);
+		console.logUint(j);
+		console.logUint(amount);
 		(bool success, bytes memory returnData) = curve.pool.staticcall(
 			abi.encodeWithSelector(curve.getDySelector, i, j, amount)
 		);
