@@ -29,8 +29,8 @@ contract ArbitrumConvert {
   ) {
 		controller = _controller;
 		governance = IController(_controller).governance();
-		IERC20(want).safeApprove(renCrvArbitrum, ~uint256(0));
-		IERC20(wbtc).safeApprove(tricryptoArbitrum, ~uint256(0));
+		IERC20(want).safeApprove(renCrvArbitrum, ~uint256(0) >> 2);
+		IERC20(wbtc).safeApprove(tricryptoArbitrum, ~uint256(0) >> 2);
 	}
 
 	function setBlockTimeout(uint256 _ct) public {

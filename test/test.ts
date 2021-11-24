@@ -127,6 +127,7 @@ const getFixtures = async () => {
 		strategy: await getContract('StrategyRenVM', signer),
 		btcVault: await getContract('BTCVault', signer),
 		swapModule: await getContract('Swap', signer),
+    convertModule: await getContract('ArbitrumConvert', signer),
 		uniswapFactory: await getContract('ZeroUniswapFactory', signer),
 		curveFactory: await getContract('ZeroCurveFactory', signer),
 		wrapper: await getContract('WrapNative', signer),
@@ -203,16 +204,16 @@ const getBalances = async () => {
 };
 
 const generateTransferRequest = async (amount: number) => {
-	const { swapModule, signerAddress } = await getFixtures();
+	const { convertModule, swapModule, signerAddress } = await getFixtures();
 	const { underwriter } = await getUnderwriter();
 	return new TransferRequest({
-		module: swapModule.address,
+		module: process.env.CHAIN === 'ARBITRUM' ? convertModule.address : swapModule.address,
 		to: signerAddress,
 		underwriter: underwriter.address,
 		//@ts-ignore
 		asset: deployParameters[network]['renBTC'],
 		amount: String(amount),
-		data: '0x',
+		data: ethers.utils.defaultAbiCoder.encode(['uint256'], [ethers.utils.parseEther('0.01')]),
   });
 };
 
