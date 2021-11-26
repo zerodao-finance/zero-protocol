@@ -7,7 +7,6 @@ import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
 import {ICurvePool} from '../interfaces/ICurvePool.sol';
 import { CurveLib } from "../libraries/CurveLib.sol";
 import {SafeMath} from 'oz410/math/SafeMath.sol';
-import {console} from 'hardhat/console.sol';
 
 contract ZeroCurveWrapper {
 	bool public immutable underlying;
@@ -55,9 +54,6 @@ contract ZeroCurveWrapper {
 	function convert(address _module) external payable returns (uint256 _actualOut) {
 		uint256 _balance = IERC20(tokenInAddress).balanceOf(address(this));
 		uint256 _startOut = IERC20(tokenOutAddress).balanceOf(address(this));
-    console.log("_balance _startOut");
-    console.log(_balance);
-     console.log(_startOut);
 		getPool().exchange(tokenInIndex, tokenOutIndex, _balance, _balance / 0x10);
 		_actualOut = IERC20(tokenOutAddress).balanceOf(address(this)) - _startOut;
 		IERC20(tokenOutAddress).safeTransfer(msg.sender, _actualOut);

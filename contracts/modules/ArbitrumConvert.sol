@@ -1,5 +1,4 @@
 pragma solidity >=0.6.0;
-import { console } from "hardhat/console.sol";
 import {ArbitrumConvertLib} from "./ArbitrumConvertLib.sol";
 import {SafeMath} from 'oz410/math/SafeMath.sol';
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
@@ -66,8 +65,6 @@ contract ArbitrumConvert {
     uint256 _ratio
 	) internal returns (uint256 amountSwappedETH, uint256 amountSwappedBTC) {
     uint256 amountToETH = _ratio.mul(_amountIn).div(uint256(1 ether));
-    console.log("amountToETH");
-    console.log(amountToETH);
     uint256 wbtcOut = IRenCrvArbitrum(renCrvArbitrum).exchange(1, 0, amountToETH, 0, address(this));
     uint256 _amountStart = address(this).balance;
     (bool success,) = tricryptoArbitrum.call(abi.encodeWithSelector(ICurveETHUInt256.exchange.selector, 1, 2, wbtcOut, 0, true));

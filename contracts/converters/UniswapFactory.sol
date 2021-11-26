@@ -5,7 +5,6 @@ import {IUniswapV2Router02} from '@uniswap/v2-periphery/contracts/interfaces/IUn
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
 import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
 import {SafeMath} from 'oz410/math/SafeMath.sol';
-import 'hardhat/console.sol';
 
 contract ZeroUniswapFactory {
 	address public immutable router;

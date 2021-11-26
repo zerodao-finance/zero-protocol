@@ -7,7 +7,6 @@ import {IUniswapV2Router02} from '@uniswap/v2-periphery/contracts/interfaces/IUn
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
 import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
 import {IController} from '../interfaces/IController.sol';
-import {console} from 'hardhat/console.sol';
 
 contract Swap {
 	using SafeERC20 for *;
@@ -87,7 +86,6 @@ contract Swap {
 			address(this),
 			block.timestamp
 		)[_path.length - 1];
-console.log("amountOut", _amountOut);
 		return _amountOut;
 	}
 

@@ -21,7 +21,6 @@ import {SafeMath} from 'oz410/math/SafeMath.sol';
 import {LockForImplLib} from '../libraries/LockForImplLib.sol';
 import '../interfaces/IConverter.sol';
 import '@openzeppelin/contracts/math/Math.sol';
-import {console} from 'hardhat/console.sol';
 
 /**
 @title upgradeable contract which determines the authority of a given address to sign off on loans
@@ -247,8 +246,6 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		_txGas = IConverter(converter).estimate(_txGas); //convert txGas from ETH to wBTC
 		_txGas = IConverter(converters[IStrategy(strategies[params.asset]).vaultWant()][params.asset]).estimate(_txGas);
 		// ^convert txGas from wBTC to renBTC
-    console.log("fee");
-    console.log(deductFee(params.amount, params.asset).sub(_txGas));
 		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(module, deductFee(params.amount, params.asset).sub(_txGas));
 		IZeroModule(module).receiveLoan(params.to, params.asset, _amountSent, params.nonce, params.data);
 		uint256 _gasRefund = Math.min(_gasBefore.sub(gasleft()), maxGasLoan).mul(Math.min(tx.gasprice, maxGasPrice));

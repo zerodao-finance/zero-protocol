@@ -11,7 +11,6 @@ import 'oz410/proxy/Initializable.sol';
 import '../interfaces/IConverter.sol';
 import '../interfaces/IOneSplitAudit.sol';
 import '../interfaces/IStrategy.sol';
-import 'hardhat/console.sol';
 
 contract ControllerUpgradeable {
 	using SafeERC20 for IERC20;

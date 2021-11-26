@@ -1,7 +1,6 @@
 pragma solidity >=0.6.0;
 
 import {ICurveInt128} from '../interfaces/CurvePools/ICurveInt128.sol';
-import {console} from 'hardhat/console.sol';
 import {ICurveUInt128} from '../interfaces/CurvePools/ICurveUInt128.sol';
 
 import {ICurveInt256} from '../interfaces/CurvePools/ICurveInt256.sol';
@@ -56,11 +55,6 @@ library CurveLib {
 		uint256 j,
 		uint256 amount
 	) internal view returns (uint256 result) {
-		console.logBytes(abi.encodePacked(curve.getDySelector));
-		console.logAddress(curve.pool);
-		console.logUint(i);
-		console.logUint(j);
-		console.logUint(amount);
 		(bool success, bytes memory returnData) = curve.pool.staticcall(
 			abi.encodeWithSelector(curve.getDySelector, i, j, amount)
 		);
