@@ -362,7 +362,7 @@ describe('Zero', () => {
 		const signature = await transferRequest.sign(signer, controller.address);
 
 		console.log('\nWriting a small loan');
-		await underwriter.proxy(controller.address, controller.interface.encodeFunctionData('loan', [
+		await underwriter.loan(
 			transferRequest.to,
 			transferRequest.asset,
 			transferRequest.amount,
@@ -370,7 +370,7 @@ describe('Zero', () => {
 			transferRequest.module,
 			transferRequest.data,
 			signature,
-		]));
+		);
 		await getBalances();
 
 		console.log('\nRepaying loan...');
@@ -393,6 +393,53 @@ describe('Zero', () => {
 	});
 
 	it('should take out, make a swap with, then repay a large loan', async () => {
+		const { signer, controller, btcVault } = await getFixtures();
+		const { underwriter, underwriterImpl } = await getUnderwriter();
+		const renbtc = new ethers.Contract(await btcVault.token(), btcVault.interface, signer);
+		await renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
+
+		await btcVault.deposit('2500000000');
+		await btcVault.earn();
+		console.log('Deposited 15renBTC and called earn');
+		await getBalances();
+
+		//@ts-ignore
+		const transferRequest = await generateTransferRequest(1500000000);
+
+		console.log('\nInitial balances');
+		await getBalances();
+
+		transferRequest.setUnderwriter(underwriter.address);
+		const signature = await transferRequest.sign(signer, controller.address);
+
+		console.log('\nWriting a large loan');
+		await underwriterImpl.loan(
+			transferRequest.to,
+			transferRequest.asset,
+			transferRequest.amount,
+			transferRequest.pNonce,
+			transferRequest.module,
+			transferRequest.data,
+			signature,
+		);
+		await getBalances();
+
+		console.log('\nRepaying loan...');
+		await underwriterImpl.repay(
+			underwriter.address, //underwriter
+			transferRequest.to, //to
+			transferRequest.asset, //asset
+			transferRequest.amount, //amount
+			String(Number(transferRequest.amount) - 1000), //actualAmount
+			transferRequest.pNonce, //nonce
+			transferRequest.module, //module
+			utils.hexlify(utils.randomBytes(32)), //nHash
+			transferRequest.data,
+			signature, //signature
+		);
+		await getBalances();
+	});
+	it('should handle a default', async () => {
 		const { signer, controller, btcVault } = await getFixtures();
 		const { underwriter, underwriterImpl } = await getUnderwriter();
 		const renbtc = new ethers.Contract(await btcVault.token(), btcVault.interface, signer);

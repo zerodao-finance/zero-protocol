@@ -103,6 +103,10 @@ contract StrategyRenVM {
 		}
 		address converter = IController(controller).converters(want, vaultWant);
 		// _asset is wBTC and want is renBTC
+    console.log("_asset");
+    console.log(_asset);
+    console.log("want");
+    console.log(want);
 		if (_asset == want) {
 			// if asset is what the strategy wants
 			//then we can't directly withdraw it
@@ -110,10 +114,19 @@ contract StrategyRenVM {
 		}
 		uint256 _shares = estimateShares(_amount);
 		_amount = IyVault(vault).withdraw(_shares);
+    console.log("_amountn after estimate");
+    console.log(_amount);
 		if (_asset == want) {
 			// if asset is what the strategy wants
-			IERC20(vaultWant).transfer(converter, _amount);
-			_amount = IConverter(converter).convert(address(0x0));
+       console.log("converter _amount");
+      console.log(converter);
+       console.log(_amount);
+       console.log("want vaultWant");
+       console.log(want);
+       console.log(vaultWant);
+      IConverter toWant = IConverter(IController(controller).converters(vaultWant, want));
+			IERC20(vaultWant).transfer(address(toWant), _amount);
+			_amount = toWant.convert(address(0x0));
 		}
 		return _amount;
 	}
@@ -154,7 +167,12 @@ contract StrategyRenVM {
 		uint256 _reserve = IERC20(want).balanceOf(address(this));
 		address _want = IZeroModule(_module).want();
 		if (_amount > _reserve || _want != want) {
+      console.log("break");
+      console.log(_amount);
+      console.log(_want);
 			_amount = _withdraw(_amount, _want);
+      console.log("_amount");
+      console.log(_amount);
 		}
 		IERC20(_want).safeTransfer(_module, _amount);
 		return _amount;
