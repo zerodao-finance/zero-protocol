@@ -82,6 +82,7 @@ module.exports = async ({
   const dummyVault = { address: '0x9eDDC94bB952117342cB1f556ea0591363F7B833' };
   const strategyRenVM = { address: '0x4615b36Cb20E9707c3e4dc8376ea6863C38c14Cc' };
   */
+  /*
 
 
   const zeroUnderwriterLockBytecodeLib = await deployFixedAddress('ZeroUnderwriterLockBytecodeLib', {
@@ -110,7 +111,10 @@ module.exports = async ({
 
 	console.log('waiting on proxy deploy to mine ...');
   await zeroController.deployTransaction.wait();
-	console.log('done!');
+  */
+//	console.log('done!');
+  /*
+  const zeroController = await hre.ethers.getContract('ZeroController');
 
   await deployFixedAddress('BTCVault', {
     contractName: 'BTCVault',
@@ -138,8 +142,10 @@ module.exports = async ({
     args: [zeroController.address],
     from: deployer,
   });
+  */
   const controller = await ethers.getContract('ZeroController');
   
+  /*
   
   const module = process.env.CHAIN === 'ARBITRUM' ? await deployFixedAddress('ArbitrumConvert', { args: [ zeroController.address ], contractName: 'ArbitrumConvert', from: deployer }) : await deployFixedAddress('Swap', {
     args: [
@@ -213,12 +219,17 @@ module.exports = async ({
   const unwrapper = await ethers.getContract('UnwrapNative', deployer);
   const curveFactory = await ethers.getContract('ZeroCurveFactory', deployer);
 
-  const getWrapperAddress = async (tx) => {
+*/
+  const _getWrapperAddress = async (tx) => {
     const receipt = await tx.wait();
     console.log(require('util').inspect(receipt, { colors: true, depth: 15 }));
     const { events } = receipt;
     const lastEvent = events.find((v) => (v.args || {})._wrapper);
     return lastEvent.args._wrapper;
+  };
+  let getWrapperAddress = async () => {
+    getWrapperAddress = _getWrapperAddress;
+    return '0x400779D2e22d4dec04f6043114E88820E115903A';
   };
 
   // Deploy converters
@@ -273,7 +284,7 @@ module.exports = async ({
 
       break;
     case 'ARBITRUM':
-      var wETHToWBTCArbTx = await curveFactory.createWrapper(false, 2, 1, '0x960ea3e3C7FB317332d990873d354E18d7645590')
+      var wETHToWBTCArbTx = {}; /* await curveFactory.createWrapper(false, 2, 1, '0x960ea3e3C7FB317332d990873d354E18d7645590') */
       var wETHToWBTCArb = await getWrapperAddress(wETHToWBTCArbTx);
       await setConverter(controller, 'wNative', 'wBTC', wETHToWBTCArb);
       var wBtcToWETHArbTx = await curveFactory.createWrapper(false, 1, 2, '0x960ea3e3C7FB317332d990873d354E18d7645590');
