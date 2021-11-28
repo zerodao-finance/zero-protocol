@@ -24,7 +24,7 @@ const etherscan = {
   }
 };
 
-var forkingUrl = "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm"
+var forkingUrl = "DUMMY URL"
 switch (process.env.CHAIN) {
   case 'ETHEREUM':
     forkingUrl = "https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX"

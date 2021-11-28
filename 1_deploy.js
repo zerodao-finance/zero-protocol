@@ -46,7 +46,7 @@ const toAddress = (contractOrAddress) => ((contractOrAddress || {})).address || 
 const setConverter = async (controller, source, target, converter) => {
   const [sourceAddress, targetAddress] = [source, target].map((v) => deployParameters[network][v] || v);
   console.log('setting converter');
-  const tx = await controller.setConverter(sourceAddress, targetAddress, toAddress(converter), { gasLimit: '500000' });
+  const tx = await controller.setConverter(sourceAddress, targetAddress, toAddress(converter));/* { gasPrice: '5000000', gasLimit: '5000000' }); */
   console.log('setConverter(' + sourceAddress + ',' + targetAddress + ',' + toAddress(converter));
   return tx;
 };
@@ -75,7 +75,7 @@ module.exports = async ({
   }
   const signer = await ethers.getSigner(SIGNER_ADDRESS);
   const [deployerSigner] = await ethers.getSigners();
-
+  console.log("RUNNING");
 	/*
   const zeroUnderwriterLockBytecodeLib = { address: '0xfFd2EF3D44a2ea1B5E88780C1c85bcf6B2Aa4Bb5' };
   const zeroController = { address: '0xba227751e973C6DfEb4A56F811215F847EFEfC3E' };
@@ -144,7 +144,7 @@ module.exports = async ({
   });
   */
   const controller = await ethers.getContract('ZeroController');
-  
+  console.log("GOT CONTROLLER"); 
   /*
   
   const module = process.env.CHAIN === 'ARBITRUM' ? await deployFixedAddress('ArbitrumConvert', { args: [ zeroController.address ], contractName: 'ArbitrumConvert', from: deployer }) : await deployFixedAddress('Swap', {
@@ -215,11 +215,11 @@ module.exports = async ({
 
 
   //Deploy converters
+//*/
   const wrapper = await ethers.getContract('WrapNative', deployer);
   const unwrapper = await ethers.getContract('UnwrapNative', deployer);
   const curveFactory = await ethers.getContract('ZeroCurveFactory', deployer);
 
-*/
   const _getWrapperAddress = async (tx) => {
     const receipt = await tx.wait();
     console.log(require('util').inspect(receipt, { colors: true, depth: 15 }));
@@ -231,11 +231,13 @@ module.exports = async ({
     getWrapperAddress = _getWrapperAddress;
     return '0x400779D2e22d4dec04f6043114E88820E115903A';
   };
-
+  console.log("CONVERTERS");
   // Deploy converters
+   /*
   switch (network) {
     case "ETHEREUM":
 
+      console.log("RUNNING ETHEREUM");
       // Curve wBTC -> renBTC
       var wBTCToRenBTCTx = await curveFactory.functions.createWrapper(false, 1, 0, deployParameters[network]["Curve_SBTC"]);
       var wBTCToRenBTC = await getWrapperAddress(wBTCToRenBTCTx);
@@ -260,6 +262,7 @@ module.exports = async ({
 
     case 'MATIC':
       const sushiFactory = await ethers.getContract('ZeroUniswapFactory', deployer);
+      console.log("MATIC");
 
       // Curve wBTC -> renBTC
       var wBTCToRenBTCTx = await curveFactory.createWrapper(true, 0, 1, deployParameters[network]["Curve_Ren"], { gasLimit: 5e6 });
@@ -284,23 +287,29 @@ module.exports = async ({
 
       break;
     case 'ARBITRUM':
-      var wETHToWBTCArbTx = {}; /* await curveFactory.createWrapper(false, 2, 1, '0x960ea3e3C7FB317332d990873d354E18d7645590') */
+      console.log("Running arbitrum");
+      var wETHToWBTCArbTx = {}; /* await curveFactory.createWrapper(false, 2, 1, '0x960ea3e3C7FB317332d990873d354E18d7645590')
       var wETHToWBTCArb = await getWrapperAddress(wETHToWBTCArbTx);
-      await setConverter(controller, 'wNative', 'wBTC', wETHToWBTCArb);
+//      await setConverter(controller, 'wNative', 'wBTC', wETHToWBTCArb);
+      console.log("wETH->wBTC Converter Set.");
       var wBtcToWETHArbTx = await curveFactory.createWrapper(false, 1, 2, '0x960ea3e3C7FB317332d990873d354E18d7645590');
       var wBtcToWETHArb = await getWrapperAddress(wBtcToWETHArbTx);
       await setConverter(controller, 'wBTC', 'wNative', wBtcToWETHArb);
+      console.log("wBTC->wETH Converter Set.");
       // Curve wBTC -> renBTC
-      var wBTCToRenBTCArbTx = await curveFactory.createWrapper(false, 0, 1, deployParameters[network]["Curve_Ren"], { gasLimit: 5e6 });
+      var wBTCToRenBTCArbTx = await curveFactory.createWrapper(false, 0, 1, deployParameters[network]["Curve_Ren"]);
       var wBTCToRenBTCArb = await getWrapperAddress(wBTCToRenBTCArbTx);
       await setConverter(controller, 'wBTC', 'renBTC', wBTCToRenBTCArb);
+      console.log("wBTC->renBTC Converter Set.");
 
       // Curve renBTC -> wBTC
-      var renBTCToWBTCArbTx = await curveFactory.createWrapper(false, 1, 0, deployParameters[network]["Curve_Ren"], { gasLimit: 5e6 });
+      var renBTCToWBTCArbTx = await curveFactory.createWrapper(false, 1, 0, deployParameters[network]["Curve_Ren"]);
+      console.log("renBTC->wBTC Converter Set.");
       var renBTCToWBTCArb = await getWrapperAddress(renBTCToWBTCArbTx);
       await setConverter(controller, 'renBTC', 'wBTC', renBTCToWBTCArb);
 
   }
+*/
 
   // Wrapper ETH -> wETH
   await setConverter(controller, ethers.constants.AddressZero, "wNative", wrapper.address);

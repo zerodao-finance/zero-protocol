@@ -41,6 +41,7 @@ const getContract = async (...args: any[]) => {
 	try {
 		return await ethers.getContract(...args);
 	} catch (e) {
+    console.error(e);
 		return new ethers.Contract(ethers.constants.AddressZero, [], (await ethers.getSigners())[0]);
 	}
 };
