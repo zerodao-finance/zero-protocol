@@ -7,7 +7,6 @@ import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
 import {ICurvePool} from '../interfaces/ICurvePool.sol';
 import { CurveLib } from "../libraries/CurveLib.sol";
 import {SafeMath} from 'oz410/math/SafeMath.sol';
-import {console} from 'hardhat/console.sol';
 
 contract ZeroCurveWrapper {
 	bool public immutable underlying;

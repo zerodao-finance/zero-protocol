@@ -14,7 +14,6 @@ import {ICurveUnderlyingUInt128} from '../interfaces/CurvePools/ICurveUnderlying
 import {ICurveUnderlyingUInt256} from '../interfaces/CurvePools/ICurveUnderlyingUInt256.sol';
 import {CurveLib} from '../libraries/CurveLib.sol';
 
-import {console} from 'hardhat/console.sol';
 
 contract ZeroCurveFactory {
 	event CreateWrapper(address _wrapper);

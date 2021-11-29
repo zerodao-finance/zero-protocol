@@ -8,7 +8,7 @@ export declare const toHex: (input: string) => string;
 export declare const fetchData: <T>(request: () => Promise<Response>) => Promise<T>;
 export declare const computePHash: (input: PHashInput) => string;
 export declare const computePHashFromP: (p: string) => string;
-export declare const computeP: (nonce: string, module: string, data: string) => string;
+export declare const computeP: (to: string, nonce: string, module: string, data: string) => string;
 export declare const maybeCoerceToGHash: (input: GHashInput | string) => string;
 export declare const encodeInitializationActions: (input: any, InitializationActionsABI: any) => string;
 export declare const computeShiftInTxHash: ({ renContract, utxo, g }: any) => string;

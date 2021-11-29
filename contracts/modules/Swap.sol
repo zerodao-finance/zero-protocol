@@ -7,7 +7,6 @@ import {IUniswapV2Router02} from '@uniswap/v2-periphery/contracts/interfaces/IUn
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
 import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
 import {IController} from '../interfaces/IController.sol';
-import {console} from 'hardhat/console.sol';
 
 contract Swap {
 	using SafeERC20 for *;
@@ -65,7 +64,7 @@ contract Swap {
 		uint256 _actual,
 		uint256 _nonce,
 		bytes memory _data
-	) public {
+	) public onlyController {
 		uint256 amountSwapped = swapTokens(want, fiat, _actual);
 		outstanding[_nonce] = SwapLib.SwapRecord({qty: amountSwapped, when: uint64(block.timestamp), token: _asset});
 	}
@@ -87,7 +86,6 @@ contract Swap {
 			address(this),
 			block.timestamp
 		)[_path.length - 1];
-console.log("amountOut", _amountOut);
 		return _amountOut;
 	}
 
@@ -99,7 +97,7 @@ console.log("amountOut", _amountOut);
 		bytes memory _data
 	) public onlyController {
 		require(outstanding[_nonce].qty != 0, '!outstanding');
-		IERC20(fiat).safeTransfer(_to, _actualAmount);
+		IERC20(fiat).safeTransfer(_to, outstanding[_nonce].qty);
 		delete outstanding[_nonce];
 	}
 

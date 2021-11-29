@@ -14,7 +14,6 @@ import {IController} from '../interfaces/IController.sol';
 import {IUniswapV2Router02} from '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import {ICurvePool} from '../interfaces/ICurvePool.sol';
 import {IZeroModule} from '../interfaces/IZeroModule.sol';
-import {console} from 'hardhat/console.sol';
 
 contract StrategyRenVM {
 	using SafeERC20 for IERC20;
@@ -111,8 +110,9 @@ contract StrategyRenVM {
 		_amount = IyVault(vault).withdraw(_shares);
 		if (_asset == want) {
 			// if asset is what the strategy wants
-			IERC20(vaultWant).transfer(converter, _amount);
-			_amount = IConverter(converter).convert(address(0x0));
+      IConverter toWant = IConverter(IController(controller).converters(vaultWant, want));
+			IERC20(vaultWant).transfer(address(toWant), _amount);
+			_amount = toWant.convert(address(0x0));
 		}
 		return _amount;
 	}

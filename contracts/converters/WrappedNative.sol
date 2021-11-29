@@ -3,7 +3,6 @@ pragma solidity >=0.6.0;
 
 import 'oz410/math/SafeMath.sol';
 import {IWETH} from '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
-import {console} from 'hardhat/console.sol';
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
 
 contract WrapNative {

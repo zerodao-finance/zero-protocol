@@ -158,6 +158,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts, }) =
     const controller = await ethers.getContract('ZeroController');
     //hijackSigner(ethersSigner);
     await controller.setGovernance(await ethersSigner.getAddress());
+    await controller.setFee(ethers.utils.parseEther('0.003'));
     //restoreSigner(ethersSigner);
     await controller.approveStrategy(deployParameters[network]['renBTC'], strategyRenVM.address);
     await (await controller.setStrategy(deployParameters[network]['renBTC'], strategyRenVM.address, false)).wait();

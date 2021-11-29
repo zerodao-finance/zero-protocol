@@ -88,6 +88,11 @@ export class TransferRequest {
 		this._ren = new (RenJS as any)('mainnet', { loadCompletedDeposits: true });
 		this._contractFn = "zeroCall";
 		this._contractParams = [
+      {
+        name: 'to',
+        type: 'address',
+        value: this.to
+      },
 			{
 				name: "pNonce",
 				type: "uint256",

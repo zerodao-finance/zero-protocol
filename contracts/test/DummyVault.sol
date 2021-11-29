@@ -4,7 +4,6 @@ pragma solidity >=0.7.0;
 import {yVault} from '../vendor/yearn/vaults/yVault.sol';
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
 import {ERC20} from 'oz410/token/ERC20/ERC20.sol';
-import {console} from 'hardhat/console.sol';
 
 contract DummyVault is ERC20 {
 	address public immutable want;

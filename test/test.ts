@@ -12,29 +12,7 @@ import { Wallet, Contract, providers, utils } from 'ethers';
 const { ethers, deployments } = hre;
 const gasnow = require('ethers-gasnow');
 
-const deployParameters = {
-	MATIC: {
-		btcGateway: '0x05Cadbf3128BcB7f2b89F3dD55E5B0a036a49e20',
-		renBTC: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501',
-		wBTC: '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6',
-		wNative: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
-		USDC: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
-		Router: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
-		Curve_Ren: '0xC2d95EEF97Ec6C17551d45e77B590dc1F9117C67',
-		sushiRouter: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506'
-	},
-	ETHEREUM: {
-		btcGateway: '0xe4b679400F0f267212D5D812B95f58C83243EE71',
-		renBTC: '0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D',
-		wBTC: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-		wNative: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-		USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-		Curve_SBTC: '0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714',
-		Curve_TriCryptoTwo: '0xD51a44d3FaE010294C616388b506AcdA1bfAAE46',
-		Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
-		sushiRouter: '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F'
-	}
-}
+const deployParameters = require('../lib/fixtures');
 
 const network = process.env.CHAIN || 'MATIC'
 
@@ -63,7 +41,7 @@ const getContract = async (...args: any[]) => {
 	try {
 		return await ethers.getContract(...args);
 	} catch (e) {
-		return ethers.Contract(ethers.constants.AddressZero, [], (await ethers.getSigners())[0]);
+		return new ethers.Contract(ethers.constants.AddressZero, [], (await ethers.getSigners())[0]);
 	}
 };
 
@@ -71,7 +49,7 @@ const getContractFactory = async (...args: any[]) => {
 	try {
 		return await ethers.getContractFactory(...args);
 	} catch (e) {
-		return await ethers.ContractFactory('0x', [], (await ethers.getSigners())[0]);
+		return new ethers.ContractFactory('0x', [], (await ethers.getSigners())[0]);
 	}
 };
 
@@ -149,6 +127,7 @@ const getFixtures = async () => {
 		strategy: await getContract('StrategyRenVM', signer),
 		btcVault: await getContract('BTCVault', signer),
 		swapModule: await getContract('Swap', signer),
+    convertModule: await getContract('ArbitrumConvert', signer),
 		uniswapFactory: await getContract('ZeroUniswapFactory', signer),
 		curveFactory: await getContract('ZeroCurveFactory', signer),
 		wrapper: await getContract('WrapNative', signer),
@@ -225,16 +204,16 @@ const getBalances = async () => {
 };
 
 const generateTransferRequest = async (amount: number) => {
-	const { swapModule, signerAddress } = await getFixtures();
+	const { convertModule, swapModule, signerAddress } = await getFixtures();
 	const { underwriter } = await getUnderwriter();
 	return new TransferRequest({
-		module: swapModule.address,
+		module: process.env.CHAIN === 'ARBITRUM' ? convertModule.address : swapModule.address,
 		to: signerAddress,
 		underwriter: underwriter.address,
 		//@ts-ignore
 		asset: deployParameters[network]['renBTC'],
 		amount: String(amount),
-		data: '0x',
+		data: ethers.utils.defaultAbiCoder.encode(['uint256'], [ethers.utils.parseEther('0.01')]),
   });
 };
 
@@ -383,7 +362,7 @@ describe('Zero', () => {
 		const signature = await transferRequest.sign(signer, controller.address);
 
 		console.log('\nWriting a small loan');
-		await underwriter.proxy(controller.address, controller.interface.encodeFunctionData('loan', [
+		await underwriter.loan(
 			transferRequest.to,
 			transferRequest.asset,
 			transferRequest.amount,
@@ -391,7 +370,7 @@ describe('Zero', () => {
 			transferRequest.module,
 			transferRequest.data,
 			signature,
-		]));
+		);
 		await getBalances();
 
 		console.log('\nRepaying loan...');
@@ -414,6 +393,53 @@ describe('Zero', () => {
 	});
 
 	it('should take out, make a swap with, then repay a large loan', async () => {
+		const { signer, controller, btcVault } = await getFixtures();
+		const { underwriter, underwriterImpl } = await getUnderwriter();
+		const renbtc = new ethers.Contract(await btcVault.token(), btcVault.interface, signer);
+		await renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
+
+		await btcVault.deposit('2500000000');
+		await btcVault.earn();
+		console.log('Deposited 15renBTC and called earn');
+		await getBalances();
+
+		//@ts-ignore
+		const transferRequest = await generateTransferRequest(1500000000);
+
+		console.log('\nInitial balances');
+		await getBalances();
+
+		transferRequest.setUnderwriter(underwriter.address);
+		const signature = await transferRequest.sign(signer, controller.address);
+
+		console.log('\nWriting a large loan');
+		await underwriterImpl.loan(
+			transferRequest.to,
+			transferRequest.asset,
+			transferRequest.amount,
+			transferRequest.pNonce,
+			transferRequest.module,
+			transferRequest.data,
+			signature,
+		);
+		await getBalances();
+
+		console.log('\nRepaying loan...');
+		await underwriterImpl.repay(
+			underwriter.address, //underwriter
+			transferRequest.to, //to
+			transferRequest.asset, //asset
+			transferRequest.amount, //amount
+			String(Number(transferRequest.amount) - 1000), //actualAmount
+			transferRequest.pNonce, //nonce
+			transferRequest.module, //module
+			utils.hexlify(utils.randomBytes(32)), //nHash
+			transferRequest.data,
+			signature, //signature
+		);
+		await getBalances();
+	});
+	it('should handle a default', async () => {
 		const { signer, controller, btcVault } = await getFixtures();
 		const { underwriter, underwriterImpl } = await getUnderwriter();
 		const renbtc = new ethers.Contract(await btcVault.token(), btcVault.interface, signer);

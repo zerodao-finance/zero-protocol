@@ -41,7 +41,7 @@ export const fetchData = async <T>(request: () => Promise<Response>): Promise<T 
 ===========================================
 */
 export const computePHash = (input: PHashInput): string => {
-	const p = computeP(input.nonce.toString(), input.module, input.data);
+	const p = computeP(input.to, input.nonce.toString(), input.module, input.data);
 	if (!p) {
 		throw Error('Error computing P while computing P hash');
 	}
@@ -50,8 +50,8 @@ export const computePHash = (input: PHashInput): string => {
 
 export const computePHashFromP = (p: string) => solidityKeccak256(['bytes'], [p]);
 
-export const computeP = (nonce: string, module: string, data: string): string =>
-	new Interface(['function zeroCall(uint256,address,bytes)']).encodeFunctionData('zeroCall', [nonce, module, data]);
+export const computeP = (to: string, nonce: string, module: string, data: string): string =>
+	new Interface(['function zeroCall(address,uint256,address,bytes)']).encodeFunctionData('zeroCall', [to, nonce, module, data]);
 
 export const maybeCoerceToGHash = (input: GHashInput | string) =>
 	typeof input === 'string' ? input : computeGHash(input);

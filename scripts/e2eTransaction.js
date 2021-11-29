@@ -32,14 +32,15 @@ const _queryTxResult = {
 
 /*
 const urls = {
-    MATIC: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
-    ETHEREUM: "https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX",
-    FORK: "http://127.0.0.1:8545"
+	MATIC: "https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm",
+	ETHEREUM: "https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX",
+	FORK: "http://127.0.0.1:8545"
 }
 */
 
 const chain = process.env.CHAIN || 'MATIC';
 const privateKey = process.env.WALLET;
+const underwriterKey = process.env.UNDERWRITER_KEY;
 
 const getSigner = async () => {
 	const [signer] = await hre.ethers.getSigners();
@@ -60,49 +61,34 @@ const keeperCallback = async (msg) => {
 		const mint = await transferRequest.submitToRenVM();
 		console.log(`(TransferRequest) Deposit ${utils.formatUnits(tr.amount, 8)} BTC to ${mint.gatewayAddress}`);
 		await new Promise((resolve, reject) => mint.on('deposit', async (deposit) => {
+			await resolve();
 			const hash = deposit.txHash();
 			const depositLog = (msg) => console.log(`RenVM Hash: ${hash}\nStatus: ${deposit.status}\n${msg}`);
 
-			/*
-        deposit.confirmed().then(async () => {
-            console.log("Executing loan");
-            const tx = await underwriterImpl.loan(
-                tr.to,
-                tr.asset,
-                tr.amount,
-                tr.pNonce,
-                tr.module,
-                tr.data,
-                tr.signature,
-            );
-            console.log(tx);
-        })
-        */
-
+			
 			await deposit
 				.confirmed()
 				.on('target', (target) => {
-          depositLog(`0/${target} confirmations`);
-          resolve(deposit);
-        })
+					depositLog(`0/${target} confirmations`);
+				})
 				.on('confirmation', (confs, target) => depositLog(`${confs}/${target} confirmations`));
 			await deposit.signed().on('status', (status) => depositLog(`Status: ${status}`));
 		}));
-    /*
-		const loanTx = await tr.loan(signer);
+		const loanTx = await tr.loan(new ethers.Wallet(process.env.UNDERWRITER_WALLET).connect(signer.provider));
 		console.log('loaned!');
 		console.log(loanTx);
 		console.log('awaiting receipt');
 		console.log(await loanTx.wait());
-    */
-		/*tr._queryTxResult = _queryTxResult;
+		/*
+		tr._queryTxResult = _queryTxResult;
 		tr._mint = {};
-    */
+		*/
 		const waitedSignature = await tr.waitForSignature();
 		console.log('got signature!');
 		console.log(waitedSignature);
 		console.log('repaying');
-		const tx = await tr.repay(signer, { gasLimit: 500e3 });
+	
+		const tx = await tr.repay(new ethers.Wallet(process.env.UNDERWRITER_WALLET).connect(signer.provider), { gasLimit: 500e3 });
 		console.log('tx submitted');
 		console.log(tx);
 		console.log('awaiting receipt');
@@ -161,16 +147,16 @@ const main = async () => {
 	const Controller = new Contract(ControllerAddress, ControllerAbi, signer);
 	const BTCVault = new Contract(BTCVaultAddress, BTCVaultAbi, signer);
 
-	const underwriterImpl = new Contract(underwriterAddress, ControllerAbi, signer);
+	const underwriterImpl = new Contract(underwriterAddress, ControllerAbi, new ethers.Wallet(process.env.UNDERWRITER_WALLET).connect(signer.provider));
 
 	transferRequest = new TransferRequest({
 		module: Swap.address,
 		to: await signer.getAddress(),
 		underwriter: TrivialUnderwriter.address,
 		asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', // renBTC on MATIC
-		nonce: '0x53fc9b778460077468d2e8fd44eb0d9c66810e551c9e983569f092133f37db3e',
-		pNonce: '0x36cbcf365ecad2171742b1adeecb4b3d74eb0fddb8988b690117bf550a9b19c7',
-		amount: String(utils.parseUnits('0.0016', 8)),
+		nonce: '0x63fc9b778460077468d2e8fd44eb0d9c66810e551c9e983569f092133f37db2b',
+		pNonce: '0x46cbcf365ecad2171742b1adeecb4b3d74eb0fddb8988b690117bf550a9b19e9',
+		amount: String(utils.parseUnits('0.035', 8)),
 		data: '0x',
 	});
 

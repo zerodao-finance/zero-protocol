@@ -29,8 +29,8 @@ contract ArbitrumConvert {
   ) {
 		controller = _controller;
 		governance = IController(_controller).governance();
-		IERC20(want).safeApprove(renCrvArbitrum, ~uint256(0));
-		IERC20(wbtc).safeApprove(tricryptoArbitrum, ~uint256(0));
+		IERC20(want).safeApprove(renCrvArbitrum, ~uint256(0) >> 2);
+		IERC20(wbtc).safeApprove(tricryptoArbitrum, ~uint256(0) >> 2);
 	}
 
 	function setBlockTimeout(uint256 _ct) public {
@@ -65,16 +65,22 @@ contract ArbitrumConvert {
     uint256 _ratio
 	) internal returns (uint256 amountSwappedETH, uint256 amountSwappedBTC) {
     uint256 amountToETH = _ratio.mul(_amountIn).div(uint256(1 ether));
-    uint256 wbtcOut = IRenCrvArbitrum(renCrvArbitrum).exchange(0, 1, amountToETH, 0, address(this));
-    amountSwappedETH = ICurveETHUInt256(tricryptoArbitrum).exchange(1, 2, wbtcOut, 0, true);
+    uint256 wbtcOut = IRenCrvArbitrum(renCrvArbitrum).exchange(1, 0, amountToETH, 0, address(this));
+    uint256 _amountStart = address(this).balance;
+    (bool success,) = tricryptoArbitrum.call(abi.encodeWithSelector(ICurveETHUInt256.exchange.selector, 1, 2, wbtcOut, 0, true));
+    require(success, "!exchange");
+    amountSwappedETH = address(this).balance.sub(_amountStart);
     amountSwappedBTC = _amountIn.sub(amountToETH);
   }
   receive() external payable {
     // no-op
   } 
   function swapTokensBack(ArbitrumConvertLib.ConvertRecord storage record) internal returns (uint256 amountReturned) {
-    uint256 wbtcOut = ICurveETHUInt256(tricryptoArbitrum).exchange{ value: record.qtyETH }(2, 1, record.qtyETH, 0, true);
-    amountReturned = IRenCrvArbitrum(renCrvArbitrum).exchange(1, 0, wbtcOut, 0, address(this)).add(record.qty);
+    uint256 _amountStart = IERC20(wbtc).balanceOf(address(this));
+    (bool success,) = tricryptoArbitrum.call{ value: record.qtyETH }(abi.encodeWithSelector(ICurveETHUInt256.exchange.selector, 2, 1, record.qtyETH, 0, true));
+    require(success, "!exchange");
+    uint256 wbtcOut = IERC20(wbtc).balanceOf(address(this));
+    amountReturned = IRenCrvArbitrum(renCrvArbitrum).exchange(0, 1, wbtcOut, 0, address(this)).add(record.qty);
   } 
 	function repayLoan(
 		address _to,

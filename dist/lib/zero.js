@@ -44,6 +44,11 @@ class TransferRequest {
         this._contractFn = "zeroCall";
         this._contractParams = [
             {
+                name: 'to',
+                type: 'address',
+                value: this.to
+            },
+            {
                 name: "pNonce",
                 type: "uint256",
                 value: this.pNonce
