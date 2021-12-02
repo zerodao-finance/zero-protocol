@@ -4,9 +4,10 @@ import { Logger } from '../logger';
 import { ConnectionTypes } from './types';
 import { TransferRequest } from '../types';
 import { PersistenceAdapter } from '../persistence';
+import { EventEmitter } from 'events';
 declare class ZeroConnection extends libp2p {
 }
-declare class ZeroUser {
+declare class ZeroUser extends EventEmitter {
     conn: ConnectionTypes;
     keepers: string[];
     log: Logger;

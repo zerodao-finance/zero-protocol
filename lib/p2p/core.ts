@@ -11,16 +11,18 @@ import { PersistenceAdapter, InMemoryPersistenceAdapter } from '../persistence';
 import { Buffer } from 'buffer';
 import peerId = require('peer-id');
 import peerInfo = require('peer-info');
+import { EventEmitter } from 'events';
 
 class ZeroConnection extends libp2p { }
 
-class ZeroUser {
+class ZeroUser extends EventEmitter {
 	conn: ConnectionTypes;
 	keepers: string[];
 	log: Logger;
 	storage: PersistenceAdapter<any, any>;
 
 	constructor(connection: ConnectionTypes, persistence?: PersistenceAdapter<any, any>) {
+		super();
 		this.conn = connection;
 		this.conn.on('peer:discovery', () => console.log('discovered!'));
 		this.keepers = [];
@@ -35,6 +37,7 @@ class ZeroUser {
 			if (!this.keepers.includes(from)) {
 				try {
 					this.keepers.push(from);
+					this.emit('keeper', from);
 					this.log.debug(`Keeper Details: `, {
 						from,
 					});

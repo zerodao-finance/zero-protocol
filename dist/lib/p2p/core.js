@@ -19,11 +19,13 @@ const it_pipe_1 = __importDefault(require("it-pipe"));
 const it_length_prefixed_1 = __importDefault(require("it-length-prefixed"));
 const persistence_1 = require("../persistence");
 const peerId = require("peer-id");
+const events_1 = require("events");
 class ZeroConnection extends libp2p_1.default {
 }
 exports.ZeroConnection = ZeroConnection;
-class ZeroUser {
+class ZeroUser extends events_1.EventEmitter {
     constructor(connection, persistence) {
+        super();
         this.conn = connection;
         this.conn.on('peer:discovery', () => console.log('discovered!'));
         this.keepers = [];
@@ -37,6 +39,7 @@ class ZeroUser {
             if (!this.keepers.includes(from)) {
                 try {
                     this.keepers.push(from);
+                    this.emit('keeper', from);
                     this.log.debug(`Keeper Details: `, {
                         from,
                     });
