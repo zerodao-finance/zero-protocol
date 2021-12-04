@@ -35,6 +35,7 @@ const providers = {
 	ARBITRUM: Arbitrum(new ethers.providers.JsonRpcProvider("https://arb-mainnet.g.alchemy.com/v2/utMr7YLZtnhmRySXim_DuF5QMl0HBwdA"), 'mainnet'),
 }
 const provider = providers[process.env.CHAIN || "MATIC"]
+console.log("Provider:", provider);
 
 
 export class TransferRequest {

@@ -58,7 +58,7 @@ const handleTransferRequest = async (message) => {
         const mint = await transferRequest.submitToRenVM();
         console.log("Successfully submitted to renVM.")
         console.log("Gateway address is", await transferRequest.toGatewayAddress())
-        console.log("RECEIVED TRANSFER REQUEST", message);
+        console.log("RECEIVED MESSAGE", message);
         console.log("RECEIVED TRANSFER REQUEST", transferRequest);
         await new Promise((resolve, reject) => mint.on('deposit', async (deposit) => {
             console.log("Deposit received.")
