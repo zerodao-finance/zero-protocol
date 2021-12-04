@@ -20,7 +20,7 @@ import { computeP, computeNHash, maybeCoerceToGHash } from './util/helpers';
 import { createNode, ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
 import { PersistenceAdapter } from './persistence';
 import { GatewayAddressInput } from './types';
-import { Bitcoin, Polygon, Ethereum } from "@renproject/chains"
+import { Bitcoin, Polygon, Ethereum, Arbitrum } from "@renproject/chains"
 import RenJS from "@renproject/ren";
 import { EthArgs } from "@renproject/interfaces";
 
@@ -31,7 +31,8 @@ const logger = { debug(v) { console.error(v); } };
 
 const providers = {
 	MATIC: Polygon(new ethers.providers.JsonRpcProvider("https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm"), 'mainnet'),
-	ETHEREUM: Ethereum(new ethers.providers.JsonRpcProvider("https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX"), 'mainnet')
+	ETHEREUM: Ethereum(new ethers.providers.JsonRpcProvider("https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX"), 'mainnet'),
+	ARBITRUM: Arbitrum(new ethers.providers.JsonRpcProvider("https://arb-mainnet.g.alchemy.com/v2/utMr7YLZtnhmRySXim_DuF5QMl0HBwdA"), 'mainnet'),
 }
 const provider = providers[process.env.CHAIN || "MATIC"]
 
@@ -52,8 +53,8 @@ export class TransferRequest {
 	private _contractFn: string;
 	private _contractParams: EthArgs;
 	private _ren: RenJS;
-  public _queryTxResult: any;
-  public _mint: any;
+	public _queryTxResult: any;
+	public _mint: any;
 
 	constructor(params: {
 		module: string,
@@ -88,11 +89,11 @@ export class TransferRequest {
 		this._ren = new (RenJS as any)('mainnet', { loadCompletedDeposits: true });
 		this._contractFn = "zeroCall";
 		this._contractParams = [
-      {
-        name: 'to',
-        type: 'address',
-        value: this.to
-      },
+			{
+				name: 'to',
+				type: 'address',
+				value: this.to
+			},
 			{
 				name: "pNonce",
 				type: "uint256",
@@ -120,7 +121,7 @@ export class TransferRequest {
 	}
 	async submitToRenVM(isTest) {
 		console.log('submitToRenVM this.nonce', this.nonce);
-    if (this._mint) return this._mint;
+		if (this._mint) return this._mint;
 		const result = this._mint = await this._ren.lockAndMint({
 			asset: "BTC",
 			from: Bitcoin(),
@@ -135,7 +136,7 @@ export class TransferRequest {
 		return result;
 	}
 	async waitForSignature() {
-    if (this._queryTxResult) return this._queryTxResult;
+		if (this._queryTxResult) return this._queryTxResult;
 		const mint = await this.submitToRenVM(false);
 		const deposit: any = await new Promise((resolve, reject) => {
 			mint.on('deposit', resolve);
@@ -143,13 +144,13 @@ export class TransferRequest {
 		});
 		await deposit.signed();
 		const { signature, nhash, phash, amount } = deposit._state.queryTxResult.out;
-    const result = this._queryTxResult = {
+		const result = this._queryTxResult = {
 			amount: String(amount),
 			nHash: hexlify(nhash),
 			pHash: hexlify(phash),
 			signature: hexlify(signature)
 		};
-    return result;
+		return result;
 	}
 	setUnderwriter(underwriter: string): boolean {
 		if (!ethers.utils.isAddress(underwriter)) return false;
@@ -204,27 +205,27 @@ export class TransferRequest {
 }
 
 export class TrivialUnderwriterTransferRequest extends TransferRequest {
-  async getController(signer) {
-    const underwriter = this.getTrivialUnderwriter(signer);
-    return new Contract(await underwriter.controller(), [ 'function fallbackMint(address underwriter, address to, address asset, uint256 amount, uint256 actualAmount, uint256 nonce, address module, bytes32 nHash, bytes data, bytes signature)' ], signer);
-  }
-  async fallbackMint(signer, params = {}) {
-    const controller = await this.getController(signer);
-    const queryTxResult = await this.waitForSignature();
-    return await controller.fallbackMint(this.underwriter, this.destination(), this.asset, this.amount, queryTxResult.amount, this.pNonce, this.module, queryTxResult.nHash, this.data, queryTxResult.signature, params);
-  }
-  getTrivialUnderwriter(signer) {
-    return new Contract(this.underwriter, [ 'function controller() view returns (address)', 'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)', 'function loan(address, address, uint256, uint256, address, bytes, bytes)' ], signer);
-  }
-  async loan(signer) {
-    const underwriter = this.getTrivialUnderwriter(signer);
-    return await underwriter.loan(this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature);
-  }
-  async repay(signer, params = {}) {
-    const underwriter = this.getTrivialUnderwriter(signer);
-    const { amount: actualAmount, nHash, signature } = await this.waitForSignature();
-    return await underwriter.repay(this.underwriter, this.destination(), this.asset, this.amount, actualAmount, this.pNonce, this.module, nHash, this.data, signature, params);
-  }
+	async getController(signer) {
+		const underwriter = this.getTrivialUnderwriter(signer);
+		return new Contract(await underwriter.controller(), ['function fallbackMint(address underwriter, address to, address asset, uint256 amount, uint256 actualAmount, uint256 nonce, address module, bytes32 nHash, bytes data, bytes signature)'], signer);
+	}
+	async fallbackMint(signer, params = {}) {
+		const controller = await this.getController(signer);
+		const queryTxResult = await this.waitForSignature();
+		return await controller.fallbackMint(this.underwriter, this.destination(), this.asset, this.amount, queryTxResult.amount, this.pNonce, this.module, queryTxResult.nHash, this.data, queryTxResult.signature, params);
+	}
+	getTrivialUnderwriter(signer) {
+		return new Contract(this.underwriter, ['function controller() view returns (address)', 'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)', 'function loan(address, address, uint256, uint256, address, bytes, bytes)'], signer);
+	}
+	async loan(signer) {
+		const underwriter = this.getTrivialUnderwriter(signer);
+		return await underwriter.loan(this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature);
+	}
+	async repay(signer, params = {}) {
+		const underwriter = this.getTrivialUnderwriter(signer);
+		const { amount: actualAmount, nHash, signature } = await this.waitForSignature();
+		return await underwriter.repay(this.underwriter, this.destination(), this.asset, this.amount, actualAmount, this.pNonce, this.module, nHash, this.data, signature, params);
+	}
 }
 
 
