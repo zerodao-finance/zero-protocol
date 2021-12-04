@@ -34,7 +34,7 @@ const providers = {
 	ETHEREUM: Ethereum(new ethers.providers.JsonRpcProvider("https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX"), 'mainnet'),
 	ARBITRUM: Arbitrum(new ethers.providers.JsonRpcProvider("https://arb-mainnet.g.alchemy.com/v2/utMr7YLZtnhmRySXim_DuF5QMl0HBwdA"), 'mainnet'),
 }
-const provider = providers[process.env.CHAIN || "MATIC"]
+const provider = providers[process.env.CHAIN || process.env.REACT_APP_CHAIN || "MATIC"]
 console.log("Provider:", provider);
 
 
