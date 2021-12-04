@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.computeHashForDarknodeSignature = exports.computeNHash = exports.computeShiftInTxHash = exports.encodeInitializationActions = exports.maybeCoerceToGHash = exports.computeP = exports.computePHashFromP = exports.computePHash = exports.fetchData = exports.toHex = exports.fromBase64 = exports.toBase64 = exports.addHexPrefix = exports.stripHexPrefix = void 0;
 const safe_buffer_1 = require("safe-buffer");
@@ -25,20 +34,20 @@ exports.toHex = toHex;
  * @param request = Promise to await
  * @return JSON formatted response
  */
-const fetchData = async (request) => {
+const fetchData = (request) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const response = await request();
+        const response = yield request();
         if (!response.ok) {
             return null;
         }
         // purposefully await to use try / catch
-        return await response.json();
+        return yield response.json();
     }
     catch (err) {
         console.log('error', err);
         return null;
     }
-};
+});
 exports.fetchData = fetchData;
 /*
 ===========================================
@@ -81,4 +90,3 @@ const computeHashForDarknodeSignature = (input) => keccakAbiEncoded(['bytes32', 
     maybeCoerceToNHash(input.n),
 ]);
 exports.computeHashForDarknodeSignature = computeHashForDarknodeSignature;
-//# sourceMappingURL=helpers.js.map

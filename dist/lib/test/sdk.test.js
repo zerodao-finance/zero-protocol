@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const zero_1 = require("../zero");
 const ethers_1 = require("ethers");
@@ -59,7 +68,7 @@ describe('computeP unit test', () => {
         });
         (0, chai_1.expect)(transferRequest).to.be.instanceof(zero_1.TransferRequest);
     });
-    it('creates a valid gateway address', async () => {
+    it('creates a valid gateway address', () => __awaiter(void 0, void 0, void 0, function* () {
         const transferRequest = new zero_1.TransferRequest({
             asset: ethers_1.constants.AddressZero,
             module: ethers_1.constants.AddressZero,
@@ -70,12 +79,12 @@ describe('computeP unit test', () => {
             contractAddress: ethers_1.constants.AddressZero,
             chainId: 1
         });
-        const gatewayAddress = await transferRequest.toGatewayAddress({
+        const gatewayAddress = yield transferRequest.toGatewayAddress({
             isTest: true
         });
         const isValidAddress = (0, bitcoin_address_validation_1.validate)(gatewayAddress);
         (0, chai_1.expect)(isValidAddress).to.be.true;
-    });
+    }));
     it('creates a valid EIP721 response', () => {
         const expected = {
             types: {
@@ -154,4 +163,3 @@ describe('computeP unit test', () => {
         (0, chai_1.expect)(EIP712).to.be.deep.eq(expected);
     });
 });
-//# sourceMappingURL=sdk.test.js.map

@@ -7,4 +7,3 @@ const inMemory_1 = require("./inMemory");
 Object.defineProperty(exports, "InMemoryPersistenceAdapter", { enumerable: true, get: function () { return inMemory_1.InMemoryPersistenceAdapter; } });
 const gun_1 = require("./gun");
 Object.defineProperty(exports, "GunPersistenceAdapter", { enumerable: true, get: function () { return gun_1.GunPersistenceAdapter; } });
-//# sourceMappingURL=index.js.map

@@ -1,4 +1,13 @@
 'use strict';
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 const libp2p = require('libp2p');
 const TCP = require('libp2p-tcp');
 const WS = require('libp2p-websockets');
@@ -20,7 +29,7 @@ const fromPresetOrMultiAddr = (multiaddr) => presets[multiaddr] || multiaddr;
 const wrtc = require('wrtc');
 console.log(wrtc);
 module.exports = {
-    createNode: async (options) => {
+    createNode: (options) => __awaiter(void 0, void 0, void 0, function* () {
         /*
         const peerInfo = options.peerInfo || (await PeerInfo.create());
         */
@@ -29,7 +38,7 @@ module.exports = {
         peerInfo.multiaddrs.add(multiaddr);
         */
         const dhtEnable = typeof options.dht === 'undefined' || options.dht === true;
-        const socket = await libp2p.create({
+        const socket = yield libp2p.create({
             //	peerInfo,
             addresses: {
                 listen: [
@@ -68,6 +77,5 @@ module.exports = {
             },
         });
         return socket;
-    },
+    }),
 };
-//# sourceMappingURL=node.js.map

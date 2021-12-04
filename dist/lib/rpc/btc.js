@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -10,12 +19,12 @@ const helpers_1 = require("../util/helpers");
 const bitcoin_core_1 = __importDefault(require("bitcoin-core"));
 const axios_1 = __importDefault(require("axios"));
 const BTCHandler_1 = require("send-crypto/build/main/handlers/BTC/BTCHandler");
-const fetchBitcoinPriceHistory = async (confirmationTime) => {
+const fetchBitcoinPriceHistory = (confirmationTime) => __awaiter(void 0, void 0, void 0, function* () {
     const numConfTime = parseFloat(confirmationTime);
     if (isNaN(numConfTime))
         return undefined;
     const oldPriceIndex = Math.ceil(numConfTime / 5) + 1;
-    const cgResponse = await (0, helpers_1.fetchData)(() => fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=.1&interval=minute'));
+    const cgResponse = yield (0, helpers_1.fetchData)(() => fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=.1&interval=minute'));
     const prices = cgResponse ? cgResponse['prices'] : undefined;
     // Coingecko returns data in oldest -> newest format so we pull data from the end
     return prices
@@ -24,13 +33,13 @@ const fetchBitcoinPriceHistory = async (confirmationTime) => {
             oldPrice: new bignumber_js_1.default(prices[prices.length - oldPriceIndex][1]),
         }
         : undefined;
-};
+});
 exports.fetchBitcoinPriceHistory = fetchBitcoinPriceHistory;
-const fetchAverageBitcoinConfirmationTime = async () => {
-    const stats = await (0, helpers_1.fetchData)(() => fetch(`https://blockchain.info/stats?format=json&cors=true`));
+const fetchAverageBitcoinConfirmationTime = () => __awaiter(void 0, void 0, void 0, function* () {
+    const stats = yield (0, helpers_1.fetchData)(() => fetch(`https://blockchain.info/stats?format=json&cors=true`));
     const blockLengthMinutes = stats ? parseFloat(stats['minutes_between_blocks']) : 60;
     return (blockLengthMinutes * 6).toFixed(1);
-};
+});
 exports.fetchAverageBitcoinConfirmationTime = fetchAverageBitcoinConfirmationTime;
 class BitcoinClient extends bitcoin_core_1.default {
     constructor(o) {
@@ -48,12 +57,12 @@ class BitcoinClient extends bitcoin_core_1.default {
     }
 }
 exports.BitcoinClient = BitcoinClient;
-const resultToJsonRpc = async (id, fn) => {
+const resultToJsonRpc = (id, fn) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         return {
             jsonrpc: '2.0',
             id,
-            result: await fn()
+            result: yield fn()
         };
     }
     catch (e) {
@@ -63,7 +72,7 @@ const resultToJsonRpc = async (id, fn) => {
             error: e
         };
     }
-};
+});
 class BTCBackend {
     constructor(options) {
         this.testnet = options.network && options.network === 'testnet';
@@ -72,31 +81,37 @@ class BTCBackend {
         this.prefixes = ['btc'];
         this.id = 0;
     }
-    async sendPromise({ id, method, params }) {
-        switch (method) {
-            case 'btc_getUTXOs':
-                return await resultToJsonRpc(id, async () => await this.handler.getUTXOs(this.testnet, ...params));
-        }
+    sendPromise({ id, method, params }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            switch (method) {
+                case 'btc_getUTXOs':
+                    return yield resultToJsonRpc(id, () => __awaiter(this, void 0, void 0, function* () { return yield this.handler.getUTXOs(this.testnet, ...params); }));
+            }
+        });
     }
     send(o, cb) {
         this.sendPromise(o).then((result) => cb(null, result)).catch((err) => cb(err));
     }
-    async sendWrapped(method, params) {
-        const response = await new Promise((resolve, reject) => this.send({
-            id: this.id++,
-            method,
-            params,
-            jsonrpc: '2.0'
-        }, (err, result) => err ? reject(err) : resolve(result)));
-        if (response.error)
-            throw response.error;
-        return response.result;
+    sendWrapped(method, params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const response = yield new Promise((resolve, reject) => this.send({
+                id: this.id++,
+                method,
+                params,
+                jsonrpc: '2.0'
+            }, (err, result) => err ? reject(err) : resolve(result)));
+            if (response.error)
+                throw response.error;
+            return response.result;
+        });
     }
-    async listReceivedByAddress(params) {
-        return await this.sendWrapped('btc_getUTXOs', [{
-                confirmations: params.confirmations || 1,
-                address: params.address
-            }]);
+    listReceivedByAddress(params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.sendWrapped('btc_getUTXOs', [{
+                    confirmations: params.confirmations || 1,
+                    address: params.address
+                }]);
+        });
     }
 }
 const getDefaultBitcoinClient = () => {
@@ -104,21 +119,21 @@ const getDefaultBitcoinClient = () => {
     return new BTCBackend({ network });
 };
 exports.getDefaultBitcoinClient = getDefaultBitcoinClient;
-const getSingleAddressBlockchainInfo = async (address) => {
-    const { data, status } = await axios_1.default.get('https://blockchain.info/rawaddr/' + address + '?cors=true');
+const getSingleAddressBlockchainInfo = (address) => __awaiter(void 0, void 0, void 0, function* () {
+    const { data, status } = yield axios_1.default.get('https://blockchain.info/rawaddr/' + address + '?cors=true');
     if (status !== 200)
         throw Error('status code - ' + String(status));
     return data;
-};
-const getListReceivedByAddressBlockchainInfo = async (address) => {
-    const singleAddress = await getSingleAddressBlockchainInfo(address);
+});
+const getListReceivedByAddressBlockchainInfo = (address) => __awaiter(void 0, void 0, void 0, function* () {
+    const singleAddress = yield getSingleAddressBlockchainInfo(address);
     const { txs, total_received, address: addressResult } = singleAddress;
     return {
         txids: txs,
         amount: total_received,
         address: addressResult
     };
-};
+});
 /*
 export const getDefaultBitcoinClient = () => {
               const client = new BitcoinClient({
@@ -159,4 +174,3 @@ export const getDefaultBitcoinClient = () => {
     return client;
 };
 */ 
-//# sourceMappingURL=btc.js.map

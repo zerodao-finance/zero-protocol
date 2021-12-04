@@ -46,4 +46,3 @@ class EthNetwork extends network_2.Network {
     }
 }
 exports.EthNetwork = EthNetwork;
-//# sourceMappingURL=bsc.network.js.map

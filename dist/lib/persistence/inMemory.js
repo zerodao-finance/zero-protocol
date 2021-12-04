@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -9,81 +18,94 @@ class InMemoryPersistenceAdapter {
     constructor() {
         this.backend = new Map();
     }
-    async set(transferRequest) {
-        const tr = Object.assign({}, transferRequest);
-        delete tr._mint;
-        delete tr._queryTxResult;
-        const key = (0, object_hash_1.default)(tr);
-        const status = Object.assign(Object.assign({}, tr), { status: 'pending' });
-        try {
-            await this.backend.set(key, status);
-            return key;
-        }
-        catch (e) {
-            throw new Error(e.message);
-        }
-    }
-    async get(key) {
-        try {
-            const value = this.backend.get(key);
-            if (value) {
-                return value;
+    set(transferRequest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const tr = Object.assign({}, transferRequest);
+            delete tr._mint;
+            delete tr._queryTxResult;
+            const key = (0, object_hash_1.default)(tr);
+            const status = Object.assign(Object.assign({}, tr), { status: 'pending' });
+            try {
+                yield this.backend.set(key, status);
+                return key;
             }
-            else
+            catch (e) {
+                throw new Error(e.message);
+            }
+        });
+    }
+    get(key) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const value = this.backend.get(key);
+                if (value) {
+                    return value;
+                }
+                else
+                    return undefined;
+            }
+            catch (e) {
                 return undefined;
-        }
-        catch (e) {
-            return undefined;
-        }
-    }
-    async remove(key) {
-        try {
-            await this.backend.delete(key);
-            return true;
-        }
-        catch (e) {
-            return false;
-        }
-    }
-    async has(key) {
-        try {
-            return await this.backend.has(key);
-        }
-        catch (e) {
-            return false;
-        }
-    }
-    async getStatus(key) {
-        try {
-            const value = (await this.get(key));
-            if (value) {
-                return value.status;
             }
-            else {
-                throw new Error(`No transfer request with key: ${key}`);
-            }
-        }
-        catch (e) {
-            throw new Error(e.message);
-        }
+        });
     }
-    async setStatus(key, status) {
-        try {
-            const value = (await this.get(key));
-            if (value) {
-                value.status = status;
-                await this.backend.set(key, value);
+    remove(key) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield this.backend.delete(key);
+                return true;
             }
-            else
-                throw new Error(`No transfer request with key: ${key}`);
-        }
-        catch (e) {
-            throw new Error(e.message);
-        }
+            catch (e) {
+                return false;
+            }
+        });
     }
-    async getAllTransferRequests() {
-        return Array.from(this.backend.values());
+    has(key) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                return yield this.backend.has(key);
+            }
+            catch (e) {
+                return false;
+            }
+        });
+    }
+    getStatus(key) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const value = (yield this.get(key));
+                if (value) {
+                    return value.status;
+                }
+                else {
+                    throw new Error(`No transfer request with key: ${key}`);
+                }
+            }
+            catch (e) {
+                throw new Error(e.message);
+            }
+        });
+    }
+    setStatus(key, status) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const value = (yield this.get(key));
+                if (value) {
+                    value.status = status;
+                    yield this.backend.set(key, value);
+                }
+                else
+                    throw new Error(`No transfer request with key: ${key}`);
+            }
+            catch (e) {
+                throw new Error(e.message);
+            }
+        });
+    }
+    getAllTransferRequests() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return Array.from(this.backend.values());
+        });
     }
 }
 exports.InMemoryPersistenceAdapter = InMemoryPersistenceAdapter;
-//# sourceMappingURL=inMemory.js.map

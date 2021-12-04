@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -37,11 +46,11 @@ describe('fetchAverageBitcoinConfirmationTime', () => {
     afterEach(() => {
         fetch_mock_1.default.restore();
     });
-    it('Returns Correct BTC Confirmation Time', async () => {
-        const confTime = await (0, btc_1.fetchAverageBitcoinConfirmationTime)();
+    it('Returns Correct BTC Confirmation Time', () => __awaiter(void 0, void 0, void 0, function* () {
+        const confTime = yield (0, btc_1.fetchAverageBitcoinConfirmationTime)();
         const expected = (10.1742 * 6).toFixed(1);
         (0, chai_1.expect)(confTime).to.be.equal(expected);
-    });
+    }));
 });
 describe('fetchBtcPriceHistory', () => {
     const mockData = {
@@ -155,13 +164,13 @@ describe('fetchBtcPriceHistory', () => {
         },
     ];
     data.forEach((testData) => {
-        it('Returns correct price history', async () => {
+        it('Returns correct price history', () => __awaiter(void 0, void 0, void 0, function* () {
             const confTime = testData.confTime;
-            const prices = await (0, btc_1.fetchBitcoinPriceHistory)(confTime);
+            const prices = yield (0, btc_1.fetchBitcoinPriceHistory)(confTime);
             console.log('prices:', prices);
             console.log(testData.expected);
             (0, chai_1.expect)(prices).to.deep.equal(testData.expected);
-        });
+        }));
     });
 });
 describe('BitcoinClient', () => {
@@ -170,4 +179,3 @@ describe('BitcoinClient', () => {
         (0, chai_1.expect)(client).to.be.instanceOf(btc_1.BitcoinClient);
     });
 });
-//# sourceMappingURL=btc.test.js.map

@@ -10,4 +10,3 @@ var SUPPORTED_TOKENS;
     SUPPORTED_TOKENS["MATIC"] = "Matic";
     SUPPORTED_TOKENS["BNB"] = "BNB";
 })(SUPPORTED_TOKENS = exports.SUPPORTED_TOKENS || (exports.SUPPORTED_TOKENS = {}));
-//# sourceMappingURL=tokens.js.map

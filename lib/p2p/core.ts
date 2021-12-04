@@ -1,5 +1,5 @@
 'use strict';
-import libp2p from 'libp2p';
+import libp2p from 'libp2p/src/index'; // @ts-ignore
 import createLogger, { Logger } from '../logger';
 //import { MockZeroConnection } from './mocks';
 import { fromJSONtoBuffer, fromBufferToJSON } from './util';

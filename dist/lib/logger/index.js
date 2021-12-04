@@ -9,4 +9,3 @@ const createLogger = (userType) => (0, winston_1.createLogger)({
     transports: [new winston_1.transports.Console()],
 });
 exports.default = createLogger;
-//# sourceMappingURL=index.js.map

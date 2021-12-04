@@ -27,4 +27,3 @@ exports.ZeroController = new Contract(ZeroControllerJson.address, ZeroController
 exports.ZeroCurveFactory = new Contract(ZeroCurveFactoryJson.address, ZeroCurveFactoryJson.abi, signer);
 exports.ZeroUniswapFactory = new Contract(ZeroUniswapFactoryJson.address, ZeroUniswapFactoryJson.abi, signer);
 exports.ZeroUnderwriterImpl = new Contract(TrivialUnderwriterJson.address, ZeroControllerJson.abi, signer);
-//# sourceMappingURL=deployed-contracts.js.map

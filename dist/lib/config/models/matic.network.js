@@ -54,4 +54,3 @@ class MaticNetwork extends network_2.Network {
     }
 }
 exports.MaticNetwork = MaticNetwork;
-//# sourceMappingURL=matic.network.js.map

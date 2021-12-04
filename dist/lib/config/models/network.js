@@ -36,4 +36,3 @@ class Network {
 exports.Network = Network;
 Network.idToNetwork = {};
 Network.symbolToNetwork = {};
-//# sourceMappingURL=network.js.map

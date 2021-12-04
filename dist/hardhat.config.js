@@ -86,4 +86,3 @@ module.exports = {
     },
     etherscan: etherscan[process.env.CHAIN || 'MATIC']
 };
-//# sourceMappingURL=hardhat.config.js.map

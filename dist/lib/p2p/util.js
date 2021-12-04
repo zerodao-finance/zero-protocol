@@ -19,4 +19,3 @@ function fromJSONtoBuffer(obj) {
     return stringToBuffer(stringified);
 }
 exports.fromJSONtoBuffer = fromJSONtoBuffer;
-//# sourceMappingURL=util.js.map

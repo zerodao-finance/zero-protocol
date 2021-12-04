@@ -24,4 +24,3 @@ const override = (address, runtimeCode) => {
     return true;
 };
 exports.override = override;
-//# sourceMappingURL=inject-mock.js.map

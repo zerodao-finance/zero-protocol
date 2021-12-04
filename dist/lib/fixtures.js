@@ -37,4 +37,3 @@ module.exports = {
         btcGateway: '0xe4b679400F0f267212D5D812B95f58C83243EE71'
     }
 };
-//# sourceMappingURL=fixtures.js.map

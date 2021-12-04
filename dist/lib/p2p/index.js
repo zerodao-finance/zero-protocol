@@ -12,4 +12,3 @@ Object.defineProperty(exports, "bufferToString", { enumerable: true, get: functi
 Object.defineProperty(exports, "fromBufferToJSON", { enumerable: true, get: function () { return util_1.fromBufferToJSON; } });
 Object.defineProperty(exports, "fromJSONtoBuffer", { enumerable: true, get: function () { return util_1.fromJSONtoBuffer; } });
 Object.defineProperty(exports, "stringToBuffer", { enumerable: true, get: function () { return util_1.stringToBuffer; } });
-//# sourceMappingURL=index.js.map
