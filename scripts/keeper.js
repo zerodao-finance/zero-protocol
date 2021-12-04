@@ -1,14 +1,12 @@
-import { Wallet } from '@renproject/chains-ethereum/node_modules/ethers';
-import { reject } from 'bluebird';
-
+import { Wallet } from 'ethers';
 const { ethers } = require('hardhat');
 const { TrivialUnderwriterTransferRequest } = require('../lib/zero');
 const { createZeroConnection, createZeroKeeper } = require('../lib/zero');
 
 
-/*--------------------------- ENVIRONMENT VARIABLES ---------------------------
+/*--------------------------- ENVIRONMENT VARIABLES -------------------------*/
 
-PK: The private key of the wallet to use.
+// PK: The private key of the wallet to use.
 
 //--------------------------------- CONSTANTS -------------------------------*/
 
@@ -16,9 +14,9 @@ PK: The private key of the wallet to use.
 const LOAN_CONFIRMATION = 1
 
 // Address of RenBTC. Used for balance check.
-RENBTC_ADDRESS = '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501'
+const RENBTC_ADDRESS = '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501'
 
-MAX_AMOUNT = 50000000;
+const MAX_AMOUNT = 50000000;
 
 // URL of P2P network to use. DON'T MODIFY unless you know what you're doing...
 const KEEPER_URL = '/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'
@@ -64,15 +62,19 @@ const handleTransferRequest = async (message) => {
                 .on('target', (target) => {
                     depositLog(`0/${target} confirmations`);
                 })
-                .on('confirmation', (confs, target) => {
+                .on('confirmation', async (confs, target) => {
                     depositLog(`${confs}/${target} confirmations`);
-                    confs == LOAN_CONFIRMATION && (await executeLoan(transferRequest));
+                    if (confs == LOAN_CONFIRMATION) {
+                        await executeLoan(transferRequest);
+                    }
                 });
 
             await deposit.signed().on('status', (status) => {
                 depositLog(`Status: ${status}`);
             });
         }));
+    } catch (e) {
+        console.log(e);
     }
 }
 
@@ -88,4 +90,4 @@ const run = async () => {
 
 }
 
-export default run;
+run();

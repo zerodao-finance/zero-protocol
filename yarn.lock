@@ -1121,6 +1121,20 @@
     bn.js "^5.2.0"
     ethers "^5.4.5"
 
+"@renproject/chains-ethereum@^2.5.10-1":
+  version "2.5.10-1"
+  resolved "https://registry.yarnpkg.com/@renproject/chains-ethereum/-/chains-ethereum-2.5.10-1.tgz#be1e58b37af69cd6bfd3f05b94fd9010ad6d5e6f"
+  integrity sha512-abORA269CIZ4uJSPCbcGQv5tqtWa/Pw4VjTdAHMvhNIwb+tdoOtpSl02sj4Eg6ASRFg2ttt3eJ9kLQaxyfvPNg==
+  dependencies:
+    "@ethersproject/providers" "^5.4.4"
+    "@renproject/interfaces" "^2.5.10-1"
+    "@renproject/utils" "^2.5.10-1"
+    "@types/bn.js" "^5.1.0"
+    "@types/node" ">=10"
+    bignumber.js "^9.0.1"
+    bn.js "^5.2.0"
+    ethers "^5.4.5"
+
 "@renproject/chains-filecoin@^2.5.9":
   version "2.5.9"
   resolved "https://registry.yarnpkg.com/@renproject/chains-filecoin/-/chains-filecoin-2.5.9.tgz#f2283a8a38277bf499b1febd11a873e5638c48e2"
