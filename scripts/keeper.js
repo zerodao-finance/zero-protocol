@@ -50,7 +50,7 @@ const hasEnough = async (transferRequest) => {
 
 const handleTransferRequest = async (message) => {
     try {
-        const transferRequest = new TrivialUnderwriterTransferRequest({ ...message, contractAddress: CONTROLLER });
+        const transferRequest = new TrivialUnderwriterTransferRequest({ ...message, chainId: '0xa4b1', contractAddress: CONTROLLER });
         transferRequest.setUnderwriter(trivial.address);
 
         //if (!(hasEnough(transferRequest))) return;
