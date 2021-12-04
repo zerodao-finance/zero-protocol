@@ -2,6 +2,8 @@ import { Wallet } from 'ethers';
 const { ethers } = require('hardhat');
 const { TrivialUnderwriterTransferRequest } = require('../lib/zero');
 const { createZeroConnection, createZeroKeeper } = require('../lib/zero');
+const TrivialUnderwriter = require('../deployments/arbitrum/TrivialUnderwriter');
+const trivial = new ethers.Contract(TrivialUnderwriter.address, TrivialUnderwriter.abi, new ethers.providers.InfuraProvider('mainnet'));
 
 
 /*--------------------------- ENVIRONMENT VARIABLES -------------------------*/
@@ -49,6 +51,7 @@ const hasEnough = async (transferRequest) => {
 const handleTransferRequest = async (message) => {
     try {
         const transferRequest = new TrivialUnderwriterTransferRequest({ ...message, contractAddress: CONTROLLER });
+        transferRequest.setUnderwriter(trivial.address);
 
         //if (!(hasEnough(transferRequest))) return;
         console.log("Submitting to renVM...")
