@@ -50,7 +50,7 @@ const hasEnough = async (transferRequest) => {
 
 const handleTransferRequest = async (message) => {
     try {
-        const transferRequest = new TrivialUnderwriterTransferRequest({ ...message, chainId: '0xa4b1', contractAddress: CONTROLLER });
+        const transferRequest = new TrivialUnderwriterTransferRequest({ ...message, chainId: 42161, contractAddress: CONTROLLER });
         transferRequest.setUnderwriter(trivial.address);
 
         //if (!(hasEnough(transferRequest))) return;
@@ -58,7 +58,8 @@ const handleTransferRequest = async (message) => {
         const mint = await transferRequest.submitToRenVM();
         console.log("Successfully submitted to renVM.")
         console.log("Gateway address is", await transferRequest.toGatewayAddress())
-
+        console.log("RECEIVED TRANSFER REQUEST", message);
+        console.log("RECEIVED TRANSFER REQUEST", transferRequest);
         await new Promise((resolve, reject) => mint.on('deposit', async (deposit) => {
             console.log("Deposit received.")
             await resolve();
