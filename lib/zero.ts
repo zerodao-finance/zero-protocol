@@ -41,7 +41,6 @@ const getProvider = async (provider) => {
   }
 };
 
-console.log("Provider:", provider);
 
 
 export class TransferRequest {
@@ -76,9 +75,7 @@ export class TransferRequest {
 		contractAddress?: string,
 		chainId?: number,
 		signature?: string,
-		provider?: any
 	}) {
-		this.provider = provider;
 		this.module = params.module;
 		this.to = params.to;
 		this.underwriter = params.underwriter;
@@ -140,7 +137,7 @@ export class TransferRequest {
 			asset: "BTC",
 			from: Bitcoin(),
 			nonce: this.nonce,
-			to: getProvider(this.provider).Contract({
+			to: (await getProvider(this.provider)).Contract({
 				sendTo: this.contractAddress,
 				contractFn: this._contractFn,
 				contractParams: this._contractParams

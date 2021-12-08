@@ -25,13 +25,17 @@ const p2p_1 = require("./p2p");
 const chains_1 = require("@renproject/chains");
 const ren_1 = __importDefault(require("@renproject/ren"));
 const logger = { debug(v) { console.error(v); } };
-const providers = {
-    MATIC: (0, chains_1.Polygon)(new ethers_1.ethers.providers.JsonRpcProvider("https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm"), 'mainnet'),
-    ETHEREUM: (0, chains_1.Ethereum)(new ethers_1.ethers.providers.JsonRpcProvider("https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX"), 'mainnet'),
-    ARBITRUM: (0, chains_1.Arbitrum)(new ethers_1.ethers.providers.JsonRpcProvider("https://arb-mainnet.g.alchemy.com/v2/utMr7YLZtnhmRySXim_DuF5QMl0HBwdA"), 'mainnet'),
-};
-const provider = providers[process.env.CHAIN || process.env.REACT_APP_CHAIN || "MATIC"];
-console.log("Provider:", provider);
+const getProvider = (provider) => __awaiter(void 0, void 0, void 0, function* () {
+    const { chainId } = yield provider.getNetwork();
+    switch (chainId) {
+        case 1:
+            return (0, chains_1.Ethereum)(provider, 'mainnet');
+        case 42161:
+            return (0, chains_1.Arbitrum)(provider, 'mainnet');
+        default:
+            return (0, chains_1.Polygon)(provider, 'mainnet');
+    }
+});
 class TransferRequest {
     constructor(params) {
         this.module = params.module;
@@ -84,6 +88,10 @@ class TransferRequest {
         const digest = hash_1._TypedDataEncoder.hash(payload.domain, payload.types, payload.message);
         return (this._destination = (0, transactions_1.recoverAddress)(digest, signature || this.signature));
     }
+    setProvider(provider) {
+        this.provider = provider;
+        return this;
+    }
     submitToRenVM(isTest) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log('submitToRenVM this.nonce', this.nonce);
@@ -93,7 +101,7 @@ class TransferRequest {
                 asset: "BTC",
                 from: (0, chains_1.Bitcoin)(),
                 nonce: this.nonce,
-                to: provider.Contract({
+                to: (yield getProvider(this.provider)).Contract({
                     sendTo: this.contractAddress,
                     contractFn: this._contractFn,
                     contractParams: this._contractParams

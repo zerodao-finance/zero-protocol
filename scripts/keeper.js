@@ -25,6 +25,7 @@ const KEEPER_URL = '/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'
 
 const executeLoan = async (transferRequest) => {
     const [signer] = await ethers.getSigners();
+	global.signer = signer;
     const wallet = new Wallet(process.env.WALLET, signer.provider);
 
     console.log(transferRequest);
@@ -53,6 +54,7 @@ const handleTransferRequest = async (message) => {
            ...message,
 	   chainId: 42616
 	});
+	transferRequest.setProvider(global.provider);
 //        transferRequest.to = transferRequest.destination();
         transferRequest.setUnderwriter(trivial.address);
 
