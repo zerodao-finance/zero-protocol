@@ -15,6 +15,7 @@ export class InMemoryPersistenceAdapter implements PersistenceAdapter<InMemoryBa
     const tr: any = { ...transferRequest };
     delete tr._mint;
     delete tr._queryTxResult;
+    delete tr.provider;
 		const key = hash(tr);
 		const status: any = { ...tr, status: 'pending' };
 		try {
