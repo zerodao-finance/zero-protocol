@@ -16,14 +16,10 @@ const trivial = new ethers.Contract(TrivialUnderwriter.address, TrivialUnderwrit
 const LOAN_CONFIRMATION = 1
 
 // Address of RenBTC. Used for balance check.
-const RENBTC_ADDRESS = '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501'
-
 const MAX_AMOUNT = 50000000;
 
 // URL of P2P network to use. DON'T MODIFY unless you know what you're doing...
 const KEEPER_URL = '/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'
-
-const CONTROLLER = '0x53f38bEA30fE6919e0475Fe57C2629f3D3754d1E'
 
 //-----------------------------------------------------------------------------
 
@@ -32,12 +28,12 @@ const executeLoan = async (transferRequest) => {
     const wallet = new Wallet(process.env.WALLET, signer.provider);
 
     console.log(transferRequest);
-    const loan = await transferRequest.loan(wallet);
+    const loan = await transferRequest.loan(wallet, { gasLimit: 1.5e6 });
     await loan.wait();
 
     await transferRequest.waitForSignature();
 
-    const repay = await transferRequest.repay(wallet, { gasLimit: 500e3 });
+    const repay = await transferRequest.repay(wallet, { gasLimit: 1.5e6 });
     await repay.wait();
 }
 
@@ -53,8 +49,11 @@ let triggered = false;
 
 const handleTransferRequest = async (message) => {
     try {
-        const transferRequest = new TrivialUnderwriterTransferRequest({ ...message, contractAddress: CONTROLLER });
-        transferRequest.to = transferRequest.destination();
+        const transferRequest = new TrivialUnderwriterTransferRequest({
+           ...message,
+	   chainId: 42616
+	});
+//        transferRequest.to = transferRequest.destination();
         transferRequest.setUnderwriter(trivial.address);
 
         //if (!(hasEnough(transferRequest))) return;

@@ -29,12 +29,18 @@ type ZeroSigner = Wallet & SignerWithAddress & Signer;
 
 const logger = { debug(v) { console.error(v); } };
 
-const providers = {
-	MATIC: Polygon(new ethers.providers.JsonRpcProvider("https://polygon-mainnet.g.alchemy.com/v2/8_zmSL_WeJCxMIWGNugMkRgphmOCftMm"), 'mainnet'),
-	ETHEREUM: Ethereum(new ethers.providers.JsonRpcProvider("https://eth-mainnet.alchemyapi.io/v2/Mqiya0B-TaJ1qWsUKuqBtwEyFIbKGWoX"), 'mainnet'),
-	ARBITRUM: Arbitrum(new ethers.providers.JsonRpcProvider("https://arb-mainnet.g.alchemy.com/v2/utMr7YLZtnhmRySXim_DuF5QMl0HBwdA"), 'mainnet'),
-}
-const provider = providers[process.env.CHAIN || process.env.REACT_APP_CHAIN || "MATIC"]
+const getProvider = async (provider) => {
+  const { chainId } = await provider.getNetwork();
+  switch (chainId) {
+    case 1:
+      return Ethereum(provider, 'mainnet');
+    case 42161:
+      return Arbitrum(provider, 'mainnet');
+    default:
+      return Polygon(provider, 'mainnet');
+  }
+};
+
 console.log("Provider:", provider);
 
 
@@ -55,6 +61,7 @@ export class TransferRequest {
 	private _contractParams: EthArgs;
 	private _ren: RenJS;
 	public _queryTxResult: any;
+	public provider: any;
 	public _mint: any;
 
 	constructor(params: {
@@ -68,8 +75,10 @@ export class TransferRequest {
 		pNonce?: BigNumberish,
 		contractAddress?: string,
 		chainId?: number,
-		signature?: string
+		signature?: string,
+		provider?: any
 	}) {
+		this.provider = provider;
 		this.module = params.module;
 		this.to = params.to;
 		this.underwriter = params.underwriter;
@@ -120,6 +129,10 @@ export class TransferRequest {
 		const digest = _TypedDataEncoder.hash(payload.domain, payload.types, payload.message);
 		return (this._destination = recoverAddress(digest, signature || this.signature));
 	}
+	setProvider(provider) {
+          this.provider = provider;
+	  return this;
+	}
 	async submitToRenVM(isTest) {
 		console.log('submitToRenVM this.nonce', this.nonce);
 		if (this._mint) return this._mint;
@@ -127,7 +140,7 @@ export class TransferRequest {
 			asset: "BTC",
 			from: Bitcoin(),
 			nonce: this.nonce,
-			to: provider.Contract({
+			to: getProvider(this.provider).Contract({
 				sendTo: this.contractAddress,
 				contractFn: this._contractFn,
 				contractParams: this._contractParams
