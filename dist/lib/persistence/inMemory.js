@@ -23,6 +23,7 @@ class InMemoryPersistenceAdapter {
             const tr = Object.assign({}, transferRequest);
             delete tr._mint;
             delete tr._queryTxResult;
+            delete tr.provider;
             const key = (0, object_hash_1.default)(tr);
             const status = Object.assign(Object.assign({}, tr), { status: 'pending' });
             try {
