@@ -159,11 +159,11 @@ export class TransferRequest {
 		return true;
 	}
 
-	toEIP712Digest(contractAddress: string, chainId: number = 1): Buffer {
+	toEIP712Digest(contractAddress: string, chainId?: number): Buffer {
 		return signTypedDataUtils.generateTypedDataHash(this.toEIP712(contractAddress || this.contractAddress, Number(chainId || this.chainId)));
 	}
 
-	toEIP712(contractAddress: string, chainId: number = 1): EIP712TypedData {
+	toEIP712(contractAddress: string, chainId?: number): EIP712TypedData {
 		this.contractAddress = contractAddress || this.contractAddress;
 		this.chainId = chainId || this.chainId;
 		return {

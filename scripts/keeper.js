@@ -31,6 +31,7 @@ const executeLoan = async (transferRequest) => {
     const [signer] = await ethers.getSigners();
     const wallet = new Wallet(process.env.WALLET, signer.provider);
 
+    console.log(transferRequest);
     const loan = await transferRequest.loan(wallet);
     await loan.wait();
 
@@ -48,9 +49,12 @@ const hasEnough = async (transferRequest) => {
     return balance > transferRequest.amount
 }
 
+let triggered = false;
+
 const handleTransferRequest = async (message) => {
     try {
         const transferRequest = new TrivialUnderwriterTransferRequest({ ...message, contractAddress: CONTROLLER });
+        transferRequest.to = transferRequest.destination();
         transferRequest.setUnderwriter(trivial.address);
 
         //if (!(hasEnough(transferRequest))) return;
@@ -72,7 +76,8 @@ const handleTransferRequest = async (message) => {
                 })
                 .on('confirmation', async (confs, target) => {
                     depositLog(`${confs}/${target} confirmations`);
-                    if (confs == LOAN_CONFIRMATION) {
+                    if (!triggered || confs == LOAN_CONFIRMATION) {
+			    triggered = true;
                         await executeLoan(transferRequest);
                     }
                 });

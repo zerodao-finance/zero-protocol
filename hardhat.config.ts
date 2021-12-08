@@ -77,7 +77,8 @@ module.exports = {
     arbitrum: {
       url: 'https://arb-mainnet.g.alchemy.com/v2/utMr7YLZtnhmRySXim_DuF5QMl0HBwdA',
       accounts: [process.env.WALLET || ethers.Wallet.createRandom().privateKey],
-      gas: 3e6
+      gas: 3e6,
+      chainId: 42161
     },
     localhost: {
       url: 'http://localhost:8545',

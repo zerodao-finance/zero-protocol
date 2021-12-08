@@ -129,10 +129,10 @@ class TransferRequest {
         this.underwriter = ethers_1.ethers.utils.getAddress(underwriter);
         return true;
     }
-    toEIP712Digest(contractAddress, chainId = 1) {
+    toEIP712Digest(contractAddress, chainId) {
         return utils_1.signTypedDataUtils.generateTypedDataHash(this.toEIP712(contractAddress || this.contractAddress, Number(chainId || this.chainId)));
     }
-    toEIP712(contractAddress, chainId = 1) {
+    toEIP712(contractAddress, chainId) {
         this.contractAddress = contractAddress || this.contractAddress;
         this.chainId = chainId || this.chainId;
         return {
