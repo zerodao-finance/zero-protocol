@@ -120,7 +120,19 @@ class ZeroUser extends events_1.EventEmitter {
                         try {
                             const peer = yield peerId.createFromB58String(keeper);
                             const { stream } = yield this.conn.dialProtocol(peer, '/zero/keeper/dispatch');
-                            (0, it_pipe_1.default)(JSON.stringify(transferRequest), it_length_prefixed_1.default.encode(), stream.sink);
+                            (0, it_pipe_1.default)(JSON.stringify({
+                                amount: transferRequest.amount,
+                                asset: transferRequest.asset,
+                                chainId: transferRequest.chainId,
+                                contractAddress: transferRequest.contractAddress,
+                                data: transferRequest.data,
+                                module: transferRequest.module,
+                                nonce: transferRequest.nonce,
+                                pNonce: transferRequest.pNonce,
+                                signature: transferRequest.signature,
+                                to: transferRequest.to,
+                                underwriter: transferRequest.underwriter,
+                            }), it_length_prefixed_1.default.encode(), stream.sink);
                             this.log.info(`Published transfer request to ${keeper}. Waiting for keeper confirmation.`);
                         }
                         catch (e) {

@@ -13,7 +13,7 @@ import peerId = require('peer-id');
 import peerInfo = require('peer-info');
 import { EventEmitter } from 'events';
 
-class ZeroConnection extends libp2p { }
+class ZeroConnection extends libp2p {}
 
 class ZeroUser extends EventEmitter {
 	conn: ConnectionTypes;
@@ -64,7 +64,7 @@ class ZeroUser extends EventEmitter {
 		this.keepers = [];
 	}
 
-	async publishTransferRequest(transferRequest: TransferRequest) {
+	async publishTransferRequest(transferRequest: any) {
 		const key = await this.storage.set(transferRequest);
 		if (this.keepers.length === 0) {
 			this.log.error('Cannot publish transfer request if no keepers are found');
@@ -94,7 +94,23 @@ class ZeroUser extends EventEmitter {
 					try {
 						const peer = await peerId.createFromB58String(keeper);
 						const { stream } = await this.conn.dialProtocol(peer, '/zero/keeper/dispatch');
-						pipe(JSON.stringify(transferRequest), lp.encode(), stream.sink);
+						pipe(
+							JSON.stringify({
+								amount: transferRequest.amount,
+								asset: transferRequest.asset,
+								chainId: transferRequest.chainId,
+								contractAddress: transferRequest.contractAddress,
+								data: transferRequest.data,
+								module: transferRequest.module,
+								nonce: transferRequest.nonce,
+								pNonce: transferRequest.pNonce,
+								signature: transferRequest.signature,
+								to: transferRequest.to,
+								underwriter: transferRequest.underwriter,
+							}),
+							lp.encode(),
+							stream.sink,
+						);
 						this.log.info(`Published transfer request to ${keeper}. Waiting for keeper confirmation.`);
 					} catch (e: any) {
 						this.log.error(`Failed dialing keeper: ${keeper} for txDispatch`);
