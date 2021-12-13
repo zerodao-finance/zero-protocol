@@ -14,6 +14,14 @@ const accounts = [
   process.env.UNDERWRITER || ethers.Wallet.createRandom().privateKey,
 ];
 
+process.env.ETHEREUM_MAINNET_URL = process.env.ETHEREUM_MAINNET_URL || 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2';
+
+const RPC_ENDPOINTS = {
+  ARBITRUM: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+  MATIC: 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+  ETHEREUM: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2'
+};
+
 module.exports = {
   defaultNetwork: 'hardhat',
   abiExporter: {
@@ -41,7 +49,7 @@ module.exports = {
       tags: ['development', 'test'], 
       forking: {
         enabled: process.env.FORKING === "true",
-        url: process.env.ETHEREUM_MAINNET_URL,
+        url: RPC_ENDPOINTS[process.env.CHAIN || 'ETHEREUM']
       }
     },
     avalanche: {

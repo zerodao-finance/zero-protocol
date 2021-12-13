@@ -77,10 +77,6 @@ module.exports = async ({
   const [deployerSigner] = await ethers.getSigners();
   console.log("RUNNING");
 
-  const zeroUnderwriterLockBytecodeLib = { address: '0xfFd2EF3D44a2ea1B5E88780C1c85bcf6B2Aa4Bb5' };
-  const zeroController = { address: '0xba227751e973C6DfEb4A56F811215F847EFEfC3E' };
-  const dummyVault = { address: '0x9eDDC94bB952117342cB1f556ea0591363F7B833' };
-  const strategyRenVM = { address: '0x4615b36Cb20E9707c3e4dc8376ea6863C38c14Cc' };
   
   
   const zeroUnderwriterLockBytecodeLib = await deployFixedAddress('ZeroUnderwriterLockBytecodeLib', {
@@ -110,7 +106,6 @@ module.exports = async ({
   
 //	console.log('done!');
   
-  const zeroController = await hre.ethers.getContract('ZeroController');
   await deployFixedAddress('BTCVault', {
     contractName: 'BTCVault',
     args: [deployParameters[network]['renBTC'], zeroController.address, "zeroBTC", "zBTC"],
@@ -251,7 +246,7 @@ module.exports = async ({
       break;
     case 'ARBITRUM':
       console.log("Running arbitrum");
-      await curveFactory.createWrapper(false, 2, 1, '0x960ea3e3C7FB317332d990873d354E18d7645590')
+      const wETHToWBTCArbTx = await curveFactory.createWrapper(false, 2, 1, '0x960ea3e3C7FB317332d990873d354E18d7645590')
       var wETHToWBTCArb = await getWrapperAddress(wETHToWBTCArbTx);
       await setConverter(controller, 'wNative', 'wBTC', wETHToWBTCArb);
       console.log("wETH->wBTC Converter Set.");
