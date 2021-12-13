@@ -22,15 +22,26 @@ const MAX_AMOUNT = 50000000;
 const KEEPER_URL = '/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'
 
 //-----------------------------------------------------------------------------
+const getSigner = async () => {
+  return new ethers.Wallet(process.env.WALLET, new ethers.providers.JsonRpcProvider('https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2'));
+};
+
+ethers.getSigners = async () => {
+  return [ await getSigner() ];
+};
 
 const executeLoan = async (transferRequest) => {
     const [signer] = await ethers.getSigners();
     console.log(await signer.provider.getNetwork());
 	global.signer = signer;
+	global.provider = signer.provider;
     const wallet = new Wallet(process.env.WALLET, signer.provider);
 
     console.log(transferRequest);
-    const loan = await transferRequest.loan(wallet, { gasLimit: 1.5e6 });
+	transferRequest.setProvider(signer.provider);
+	console.log('loaning');
+    const loan = await transferRequest.loan(wallet, { gas: 1.5e6 });
+	console.log('loaned');
     await loan.wait();
 
     await transferRequest.waitForSignature();
@@ -41,6 +52,9 @@ const executeLoan = async (transferRequest) => {
 
 const hasEnough = async (transferRequest) => {
     const [signer] = await ethers.getSigners();
+	global.signer = signer;
+	global.provider = signer.provider;
+	transferRequest.setProvider(signer.provider);
     const wallet = new Wallet(process.env.WALLET, signer);
 
     const balance = await (new Contract(await underwriter.controller(), ['function balanceOf(address _owner) returns (uint256 balance)'], signer)).balanceOf(wallet.address);
@@ -61,9 +75,12 @@ const handleTransferRequest = async (message) => {
            pNonce: message.pNonce,
            amount: message.amount,
            data: message.data,
-           contractAddress: message.contractAddress
+           contractAddress: message.contractAddress,
+           chainId: message.chainId,
+           signature: message.signature
 	});
-	transferRequest.setProvider(global.provider);
+        const [ signer ] = await ethers.getSigners();
+	transferRequest.setProvider(signer.provider);
         //if (!(hasEnough(transferRequest))) return;
         console.log("Submitting to renVM...")
         const mint = await transferRequest.submitToRenVM();
