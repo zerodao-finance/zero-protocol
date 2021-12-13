@@ -42,14 +42,14 @@ class TransferRequest {
         this.to = params.to;
         this.underwriter = params.underwriter;
         this.asset = params.asset;
-        this.amount = params.amount.toString();
+        this.amount = ethers_1.ethers.utils.hexlify(typeof params.amount === 'number' ? params.amount : typeof params.amount === 'string' ? ethers_1.ethers.BigNumber.from(params.amount) : params.amount);
         this.data = params.data;
         console.log('params.nonce', params.nonce);
         this.nonce = params.nonce
             ? (0, bytes_1.hexlify)(params.nonce)
             : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
         this.pNonce = params.pNonce
-            ? (0, bytes_1.hexlify)(params.pNonce.toString())
+            ? (0, bytes_1.hexlify)(params.pNonce)
             : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
         this.chainId = params.chainId;
         this.contractAddress = params.contractAddress;
@@ -148,16 +148,16 @@ class TransferRequest {
             domain: {
                 name: 'ZeroController',
                 version: '1',
-                chainId: this.chainId.toString() || '1',
+                chainId: String(this.chainId) || '1',
                 verifyingContract: this.contractAddress || ethers_1.ethers.constants.AddressZero,
             },
             message: {
                 module: this.module,
                 asset: this.asset,
-                amount: this.amount.toString(),
+                amount: this.amount,
                 data: this.data,
                 underwriter: this.underwriter,
-                nonce: this.pNonce.toString(),
+                nonce: this.pNonce,
             },
             primaryType: 'TransferRequest',
         };

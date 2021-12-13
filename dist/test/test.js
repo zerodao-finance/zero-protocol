@@ -39,7 +39,7 @@ const mintRenBTC = (amount, signer) => __awaiter(void 0, void 0, void 0, functio
 });
 const getContract = (...args) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        return yield ethers.getContract(...args);
+        return (yield ethers.getContract(...args)).attach(require('../deployments/arbitrum/' + args[0]).address);
     }
     catch (e) {
         return new ethers.Contract(ethers.constants.AddressZero, [], (yield ethers.getSigners())[0]);
