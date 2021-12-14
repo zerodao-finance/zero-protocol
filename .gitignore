@@ -3,3 +3,5 @@ cache/
 artifacts/
 .openzeppelin/
 .env
+*.swp
+*.swo
