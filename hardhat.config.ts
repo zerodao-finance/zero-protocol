@@ -23,15 +23,18 @@ const RPC_ENDPOINTS = {
   ETHEREUM: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2'
 };
 
+const ETHERSCAN_API_KEYS = {
+  ARBITRUM: '7PW6SPNBFYV1EM5E5NT36JW7ARMS1FB4HW'
+};
+
+const ETHERSCAN_API_KEY = ETHERSCAN_API_KEYS[process.env.CHAIN || 'ARBITRUM'] || ETHERSCAN_API_KEYS['ARBITRUM'];
+
 module.exports = {
   defaultNetwork: 'hardhat',
   abiExporter: {
     path: "./abi",
     clear: false,
     flat: true,
-  },
-  etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY
   },
   networks: {
     mainnet: {
@@ -122,5 +125,8 @@ module.exports = {
   mocha: {
     timeout: 0,
     grep: process.env.GREP
+  },
+  etherscan: {
+    apiKey: ETHERSCAN_API_KEY
   }
 };

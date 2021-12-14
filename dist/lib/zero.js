@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createZeroKeeper = exports.createZeroUser = exports.createZeroConnection = exports.TrivialUnderwriterTransferRequest = exports.TransferRequest = void 0;
+require("./silence-init");
 const bytes_1 = require("@ethersproject/bytes");
 const contracts_1 = require("@ethersproject/contracts");
 const random_1 = require("@ethersproject/random");
@@ -27,10 +28,13 @@ const ren_1 = __importDefault(require("@renproject/ren"));
 const logger = { debug(v) { console.error(v); } };
 const getProvider = (provider) => __awaiter(void 0, void 0, void 0, function* () {
     const { chainId } = yield provider.getNetwork();
+    console.log(chainId);
     switch (chainId) {
         case 1:
             return (0, chains_1.Ethereum)(provider, 'mainnet');
         case 42161:
+            return (0, chains_1.Arbitrum)(provider, 'mainnet');
+        case 31337:
             return (0, chains_1.Arbitrum)(provider, 'mainnet');
         default:
             return (0, chains_1.Polygon)(provider, 'mainnet');

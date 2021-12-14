@@ -10702,6 +10702,11 @@ text-table@^0.2.0:
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
   integrity sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=
 
+the-global-object@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/the-global-object/-/the-global-object-1.0.2.tgz#ccf0d50deb3882060289a747541fb7f83dec99ce"
+  integrity sha512-VqyWD8S07ipzpg+sqnBxEAf/YUyFdOV/VSCCZwj1ct8rNzsSJU8pavaoCZsR4Zav6gpESZal9z3sil/gP4cvXA==
+
 then-request@^6.0.0:
   version "6.0.2"
   resolved "https://registry.yarnpkg.com/then-request/-/then-request-6.0.2.tgz#ec18dd8b5ca43aaee5cb92f7e4c1630e950d4f0c"

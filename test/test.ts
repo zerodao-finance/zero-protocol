@@ -391,7 +391,7 @@ describe('Zero', () => {
 		//		const signature = await transferRequest.sign(signer, controller.address);
 
 		console.log('\nWriting a small loan');
-		await transferRequest.fallbackMint(signer, { gasLimit: 1.5e6 });
+		await transferRequest.loan(signer, { gasLimit: 1.5e6 });
 		/*
 			transferRequest.to,
 			transferRequest.asset,

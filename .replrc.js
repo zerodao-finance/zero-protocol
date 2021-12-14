@@ -1,4 +1,4 @@
-
+require('./lib/silence-init');
 var Zero = require('./');
 var { RenJS } = require('@renproject/ren');
 

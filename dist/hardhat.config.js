@@ -6,6 +6,8 @@ require('@openzeppelin/hardhat-upgrades');
 require('@nomiclabs/hardhat-etherscan');
 require("dotenv").config();
 const ethers = require('ethers');
+if (!process.env.CHAIN_ID && process.env.CHAIN === 'ARBITRUM')
+    process.env.CHAIN_ID = '42161';
 const accounts = [
     process.env.WALLET || ethers.Wallet.createRandom().privateKey,
     process.env.UNDERWRITER || ethers.Wallet.createRandom().privateKey,
@@ -16,15 +18,16 @@ const RPC_ENDPOINTS = {
     MATIC: 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
     ETHEREUM: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2'
 };
+const ETHERSCAN_API_KEYS = {
+    ARBITRUM: '7PW6SPNBFYV1EM5E5NT36JW7ARMS1FB4HW'
+};
+const ETHERSCAN_API_KEY = ETHERSCAN_API_KEYS[process.env.CHAIN || 'ARBITRUM'] || ETHERSCAN_API_KEYS['ARBITRUM'];
 module.exports = {
     defaultNetwork: 'hardhat',
     abiExporter: {
         path: "./abi",
         clear: false,
         flat: true,
-    },
-    etherscan: {
-        apiKey: process.env.ETHERSCAN_API_KEY
     },
     networks: {
         mainnet: {
@@ -41,6 +44,7 @@ module.exports = {
             live: false,
             saveDeployments: true,
             tags: ['development', 'test'],
+            chainId: process.env.CHAIN_ID && Number(process.env.CHAIN_ID),
             forking: {
                 enabled: process.env.FORKING === "true",
                 url: RPC_ENDPOINTS[process.env.CHAIN || 'ETHEREUM']
@@ -62,7 +66,7 @@ module.exports = {
             saveDeployments: true,
         },
         arbitrum: {
-            url: "https://arb1.arbitrum.io/rpc",
+            url: RPC_ENDPOINTS.ARBITRUM,
             accounts,
             chainId: 42161,
             live: true,
@@ -114,5 +118,8 @@ module.exports = {
     mocha: {
         timeout: 0,
         grep: process.env.GREP
+    },
+    etherscan: {
+        apiKey: ETHERSCAN_API_KEY
     }
 };

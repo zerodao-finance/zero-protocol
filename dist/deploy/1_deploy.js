@@ -246,4 +246,5 @@ module.exports = ({ getChainId, getUnnamedAccounts, getNamedAccounts, }) => __aw
     yield setConverter(controller, ethers.constants.AddressZero, "wNative", wrapper.address);
     // Unwrapper wETH -> ETH
     yield setConverter(controller, "wNative", ethers.constants.AddressZero, unwrapper.address);
+    yield controller.setGasParameters(ethers.utils.parseUnits('2', 9), '250000', '500000');
 });

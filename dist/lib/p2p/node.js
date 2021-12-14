@@ -27,7 +27,6 @@ const presets = {
 };
 const fromPresetOrMultiAddr = (multiaddr) => presets[multiaddr] || multiaddr;
 const wrtc = require('wrtc');
-console.log(wrtc);
 module.exports = {
     createNode: (options) => __awaiter(void 0, void 0, void 0, function* () {
         /*

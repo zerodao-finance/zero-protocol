@@ -1,3 +1,4 @@
+import './silence-init';
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
 import { hexlify } from "@ethersproject/bytes";
@@ -18,11 +19,11 @@ import { EIP712_TYPES } from './config/constants';
 import RenVM from './util/renvm';
 import { computeP, computeNHash, maybeCoerceToGHash } from './util/helpers';
 import { createNode, ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
-import { PersistenceAdapter } from './persistence';
 import { GatewayAddressInput } from './types';
 import { Bitcoin, Polygon, Ethereum, Arbitrum } from "@renproject/chains"
 import RenJS from "@renproject/ren";
 import { EthArgs } from "@renproject/interfaces";
+import { PersistenceAdapter } from './persistence';
 
 
 type ZeroSigner = Wallet & SignerWithAddress & Signer;
@@ -31,6 +32,7 @@ const logger = { debug(v) { console.error(v); } };
 
 const getProvider = async (provider) => {
   const { chainId } = await provider.getNetwork();
+console.log(chainId);
   switch (chainId) {
     case 1:
       return Ethereum(provider, 'mainnet');
