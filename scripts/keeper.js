@@ -40,7 +40,7 @@ const executeLoan = async (transferRequest) => {
     console.log(transferRequest);
 	transferRequest.setProvider(signer.provider);
 	console.log('loaning');
-    const loan = await transferRequest.loan(wallet, { gas: 1.5e6 });
+    const loan = await transferRequest.loan(wallet, { gasLimit: 1.5e6 });
 	console.log('loaned');
     await loan.wait();
 

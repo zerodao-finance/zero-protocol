@@ -228,9 +228,9 @@ export class TrivialUnderwriterTransferRequest extends TransferRequest {
 	getTrivialUnderwriter(signer) {
 		return new Contract(this.underwriter, ['function controller() view returns (address)', 'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)', 'function loan(address, address, uint256, uint256, address, bytes, bytes)'], signer);
 	}
-	async loan(signer) {
+	async loan(signer, params = {}) {
 		const underwriter = this.getTrivialUnderwriter(signer);
-		return await underwriter.loan(this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature);
+		return await underwriter.loan(this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature, params);
 	}
 	async repay(signer, params = {}) {
 		const underwriter = this.getTrivialUnderwriter(signer);
