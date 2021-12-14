@@ -14,18 +14,18 @@ const gasnow = require('ethers-gasnow');
 
 const deployParameters = require('../lib/fixtures');
 
-const network = process.env.CHAIN || 'MATIC'
+const network = process.env.CHAIN || 'MATIC';
 
 //ethers.providers.BaseProvider.prototype.getGasPrice = gasnow.createGetGasPrice('rapid');
 const USDC_MAINNET_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 
 let _signers;
 const _getSigners = ethers.getSigners;
-if (process.env.FORKING === 'true') ethers.getSigners = async () => {
-  if (!_signers) _signers = await _getSigners.call(ethers);
-  return [ new ethers.Wallet(process.env.WALLET, _signers[0].provider) ];
-};
-
+if (process.env.FORKING === 'true')
+	ethers.getSigners = async () => {
+		if (!_signers) _signers = await _getSigners.call(ethers);
+		return [new ethers.Wallet(process.env.WALLET, _signers[0].provider)];
+	};
 
 const toAddress = (contractOrAddress: any): string => contractOrAddress.address || contractOrAddress;
 const mintRenBTC = async (amount: any, signer?: any) => {
@@ -35,7 +35,7 @@ const mintRenBTC = async (amount: any, signer?: any) => {
 	];
 	if (!signer) signer = (await ethers.getSigners())[0];
 	//@ts-ignore
-	const btcGateway = new ethers.Contract(deployParameters[network]["btcGateway"], abi, signer);
+	const btcGateway = new ethers.Contract(deployParameters[network]['btcGateway'], abi, signer);
 	await btcGateway.mint(
 		ethers.utils.hexlify(ethers.utils.randomBytes(32)),
 		amount,
@@ -46,11 +46,11 @@ const mintRenBTC = async (amount: any, signer?: any) => {
 
 const getContract = async (...args: any[]) => {
 	try {
-const c = require('../deployments/arbitrum/' + args[0]);
+		const c = require('../deployments/arbitrum/' + args[0]);
 		return new ethers.Contract(c.address, c.abi, args[args.length - 1]);
-//		return (await ethers.getContract(...args)).attach(require('../deployments/arbitrum/' + args[0]).address);
+		//		return (await ethers.getContract(...args)).attach(require('../deployments/arbitrum/' + args[0]).address);
 	} catch (e) {
-console.error(e);
+		console.error(e);
 		return new ethers.Contract(ethers.constants.AddressZero, [], (await ethers.getSigners())[0]);
 	}
 };
@@ -108,7 +108,7 @@ const deployUnderwriter = async () => {
 	underwriterAddress = (await underwriterFactory.deploy(controller.address)).address;
 	await renBTC.approve(btcVault.address, ethers.constants.MaxUint256); //let btcVault spend renBTC on behalf of signer
 	await btcVault.approve(controller.address, ethers.constants.MaxUint256); //let controller spend btcVault tokens
-//	await mintUnderwriterNFTIfNotMinted();
+	//	await mintUnderwriterNFTIfNotMinted();
 };
 
 const mintUnderwriterNFTIfNotMinted = async () => {
@@ -137,21 +137,21 @@ const getFixtures = async () => {
 		strategy: await getContract('StrategyRenVM', signer),
 		btcVault: await getContract('BTCVault', signer),
 		swapModule: await getContract('ArbitrumConvert', signer),
-    convertModule: await getContract('ArbitrumConvert', signer),
+		convertModule: await getContract('ArbitrumConvert', signer),
 		uniswapFactory: await getContract('ZeroUniswapFactory', signer),
 		curveFactory: await getContract('ZeroCurveFactory', signer),
 		wrapper: await getContract('WrapNative', signer),
 		unwrapper: await getContract('UnwrapNative', signer),
 		//@ts-ignore
-		gateway: new Contract(deployParameters[network]["btcGateway"], GatewayLogicV1.abi, signer),
+		gateway: new Contract(deployParameters[network]['btcGateway'], GatewayLogicV1.abi, signer),
 		//@ts-ignore
-		renBTC: new Contract(deployParameters[network]["renBTC"], erc20abi, signer),
+		renBTC: new Contract(deployParameters[network]['renBTC'], erc20abi, signer),
 		//@ts-ignore
-		wETH: new Contract(deployParameters[network]["wNative"], erc20abi, signer),
+		wETH: new Contract(deployParameters[network]['wNative'], erc20abi, signer),
 		//@ts-ignore
-		usdc: new Contract(deployParameters[network]["USDC"], erc20abi, signer),
+		usdc: new Contract(deployParameters[network]['USDC'], erc20abi, signer),
 		//@ts-ignore
-		wBTC: new Contract(deployParameters[network]["wBTC"], erc20abi, signer),
+		wBTC: new Contract(deployParameters[network]['wBTC'], erc20abi, signer),
 		yvWBTC: await getContract('DummyVault', signer),
 	};
 };
@@ -224,7 +224,7 @@ const generateTransferRequest = async (amount: number) => {
 		asset: deployParameters[network]['renBTC'],
 		amount: String(amount),
 		data: ethers.utils.defaultAbiCoder.encode(['uint256'], [ethers.utils.parseEther('0.01')]),
-  });
+	});
 };
 
 const getUnderwriter = async () => {
@@ -235,7 +235,7 @@ const getUnderwriter = async () => {
 		underwriterAddress,
 		underwriter: new Contract(underwriterAddress, underwriterFactory.interface, signer),
 		underwriterImpl: new Contract(underwriterAddress, controller.interface, signer),
-		lock: ethers.constants.AddressZero || await controller.lockFor(underwriterAddress),
+		lock: ethers.constants.AddressZero || (await controller.lockFor(underwriterAddress)),
 	};
 };
 
@@ -248,17 +248,17 @@ const getWrapperContract = async (address: string) => {
 describe('Zero', () => {
 	var prop;
 	before(async () => {
-//		await deployments.fixture();
-//		await deployUnderwriter();
+		//		await deployments.fixture();
+		//		await deployUnderwriter();
 		const artifact = await deployments.getArtifact('MockGatewayLogicV1');
 		//@ts-ignore
-		const implementationAddress = await getImplementation(deployParameters[network]["btcGateway"]);
+		const implementationAddress = await getImplementation(deployParameters[network]['btcGateway']);
 		override(implementationAddress, artifact.deployedBytecode);
 		const { gateway } = await getFixtures();
 		await gateway.mint(utils.randomBytes(32), utils.parseUnits('50', 8), utils.randomBytes(32), '0x'); //mint renBTC to signer
 	});
 
-/*
+	/*
 	beforeEach(async function () {
 		console.log('\n');
 		//@ts-ignore
@@ -283,7 +283,7 @@ describe('Zero', () => {
 		const [signer] = await ethers.getSigners();
 		const signerAddress = await signer.getAddress();
 		//@ts-ignore
-		const btcGateway = new ethers.Contract(deployParameters[network]["btcGateway"], abi, signer);
+		const btcGateway = new ethers.Contract(deployParameters[network]['btcGateway'], abi, signer);
 		//@ts-ignore
 		const renbtc = new ethers.Contract(deployParameters[network]['renBTC'], erc20Abi, signer);
 		await btcGateway.mint(
@@ -361,24 +361,38 @@ describe('Zero', () => {
 		const { underwriter, underwriterImpl } = await getUnderwriter();
 
 		const renbtc = new ethers.Contract(await btcVault.token(), btcVault.interface, signer);
-/*
+		/*
 		await renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
 		await btcVault.deposit('1000000');
 		await btcVault.earn();
 */
 		console.log('Deposited 15renBTC and called earn');
-//		await getBalances();
+		//		await getBalances();
 
 		//@ts-ignore
-		const transferRequest = new TrivialUnderwriterTransferRequest(JSON.parse(`{"module":"0x59741D0210Dd24FFfDBa2eEEc9E130A016B8eb3F","to":"0xC6ccaC065fCcA640F44289886Ce7861D9A527F9E","underwriter":"0xd0D8fA764352e33F40c66C75B3BC0204DC95973e","asset":"0xDBf31dF14B66535aF65AaC99C32e9eA844e14501","amount":"0x061a80","data":"0x0000000000000000000000000000000000000000000000000000000000000000","nonce":"0x451864533b79a3515a668360a274fcd8fb4a5cb39f80e2f5e3f9fd725f3e6b68","pNonce":"0x22191a85daace2b2bdc97aca44e92cc505e65522a56238f6610e80ab9aa5e30d","chainId":42161,"contractAddress":"0x53f38bEA30fE6919e0475Fe57C2629f3D3754d1E","signature":"0xe176c0114387659e19aa365ecc6b307f28765cdfe6fd1608a9997a00982bf7631e8729af954b713ca06baac07c51364c61551ca44cf3182ac5670dd0915f91401c"}`));//await generateTransferRequest(40000);
+		('0x42e48680f15b7207c7602fec83b9c252fa3548c8533246ed532a75c6d0c486394648ba8f42a73a0ce2482712f09d177c3641ef07fcfd3b5cd3b4329982f756141b');
+		const transferRequest = new TrivialUnderwriterTransferRequest({
+			module: '0x59741D0210Dd24FFfDBa2eEEc9E130A016B8eb3F',
+			to: '0xC6ccaC065fCcA640F44289886Ce7861D9A527F9E',
+			underwriter: '0xd0D8fA764352e33F40c66C75B3BC0204DC95973e',
+			asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501',
+			amount: '0x061a80',
+			data: '0x00000000000000000000000000000000000000000000000000009184e72a0000',
+			nonce: '0xb67ed6c41ea6f5b7395f005ceb172eb093273396d1e5bb49d919c4df396e0d5a',
+			pNonce: '0x0153c5fa086b7eceef6ec52b6b96381ee6f16852a6ace5b742f239296b4cd901',
+			chainId: 42161,
+			contractAddress: '0x53f38bEA30fE6919e0475Fe57C2629f3D3754d1E',
+			signature:
+				'0x42e48680f15b7207c7602fec83b9c252fa3548c8533246ed532a75c6d0c486394648ba8f42a73a0ce2482712f09d177c3641ef07fcfd3b5cd3b4329982f756141b',
+		});
 		transferRequest.setProvider((await ethers.getSigners())[0].provider);
 
-//		transferRequest.setUnderwriter(underwriter.address);
-//		const signature = await transferRequest.sign(signer, controller.address);
+		//		transferRequest.setUnderwriter(underwriter.address);
+		//		const signature = await transferRequest.sign(signer, controller.address);
 
 		console.log('\nWriting a small loan');
 		await transferRequest.fallbackMint(signer, { gasLimit: 1.5e6 });
-/*
+		/*
 			transferRequest.to,
 			transferRequest.asset,
 			transferRequest.amount,
@@ -388,7 +402,7 @@ describe('Zero', () => {
 			signature,
 		);
 */
-/*
+		/*
 		await getBalances();
 
 		console.log('\nRepaying loan...');
