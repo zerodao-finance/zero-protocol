@@ -23,7 +23,7 @@ const KEEPER_URL = '/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'
 
 //-----------------------------------------------------------------------------
 const getSigner = async () => {
-  return new ethers.Wallet(process.env.WALLET, new ethers.providers.JsonRpcProvider('https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2'));
+  return new ethers.Wallet(process.env.WALLET, new ethers.providers.JsonRpcProvider(process.env.FORKING === 'true' ? 'http://localhost:8545' : 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2'));
 };
 
 ethers.getSigners = async () => {
@@ -40,7 +40,7 @@ const executeLoan = async (transferRequest) => {
     console.log(transferRequest);
 	transferRequest.setProvider(signer.provider);
 	console.log('loaning');
-    const loan = await transferRequest.loan(wallet, { gasLimit: 1.5e6 });
+    const loan = await transferRequest.dry(wallet, { gasLimit: 1.5e6 });
 	console.log('loaned');
     await loan.wait();
 

@@ -126,14 +126,14 @@ module.exports = ({ getChainId, getUnnamedAccounts, getNamedAccounts, }) => __aw
         from: deployer
     });
     yield controller.approveModule(module.address, true);
-    const strategyRenVM = yield deployments.deploy('StrategyRenVM', {
+    const strategyRenVM = yield deployments.deploy(network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : 'StrategyRenVM', {
         args: [
             zeroController.address,
             deployParameters[network]["renBTC"],
             deployParameters[network]["wNative"], dummyVault.address,
             deployParameters[network]['wBTC']
         ],
-        contractName: 'StrategyRenVM',
+        contractName: network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : 'StrategyRenVM',
         from: deployer,
         waitConfirmations: 1
     });

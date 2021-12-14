@@ -198,16 +198,23 @@ class TrivialUnderwriterTransferRequest extends TransferRequest {
         return __awaiter(this, void 0, void 0, function* () {
             const controller = yield this.getController(signer);
             const queryTxResult = yield this.waitForSignature();
+            console.log(this.destination());
             return yield controller.fallbackMint(this.underwriter, this.destination(), this.asset, this.amount, queryTxResult.amount, this.pNonce, this.module, queryTxResult.nHash, this.data, queryTxResult.signature, params);
         });
     }
     getTrivialUnderwriter(signer) {
         return new contracts_1.Contract(this.underwriter, ['function controller() view returns (address)', 'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)', 'function loan(address, address, uint256, uint256, address, bytes, bytes)'], signer);
     }
-    loan(signer) {
+    loan(signer, params = {}) {
         return __awaiter(this, void 0, void 0, function* () {
             const underwriter = this.getTrivialUnderwriter(signer);
-            return yield underwriter.loan(this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature);
+            return yield underwriter.loan(this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature, params);
+        });
+    }
+    dry(signer, params = {}) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const underwriter = this.getTrivialUnderwriter(signer);
+            return yield underwriter.callStatic.loan(this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature, params);
         });
     }
     repay(signer, params = {}) {

@@ -36,6 +36,8 @@ const getProvider = async (provider) => {
       return Ethereum(provider, 'mainnet');
     case 42161:
       return Arbitrum(provider, 'mainnet');
+    case 31337:
+      return Arbitrum(provider, 'mainnet');
     default:
       return Polygon(provider, 'mainnet');
   }
@@ -223,6 +225,7 @@ export class TrivialUnderwriterTransferRequest extends TransferRequest {
 	async fallbackMint(signer, params = {}) {
 		const controller = await this.getController(signer);
 		const queryTxResult = await this.waitForSignature();
+console.log(this.destination());
 		return await controller.fallbackMint(this.underwriter, this.destination(), this.asset, this.amount, queryTxResult.amount, this.pNonce, this.module, queryTxResult.nHash, this.data, queryTxResult.signature, params);
 	}
 	getTrivialUnderwriter(signer) {
@@ -231,6 +234,10 @@ export class TrivialUnderwriterTransferRequest extends TransferRequest {
 	async loan(signer, params = {}) {
 		const underwriter = this.getTrivialUnderwriter(signer);
 		return await underwriter.loan(this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature, params);
+	}
+	async dry(signer, params = {}) {
+		const underwriter = this.getTrivialUnderwriter(signer);
+		return await underwriter.callStatic.loan(this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature, params);
 	}
 	async repay(signer, params = {}) {
 		const underwriter = this.getTrivialUnderwriter(signer);

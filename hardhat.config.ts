@@ -7,6 +7,7 @@ require('@nomiclabs/hardhat-etherscan');
 require("dotenv").config();
 const ethers = require('ethers');
 
+if (!process.env.CHAIN_ID && process.env.CHAIN === 'ARBITRUM') process.env.CHAIN_ID = '42161';
 
 
 const accounts = [
@@ -47,6 +48,7 @@ module.exports = {
       live: false,
       saveDeployments: true,
       tags: ['development', 'test'], 
+      chainId: process.env.CHAIN_ID && Number(process.env.CHAIN_ID),
       forking: {
         enabled: process.env.FORKING === "true",
         url: RPC_ENDPOINTS[process.env.CHAIN || 'ETHEREUM']
@@ -68,7 +70,7 @@ module.exports = {
       saveDeployments: true,
     },
     arbitrum: {
-      url: "https://arb1.arbitrum.io/rpc",
+      url: RPC_ENDPOINTS.ARBITRUM,
       accounts,
       chainId: 42161,
       live: true,

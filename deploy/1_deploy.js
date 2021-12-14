@@ -148,14 +148,14 @@ module.exports = async ({
   await controller.approveModule(module.address, true);
   
   
-  const strategyRenVM = await deployments.deploy('StrategyRenVM', {
+  const strategyRenVM = await deployments.deploy(network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : 'StrategyRenVM', {
     args: [
       zeroController.address,
       deployParameters[network]["renBTC"],
       deployParameters[network]["wNative"], dummyVault.address,
       deployParameters[network]['wBTC']
     ],
-    contractName: 'StrategyRenVM',
+    contractName: network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : 'StrategyRenVM',
     from: deployer,
     waitConfirmations: 1
   });
@@ -272,4 +272,6 @@ module.exports = async ({
 
   // Unwrapper wETH -> ETH
   await setConverter(controller, "wNative", ethers.constants.AddressZero, unwrapper.address);
+  await controller.setGasParameters(ethers.utils.parseUnits('2', 9), '250000', '500000')
+
 };

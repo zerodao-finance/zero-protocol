@@ -93,6 +93,12 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		);
 		_;
 	}
+	function setGasParameters(uint256 _maxGasPrice, uint256 _maxGasRepay, uint256 _maxGasLoan) public {
+          require(msg.sender == governance, "!governance");
+          maxGasPrice = _maxGasPrice;
+          maxGasRepay = _maxGasRepay;
+          maxGasLoan = _maxGasLoan;
+        }
 
 	function balanceOf(address _owner)
 		public
