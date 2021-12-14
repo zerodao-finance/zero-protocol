@@ -1,21 +1,18 @@
 'use strict';
 const globalObject = require('the-global-object');
-const { MODULE } = globalObject;
-const mod = globalObject.MODULE = Object.create({});
+const mod = globalObject.window = Object.create({});
 let _Gun;
-Object.defineProperty(mod, 'exports', {
+Object.defineProperty(mod, 'Gun', {
     get() {
         return _Gun;
     },
     set(v) {
-        console.log(v);
         _Gun = v;
         let _once = v.log.once;
         v.log.once = function () {
             v.log.once = _once;
         };
-        (MODULE || {}).Gun = v;
     }
 });
 require('gun');
-globalObject.MODULE = MODULE;
+delete globalObject.window;

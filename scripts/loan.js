@@ -3,8 +3,10 @@
 const zero = require('../');
 const hre = require('hardhat');
 const { ethers } = hre;
+const _getSigners = ethers.getSigners;
 const getSigner = async () => {
-  return new ethers.Wallet(process.env.WALLET, new ethers.providers.JsonRpcProvider(process.env.FORKING === 'true' ? 'http://localhost:8545' : 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2'));
+  const [ signer ] = await _getSigners.call(ethers);
+  return new ethers.Wallet(process.env.WALLET, process.env.FORKING === 'true' ? signer.provider : new ethers.providers.JsonRpcProvider('https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2'));
 };
 
 ethers.getSigners = async () => {
@@ -12,7 +14,7 @@ ethers.getSigners = async () => {
 };
 
 (async () => {
-  const [ signer ] = await hre.ethers.getSigners();
+  const signer = await getSigner();
 		const transferRequest = new zero.TrivialUnderwriterTransferRequest({
 			module: '0x59741D0210Dd24FFfDBa2eEEc9E130A016B8eb3F',
 			to: '0xC6ccaC065fCcA640F44289886Ce7861D9A527F9E',
@@ -28,7 +30,7 @@ ethers.getSigners = async () => {
 				'0x42e48680f15b7207c7602fec83b9c252fa3548c8533246ed532a75c6d0c486394648ba8f42a73a0ce2482712f09d177c3641ef07fcfd3b5cd3b4329982f756141b',
 		});
   transferRequest.setProvider(signer.provider);
-  const tx = await transferRequest.loan(signer, { gasLimit: 1.5e6 });
+  const tx = await transferRequest.repay(signer);
   console.log(tx);
   console.log(await tx.wait());
 })().catch((err) => console.error(err));

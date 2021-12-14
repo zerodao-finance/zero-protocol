@@ -186,7 +186,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		);
 		IZeroModule(module).repayLoan(params.to, asset, _mintAmount, nonce, data);
 		depositAll(asset);
-		uint256 _gasRefund = Math.min(_gasBefore.sub(gasleft()), maxGasLoan).mul(Math.min(tx.gasprice, maxGasPrice));
+		uint256 _gasRefund = Math.min(_gasBefore.sub(gasleft()), maxGasLoan).mul(maxGasPrice);
 		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);
 	}
 
@@ -254,7 +254,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		// ^convert txGas from wBTC to renBTC
 		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(module, deductFee(params.amount, params.asset).sub(_txGas));
 		IZeroModule(module).receiveLoan(params.to, params.asset, _amountSent, params.nonce, params.data);
-		uint256 _gasRefund = Math.min(_gasBefore.sub(gasleft()), maxGasLoan).mul(Math.min(tx.gasprice, maxGasPrice));
+		uint256 _gasRefund = Math.min(_gasBefore.sub(gasleft()), maxGasLoan).mul(maxGasPrice);
 		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);
 	}
 }
