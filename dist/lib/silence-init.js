@@ -1,6 +1,6 @@
 'use strict';
 const globalObject = require('the-global-object');
-const mod = globalObject.window = Object.create({});
+const mod = globalObject.document ? globalObject : (globalObject.window = Object.create({}));
 let _Gun;
 Object.defineProperty(mod, 'Gun', {
     get() {
@@ -15,4 +15,3 @@ Object.defineProperty(mod, 'Gun', {
     }
 });
 require('gun');
-delete globalObject.window;

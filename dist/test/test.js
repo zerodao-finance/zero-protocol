@@ -47,9 +47,11 @@ const mintRenBTC = (amount, signer) => __awaiter(void 0, void 0, void 0, functio
 });
 const getContract = (...args) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const c = require('../deployments/arbitrum/' + args[0]);
-        return new ethers.Contract(c.address, c.abi, args[args.length - 1]);
-        //		return (await ethers.getContract(...args)).attach(require('../deployments/arbitrum/' + args[0]).address);
+        /*
+                const c = require('../deployments/arbitrum/' + args[0]);
+                return new ethers.Contract(c.address, c.abi, args[args.length - 1]);
+        */
+        return (yield ethers.getContract(...args)); //.attach(require('../deployments/arbitrum/' + args[0]).address);
     }
     catch (e) {
         console.error(e);
@@ -105,6 +107,11 @@ const underwriterDeposit = (amountOfRenBTC) => __awaiter(void 0, void 0, void 0,
     console.log('Underwriter address is', underwriterAddress);
     yield mintUnderwriterNFTIfNotMinted();
 });
+const getStrategyContract = (signer) => __awaiter(void 0, void 0, void 0, function* () {
+    if (process.env.CHAIN === 'ARBITRUM')
+        return yield getContract('StrategyRenVMArbitrum', signer);
+    return yield getContract('StrategyRenVM', signer);
+});
 const getFixtures = () => __awaiter(void 0, void 0, void 0, function* () {
     const [signer] = yield ethers.getSigners();
     const controller = yield getContract('ZeroController', signer);
@@ -114,7 +121,7 @@ const getFixtures = () => __awaiter(void 0, void 0, void 0, function* () {
         signer: signer,
         signerAddress: yield signer.getAddress(),
         controller: controller,
-        strategy: yield getContract('StrategyRenVM', signer),
+        strategy: yield getStrategyContract(signer),
         btcVault: yield getContract('BTCVault', signer),
         swapModule: yield getContract('ArbitrumConvert', signer),
         convertModule: yield getContract('ArbitrumConvert', signer),
@@ -136,6 +143,7 @@ const getFixtures = () => __awaiter(void 0, void 0, void 0, function* () {
     };
 });
 const getBalances = () => __awaiter(void 0, void 0, void 0, function* () {
+    return;
     const { swapModule, strategy, controller, btcVault, signerAddress, renBTC, wETH, usdc, wBTC, yvWBTC } = yield getFixtures();
     const wallets = {
         Wallet: signerAddress,
@@ -214,8 +222,8 @@ const getWrapperContract = (address) => __awaiter(void 0, void 0, void 0, functi
 describe('Zero', () => {
     var prop;
     before(() => __awaiter(void 0, void 0, void 0, function* () {
-        //		await deployments.fixture();
-        //		await deployUnderwriter();
+        yield deployments.fixture();
+        yield deployUnderwriter();
         const artifact = yield deployments.getArtifact('MockGatewayLogicV1');
         //@ts-ignore
         const implementationAddress = yield getImplementation(deployParameters[network]['btcGateway']);
@@ -223,21 +231,20 @@ describe('Zero', () => {
         const { gateway } = yield getFixtures();
         yield gateway.mint(ethers_1.utils.randomBytes(32), ethers_1.utils.parseUnits('50', 8), ethers_1.utils.randomBytes(32), '0x'); //mint renBTC to signer
     }));
-    /*
-    beforeEach(async function () {
-        console.log('\n');
-        //@ts-ignore
-        console.log('='.repeat(32), 'Beginning Test', '='.repeat(32));
-        console.log('Test:', this.currentTest.title, '\n');
-        console.log('Initial Balances:');
-        await getBalances();
+    beforeEach(function () {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log('\n');
+            //@ts-ignore
+            console.log('='.repeat(32), 'Beginning Test', '='.repeat(32));
+            console.log('Test:', this.currentTest.title, '\n');
+            console.log('Initial Balances:');
+            yield getBalances();
+        });
     });
-
-    afterEach(async () => {
+    afterEach(() => __awaiter(void 0, void 0, void 0, function* () {
         console.log('Final Balances:');
-        await getBalances();
-    });
-*/
+        yield getBalances();
+    }));
     it('mock gateway should work', () => __awaiter(void 0, void 0, void 0, function* () {
         const abi = [
             'function mint(bytes32, uint256, bytes32, bytes) returns (uint256)',
@@ -283,7 +290,7 @@ describe('Zero', () => {
     it('should deposit funds then withdraw funds back from vault', () => __awaiter(void 0, void 0, void 0, function* () {
         const { renBTC, btcVault } = yield getFixtures();
         const beforeBalance = (yield renBTC.balanceOf(btcVault.address)).toNumber() / (yield renBTC.decimals());
-        const addedAmount = '1000000';
+        const addedAmount = '4000000';
         yield underwriterDeposit(addedAmount);
         const afterBalance = (yield renBTC.balanceOf(btcVault.address)).toNumber() / (yield renBTC.decimals());
         console.log('Deposited funds into vault');
@@ -294,7 +301,7 @@ describe('Zero', () => {
     }));
     it('should transfer overflow funds to strategy vault', () => __awaiter(void 0, void 0, void 0, function* () {
         const { btcVault, renBTC } = yield getFixtures();
-        yield underwriterDeposit('1000000');
+        yield underwriterDeposit('4000000');
         console.log('deposited all renBTC into vault');
         yield getBalances();
         yield btcVault.earn();
@@ -304,13 +311,11 @@ describe('Zero', () => {
         const { signer, controller, btcVault } = yield getFixtures();
         const { underwriter, underwriterImpl } = yield getUnderwriter();
         const renbtc = new ethers.Contract(yield btcVault.token(), btcVault.interface, signer);
-        /*
-        await renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
-        await btcVault.deposit('1000000');
-        await btcVault.earn();
-*/
+        yield renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
+        yield btcVault.deposit('4000000');
+        yield btcVault.earn();
         console.log('Deposited 15renBTC and called earn');
-        //		await getBalances();
+        yield getBalances();
         //@ts-ignore
         ('0x42e48680f15b7207c7602fec83b9c252fa3548c8533246ed532a75c6d0c486394648ba8f42a73a0ce2482712f09d177c3641ef07fcfd3b5cd3b4329982f756141b');
         const transferRequest = new zero_1.TrivialUnderwriterTransferRequest({
@@ -327,8 +332,8 @@ describe('Zero', () => {
             signature: '0x42e48680f15b7207c7602fec83b9c252fa3548c8533246ed532a75c6d0c486394648ba8f42a73a0ce2482712f09d177c3641ef07fcfd3b5cd3b4329982f756141b',
         });
         transferRequest.setProvider((yield ethers.getSigners())[0].provider);
-        //		transferRequest.setUnderwriter(underwriter.address);
-        //		const signature = await transferRequest.sign(signer, controller.address);
+        transferRequest.setUnderwriter(underwriter.address);
+        const signature = yield transferRequest.sign(signer, controller.address);
         console.log('\nWriting a small loan');
         yield transferRequest.loan(signer, { gasLimit: 1.5e6 });
         /*
@@ -341,34 +346,31 @@ describe('Zero', () => {
             signature,
         );
 */
-        /*
-        await getBalances();
-
+        yield getBalances();
         console.log('\nRepaying loan...');
-        const nHash = utils.hexlify(utils.randomBytes(32));
+        const nHash = ethers_1.utils.hexlify(ethers_1.utils.randomBytes(32));
         const actualAmount = String(Number(transferRequest.amount) - 1000);
         const renVMSignature = '0x';
-        await underwriter.proxy(controller.address, controller.interface.encodeFunctionData('repay', [
-            underwriter.address, //underwriter
-            transferRequest.to, //to
-            transferRequest.asset, //asset
-            transferRequest.amount, //amount
+        yield underwriter.proxy(controller.address, controller.interface.encodeFunctionData('repay', [
+            underwriter.address,
+            transferRequest.to,
+            transferRequest.asset,
+            transferRequest.amount,
             actualAmount,
-            transferRequest.pNonce, //nonce
-            transferRequest.module, //module
+            transferRequest.pNonce,
+            transferRequest.module,
             nHash,
             transferRequest.data,
             renVMSignature, //signature
         ]));
-        await getBalances();
-*/
+        yield getBalances();
     }));
     it('should take out, make a swap with, then repay a large loan', () => __awaiter(void 0, void 0, void 0, function* () {
         const { signer, controller, btcVault } = yield getFixtures();
         const { underwriter, underwriterImpl } = yield getUnderwriter();
         const renbtc = new ethers.Contract(yield btcVault.token(), btcVault.interface, signer);
         yield renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
-        yield btcVault.deposit('1000000');
+        yield btcVault.deposit('4000000');
         yield btcVault.earn();
         console.log('Deposited 15renBTC and called earn');
         yield getBalances();
@@ -398,7 +400,7 @@ describe('Zero', () => {
         const { underwriter, underwriterImpl } = yield getUnderwriter();
         const renbtc = new ethers.Contract(yield btcVault.token(), btcVault.interface, signer);
         yield renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
-        yield btcVault.deposit('1000000');
+        yield btcVault.deposit('4000000');
         yield btcVault.earn();
         console.log('Deposited 15renBTC and called earn');
         yield getBalances();
