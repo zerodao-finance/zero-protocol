@@ -137,7 +137,7 @@ class ZeroUser extends events_1.EventEmitter {
                         }
                         catch (e) {
                             this.log.error(`Failed dialing keeper: ${keeper} for txDispatch`);
-                            this.log.debug(e.stack);
+                            this.log.error(e.stack);
                         }
                     }
                     else {

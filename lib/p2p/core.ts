@@ -114,7 +114,7 @@ class ZeroUser extends EventEmitter {
 						this.log.info(`Published transfer request to ${keeper}. Waiting for keeper confirmation.`);
 					} catch (e: any) {
 						this.log.error(`Failed dialing keeper: ${keeper} for txDispatch`);
-						this.log.debug(e.stack);
+						this.log.error(e.stack);
 					}
 				} else {
 					break;
