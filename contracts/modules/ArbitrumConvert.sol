@@ -65,12 +65,16 @@ contract ArbitrumConvert {
     uint256 _ratio
 	) internal returns (uint256 amountSwappedETH, uint256 amountSwappedBTC) {
     uint256 amountToETH = _ratio.mul(_amountIn).div(uint256(1 ether));
-    uint256 wbtcOut = IRenCrvArbitrum(renCrvArbitrum).exchange(1, 0, amountToETH, 0, address(this));
-    uint256 _amountStart = address(this).balance;
-    (bool success,) = tricryptoArbitrum.call(abi.encodeWithSelector(ICurveETHUInt256.exchange.selector, 1, 2, wbtcOut, 0, true));
-    require(success, "!exchange");
-    amountSwappedETH = address(this).balance.sub(_amountStart);
-    amountSwappedBTC = _amountIn.sub(amountToETH);
+    uint256 wbtcOut = amountToETH != 0 ? IRenCrvArbitrum(renCrvArbitrum).exchange(1, 0, amountToETH, 0, address(this)) : 0;
+    if (wbtcOut != 0) {
+      uint256 _amountStart = address(this).balance;
+      (bool success,) = tricryptoArbitrum.call(abi.encodeWithSelector(ICurveETHUInt256.exchange.selector, 1, 2, wbtcOut, 0, true));
+      require(success, "!exchange");
+      amountSwappedETH = address(this).balance.sub(_amountStart);
+      amountSwappedBTC = _amountIn.sub(amountToETH);
+    } else {
+      amountSwappedBTC = _amountIn;
+    }
   }
   receive() external payable {
     // no-op

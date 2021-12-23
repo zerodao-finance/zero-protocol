@@ -21,11 +21,13 @@ const USDC_MAINNET_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 
 let _signers;
 const _getSigners = ethers.getSigners;
+/*
 if (process.env.FORKING === 'true')
 	ethers.getSigners = async () => {
 		if (!_signers) _signers = await _getSigners.call(ethers);
 		return [new ethers.Wallet(process.env.WALLET, _signers[0].provider)];
 	};
+ */
 
 const toAddress = (contractOrAddress: any): string => contractOrAddress.address || contractOrAddress;
 const mintRenBTC = async (amount: any, signer?: any) => {
@@ -362,7 +364,7 @@ describe('Zero', () => {
 	});
 
 	it('should take out, make a swap with, then repay a small loan', async () => {
-		const { signer, controller, btcVault } = await getFixtures();
+		const { signer, controller, swapModule, convertModule, btcVault } = await getFixtures();
 		const { underwriter, underwriterImpl } = await getUnderwriter();
 
 		const renbtc = new ethers.Contract(await btcVault.token(), btcVault.interface, signer);
@@ -375,7 +377,7 @@ describe('Zero', () => {
 		//@ts-ignore
 		('0x42e48680f15b7207c7602fec83b9c252fa3548c8533246ed532a75c6d0c486394648ba8f42a73a0ce2482712f09d177c3641ef07fcfd3b5cd3b4329982f756141b');
 		const transferRequest = new TrivialUnderwriterTransferRequest({
-			module: '0x59741D0210Dd24FFfDBa2eEEc9E130A016B8eb3F',
+			module: process.env.CHAIN === 'ARBITRUM' ? convertModule.address : swapModule.address,
 			to: '0xC6ccaC065fCcA640F44289886Ce7861D9A527F9E',
 			underwriter: '0xd0D8fA764352e33F40c66C75B3BC0204DC95973e',
 			asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501',
