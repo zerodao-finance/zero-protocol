@@ -27,7 +27,7 @@ var controller = getContract('ZeroController');
 var upgraded = new ethers.Contract(controller.address, [ 'function setGasParameters(uint256, uint256, uint256)' ], wallet);
 var vault = getContract('BTCVault');
 var trivial = new ethers.Contract(getContract('TrivialUnderwriter').address, [ 'function loan(address, address, uint256, uint256, address, bytes, bytes)', 'function controller() view returns (address)', 'function owner() view returns (address)' ], wallet);
-//controller = new ethers.Contract(controller.address, [ 'function setFee(uint256)', 'function setBaseFeeByAsset(address, uint256)', 'function lockFor(address) view returns (address)', 'function mint(address, address)' ], wallet);
+controller = new ethers.Contract(controller.address, [ 'function approveModule(address, bool)', 'function approvedModules(address) view returns (bool)' ], wallet);
 var makeKeeper = async () => await zero.createZeroKeeper(await zero.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
 
 //var makeUser = async () => await zero.createZeroUser(await zero.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
