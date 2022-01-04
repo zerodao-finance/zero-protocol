@@ -73,11 +73,12 @@ const createMockKeeper = (provider) => __awaiter(void 0, void 0, void 0, functio
 exports.createMockKeeper = createMockKeeper;
 const enableGlobalMockRuntime = () => {
     core_1.ZeroUser.prototype.subscribeKeepers = function () {
+        me = this
         return __awaiter(this, void 0, void 0, function* () {
-            if (!this.keepers.includes(exports.TEST_KEEPER_ADDRESS)) {
+            if (!me.keepers.includes(exports.TEST_KEEPER_ADDRESS)) {
                 setTimeout(function () {
-                    this.keepers.push(exports.TEST_KEEPER_ADDRESS);
-                    this.emit('keeper', exports.TEST_KEEPER_ADDRESS);
+                    me.keepers.push(exports.TEST_KEEPER_ADDRESS);
+                    me.emit('keeper', exports.TEST_KEEPER_ADDRESS);
                 }, 500);
             }
         });
