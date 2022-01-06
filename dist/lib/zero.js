@@ -25,21 +25,26 @@ const constants_1 = require("./config/constants");
 const p2p_1 = require("./p2p");
 const chains_1 = require("@renproject/chains");
 const ren_1 = __importDefault(require("@renproject/ren"));
+const CONTROLLER_DEPLOYMENTS = {
+    Arbitrum: require('../deployments/arbitrum/ZeroController').address,
+    Polygon: require('../deployments/matic/ZeroController').address,
+    Ethereum: ethers_1.ethers.constants.AddressZero
+};
+const RPC_ENDPOINTS = {
+    Arbitrum: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+    Polygon: 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+    Ethereum: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+};
+const RENVM_PROVIDERS = {
+    Arbitrum: chains_1.Arbitrum,
+    Polygon: chains_1.Polygon,
+    Ethereum: chains_1.Ethereum
+};
+const getProvider = (transferRequest) => {
+    const chain = Object.keys(CONTROLLER_DEPLOYMENTS).find((v) => transferRequest.contractAddress === v);
+    return RENVM_PROVIDERS[chain](new ethers_1.ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain]), 'mainnet');
+};
 const logger = { debug(v) { console.error(v); } };
-const getProvider = (provider) => __awaiter(void 0, void 0, void 0, function* () {
-    const { chainId } = yield provider.getNetwork();
-    console.log(chainId);
-    switch (chainId) {
-        case 1:
-            return (0, chains_1.Ethereum)(provider, 'mainnet');
-        case 42161:
-            return (0, chains_1.Arbitrum)(provider, 'mainnet');
-        case 31337:
-            return (0, chains_1.Arbitrum)(provider, 'mainnet');
-        default:
-            return (0, chains_1.Polygon)(provider, 'mainnet');
-    }
-});
 class TransferRequest {
     constructor(params) {
         this.module = params.module;
@@ -105,7 +110,7 @@ class TransferRequest {
                 asset: "BTC",
                 from: (0, chains_1.Bitcoin)(),
                 nonce: this.nonce,
-                to: (yield getProvider(this.provider)).Contract({
+                to: (getProvider(this)).Contract({
                     sendTo: this.contractAddress,
                     contractFn: this._contractFn,
                     contractParams: this._contractParams
