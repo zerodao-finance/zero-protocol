@@ -22,6 +22,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+<<<<<<< HEAD
 var __generator = (this && this.__generator) || function (thisArg, body) {
     var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
@@ -86,6 +87,48 @@ var getProvider = function (provider) { return __awaiter(void 0, void 0, void 0,
 }); };
 var TransferRequest = /** @class */ (function () {
     function TransferRequest(params) {
+=======
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createZeroKeeper = exports.createZeroUser = exports.createZeroConnection = exports.TrivialUnderwriterTransferRequest = exports.TransferRequest = void 0;
+require("./silence-init");
+const bytes_1 = require("@ethersproject/bytes");
+const contracts_1 = require("@ethersproject/contracts");
+const random_1 = require("@ethersproject/random");
+const hash_1 = require("@ethersproject/hash");
+const transactions_1 = require("@ethersproject/transactions");
+const ethers_1 = require("ethers");
+const utils_1 = require("@0x/utils");
+const constants_1 = require("./config/constants");
+const p2p_1 = require("./p2p");
+const chains_1 = require("@renproject/chains");
+const ren_1 = __importDefault(require("@renproject/ren"));
+const CONTROLLER_DEPLOYMENTS = {
+    Arbitrum: require('../../deployments/arbitrum/ZeroController').address,
+    Polygon: require('../../deployments/matic/ZeroController').address,
+    Ethereum: ethers_1.ethers.constants.AddressZero
+};
+const RPC_ENDPOINTS = {
+    Arbitrum: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+    Polygon: 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+    Ethereum: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+};
+const RENVM_PROVIDERS = {
+    Arbitrum: chains_1.Arbitrum,
+    Polygon: chains_1.Polygon,
+    Ethereum: chains_1.Ethereum
+};
+const getProvider = (transferRequest) => {
+    const chain = Object.entries(CONTROLLER_DEPLOYMENTS).find(([k, v]) => transferRequest.contractAddress === v);
+    const chain_key = chain[0];
+    return (RENVM_PROVIDERS[chain_key])(new ethers_1.ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]), 'mainnet');
+};
+const logger = { debug(v) { console.error(v); } };
+class TransferRequest {
+    constructor(params) {
+>>>>>>> 83625264b5260e9e2bebf37ea1d990fadd7cc43a
         this.module = params.module;
         this.to = params.to;
         this.underwriter = params.underwriter;
@@ -139,6 +182,7 @@ var TransferRequest = /** @class */ (function () {
     TransferRequest.prototype.setProvider = function (provider) {
         this.provider = provider;
         return this;
+<<<<<<< HEAD
     };
     TransferRequest.prototype.submitToRenVM = function (isTest) {
         return __awaiter(this, void 0, void 0, function () {
@@ -169,6 +213,23 @@ var TransferRequest = /** @class */ (function () {
                         //    result.params.nonce = this.nonce;
                         return [2 /*return*/, result];
                 }
+=======
+    }
+    submitToRenVM(isTest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log('submitToRenVM this.nonce', this.nonce);
+            if (this._mint)
+                return this._mint;
+            const result = this._mint = yield this._ren.lockAndMint({
+                asset: "BTC",
+                from: (0, chains_1.Bitcoin)(),
+                nonce: this.nonce,
+                to: (getProvider(this)).Contract({
+                    sendTo: this.contractAddress,
+                    contractFn: this._contractFn,
+                    contractParams: this._contractParams
+                })
+>>>>>>> 83625264b5260e9e2bebf37ea1d990fadd7cc43a
             });
         });
     };

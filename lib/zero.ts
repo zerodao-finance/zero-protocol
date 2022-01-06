@@ -28,23 +28,32 @@ import { PersistenceAdapter } from './persistence';
 
 type ZeroSigner = Wallet & SignerWithAddress & Signer;
 
-const logger = { debug(v) { console.error(v); } };
-
-const getProvider = async (provider) => {
-  const { chainId } = await provider.getNetwork();
-console.log(chainId);
-  switch (chainId) {
-    case 1:
-      return Ethereum(provider, 'mainnet');
-    case 42161:
-      return Arbitrum(provider, 'mainnet');
-    case 31337:
-      return Arbitrum(provider, 'mainnet');
-    default:
-      return Polygon(provider, 'mainnet');
-  }
+const CONTROLLER_DEPLOYMENTS = {
+  Arbitrum: require('../deployments/arbitrum/ZeroController').address,
+  Polygon: require('../deployments/matic/ZeroController').address,
+  Ethereum: ethers.constants.AddressZero
+};
+const RPC_ENDPOINTS = {
+	Arbitrum: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+	Polygon: 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+	Ethereum: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
 };
 
+const RENVM_PROVIDERS = {
+  Arbitrum,
+  Polygon,
+  Ethereum
+};
+
+const getProvider = (transferRequest) => {
+  const chain = Object.entries(CONTROLLER_DEPLOYMENTS).find(([k, v]) => transferRequest.contractAddress === v);
+  const chain_key = chain[0]
+  return (RENVM_PROVIDERS[chain_key])(new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]), 'mainnet');
+};
+
+
+
+const logger = { debug(v) { console.error(v); } };
 
 
 export class TransferRequest {
@@ -141,7 +150,7 @@ export class TransferRequest {
 			asset: "BTC",
 			from: Bitcoin(),
 			nonce: this.nonce,
-			to: (await getProvider(this.provider)).Contract({
+			to: (getProvider(this)).Contract({
 				sendTo: this.contractAddress,
 				contractFn: this._contractFn,
 				contractParams: this._contractParams
