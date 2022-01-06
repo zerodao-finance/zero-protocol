@@ -5,6 +5,7 @@ import { hexlify } from "@ethersproject/bytes";
 import { Contract } from "@ethersproject/contracts";
 import { randomBytes } from "@ethersproject/random";
 import { _TypedDataEncoder } from "@ethersproject/hash";
+import { GatewayAddressInput } from "./types";
 import { BigNumber } from "@ethersproject/bignumber";
 import { recoverAddress } from "@ethersproject/transactions";
 import { generateNHash, generatePHash, generateGHash, fromHex, toURLBase64 } from "@renproject/utils";
@@ -19,11 +20,11 @@ import { EIP712_TYPES } from './config/constants';
 import RenVM from './util/renvm';
 import { computeP, computeNHash, maybeCoerceToGHash } from './util/helpers';
 import { createNode, ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
-import { GatewayAddressInput } from './types';
 import { Bitcoin, Polygon, Ethereum, Arbitrum } from "@renproject/chains"
 import RenJS from "@renproject/ren";
 import { EthArgs } from "@renproject/interfaces";
 import { PersistenceAdapter } from './persistence';
+
 
 
 type ZeroSigner = Wallet & SignerWithAddress & Signer;

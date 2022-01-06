@@ -41,8 +41,8 @@ var safe_buffer_1 = require("safe-buffer");
 var abi_1 = require("@ethersproject/abi");
 var solidity_1 = require("@ethersproject/solidity");
 var constants_1 = require("../config/constants");
-require("../types");
 var utils_1 = require("@renproject/utils");
+require("../types");
 /*
 ===========================================
 ============= GENERAL HELPERS =============
