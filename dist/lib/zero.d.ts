@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import './silence-init';
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
 import { Contract } from "@ethersproject/contracts";
@@ -6,8 +7,8 @@ import { Buffer } from "buffer";
 import { BigNumberish } from 'ethers';
 import { EIP712TypedData } from '@0x/types';
 import { ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
-import { PersistenceAdapter } from './persistence';
 import { GatewayAddressInput } from './types';
+import { PersistenceAdapter } from './persistence';
 export declare class TransferRequest {
     module: string;
     to: string;
@@ -25,6 +26,7 @@ export declare class TransferRequest {
     private _contractParams;
     private _ren;
     _queryTxResult: any;
+    provider: any;
     _mint: any;
     constructor(params: {
         module: string;
@@ -40,6 +42,7 @@ export declare class TransferRequest {
         signature?: string;
     });
     destination(contractAddress?: string, chainId?: number | string, signature?: string): string;
+    setProvider(provider: any): this;
     submitToRenVM(isTest: any): Promise<any>;
     waitForSignature(): Promise<any>;
     setUnderwriter(underwriter: string): boolean;
@@ -52,9 +55,11 @@ export declare class TrivialUnderwriterTransferRequest extends TransferRequest {
     getController(signer: any): Promise<Contract>;
     fallbackMint(signer: any, params?: {}): Promise<any>;
     getTrivialUnderwriter(signer: any): Contract;
-    loan(signer: any): Promise<any>;
+    loan(signer: any, params?: {}): Promise<any>;
+    dry(signer: any, params?: {}): Promise<any>;
     repay(signer: any, params?: {}): Promise<any>;
 }
 export declare function createZeroConnection(address: string): Promise<ZeroConnection>;
 export declare function createZeroUser(connection: ZeroConnection, persistence?: PersistenceAdapter<any, any>): ZeroUser;
 export declare function createZeroKeeper(connection: ZeroConnection): ZeroKeeper;
+//# sourceMappingURL=zero.d.ts.map

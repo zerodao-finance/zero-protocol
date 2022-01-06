@@ -22,3 +22,4 @@ export declare abstract class Network {
     static networkFromId(id: number): Network;
     static networkFromSymbol(symbol: string): Network;
 }
+//# sourceMappingURL=network.d.ts.map

@@ -14,3 +14,4 @@ export declare class LocalStoragePersistenceAdapter implements PersistenceAdapte
     getAllTransferRequests(): Promise<TransferRequestWithStatus[]>;
 }
 export {};
+//# sourceMappingURL=localStorage.d.ts.map

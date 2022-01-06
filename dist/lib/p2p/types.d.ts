@@ -5,3 +5,4 @@ export interface NodeOptions {
     multiaddr: string;
 }
 export declare type ConnectionTypes = ZeroConnection;
+//# sourceMappingURL=types.d.ts.map

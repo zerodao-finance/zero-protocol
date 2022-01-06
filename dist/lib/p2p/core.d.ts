@@ -1,8 +1,7 @@
 /// <reference types="node" />
-import libp2p from 'libp2p';
+import libp2p from 'libp2p/src/index';
 import { Logger } from '../logger';
 import { ConnectionTypes } from './types';
-import { TransferRequest } from '../types';
 import { PersistenceAdapter } from '../persistence';
 import { EventEmitter } from 'events';
 declare class ZeroConnection extends libp2p {
@@ -15,7 +14,7 @@ declare class ZeroUser extends EventEmitter {
     constructor(connection: ConnectionTypes, persistence?: PersistenceAdapter<any, any>);
     subscribeKeepers(): Promise<void>;
     unsubscribeKeepers(): Promise<void>;
-    publishTransferRequest(transferRequest: TransferRequest): Promise<void>;
+    publishTransferRequest(transferRequest: any): Promise<void>;
 }
 declare class ZeroKeeper {
     conn: ConnectionTypes;
@@ -28,3 +27,4 @@ declare class ZeroKeeper {
     destroy(): void;
 }
 export { ZeroKeeper, ZeroUser, ZeroConnection };
+//# sourceMappingURL=core.d.ts.map

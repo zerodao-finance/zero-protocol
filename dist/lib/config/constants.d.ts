@@ -11,3 +11,4 @@ export declare const EIP712_TYPES: {
         type: string;
     }[];
 };
+//# sourceMappingURL=constants.d.ts.map

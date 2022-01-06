@@ -4,3 +4,4 @@ export declare const TOKENS: ZeroToken[];
 export declare class EthNetwork extends Network {
     constructor();
 }
+//# sourceMappingURL=bsc.network.d.ts.map

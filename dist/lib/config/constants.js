@@ -1,10 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.EIP712_TYPES = exports.NULL_PHASH = exports.NULL_ADDRESS = exports.BYTES_TYPES = void 0;
-exports.BYTES_TYPES = ['bytes'];
-exports.NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
-exports.NULL_PHASH = '0x0000000000000000000000000000000000000000000000000000000000000000';
-exports.EIP712_TYPES = {
+export var BYTES_TYPES = ['bytes'];
+export var NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
+export var NULL_PHASH = '0x0000000000000000000000000000000000000000000000000000000000000000';
+export var EIP712_TYPES = {
     EIP712Domain: [
         {
             name: 'name',

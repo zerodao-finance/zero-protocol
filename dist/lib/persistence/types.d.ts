@@ -41,3 +41,4 @@ export interface PersistenceAdapter<Backend, Key> {
 export interface TransferRequestWithStatus extends TransferRequest {
     status: RequestStates;
 }
+//# sourceMappingURL=types.d.ts.map

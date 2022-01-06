@@ -52,3 +52,4 @@ export namespace ETHEREUM {
     const btcGateway_2: string;
     export { btcGateway_2 as btcGateway };
 }
+//# sourceMappingURL=fixtures.d.ts.map

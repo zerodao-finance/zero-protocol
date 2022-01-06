@@ -42,3 +42,4 @@ declare class BTCBackend {
 }
 export declare const getDefaultBitcoinClient: () => BTCBackend;
 export {};
+//# sourceMappingURL=btc.d.ts.map

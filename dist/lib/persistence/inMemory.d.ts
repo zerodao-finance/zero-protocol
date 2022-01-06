@@ -14,3 +14,4 @@ export declare class InMemoryPersistenceAdapter implements PersistenceAdapter<In
     getAllTransferRequests(): Promise<TransferRequestWithStatus[]>;
 }
 export {};
+//# sourceMappingURL=inMemory.d.ts.map

@@ -8,3 +8,4 @@ export interface PayloadType {
     from: string;
     data: string;
 }
+//# sourceMappingURL=types.d.ts.map

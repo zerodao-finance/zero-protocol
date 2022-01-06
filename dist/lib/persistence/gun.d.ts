@@ -16,3 +16,4 @@ export declare class GunPersistenceAdapter implements PersistenceAdapter<GunBack
     getAllTransferRequests(): Promise<TransferRequestWithStatus[]>;
 }
 export {};
+//# sourceMappingURL=gun.d.ts.map

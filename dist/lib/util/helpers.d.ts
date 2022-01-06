@@ -14,3 +14,4 @@ export declare const encodeInitializationActions: (input: any, InitializationAct
 export declare const computeShiftInTxHash: ({ renContract, utxo, g }: any) => string;
 export declare const computeNHash: (input: NHashInput) => any;
 export declare const computeHashForDarknodeSignature: (input: DarknodeSignatureInput) => string;
+//# sourceMappingURL=helpers.d.ts.map

@@ -16,3 +16,4 @@ export declare enum SUPPORTED_TOKENS {
 export interface TokenMap {
     [address: string]: string;
 }
+//# sourceMappingURL=tokens.d.ts.map

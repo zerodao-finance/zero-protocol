@@ -9,3 +9,4 @@ declare class RenVM {
     computeBorrowProxyAddress: ({ shifterPool, borrower, token, nonce, amount, forbidLoan, actions }: any) => string;
 }
 export default RenVM;
+//# sourceMappingURL=renvm.d.ts.map
