@@ -26,8 +26,8 @@ const p2p_1 = require("./p2p");
 const chains_1 = require("@renproject/chains");
 const ren_1 = __importDefault(require("@renproject/ren"));
 const CONTROLLER_DEPLOYMENTS = {
-    Arbitrum: require('../deployments/arbitrum/ZeroController').address,
-    Polygon: require('../deployments/matic/ZeroController').address,
+    Arbitrum: require('../../deployments/arbitrum/ZeroController').address,
+    Polygon: require('../../deployments/matic/ZeroController').address,
     Ethereum: ethers_1.ethers.constants.AddressZero
 };
 const RPC_ENDPOINTS = {
