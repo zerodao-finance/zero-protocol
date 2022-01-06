@@ -10508,7 +10508,7 @@ keccak@^3.0.0, keccak@^3.0.1:
     node-gyp-build "^4.2.0"
     readable-stream "^3.6.0"
 
-keypair@^1.0.1, keypair@^1.0.4:
+keypair@^1.0.1:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/keypair/-/keypair-1.0.4.tgz#a749a45f388593f3950f18b3757d32a93bd8ce83"
   integrity sha512-zwhgOhhniaL7oxMgUMKKw5219PWWABMO+dgMnzJOQ2/5L3XJtTJGhW2PEXlxXj9zaccdReZJZ83+4NPhVfNVDg==
@@ -10924,23 +10924,6 @@ libp2p-crypto@^0.19.0:
     pem-jwk "^2.0.0"
     protobufjs "^6.11.2"
     secp256k1 "^4.0.0"
-    uint8arrays "^3.0.0"
-    ursa-optional "^0.10.1"
-
-libp2p-crypto@^0.20.0:
-  version "0.20.0"
-  resolved "https://registry.yarnpkg.com/libp2p-crypto/-/libp2p-crypto-0.20.0.tgz#3881ccff5f1f51f48c74050d685535fb1a728488"
-  integrity sha512-WgIW9rYcWaO/5j2T6NW3R6Q46yvp2ZfFErqRMbi4/pOTL3T7+OROYpL/1iWVksWkXyurU/t2qFsIijWMxR5C4Q==
-  dependencies:
-    err-code "^3.0.1"
-    iso-random-stream "^2.0.0"
-    keypair "^1.0.4"
-    multiformats "^9.4.5"
-    noble-ed25519 "^1.2.6"
-    noble-secp256k1 "^1.2.10"
-    node-forge "^0.10.0"
-    pem-jwk "^2.0.0"
-    protobufjs "^6.11.2"
     uint8arrays "^3.0.0"
     ursa-optional "^0.10.1"
 
@@ -12903,16 +12886,6 @@ nise@^5.1.0:
     just-extend "^4.0.2"
     path-to-regexp "^1.7.0"
 
-noble-ed25519@^1.2.6:
-  version "1.2.6"
-  resolved "https://registry.yarnpkg.com/noble-ed25519/-/noble-ed25519-1.2.6.tgz#a55b75c61da000498abb43ffd81caaa370bfed22"
-  integrity sha512-zfnWqg9FVMp8CnzUpAjbt1nDXpDjCvxYiCXdnW1mY8zQHw/6twUlkFm14VPdojVzc0kcd+i9zT79+26GcNbsuQ==
-
-noble-secp256k1@^1.2.10:
-  version "1.2.14"
-  resolved "https://registry.yarnpkg.com/noble-secp256k1/-/noble-secp256k1-1.2.14.tgz#39429c941d51211ca40161569cee03e61d72599e"
-  integrity sha512-GSCXyoZBUaaPwVWdYncMEmzlSUjF9J/YeEHpklYJCyg8wPuJP3NzDx0BkiwArzINkdX2HJHvUJhL6vVWPOQQcg==
-
 node-addon-api@^2.0.0:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-2.0.2.tgz#432cfa82962ce494b132e9d72a15b29f71ff5d32"
@@ -14175,18 +14148,6 @@ peer-id@^0.14.0:
     multihashes "^4.0.2"
     protobufjs "^6.10.2"
     uint8arrays "^2.0.5"
-
-peer-id@^0.15.3:
-  version "0.15.4"
-  resolved "https://registry.yarnpkg.com/peer-id/-/peer-id-0.15.4.tgz#ae55e0dfb41d261266c051b4df4885a18d76b33d"
-  integrity sha512-MDoBIMZYwQIAHaZQUwsIcvoFgdbIl5GtZMwSkXpIYvc5v0TSDv+u8WsTKrKt2Vv28tHFFDJQdVzu3T4qTPzK+w==
-  dependencies:
-    class-is "^1.1.0"
-    libp2p-crypto "^0.20.0"
-    minimist "^1.2.5"
-    multiformats "^9.4.5"
-    protobufjs "^6.10.2"
-    uint8arrays "^3.0.0"
 
 peer-id@^0.16.0:
   version "0.16.0"
