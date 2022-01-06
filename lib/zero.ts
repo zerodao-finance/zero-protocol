@@ -46,8 +46,9 @@ const RENVM_PROVIDERS = {
 };
 
 const getProvider = (transferRequest) => {
-  const chain = Object.keys(CONTROLLER_DEPLOYMENTS).find((v) => transferRequest.contractAddress === v);
-  return RENVM_PROVIDERS[chain](new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain]), 'mainnet');
+  const chain = Object.entries(CONTROLLER_DEPLOYMENTS).find(([k, v]) => transferRequest.contractAddress === v);
+  const chain_key = chain[0]
+  return (RENVM_PROVIDERS[chain_key])(new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]), 'mainnet');
 };
 
 

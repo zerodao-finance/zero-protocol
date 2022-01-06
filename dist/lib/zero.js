@@ -26,8 +26,8 @@ const p2p_1 = require("./p2p");
 const chains_1 = require("@renproject/chains");
 const ren_1 = __importDefault(require("@renproject/ren"));
 const CONTROLLER_DEPLOYMENTS = {
-    Arbitrum: require('../../deployments/arbitrum/ZeroController').address,
-    Polygon: require('../../deployments/matic/ZeroController').address,
+    Arbitrum: require('../deployments/arbitrum/ZeroController').address,
+    Polygon: require('../deployments/matic/ZeroController').address,
     Ethereum: ethers_1.ethers.constants.AddressZero
 };
 const RPC_ENDPOINTS = {
@@ -41,8 +41,9 @@ const RENVM_PROVIDERS = {
     Ethereum: chains_1.Ethereum
 };
 const getProvider = (transferRequest) => {
-    const chain = Object.keys(CONTROLLER_DEPLOYMENTS).find((v) => transferRequest.contractAddress === v);
-    return RENVM_PROVIDERS[chain](new ethers_1.ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain]), 'mainnet');
+    const chain = Object.entries(CONTROLLER_DEPLOYMENTS).find(([k, v]) => transferRequest.contractAddress === v);
+    const chain_key = chain[0];
+    return (RENVM_PROVIDERS[chain_key])(new ethers_1.ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]), 'mainnet');
 };
 const logger = { debug(v) { console.error(v); } };
 class TransferRequest {
