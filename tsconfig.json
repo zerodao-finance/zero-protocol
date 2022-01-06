@@ -1,5 +1,4 @@
 {
-	"extends": "aegir/src/config/tsconfig.aegir.json",
 	"compilerOptions": {
 		"baseUrl": "src",
 		"outDir": "dist",
@@ -16,7 +15,7 @@
 		"checkJs": false,
 		"types": []
 	},
-	"include": ["./deploy", "./lib", "./lib/**/*.js"],
+	"include": ["./deploy", "./lib", "./lib/**/*"],
 	"exclude": ["node_modules"],
 	"typeAcquisition": { "enable": true },
 	"files": ["./hardhat.config.ts"]

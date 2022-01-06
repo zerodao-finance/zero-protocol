@@ -1,0 +1,10 @@
+"use strict";
+exports.__esModule = true;
+exports.GunPersistenceAdapter = exports.InMemoryPersistenceAdapter = exports.LocalStoragePersistenceAdapter = void 0;
+var localStorage_1 = require("./localStorage");
+exports.LocalStoragePersistenceAdapter = localStorage_1.LocalStoragePersistenceAdapter;
+var inMemory_1 = require("./inMemory");
+exports.InMemoryPersistenceAdapter = inMemory_1.InMemoryPersistenceAdapter;
+var gun_1 = require("./gun");
+exports.GunPersistenceAdapter = gun_1.GunPersistenceAdapter;
+require("./types");
