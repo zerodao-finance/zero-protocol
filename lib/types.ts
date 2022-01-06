@@ -1,5 +1,5 @@
 import { BigNumberish } from '@ethersproject/bignumber';
-import { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signers';
+import { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signer-with-address';
 import { ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
 import { PersistenceAdapter } from './persistence';
 import { EIP712TypedData } from '@0x/types';

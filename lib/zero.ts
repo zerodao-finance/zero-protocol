@@ -12,7 +12,7 @@ import { generateNHash, generatePHash, generateGHash, fromHex, toURLBase64 } fro
 import { formatBytes32String } from "@ethersproject/strings";
 import { BitcoinClient, getDefaultBitcoinClient } from "./rpc/btc";
 import { Buffer } from "buffer";
-import type { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signers';
+import type { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signer-with-address';
 import { BigNumberish, ethers, utils } from 'ethers';
 import { signTypedDataUtils } from '@0x/utils';
 import { EIP712TypedData } from '@0x/types';
