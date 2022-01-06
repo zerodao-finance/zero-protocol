@@ -1,4 +1,4 @@
-import './silence-init';
+//import './silence-init';
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
 import { hexlify } from "@ethersproject/bytes";

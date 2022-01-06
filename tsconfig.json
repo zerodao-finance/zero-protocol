@@ -15,7 +15,7 @@
 		"checkJs": false,
 		"types": []
 	},
-	"include": ["./deploy", "./lib", "./lib/**/*"],
+	"include": ["./deployments/**/*.json", "./deploy", "./lib", "./lib/**/*"],
 	"exclude": ["node_modules"],
 	"typeAcquisition": { "enable": true },
 	"files": ["./hardhat.config.ts"]

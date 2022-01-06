@@ -55,7 +55,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 exports.__esModule = true;
 exports.createZeroKeeper = exports.createZeroUser = exports.createZeroConnection = exports.TrivialUnderwriterTransferRequest = exports.TransferRequest = void 0;
-require("./silence-init");
+//import './silence-init';
 require("@ethersproject/wallet");
 require("@ethersproject/abstract-signer");
 var bytes_1 = require("@ethersproject/bytes");

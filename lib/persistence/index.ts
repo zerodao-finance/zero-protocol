@@ -1,6 +1,6 @@
 import { LocalStoragePersistenceAdapter } from './localStorage';
 import { InMemoryPersistenceAdapter } from './inMemory';
-import { GunPersistenceAdapter } from './gun';
+//import { GunPersistenceAdapter } from './gun';
 import { PersistenceAdapter } from './types';
 
-export { LocalStoragePersistenceAdapter, InMemoryPersistenceAdapter, GunPersistenceAdapter, PersistenceAdapter };
+export { LocalStoragePersistenceAdapter, InMemoryPersistenceAdapter, PersistenceAdapter };
