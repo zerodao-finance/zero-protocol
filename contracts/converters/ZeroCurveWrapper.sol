@@ -5,7 +5,7 @@ pragma solidity >=0.7.0;
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
 import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
 import {ICurvePool} from '../interfaces/ICurvePool.sol';
-import { CurveLib } from "../libraries/CurveLib.sol";
+import {CurveLib} from '../libraries/CurveLib.sol';
 import {SafeMath} from 'oz410/math/SafeMath.sol';
 
 contract ZeroCurveWrapper {
@@ -25,8 +25,16 @@ contract ZeroCurveWrapper {
 	using CurveLib for CurveLib.ICurve;
 
 	function getPool() internal view returns (CurveLib.ICurve memory result) {
-		result = CurveLib.fromSelectors(pool, underlying, coinsSelector, coinsUnderlyingSelector, exchangeSelector, getDySelector);
+		result = CurveLib.fromSelectors(
+			pool,
+			underlying,
+			coinsSelector,
+			coinsUnderlyingSelector,
+			exchangeSelector,
+			getDySelector
+		);
 	}
+
 	constructor(
 		uint256 _tokenInIndex,
 		uint256 _tokenOutIndex,
@@ -58,6 +66,12 @@ contract ZeroCurveWrapper {
 		_actualOut = IERC20(tokenOutAddress).balanceOf(address(this)) - _startOut;
 		IERC20(tokenOutAddress).safeTransfer(msg.sender, _actualOut);
 	}
-	receive() external payable { /* noop */ }
-	fallback() external payable { /* noop */ }
+
+	receive() external payable {
+		/* noop */
+	}
+
+	fallback() external payable {
+		/* noop */
+	}
 }

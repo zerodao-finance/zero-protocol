@@ -43,33 +43,37 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		keccak256('RenVMBorrowMessage(address module,uint256 amount,address underwriter,uint256 pNonce,bytes pData)');
 	bytes32 internal constant TYPE_HASH = keccak256('TransferRequest(address asset,uint256 amount)');
 	bytes32 internal ZERO_DOMAIN_SEPARATOR;
-  mapping (uint256 => address) public ownerOf;
+	mapping(uint256 => address) public ownerOf;
 
-  uint256 public fee;
-  address public gatewayRegistry;
-  mapping (address => uint256) public baseFeeByAsset;
-  mapping (address => bool) public approvedModules;
+	uint256 public fee;
+	address public gatewayRegistry;
+	mapping(address => uint256) public baseFeeByAsset;
+	mapping(address => bool) public approvedModules;
+
 	function getChainId() internal view returns (uint8 response) {
 		assembly {
 			response := chainid()
 		}
 	}
 
-  function setFee(uint256 _fee) public {
-    require(msg.sender == governance, "!governance");
-    fee = _fee;
-  }
-  function approveModule(address module, bool isApproved) public {
-    require(msg.sender == governance, "!governance");
-    approvedModules[module] = isApproved;
-  }
-  function setBaseFeeByAsset(address _asset, uint256 _fee) public {
-    require(msg.sender == governance, "!governance");
-    baseFeeByAsset[_asset] = _fee;
-  }
-  function deductFee(uint256 _amount, address _asset) internal view returns (uint256 result) {
-    result = _amount.mul(uint256(1 ether).sub(fee)).div(uint256(1 ether)).sub(baseFeeByAsset[_asset]);
-  }
+	function setFee(uint256 _fee) public {
+		require(msg.sender == governance, '!governance');
+		fee = _fee;
+	}
+
+	function approveModule(address module, bool isApproved) public {
+		require(msg.sender == governance, '!governance');
+		approvedModules[module] = isApproved;
+	}
+
+	function setBaseFeeByAsset(address _asset, uint256 _fee) public {
+		require(msg.sender == governance, '!governance');
+		baseFeeByAsset[_asset] = _fee;
+	}
+
+	function deductFee(uint256 _amount, address _asset) internal view returns (uint256 result) {
+		result = _amount.mul(uint256(1 ether).sub(fee)).div(uint256(1 ether)).sub(baseFeeByAsset[_asset]);
+	}
 
 	function initialize(address _rewards, address _gatewayRegistry) public {
 		__Ownable_init_unchained();
@@ -93,19 +97,19 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		);
 		_;
 	}
-	function setGasParameters(uint256 _maxGasPrice, uint256 _maxGasRepay, uint256 _maxGasLoan) public {
-          require(msg.sender == governance, "!governance");
-          maxGasPrice = _maxGasPrice;
-          maxGasRepay = _maxGasRepay;
-          maxGasLoan = _maxGasLoan;
-        }
 
-	function balanceOf(address _owner)
-		public
-		view
-		override
-		returns (uint256 result)
-	{
+	function setGasParameters(
+		uint256 _maxGasPrice,
+		uint256 _maxGasRepay,
+		uint256 _maxGasLoan
+	) public {
+		require(msg.sender == governance, '!governance');
+		maxGasPrice = _maxGasPrice;
+		maxGasRepay = _maxGasRepay;
+		maxGasLoan = _maxGasLoan;
+	}
+
+	function balanceOf(address _owner) public view override returns (uint256 result) {
 		result = _balanceOf(_owner);
 	}
 
@@ -179,7 +183,6 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		lock.trackIn(actualAmount);
 		uint256 _mintAmount = IGateway(IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset)).mint(
 			keccak256(abi.encode(params.to, params.nonce, params.module, params.data)),
-
 			actualAmount,
 			nHash,
 			signature
@@ -228,7 +231,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		bytes memory data,
 		bytes memory userSignature
 	) public onlyUnderwriter {
-    require(approvedModules[module], "!approved");
+		require(approvedModules[module], '!approved');
 		uint256 _gasBefore = gasleft();
 		ZeroLib.LoanParams memory params = ZeroLib.LoanParams({
 			to: to,
@@ -252,7 +255,10 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		_txGas = IConverter(converter).estimate(_txGas); //convert txGas from ETH to wBTC
 		_txGas = IConverter(converters[IStrategy(strategies[params.asset]).vaultWant()][params.asset]).estimate(_txGas);
 		// ^convert txGas from wBTC to renBTC
-		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(module, deductFee(params.amount, params.asset).sub(_txGas));
+		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(
+			module,
+			deductFee(params.amount, params.asset).sub(_txGas)
+		);
 		IZeroModule(module).receiveLoan(params.to, params.asset, _amountSent, params.nonce, params.data);
 		uint256 _gasRefund = Math.min(_gasBefore.sub(gasleft()), maxGasLoan).mul(maxGasPrice);
 		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);

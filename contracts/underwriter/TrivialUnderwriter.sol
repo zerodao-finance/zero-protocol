@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 import {Ownable} from 'oz410/access/Ownable.sol';
-import { ZeroController } from "../controllers/ZeroController.sol";
+import {ZeroController} from '../controllers/ZeroController.sol';
 
 /**
 @title contract that is the simplest underwriter, just a proxy with an owner tag
@@ -31,8 +31,8 @@ contract TrivialUnderwriter is Ownable {
 	function proxy(address payable target, bytes memory data) public payable onlyOwner {
 		(bool success, bytes memory response) = target.call{value: msg.value}(data);
 		bubble(success, response);
-
 	}
+
 	function loan(
 		address to,
 		address asset,
@@ -42,9 +42,10 @@ contract TrivialUnderwriter is Ownable {
 		bytes memory data,
 		bytes memory userSignature
 	) public {
-    require(msg.sender == owner(), "must be called by owner");
-    ZeroController(controller).loan(to, asset, amount, nonce, module, data, userSignature);
-  }
+		require(msg.sender == owner(), 'must be called by owner');
+		ZeroController(controller).loan(to, asset, amount, nonce, module, data, userSignature);
+	}
+
 	function repay(
 		address underwriter,
 		address to,
@@ -57,9 +58,20 @@ contract TrivialUnderwriter is Ownable {
 		bytes memory data,
 		bytes memory signature
 	) public {
-    require(msg.sender == owner(), "must be called by owner");
-    ZeroController(controller).repay(underwriter, to, asset, amount, actualAmount, nonce, module, nHash, data, signature);
-  }
+		require(msg.sender == owner(), 'must be called by owner');
+		ZeroController(controller).repay(
+			underwriter,
+			to,
+			asset,
+			amount,
+			actualAmount,
+			nonce,
+			module,
+			nHash,
+			data,
+			signature
+		);
+	}
 
 	/**
   @notice handles any other call and forwards to the controller

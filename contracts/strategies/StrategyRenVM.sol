@@ -110,7 +110,7 @@ contract StrategyRenVM {
 		_amount = IyVault(vault).withdraw(_shares);
 		if (_asset == want) {
 			// if asset is what the strategy wants
-      IConverter toWant = IConverter(IController(controller).converters(vaultWant, want));
+			IConverter toWant = IConverter(IController(controller).converters(vaultWant, want));
 			IERC20(vaultWant).transfer(address(toWant), _amount);
 			_amount = toWant.convert(address(0x0));
 		}
