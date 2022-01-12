@@ -14,7 +14,6 @@ import {ICurveUnderlyingUInt128} from '../interfaces/CurvePools/ICurveUnderlying
 import {ICurveUnderlyingUInt256} from '../interfaces/CurvePools/ICurveUnderlyingUInt256.sol';
 import {CurveLib} from '../libraries/CurveLib.sol';
 
-
 contract ZeroCurveFactory {
 	event CreateWrapper(address _wrapper);
 
@@ -26,5 +25,8 @@ contract ZeroCurveFactory {
 	) public payable {
 		emit CreateWrapper(address(new ZeroCurveWrapper(_tokenInIndex, _tokenOutIndex, _pool, _underlying)));
 	}
-	fallback() payable external { /* no op */ }
+
+	fallback() external payable {
+		/* no op */
+	}
 }

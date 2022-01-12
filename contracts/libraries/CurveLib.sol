@@ -34,9 +34,7 @@ library CurveLib {
 	}
 
 	function coins(ICurve memory curve, uint256 i) internal view returns (address result) {
-		(bool success, bytes memory returnData) = curve.pool.staticcall(
-			abi.encodeWithSelector(curve.coinsSelector, i)
-		);
+		(bool success, bytes memory returnData) = curve.pool.staticcall(abi.encodeWithSelector(curve.coinsSelector, i));
 		require(success, '!coins');
 		(result) = abi.decode(returnData, (address));
 	}
@@ -74,7 +72,6 @@ library CurveLib {
 		);
 		if (!success) revert(RevertCaptureLib.decodeError(returnData));
 	}
-
 
 	function toDynamic(bytes4[4] memory ary) internal pure returns (bytes4[] memory result) {
 		result = new bytes4[](ary.length);

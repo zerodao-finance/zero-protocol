@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.6.0;
 
-import { ZeroController } from "../controllers/ZeroController.sol";
-import { ZeroLib } from "../libraries/ZeroLib.sol";
+import {ZeroController} from '../controllers/ZeroController.sol';
+import {ZeroLib} from '../libraries/ZeroLib.sol';
+
 contract ControllerFundsRelease {
 	address public governance;
 	address public strategist;
@@ -28,21 +29,29 @@ contract ControllerFundsRelease {
 		keccak256('RenVMBorrowMessage(address module,uint256 amount,address underwriter,uint256 pNonce,bytes pData)');
 	bytes32 internal constant TYPE_HASH = keccak256('TransferRequest(address asset,uint256 amount)');
 	bytes32 internal ZERO_DOMAIN_SEPARATOR;
-  function converters(address, address) public view returns (address) {
-    return address(this);
-  }
-  function estimate(uint256 amount) public view returns (uint256) {
-    return amount;
-  }
-  function convert(address) public returns (uint256) {
-    return 5000000;
-  }
-  
-  function proxy(address to, bytes memory data, uint256 value) public returns (bool) {
-    require(governance == msg.sender, "!governance");
-    (bool success, bytes memory result) = to.call{ value: value }(data);
-    if (!success) assembly {
-      revert(add(0x20, result), mload(result))
-    }
-  }
+
+	function converters(address, address) public view returns (address) {
+		return address(this);
+	}
+
+	function estimate(uint256 amount) public view returns (uint256) {
+		return amount;
+	}
+
+	function convert(address) public returns (uint256) {
+		return 5000000;
+	}
+
+	function proxy(
+		address to,
+		bytes memory data,
+		uint256 value
+	) public returns (bool) {
+		require(governance == msg.sender, '!governance');
+		(bool success, bytes memory result) = to.call{value: value}(data);
+		if (!success)
+			assembly {
+				revert(add(0x20, result), mload(result))
+			}
+	}
 }

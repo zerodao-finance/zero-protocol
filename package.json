@@ -6,6 +6,7 @@
 	"repository": "https://github.com/zerodao-finance/zero-protocol",
 	"types": "./lib/types.d.ts",
 	"scripts": {
+		"prettier:sol": "prettier --write ./**/*.sol",
 		"verify": "hardhat etherscan-verify --license MIT",
 		"verify:implementation": "bash -c 'hardhat verify `node scripts/get-implementation` --libraries scripts/libraries.js'",
 		"test": "hardhat test",
