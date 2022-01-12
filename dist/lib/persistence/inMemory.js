@@ -64,10 +64,19 @@ var InMemoryPersistenceAdapter = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        tr = __assign({}, transferRequest);
-                        delete tr._mint;
-                        delete tr._queryTxResult;
-                        delete tr.provider;
+                        tr = {
+                            amount: transferRequest.amount,
+                            nonce: transferRequest.nonce,
+                            pNonce: transferRequest.pNonce,
+                            data: transferRequest.data,
+                            module: transferRequest.module,
+                            asset: transferRequest.assset,
+                            chainId: transferRequest.chainId,
+                            contractAddress: transferRequest.contractAddress,
+                            underwriter: transferRequest.underwriter,
+                            signature: transferRequest.signature,
+                            to: transferRequest.to
+                        };
                         key = (0, object_hash_1["default"])(tr);
                         status = __assign(__assign({}, tr), { status: 'pending' });
                         _a.label = 1;

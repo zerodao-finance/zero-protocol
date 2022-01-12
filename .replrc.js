@@ -24,10 +24,10 @@ var usdc = new ethers.Contract('0x2791bca1f2de4661ed88a30c99a7a9449aa84174', [ '
 var wbtc = new ethers.Contract('0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6', [ 'function transfer(address, uint256)', 'function balanceOf(address) view returns (uint256)' ], wallet);
 var zero = require('./');
 var controller = getContract('ZeroController');
-var upgraded = new ethers.Contract(controller.address, [ 'function setGasParameters(uint256, uint256, uint256)' ], wallet);
+//var upgraded = new ethers.Contract(controller.address, [ 'function setGasParameters(uint256, uint256, uint256)' ], wallet);
 var vault = getContract('BTCVault');
 var trivial = new ethers.Contract(getContract('TrivialUnderwriter').address, [ 'function loan(address, address, uint256, uint256, address, bytes, bytes)', 'function controller() view returns (address)', 'function owner() view returns (address)' ], wallet);
-controller = new ethers.Contract(controller.address, [ 'function approveModule(address, bool)', 'function approvedModules(address) view returns (bool)' ], wallet);
+//controller = new ethers.Contract(controller.address, [ 'function approveModule(address, bool)', 'function approvedModules(address) view returns (bool)' ], wallet);
 var makeKeeper = async () => await zero.createZeroKeeper(await zero.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
 
 //var makeUser = async () => await zero.createZeroUser(await zero.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));

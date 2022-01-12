@@ -11,11 +11,20 @@ export class InMemoryPersistenceAdapter implements PersistenceAdapter<InMemoryBa
 		this.backend = new Map();
 	}
 
-	async set(transferRequest: TransferRequest): Promise<InMemoryKeyType> {
-    const tr: any = { ...transferRequest };
-    delete tr._mint;
-    delete tr._queryTxResult;
-    delete tr.provider;
+	async set(transferRequest: any): Promise<InMemoryKeyType> {
+    const tr: any = {
+      amount: transferRequest.amount,
+      nonce: transferRequest.nonce,
+      pNonce: transferRequest.pNonce,
+      data: transferRequest.data,
+      module: transferRequest.module,
+      asset: transferRequest.assset,
+      chainId: transferRequest.chainId,
+      contractAddress: transferRequest.contractAddress,
+      underwriter: transferRequest.underwriter,
+      signature: transferRequest.signature,
+      to: transferRequest.to
+    };
 		const key = hash(tr);
 		const status: any = { ...tr, status: 'pending' };
 		try {
