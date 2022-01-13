@@ -68,10 +68,11 @@ export const createMockKeeper = async (provider) => {
 
 export const enableGlobalMockRuntime = () => {
 	ZeroUser.prototype.subscribeKeepers = async function () {
+		const me = this
 		if (!this.keepers.includes(TEST_KEEPER_ADDRESS)) {
 			setTimeout(function () {
-				this.keepers.push(TEST_KEEPER_ADDRESS);
-				this.emit('keeper', TEST_KEEPER_ADDRESS);
+				me.keepers.push(TEST_KEEPER_ADDRESS);
+				me.emit('keeper', TEST_KEEPER_ADDRESS);
 			}, 500);
 		}
 	};
@@ -86,7 +87,7 @@ export const enableGlobalMockRuntime = () => {
 		const timeout = (n) => new Promise((resolve) => setTimeout(resolve, n));
 		setTimeout(async () => {
 			confirmed.emit('target', target);
-			confirmed.emit('deposit', 0);
+			confirmed.emit('confirmation', 0);
 			for (let i = 1; i <= 6; i++) {
 				await timeout(2000);
 				confirmed.emit('deposit', i, target);

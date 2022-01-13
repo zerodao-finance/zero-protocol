@@ -170,11 +170,13 @@ exports.createMockKeeper = createMockKeeper;
 var enableGlobalMockRuntime = function () {
     core_1.ZeroUser.prototype.subscribeKeepers = function () {
         return __awaiter(this, void 0, void 0, function () {
+            var me;
             return __generator(this, function (_a) {
+                me = this;
                 if (!this.keepers.includes(exports.TEST_KEEPER_ADDRESS)) {
                     setTimeout(function () {
-                        this.keepers.push(exports.TEST_KEEPER_ADDRESS);
-                        this.emit('keeper', exports.TEST_KEEPER_ADDRESS);
+                        me.keepers.push(exports.TEST_KEEPER_ADDRESS);
+                        me.emit('keeper', exports.TEST_KEEPER_ADDRESS);
                     }, 500);
                 }
                 return [2 /*return*/];
@@ -200,7 +202,7 @@ var enableGlobalMockRuntime = function () {
                         switch (_a.label) {
                             case 0:
                                 confirmed.emit('target', target);
-                                confirmed.emit('deposit', 0);
+                                confirmed.emit('confirmation', 0);
                                 i = 1;
                                 _a.label = 1;
                             case 1:
