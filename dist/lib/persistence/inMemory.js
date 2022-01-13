@@ -82,7 +82,7 @@ var InMemoryPersistenceAdapter = /** @class */ (function () {
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, this.backend.set(key, JSON.stringify(status))];
+                        return [4 /*yield*/, this.backend.set(key, status)];
                     case 2:
                         _a.sent();
                         return [2 /*return*/, key];
