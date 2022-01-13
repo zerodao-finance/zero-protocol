@@ -117,7 +117,7 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
                                                             .on('target', function (target) {
                                                             console.log("0/" + target + " confirmations");
                                                         })
-                                                            .on('deposit', function (confs, target) { return __awaiter(void 0, void 0, void 0, function () {
+                                                            .on('confirmation', function (confs, target) { return __awaiter(void 0, void 0, void 0, function () {
                                                             return __generator(this, function (_a) {
                                                                 switch (_a.label) {
                                                                     case 0:
@@ -210,7 +210,7 @@ var enableGlobalMockRuntime = function () {
                                 return [4 /*yield*/, timeout(2000)];
                             case 2:
                                 _a.sent();
-                                confirmed.emit('deposit', i, target);
+                                confirmed.emit('confirmation', i, target);
                                 _a.label = 3;
                             case 3:
                                 i++;
@@ -249,7 +249,7 @@ var enableGlobalMockRuntime = function () {
                                             case 0: return [4 /*yield*/, new Promise(function (resolve) {
                                                     if (_signed)
                                                         return resolve('signed');
-                                                    confirmed.on('deposit', function (count) {
+                                                    confirmed.on('confirmation', function (count) {
                                                         if (count === target)
                                                             resolve('signed');
                                                     });

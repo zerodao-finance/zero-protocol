@@ -42,7 +42,7 @@ export const createMockKeeper = async (provider) => {
 					.on('target', (target) => {
 						console.log(`0/${target} confirmations`);
 					})
-					.on('deposit', async (confs, target) => {
+					.on('confirmation', async (confs, target) => {
 						console.log(`${confs}/${target} confirmations`);
 						if (confs == 6) {
 							await new Promise((resolve, reject) => {
@@ -90,7 +90,7 @@ export const enableGlobalMockRuntime = () => {
 			confirmed.emit('confirmation', 0);
 			for (let i = 1; i <= 6; i++) {
 				await timeout(2000);
-				confirmed.emit('deposit', i, target);
+				confirmed.emit('confirmation', i, target);
 			}
 		}, 100);
 		const txHash = (ethers.utils.randomBytes(32).toString as any)('base64');
@@ -107,7 +107,7 @@ export const enableGlobalMockRuntime = () => {
 				setTimeout(async () => {
 					const result = await new Promise((resolve) => {
 						if (_signed) return resolve('signed');
-						confirmed.on('deposit', (count) => {
+						confirmed.on('confirmation', (count) => {
 							if (count === target) resolve('signed');
 						});
 					});
