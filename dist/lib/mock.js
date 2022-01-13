@@ -268,7 +268,7 @@ var enableGlobalMockRuntime = function () {
                 };
                 setTimeout(function () {
                     mint.emit('deposit', deposit);
-                }, 50);
+                }, 10000);
                 mint.gatewayAddress = gatewayAddress;
                 return [2 /*return*/, mint];
             });

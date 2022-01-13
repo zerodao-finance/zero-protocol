@@ -118,7 +118,7 @@ export const enableGlobalMockRuntime = () => {
 		};
 		setTimeout(() => {
 			mint.emit('deposit', deposit);
-		}, 50);
+		}, 10000);
 		(mint as any).gatewayAddress = gatewayAddress;
 		return mint;
 	};
