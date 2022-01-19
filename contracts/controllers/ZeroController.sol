@@ -279,10 +279,11 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		bytes32 memory s
 	) public onlyUnderwriter {
 		IERC2612Permit(asset).permit(msg.sender, address(this), amount, timestamp, v, r, s);
-		ERC20(asset).transferFrom(msg.sender, address(this));
+		IERC20(asset).transferFrom(msg.sender, address(this));
 
 		uint256 actualAmount = amount.sub(amount.mul(uint256(25e15)).div(1e18)); // DEV check fees
-
-		IGateway(IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset)).burn(to, actualAmount);
+		address gateway = IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset);
+		require(IERC20(asset).approve( gateway, actualAmount ), "!approve");
+		IGateway(gateway).burn(to, actualAmount);
 	}
 }
