@@ -192,17 +192,19 @@ module.exports = async ({
   const unwrapper = await ethers.getContract('UnwrapNative', deployer);
   const curveFactory = await ethers.getContract('ZeroCurveFactory', deployer);
 
-  const _getWrapperAddress = async (tx) => {
+  const getWrapperAddress = async (tx) => {
     const receipt = await tx.wait();
     console.log(require('util').inspect(receipt, { colors: true, depth: 15 }));
     const { events } = receipt;
     const lastEvent = events.find((v) => (v.args || {})._wrapper);
     return lastEvent.args._wrapper;
   };
+	/*
   let getWrapperAddress = async () => {
     getWrapperAddress = _getWrapperAddress;
     return '0x400779D2e22d4dec04f6043114E88820E115903A';
   };
+  */
   console.log("CONVERTERS");
   // Deploy converters
   switch (network) {
