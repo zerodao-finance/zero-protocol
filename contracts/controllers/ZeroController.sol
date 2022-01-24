@@ -19,6 +19,7 @@ import {IGatewayRegistry} from '../interfaces/IGatewayRegistry.sol';
 import {IStrategy} from '../interfaces/IStrategy.sol';
 import {SafeMath} from 'oz410/math/SafeMath.sol';
 import {LockForImplLib} from '../libraries/LockForImplLib.sol';
+import {IERC2612Permit} from '../interfaces/IERC2612Permit.sol';
 import '../interfaces/IConverter.sol';
 import '@openzeppelin/contracts/math/Math.sol';
 
@@ -75,7 +76,10 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		result = _amount.mul(uint256(1 ether).sub(fee)).div(uint256(1 ether)).sub(baseFeeByAsset[_asset]);
 	}
 
-	function initialize(address _rewards, address _gatewayRegistry) public {
+	function initialize(
+		address _rewards,
+		address _gatewayRegistry,
+	) public {
 		__Ownable_init_unchained();
 		__Controller_init_unchained(_rewards);
 		__EIP712_init_unchained('ZeroController', '1');
@@ -262,5 +266,24 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		IZeroModule(module).receiveLoan(params.to, params.asset, _amountSent, params.nonce, params.data);
 		uint256 _gasRefund = Math.min(_gasBefore.sub(gasleft()), maxGasLoan).mul(maxGasPrice);
 		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);
+	}
+
+	function burn(
+		address to,
+		address asset,
+		uint256 amount,
+		bytes memory userSignature,
+		uint256 timestamp,
+		uint8 v,
+		bytes32 memory r,
+		bytes32 memory s
+	) public onlyUnderwriter {
+		IERC2612Permit(asset).permit(msg.sender, address(this), amount, timestamp, v, r, s);
+		IERC20(asset).transferFrom(msg.sender, address(this));
+
+		uint256 actualAmount = amount.sub(amount.mul(uint256(25e15)).div(1e18)); // DEV check fees
+		address gateway = IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset);
+		require(IERC20(asset).approve( gateway, actualAmount ), "!approve");
+		IGateway(gateway).burn(to, actualAmount);
 	}
 }
