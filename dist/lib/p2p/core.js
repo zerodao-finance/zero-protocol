@@ -153,6 +153,13 @@ var ZeroUser = /** @class */ (function (_super) {
             });
         });
     };
+    ZeroUser.prototype.publishReleaseRequest = function (releaseRequest) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/];
+            });
+        });
+    };
     ZeroUser.prototype.publishTransferRequest = function (transferRequest) {
         return __awaiter(this, void 0, void 0, function () {
             var key, ackReceived_1, _i, _a, keeper, peer, stream, e_2, e_3;

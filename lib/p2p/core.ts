@@ -64,6 +64,9 @@ class ZeroUser extends EventEmitter {
 		this.keepers = [];
 	}
 
+	async publishReleaseRequest(releaseRequest: any) {
+          // implement
+	}
 	async publishTransferRequest(transferRequest: any) {
 		const key = await this.storage.set(transferRequest);
 		if (this.keepers.length === 0) {

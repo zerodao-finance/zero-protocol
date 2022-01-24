@@ -274,6 +274,123 @@ var enableGlobalMockRuntime = function () {
             });
         });
     };
+    zero_1.ReleaseRequest.prototype.submitToRenVM = function (flag) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _confirm, target, timeout, txHash, _burnAndRelease;
+            var _this = this;
+            return __generator(this, function (_a) {
+                _confirm = new events_1.EventEmitter();
+                target = 6;
+                timeout = function (n) { return new Promise(function (resolve) { return setTimeout(resolve, n); }); };
+                txHash = ethers_1.ethers.utils.randomBytes(32).toString('base64');
+                setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
+                    var i;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                _confirm.emit("target", target);
+                                _confirm.emit("confirmation", 0);
+                                _confirm.emit("transactionHash", txHash);
+                                i = 1;
+                                _a.label = 1;
+                            case 1:
+                                if (!(1 <= target)) return [3 /*break*/, 4];
+                                return [4 /*yield*/, timeout(1000)];
+                            case 2:
+                                _a.sent();
+                                _confirm.emit('confirmation', i, target);
+                                _a.label = 3;
+                            case 3:
+                                i++;
+                                return [3 /*break*/, 1];
+                            case 4: return [2 /*return*/];
+                        }
+                    });
+                }); }, 3000);
+                _burnAndRelease = {
+                    burn: function () {
+                        return __awaiter(this, void 0, void 0, function () {
+                            return __generator(this, function (_a) {
+                                return [2 /*return*/, _confirm];
+                            });
+                        });
+                    },
+                    release: function () {
+                        return __awaiter(this, void 0, void 0, function () {
+                            var _release;
+                            var _this = this;
+                            return __generator(this, function (_a) {
+                                _release = new events_1.EventEmitter();
+                                _confirm.on("confirmation", function (confs, target) {
+                                    setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
+                                        var result;
+                                        return __generator(this, function (_a) {
+                                            switch (_a.label) {
+                                                case 0: return [4 /*yield*/, new Promise(function (resolve) {
+                                                        if (confs === target)
+                                                            resolve("done");
+                                                        if (confs > 0)
+                                                            resolve("confirming");
+                                                        else
+                                                            resolve("pending");
+                                                    })];
+                                                case 1:
+                                                    result = _a.sent();
+                                                    _release.emit("status", result);
+                                                    return [2 /*return*/];
+                                            }
+                                        });
+                                    }); }, 100);
+                                });
+                                _confirm.on("transactionHash", function (txHash) {
+                                    setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
+                                        return __generator(this, function (_a) {
+                                            _release.emit("txHash", txHash);
+                                            return [2 /*return*/];
+                                        });
+                                    }); }, 100);
+                                });
+                                return [2 /*return*/, _release];
+                            });
+                        });
+                    }
+                };
+                return [2 /*return*/, _burnAndRelease];
+            });
+        });
+    };
+    zero_1.ReleaseRequest.prototype.sign = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                this.signature = ethers_1.ethers.utils.hexlify(ethers_1.ethers.utils.randomBytes(65));
+                return [2 /*return*/, this.signature];
+            });
+        });
+    };
+    core_1.ZeroUser.prototype.publishReleaseRequest = function (_releaseRequest) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                setTimeout(function () {
+                    (function () { return __awaiter(_this, void 0, void 0, function () {
+                        var _this = this;
+                        return __generator(this, function (_a) {
+                            try {
+                                Promise.all(keepers.map(function (v) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
+                                    return [2 /*return*/, v._txDispatch && v._txDispatcher(_releaseRequest)];
+                                }); }); }))["catch"](console.error);
+                            }
+                            catch (e) {
+                                console.error(e);
+                            }
+                            return [2 /*return*/];
+                        });
+                    }); })();
+                }, 1000);
+                return [2 /*return*/];
+            });
+        });
+    };
     core_1.ZeroUser.prototype.publishTransferRequest = function (transferRequest) {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;

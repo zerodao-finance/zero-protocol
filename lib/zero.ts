@@ -108,7 +108,7 @@ export class ReleaseRequest {
 		this.contractAddress = contractAddress || this.contractAddress;
 		this.chainId = chainId || this.chainId;
 		return {
-			types: ERC20PERMIT_TYPES,
+			types: ERC20PERMIT_TYPES as any,
 			domain: {
 				name: 'ZeroController',
 				version: '1',
@@ -124,6 +124,9 @@ export class ReleaseRequest {
 			},
 			primaryType: 'ReleaseRequest',
 		};
+	}
+	async sign(signer: any) {
+          throw Error('must implement');
 	}
 
 	async submitToRenVM(isTest) {

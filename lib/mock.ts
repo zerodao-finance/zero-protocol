@@ -1,4 +1,4 @@
-import { TrivialUnderwriterTransferRequest, createZeroKeeper, TransferRequest } from './zero';
+import { TrivialUnderwriterTransferRequest, createZeroKeeper, ReleaseRequest, TransferRequest } from './zero';
 import { ZeroUser } from './p2p/core';
 import { ethers } from 'ethers';
 import { EventEmitter } from 'events';
@@ -122,7 +122,7 @@ export const enableGlobalMockRuntime = () => {
 		(mint as any).gatewayAddress = gatewayAddress;
 		return mint;
 	};
-	ReleaseRequest.prototype.submitReleaseRequest = async function (flag) {
+	ReleaseRequest.prototype.submitToRenVM = async function (flag) {
 		// TODO implement confirmed event listener
 		const _confirm = new EventEmitter();
 		const target = 6
@@ -170,7 +170,7 @@ export const enableGlobalMockRuntime = () => {
 	}
 
 	ReleaseRequest.prototype.sign = async function () {
-		this.signature = ethers.utils.hexilfy(ethers.utils.randomBytes(65))
+		this.signature = ethers.utils.hexlify(ethers.utils.randomBytes(65))
 		return this.signature
 	}
 

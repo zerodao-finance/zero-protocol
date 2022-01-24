@@ -54,7 +54,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.createZeroKeeper = exports.createZeroUser = exports.createZeroConnection = exports.TrivialUnderwriterTransferRequest = exports.TransferRequest = void 0;
+exports.createZeroKeeper = exports.createZeroUser = exports.createZeroConnection = exports.TrivialUnderwriterTransferRequest = exports.TransferRequest = exports.ReleaseRequest = void 0;
 //import './silence-init';
 require("@ethersproject/wallet");
 require("@ethersproject/abstract-signer");
@@ -104,6 +104,85 @@ var getProvider = function (transferRequest) {
     return (RENVM_PROVIDERS[chain_key])(new ethers_1.ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]), 'mainnet');
 };
 var logger = { debug: function (v) { console.error(v); } };
+var ReleaseRequest = /** @class */ (function () {
+    function ReleaseRequest(params) {
+        this.to = params.to;
+        this.underwriter = params.underwriter;
+        this.asset = params.asset;
+        this.amount = ethers_1.ethers.utils.hexlify(typeof params.amount === 'number' ? params.amount : typeof params.amount === 'string' ? ethers_1.ethers.BigNumber.from(params.amount) : params.amount);
+        console.log('params.nonce', params.nonce);
+        this.nonce = params.nonce
+            ? (0, bytes_1.hexlify)(params.nonce)
+            : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
+        this.chainId = params.chainId;
+        this.contractAddress = params.contractAddress;
+        this.signature = params.signature;
+        //this._config = 
+        this._ren = new ren_1["default"]('mainnet', { loadCompletedDeposits: true });
+    }
+    ReleaseRequest.prototype.setProvider = function (provider) {
+        this.provider = provider;
+        return this;
+    };
+    ReleaseRequest.prototype.toEIP712 = function (contractAddress, chainId) {
+        this.contractAddress = contractAddress || this.contractAddress;
+        this.chainId = chainId || this.chainId;
+        return {
+            types: constants_1.ERC20PERMIT_TYPES,
+            domain: {
+                name: 'ZeroController',
+                version: '1',
+                chainId: String(this.chainId) || '1',
+                verifyingContract: this.contractAddress || ethers_1.ethers.constants.AddressZero
+            },
+            message: {
+                owner: this.to,
+                spender: this.contractAddress,
+                value: this.amount,
+                nonce: this.underwriter,
+                deadline: "-1"
+            },
+            primaryType: 'ReleaseRequest'
+        };
+    };
+    ReleaseRequest.prototype.sign = function (signer) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                throw Error('must implement');
+            });
+        });
+    };
+    ReleaseRequest.prototype.submitToRenVM = function (isTest) {
+        return __awaiter(this, void 0, void 0, function () {
+            var result, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        console.log('submitToRenVM this.nonce', this.nonce);
+                        if (this._burn)
+                            return [2 /*return*/, this._burn];
+                        _a = this;
+                        return [4 /*yield*/, this._ren.burnAndRelease({
+                                asset: "BTC",
+                                to: (0, chains_1.Bitcoin)().Address(this.to),
+                                nonce: this.nonce,
+                                from: (getProvider(this)).Contract({
+                                    sendTo: this.contractAddress,
+                                    contractFn: this._contractFn,
+                                    contractParams: this._contractParams
+                                })
+                            })];
+                    case 1:
+                        result = _a._burn = _b.sent();
+                        //    result.params.nonce = this.nonce;
+                        return [2 /*return*/, result];
+                }
+            });
+        });
+    };
+    return ReleaseRequest;
+}());
+exports.ReleaseRequest = ReleaseRequest;
 var TransferRequest = /** @class */ (function () {
     function TransferRequest(params) {
         this.module = params.module;
