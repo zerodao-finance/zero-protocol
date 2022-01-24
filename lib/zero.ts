@@ -16,7 +16,7 @@ import type { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signer-wi
 import { BigNumberish, ethers, utils } from 'ethers';
 import { signTypedDataUtils } from '@0x/utils';
 import { EIP712TypedData } from '@0x/types';
-import { EIP712_TYPES } from './config/constants';
+import { EIP712_TYPES, ERC20PERMIT_TYPES } from './config/constants';
 import RenVM from './util/renvm';
 import { computeP, computeNHash, maybeCoerceToGHash } from './util/helpers';
 import { createNode, ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
@@ -30,9 +30,9 @@ import { PersistenceAdapter } from './persistence';
 type ZeroSigner = Wallet & SignerWithAddress & Signer;
 
 const CONTROLLER_DEPLOYMENTS = {
-  Arbitrum: require('../deployments/arbitrum/ZeroController').address,
-  Polygon: require('../deployments/matic/ZeroController').address,
-  Ethereum: ethers.constants.AddressZero
+	Arbitrum: require('../deployments/arbitrum/ZeroController').address,
+	Polygon: require('../deployments/matic/ZeroController').address,
+	Ethereum: ethers.constants.AddressZero
 };
 const RPC_ENDPOINTS = {
 	Arbitrum: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
@@ -41,20 +41,109 @@ const RPC_ENDPOINTS = {
 };
 
 const RENVM_PROVIDERS = {
-  Arbitrum,
-  Polygon,
-  Ethereum
+	Arbitrum,
+	Polygon,
+	Ethereum
 };
 
 const getProvider = (transferRequest) => {
-  const chain = Object.entries(CONTROLLER_DEPLOYMENTS).find(([k, v]) => transferRequest.contractAddress === v);
-  const chain_key = chain[0]
-  return (RENVM_PROVIDERS[chain_key])(new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]), 'mainnet');
+	const chain = Object.entries(CONTROLLER_DEPLOYMENTS).find(([k, v]) => transferRequest.contractAddress === v);
+	const chain_key = chain[0]
+	return (RENVM_PROVIDERS[chain_key])(new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]), 'mainnet');
 };
 
 
 
 const logger = { debug(v) { console.error(v); } };
+
+export class ReleaseRequest {
+	public to: string;
+	public asset: string;
+	public contractAddress: string;
+	public chainId: number | string;
+	public underwriter: string;
+	public nonce: string;
+	public amount: string;
+	public provider: any;
+	public _burn: any;
+	public signature: string;
+	private _ren: RenJS;
+	private _contractFn: string;
+	private _contractParams: EthArgs;
+
+	constructor(params: {
+		module: string,
+		to: string,
+		underwriter: string,
+		asset: string,
+		amount: BigNumberish,
+		data: string,
+		nonce?: BigNumberish,
+		pNonce?: BigNumberish,
+		contractAddress?: string,
+		chainId?: number,
+		signature?: string,
+	}) {
+		this.to = params.to;
+		this.underwriter = params.underwriter;
+		this.asset = params.asset;
+		this.amount = ethers.utils.hexlify(typeof params.amount === 'number' ? params.amount : typeof params.amount === 'string' ? ethers.BigNumber.from(params.amount) : params.amount);
+		console.log('params.nonce', params.nonce);
+		this.nonce = params.nonce
+			? hexlify(params.nonce)
+			: hexlify(randomBytes(32));
+		this.chainId = params.chainId;
+		this.contractAddress = params.contractAddress;
+		this.signature = params.signature;
+		//this._config = 
+		this._ren = new (RenJS as any)('mainnet', { loadCompletedDeposits: true });
+	}
+
+	setProvider(provider) {
+		this.provider = provider;
+		return this;
+	}
+
+	toEIP712(contractAddress: string, chainId?: number): EIP712TypedData {
+		this.contractAddress = contractAddress || this.contractAddress;
+		this.chainId = chainId || this.chainId;
+		return {
+			types: ERC20PERMIT_TYPES,
+			domain: {
+				name: 'ZeroController',
+				version: '1',
+				chainId: String(this.chainId) || '1',
+				verifyingContract: this.contractAddress || ethers.constants.AddressZero,
+			},
+			message: {
+				owner: this.to,
+				spender: this.contractAddress,
+				value: this.amount,
+				nonce: this.underwriter,
+				deadline: "-1",
+			},
+			primaryType: 'ReleaseRequest',
+		};
+	}
+
+	async submitToRenVM(isTest) {
+		console.log('submitToRenVM this.nonce', this.nonce);
+		if (this._burn) return this._burn;
+		const result = this._burn = await this._ren.burnAndRelease({
+			asset: "BTC",
+			to: Bitcoin().Address(this.to),
+			nonce: this.nonce,
+			from: (getProvider(this)).Contract({
+				sendTo: this.contractAddress,
+				contractFn: this._contractFn,
+				contractParams: this._contractParams
+			})
+		});
+		//    result.params.nonce = this.nonce;
+		return result;
+	}
+
+}
 
 
 export class TransferRequest {
@@ -141,8 +230,8 @@ export class TransferRequest {
 		return (this._destination = recoverAddress(digest, signature || this.signature));
 	}
 	setProvider(provider) {
-          this.provider = provider;
-	  return this;
+		this.provider = provider;
+		return this;
 	}
 	async submitToRenVM(isTest) {
 		console.log('submitToRenVM this.nonce', this.nonce);
@@ -237,7 +326,7 @@ export class TrivialUnderwriterTransferRequest extends TransferRequest {
 	async fallbackMint(signer, params = {}) {
 		const controller = await this.getController(signer);
 		const queryTxResult = await this.waitForSignature();
-console.log(this.destination());
+		console.log(this.destination());
 		return await controller.fallbackMint(this.underwriter, this.destination(), this.asset, this.amount, queryTxResult.amount, this.pNonce, this.module, queryTxResult.nHash, this.data, queryTxResult.signature, params);
 	}
 	getTrivialUnderwriter(signer) {
