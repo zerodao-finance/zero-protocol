@@ -122,6 +122,74 @@ export const enableGlobalMockRuntime = () => {
 		(mint as any).gatewayAddress = gatewayAddress;
 		return mint;
 	};
+	ReleaseRequest.prototype.submitReleaseRequest = async function (flag) {
+		// TODO implement confirmed event listener
+		const _confirm = new EventEmitter();
+		const target = 6
+		const timeout = (n) => new Promise((resolve) => setTimeout(resolve, n))
+		const txHash = (ethers.utils.randomBytes(32).toString as any)('base64');
+
+		setTimeout(async () => {
+			_confirm.emit("target", target)
+			_confirm.emit("confirmation", 0)
+			_confirm.emit("transactionHash", txHash)
+
+			for (let i = 1; 1 <= target; i++) {
+				await timeout(1000);
+				_confirm.emit('confirmation', i, target);
+			}
+		}, 3000)
+
+		const _burnAndRelease = {
+			async burn(){
+				return _confirm
+			},
+
+			async release(){
+				const _release = new EventEmitter();
+				_confirm.on("confirmation", (confs, target) => {
+					setTimeout(async () => {
+						const result = await new Promise((resolve) => {
+							if (confs === target) resolve("done")
+							if (confs > 0) resolve("confirming")
+							else resolve("pending")
+						})
+						_release.emit("status", result)
+					}, 100)
+				})
+				_confirm.on("transactionHash", (txHash) => {
+					setTimeout(async () => {
+						_release.emit("txHash", txHash)
+					}, 100)
+				})
+				return _release
+			}
+		}
+
+		return _burnAndRelease
+	}
+
+	ReleaseRequest.prototype.sign = async function () {
+		this.signature = ethers.utils.hexilfy(ethers.utils.randomBytes(65))
+		return this.signature
+	}
+
+
+	ZeroUser.prototype.publishReleaseRequest = async function (_releaseRequest) {
+		setTimeout(() => {
+			(async () => {
+				try {
+					Promise.all(keepers.map(async (v) => v._txDispatch && v._txDispatcher(_releaseRequest))).catch(
+						console.error
+					)
+				} catch (e) {
+					console.error(e)
+				}
+			})();
+		}, 1000)
+	}
+
+
 	ZeroUser.prototype.publishTransferRequest = async function (transferRequest) {
 		setTimeout(() => {
 			(async () => {
