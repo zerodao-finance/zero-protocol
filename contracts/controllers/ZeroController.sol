@@ -78,7 +78,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 
 	function initialize(
 		address _rewards,
-		address _gatewayRegistry,
+		address _gatewayRegistry
 	) public {
 		__Ownable_init_unchained();
 		__Controller_init_unchained(_rewards);
@@ -267,6 +267,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		uint256 _gasRefund = Math.min(_gasBefore.sub(gasleft()), maxGasLoan).mul(maxGasPrice);
 		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);
 	}
+/*
 
 	function burn(
 		address to,
@@ -275,8 +276,8 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		bytes memory userSignature,
 		uint256 timestamp,
 		uint8 v,
-		bytes32 memory r,
-		bytes32 memory s
+		bytes32 r,
+		bytes32 s
 	) public onlyUnderwriter {
 		IERC2612Permit(asset).permit(msg.sender, address(this), amount, timestamp, v, r, s);
 		IERC20(asset).transferFrom(msg.sender, address(this));
@@ -286,4 +287,5 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		require(IERC20(asset).approve( gateway, actualAmount ), "!approve");
 		IGateway(gateway).burn(to, actualAmount);
 	}
+*/
 }

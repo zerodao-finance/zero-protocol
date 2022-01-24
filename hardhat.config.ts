@@ -8,6 +8,7 @@ require('dotenv').config();
 const ethers = require('ethers');
 
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'ARBITRUM') process.env.CHAIN_ID = '42161';
+if (!process.env.CHAIN_ID && process.env.CHAIN === 'MATIC') process.env.CHAIN_ID = '137';
 
 const { override } = require('./lib/test/inject-mock');
 
