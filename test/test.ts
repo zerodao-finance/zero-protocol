@@ -145,8 +145,8 @@ const getFixtures = async () => {
 		controller: controller,
 		strategy: await getStrategyContract(signer),
 		btcVault: await getContract('BTCVault', signer),
-		swapModule: await getContract('ArbitrumConvert', signer),
-		convertModule: await getContract('ArbitrumConvert', signer),
+		swapModule: network === "ARBITRUM" ? await getContract('ArbitrumConvert', signer) : await getContract("PolygonConvert", signer),
+		convertModule: network === "ARBITRUM" ? await getContract('ArbitrumConvert', signer) : await getContract("PolygonConvert", signer),
 		uniswapFactory: await getContract('ZeroUniswapFactory', signer),
 		curveFactory: await getContract('ZeroCurveFactory', signer),
 		wrapper: await getContract('WrapNative', signer),
@@ -377,7 +377,7 @@ describe('Zero', () => {
 		//@ts-ignore
 		('0x42e48680f15b7207c7602fec83b9c252fa3548c8533246ed532a75c6d0c486394648ba8f42a73a0ce2482712f09d177c3641ef07fcfd3b5cd3b4329982f756141b');
 		const transferRequest = new TrivialUnderwriterTransferRequest({
-			module: process.env.CHAIN === 'ARBITRUM' ? convertModule.address : swapModule.address,
+			module: process.env.CHAIN === 'ARBITRUM' || process.env.CHAIN === "MATIC" ? convertModule.address : swapModule.address,
 			to: '0xC6ccaC065fCcA640F44289886Ce7861D9A527F9E',
 			underwriter: '0xd0D8fA764352e33F40c66C75B3BC0204DC95973e',
 			asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501',
@@ -385,7 +385,7 @@ describe('Zero', () => {
 			data: '0x00000000000000000000000000000000000000000000000000009184e72a0000',
 			nonce: '0xb67ed6c41ea6f5b7395f005ceb172eb093273396d1e5bb49d919c4df396e0d5a',
 			pNonce: '0x0153c5fa086b7eceef6ec52b6b96381ee6f16852a6ace5b742f239296b4cd901',
-			chainId: 42161,
+			chainId: process.env.CHAIN === 'ARBITRUM' ? 42161 : 137,
 			contractAddress: '0x53f38bEA30fE6919e0475Fe57C2629f3D3754d1E',
 			signature:
 				'0x42e48680f15b7207c7602fec83b9c252fa3548c8533246ed532a75c6d0c486394648ba8f42a73a0ce2482712f09d177c3641ef07fcfd3b5cd3b4329982f756141b',

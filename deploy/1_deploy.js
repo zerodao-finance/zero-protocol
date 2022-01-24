@@ -112,7 +112,8 @@ module.exports = async ({
     from: deployer
   });
   const v = await ethers.getContract('BTCVault');
-  await v.attach(deployParameters[network]['renBTC']).balanceOf(ethers.constants.AddressZero);
+  await v.attach(deployParameters[network]['renBTC'])
+  // .balanceOf(ethers.constants.AddressZero);
   
   const dummyVault = await deployFixedAddress('DummyVault', {
     contractName: 'DummyVault',
@@ -120,7 +121,8 @@ module.exports = async ({
     from: deployer
   });
   const w = await ethers.getContract('DummyVault');
-  await w.attach(deployParameters[network]['wBTC']).balanceOf(ethers.constants.AddressZero);
+  await w.attach(deployParameters[network]['wBTC'])
+  // .balanceOf(ethers.constants.AddressZero);
   console.log("Deployed DummyVault to", dummyVault.address)
   
   await deployFixedAddress("TrivialUnderwriter", {
@@ -133,7 +135,7 @@ module.exports = async ({
   console.log("GOT CONTROLLER"); 
   
   
-  const module = process.env.CHAIN === 'ARBITRUM' ? await deployFixedAddress('ArbitrumConvert', { args: [ zeroController.address ], contractName: 'ArbitrumConvert', from: deployer }) : await deployFixedAddress('Swap', {
+  const module = process.env.CHAIN === 'ARBITRUM' ? await deployFixedAddress('ArbitrumConvert', { args: [ zeroController.address ], contractName: 'ArbitrumConvert', from: deployer }) : process.env.CHAIN === "MATIC" ? await deployFixedAddress('PolygonConvert', { args: [zeroController.address], contractName: 'PolygonConvert', from: deployer }) : await deployFixedAddress('Swap', {
     args: [
       zeroController.address, // Controller
       deployParameters[network]['wETH'], // wNative
@@ -146,7 +148,6 @@ module.exports = async ({
     from: deployer
   });
   await controller.approveModule(module.address, true);
-  
   
   const strategyRenVM = await deployments.deploy(network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : 'StrategyRenVM', {
     args: [
