@@ -20,7 +20,8 @@ import { EIP712_TYPES, ERC20PERMIT_TYPES } from './config/constants';
 import RenVM from './util/renvm';
 import { computeP, computeNHash, maybeCoerceToGHash } from './util/helpers';
 import { createNode, ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
-import { Bitcoin, Polygon, Ethereum, Arbitrum } from "@renproject/chains"
+import Chains, { Bitcoin, Polygon, Ethereum, Arbitrum } from "@renproject/chains"
+import chains from "@renproject/chains";
 import RenJS from "@renproject/ren";
 import { EthArgs } from "@renproject/interfaces";
 import { PersistenceAdapter } from './persistence';
@@ -43,15 +44,23 @@ const RPC_ENDPOINTS = {
 const RENVM_PROVIDERS = {
 	Arbitrum,
 	Polygon,
-	Ethereum
+	Ethereum,
+	Bitcoin
 };
 
-const getProvider = (transferRequest) => {
-	const chain = Object.entries(CONTROLLER_DEPLOYMENTS).find(([k, v]) => transferRequest.contractAddress === v);
+const getProvider = (transferRequest: any, to?: boolean) => {
+	const chain = Object.entries(CONTROLLER_DEPLOYMENTS).find(([k, v]) => to ? transferRequest.to : transferRequest.contractAddress === v);
 	const chain_key = chain[0]
 	return (RENVM_PROVIDERS[chain_key])(new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]), 'mainnet');
 };
 
+
+/*
+Steps to identify chains.
+
+1. Lookup `asset` by address to identify origin chain id.
+2. Get the ticker for the asset. Lookup in chains to find matching chain to send to.
+*/
 
 
 const logger = { debug(v) { console.error(v); } };
@@ -88,14 +97,12 @@ export class ReleaseRequest {
 		this.underwriter = params.underwriter;
 		this.asset = params.asset;
 		this.amount = ethers.utils.hexlify(typeof params.amount === 'number' ? params.amount : typeof params.amount === 'string' ? ethers.BigNumber.from(params.amount) : params.amount);
-		console.log('params.nonce', params.nonce);
 		this.nonce = params.nonce
 			? hexlify(params.nonce)
 			: hexlify(randomBytes(32));
 		this.chainId = params.chainId;
 		this.contractAddress = params.contractAddress;
 		this.signature = params.signature;
-		//this._config = 
 		this._ren = new (RenJS as any)('mainnet', { loadCompletedDeposits: true });
 	}
 
@@ -125,8 +132,19 @@ export class ReleaseRequest {
 			primaryType: 'ReleaseRequest',
 		};
 	}
-	async sign(signer: any) {
-          throw Error('must implement');
+	async sign(signer: Wallet & Signer, contractAddress: string): Promise<string> {
+		const provider = signer.provider as ethers.providers.JsonRpcProvider;
+		const { chainId } = await signer.provider.getNetwork();
+		try {
+			const payload = this.toEIP712(contractAddress, chainId);
+			delete payload.types.EIP712Domain;
+			return (this.signature = await signer._signTypedData(payload.domain, payload.types, payload.message))
+		} catch (e) {
+			return (this.signature = await provider.send('eth_signTypedData_v4', [
+				await signer.getAddress(),
+				this.toEIP712(contractAddress, chainId),
+			]));
+		}
 	}
 
 	async submitToRenVM(isTest) {
@@ -134,7 +152,7 @@ export class ReleaseRequest {
 		if (this._burn) return this._burn;
 		const result = this._burn = await this._ren.burnAndRelease({
 			asset: "BTC",
-			to: Bitcoin().Address(this.to),
+			to: getProvider(this, true).Address(this.to),
 			nonce: this.nonce,
 			from: (getProvider(this)).Contract({
 				sendTo: this.contractAddress,

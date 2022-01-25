@@ -77,6 +77,7 @@ require("./util/renvm");
 require("./util/helpers");
 var p2p_1 = require("./p2p");
 var chains_1 = require("@renproject/chains");
+var chains_2 = __importDefault(require("@renproject/chains"));
 var ren_1 = __importDefault(require("@renproject/ren"));
 require("@renproject/interfaces");
 require("./persistence");
@@ -104,6 +105,7 @@ var getProvider = function (transferRequest) {
     return (RENVM_PROVIDERS[chain_key])(new ethers_1.ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]), 'mainnet');
 };
 var logger = { debug: function (v) { console.error(v); } };
+console.log(chains_2["default"]);
 var ReleaseRequest = /** @class */ (function () {
     function ReleaseRequest(params) {
         this.to = params.to;
@@ -145,10 +147,37 @@ var ReleaseRequest = /** @class */ (function () {
             primaryType: 'ReleaseRequest'
         };
     };
-    ReleaseRequest.prototype.sign = function (signer) {
+    ReleaseRequest.prototype.sign = function (signer, contractAddress) {
         return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                throw Error('must implement');
+            var provider, chainId, payload, _a, e_1, _b, _c, _d, _e;
+            return __generator(this, function (_f) {
+                switch (_f.label) {
+                    case 0:
+                        provider = signer.provider;
+                        return [4 /*yield*/, signer.provider.getNetwork()];
+                    case 1:
+                        chainId = (_f.sent()).chainId;
+                        _f.label = 2;
+                    case 2:
+                        _f.trys.push([2, 4, , 7]);
+                        payload = this.toEIP712(contractAddress, chainId);
+                        delete payload.types.EIP712Domain;
+                        _a = this;
+                        return [4 /*yield*/, signer._signTypedData(payload.domain, payload.types, payload.message)];
+                    case 3: return [2 /*return*/, (_a.signature = _f.sent())];
+                    case 4:
+                        e_1 = _f.sent();
+                        _b = this;
+                        _d = (_c = provider).send;
+                        _e = ['eth_signTypedData_v4'];
+                        return [4 /*yield*/, signer.getAddress()];
+                    case 5: return [4 /*yield*/, _d.apply(_c, _e.concat([[
+                                _f.sent(),
+                                this.toEIP712(contractAddress, chainId)
+                            ]]))];
+                    case 6: return [2 /*return*/, (_b.signature = _f.sent())];
+                    case 7: return [2 /*return*/];
+                }
             });
         });
     };
@@ -345,7 +374,7 @@ var TransferRequest = /** @class */ (function () {
     };
     TransferRequest.prototype.sign = function (signer, contractAddress) {
         return __awaiter(this, void 0, void 0, function () {
-            var provider, chainId, payload, _a, e_1, _b, _c, _d, _e;
+            var provider, chainId, payload, _a, e_2, _b, _c, _d, _e;
             return __generator(this, function (_f) {
                 switch (_f.label) {
                     case 0:
@@ -362,7 +391,7 @@ var TransferRequest = /** @class */ (function () {
                         return [4 /*yield*/, signer._signTypedData(payload.domain, payload.types, payload.message)];
                     case 3: return [2 /*return*/, (_a.signature = _f.sent())];
                     case 4:
-                        e_1 = _f.sent();
+                        e_2 = _f.sent();
                         _b = this;
                         _d = (_c = provider).send;
                         _e = ['eth_signTypedData_v4'];
