@@ -4,7 +4,11 @@ import {SafeMath} from 'oz410/math/SafeMath.sol';
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
 import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
 import {IController} from '../interfaces/IController.sol';
+import {IConverter} from '../interfaces/IConverter.sol';
 import {ICurveUInt256} from '../interfaces/CurvePools/ICurveUInt256.sol';
+import {IController} from '../interfaces/IController.sol';
+import {ICurveUnderlyingUInt256} from "../interfaces/CurvePools/ICurveUnderlyingUInt256.sol";
+import {ICurveInt128} from "../interfaces/CurvePools/ICurveInt128.sol";
 import {IRenCrvPolygon} from '../interfaces/CurvePools/IRenCrvPolygon.sol';
 
 
@@ -15,6 +19,7 @@ contract PolygonConvert {
     address public immutable controller;
     address public immutable governance;
     uint256 public blockTimeout;
+    address public constant wMatic = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
     address public constant weth = 0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619;
     address public constant wbtc = 0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6;
     address public constant want = 0xDBf31dF14B66535aF65AaC99C32e9eA844e14501;
@@ -72,14 +77,16 @@ contract PolygonConvert {
     {
         uint256 amountToETH = _ratio.mul(_amountIn).div(uint256(1 ether));
         uint256 wbtcOut = amountToETH != 0 
-            ? IRenCrvPolygon(renCrvPolygon).exchange(1, 0, amountToETH, 0)
+            ? ICurveInt128(renCrvPolygon).exchange(1, 0, amountToETH, 0)
 			: 0;
 		if (wbtcOut != 0) {
 			uint256 _amountStart = address(this).balance;
-			(bool success, ) = tricryptoPolygon.call(
-				abi.encodeWithSelector(ICurveUInt256.exchange.selector, 1, 2, wbtcOut, 0)
-			);
-			require(success, '!exchange');
+			IConverter converter = IConverter(IController(msg.sender).converters(wbtc, wMatic));
+			IERC20(wbtc).safeTransfer(address(converter), wbtcOut);
+			uint256 wMaticOut = converter.convert(address(this));
+			converter = IConverter(IController(msg.sender).converters(wMatic, address(0x0)));
+			IERC20(wMaticOut).safeTransfer(address(converter), wMaticOut);
+			converter.convert(address(this));
 			amountSwappedETH = address(this).balance.sub(_amountStart);
 			amountSwappedBTC = _amountIn.sub(amountToETH);
 		} else {
