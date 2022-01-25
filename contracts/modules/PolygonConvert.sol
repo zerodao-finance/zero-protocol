@@ -4,8 +4,8 @@ import {SafeMath} from 'oz410/math/SafeMath.sol';
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
 import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
 import {IController} from '../interfaces/IController.sol';
-import {ICurveETHUInt256} from '../interfaces/CurvePools/ICurveETHUInt256.sol';
-import {IRenCrvArbitrum} from '../interfaces/CurvePools/IRenCrvArbitrum.sol';
+import {ICurveInt256} from '../interfaces/CurvePools/ICurveInt256.sol';
+import {IRenCrvPolygon} from '../interfaces/CurvePools/IRenCrvPolygon.sol';
 
 
 contract PolygonConvert {
@@ -72,12 +72,12 @@ contract PolygonConvert {
     {
         uint256 amountToETH = _ratio.mul(_amountIn).div(uint256(1 ether));
         uint256 wbtcOut = amountToETH != 0 
-            ? IRenCrvArbitrum(renCrvPolygon).exchange(1, 0, amountToETH, 0, address(this))
+            ? IRenCrvPolygon(renCrvPolygon).exchange(1, 0, amountToETH, 0)
 			: 0;
 		if (wbtcOut != 0) {
 			uint256 _amountStart = address(this).balance;
 			(bool success, ) = tricryptoPolygon.call(
-				abi.encodeWithSelector(ICurveETHUInt256.exchange.selector, 1, 2, wbtcOut, 0, true)
+				abi.encodeWithSelector(ICurveInt256.exchange.selector, 1, 2, wbtcOut, 0)
 			);
 			require(success, '!exchange');
 			amountSwappedETH = address(this).balance.sub(_amountStart);
@@ -94,11 +94,11 @@ contract PolygonConvert {
     function swapTokensBack(PolygonConvertLib.ConvertRecord storage record) internal returns (uint256 amountReturned) {
         uint256 _amountStart = IERC20(wbtc).balanceOf(address(this));
         (bool success, ) = tricryptoPolygon.call{value: record.qtyETH}(
-            abi.encodeWithSelector(ICurveETHUInt256.exchange.selector, 2, 1, record.qtyETH, 0, true)
+            abi.encodeWithSelector(ICurveInt256.exchange.selector, 2, 1, record.qtyETH, 0)
         );
         require(success, '!exchange');
         uint256 wbtcOut = IERC20(wbtc).balanceOf(address(this));
-        amountReturned = IRenCrvArbitrum(renCrvPolygon).exchange(0, 1, wbtcOut, 0, address(this)).add(record.qty);
+        amountReturned = IRenCrvPolygon(renCrvPolygon).exchange(0, 1, wbtcOut, 0).add(record.qty);
     }
 
     function repayLoan(
