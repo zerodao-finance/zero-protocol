@@ -4,7 +4,7 @@ import {SafeMath} from 'oz410/math/SafeMath.sol';
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
 import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
 import {IController} from '../interfaces/IController.sol';
-import {ICurveInt256} from '../interfaces/CurvePools/ICurveInt256.sol';
+import {ICurveUInt256} from '../interfaces/CurvePools/ICurveUInt256.sol';
 import {IRenCrvPolygon} from '../interfaces/CurvePools/IRenCrvPolygon.sol';
 
 
@@ -77,7 +77,7 @@ contract PolygonConvert {
 		if (wbtcOut != 0) {
 			uint256 _amountStart = address(this).balance;
 			(bool success, ) = tricryptoPolygon.call(
-				abi.encodeWithSelector(ICurveInt256.exchange.selector, 1, 2, wbtcOut, 0)
+				abi.encodeWithSelector(ICurveUInt256.exchange.selector, 1, 2, wbtcOut, 0)
 			);
 			require(success, '!exchange');
 			amountSwappedETH = address(this).balance.sub(_amountStart);
@@ -94,7 +94,7 @@ contract PolygonConvert {
     function swapTokensBack(PolygonConvertLib.ConvertRecord storage record) internal returns (uint256 amountReturned) {
         uint256 _amountStart = IERC20(wbtc).balanceOf(address(this));
         (bool success, ) = tricryptoPolygon.call{value: record.qtyETH}(
-            abi.encodeWithSelector(ICurveInt256.exchange.selector, 2, 1, record.qtyETH, 0)
+            abi.encodeWithSelector(ICurveUInt256.exchange.selector, 2, 1, record.qtyETH, 0)
         );
         require(success, '!exchange');
         uint256 wbtcOut = IERC20(wbtc).balanceOf(address(this));
