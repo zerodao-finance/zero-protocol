@@ -27,7 +27,7 @@ contract DelegateUnderwriter is Ownable {
 		controller = _controller;
 	}
 
-	function bubble(bool success, bytes memory response) internal pure onlyAuthorized {
+	function bubble(bool success, bytes memory response) internal {
 		assembly {
 			if iszero(success) {
 				revert(add(0x20, response), mload(response))
