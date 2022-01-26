@@ -56,6 +56,7 @@ const getProvider = (transferRequest) => {
 
 const logger = { debug(v) { console.error(v); } };
 
+export class ReleaseRequest {}
 
 export class TransferRequest {
 	public module: string;

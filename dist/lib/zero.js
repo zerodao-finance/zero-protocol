@@ -54,7 +54,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.createZeroKeeper = exports.createZeroUser = exports.createZeroConnection = exports.TrivialUnderwriterTransferRequest = exports.TransferRequest = void 0;
+exports.createZeroKeeper = exports.createZeroUser = exports.createZeroConnection = exports.TrivialUnderwriterTransferRequest = exports.TransferRequest = exports.ReleaseRequest = void 0;
 //import './silence-init';
 require("@ethersproject/wallet");
 require("@ethersproject/abstract-signer");
@@ -104,6 +104,12 @@ var getProvider = function (transferRequest) {
     return (RENVM_PROVIDERS[chain_key])(new ethers_1.ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]), 'mainnet');
 };
 var logger = { debug: function (v) { console.error(v); } };
+var ReleaseRequest = /** @class */ (function () {
+    function ReleaseRequest() {
+    }
+    return ReleaseRequest;
+}());
+exports.ReleaseRequest = ReleaseRequest;
 var TransferRequest = /** @class */ (function () {
     function TransferRequest(params) {
         this.module = params.module;

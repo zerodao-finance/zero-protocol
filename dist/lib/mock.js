@@ -274,146 +274,88 @@ var enableGlobalMockRuntime = function () {
             });
         });
     };
-    ReleaseRequest.prototype.submitReleaseRequest = function (flag) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _confirm, target, timeout, txHash, _burnAndRelease;
-            var _this = this;
-            return __generator(this, function (_a) {
-                _confirm = new events_1.EventEmitter();
-                target = 6;
-                timeout = function (n) { return new Promise(function (resolve) { return setTimeout(resolve, n); }); };
-                txHash = ethers_1.ethers.utils.randomBytes(32).toString('base64');
-                setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
-                    var i;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                _confirm.emit("target", target);
-                                _confirm.emit("confirmation", 0);
-                                _confirm.emit("transactionHash", txHash);
-                                i = 1;
-                                _a.label = 1;
-                            case 1:
-                                if (!(1 <= target)) return [3 /*break*/, 4];
-                                return [4 /*yield*/, timeout(1000)];
-                            case 2:
-                                _a.sent();
-                                _confirm.emit('confirmation', i, target);
-                                _a.label = 3;
-                            case 3:
-                                i++;
-                                return [3 /*break*/, 1];
-                            case 4: return [2 /*return*/];
-                        }
-                    });
-                }); }, 3000);
-                _burnAndRelease = {
-                    burn: function () {
-                        return __awaiter(this, void 0, void 0, function () {
-                            return __generator(this, function (_a) {
-                                return [2 /*return*/, _confirm];
-                            });
-                        });
-                    },
-                    release: function () {
-                        return __awaiter(this, void 0, void 0, function () {
-                            var _release;
-                            var _this = this;
-                            return __generator(this, function (_a) {
-                                _release = new events_1.EventEmitter();
-                                _confirm.on("confirmation", function (confs, target) {
-                                    setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
-                                        var result;
-                                        return __generator(this, function (_a) {
-                                            switch (_a.label) {
-                                                case 0: return [4 /*yield*/, new Promise(function (resolve) {
-                                                        if (confs === target)
-                                                            resolve("done");
-                                                        if (confs > 0)
-                                                            resolve("confirming");
-                                                        else
-                                                            resolve("pending");
-                                                    })];
-                                                case 1:
-                                                    result = _a.sent();
-                                                    _release.emit("status", result);
-                                                    return [2 /*return*/];
-                                            }
-                                        });
-                                    }); }, 100);
-                                });
-                                _confirm.on("transactionHash", function (txHash) {
-                                    setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
-                                        return __generator(this, function (_a) {
-                                            _release.emit("txHash", txHash);
-                                            return [2 /*return*/];
-                                        });
-                                    }); }, 100);
-                                });
-                                return [2 /*return*/, _release];
-                            });
-                        });
-                    }
-                };
-                return [2 /*return*/, _burnAndRelease];
-            });
-        });
-    };
-    ReleaseRequest.prototype.sign = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                this.signature = ethers_1.ethers.utils.hexilfy(ethers_1.ethers.utils.randomBytes(65));
-                return [2 /*return*/, this.signature];
-            });
-        });
-    };
-    core_1.ZeroUser.prototype.publishReleaseRequest = function (_releaseRequest) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
-            return __generator(this, function (_a) {
-                setTimeout(function () {
-                    (function () { return __awaiter(_this, void 0, void 0, function () {
-                        var _this = this;
-                        return __generator(this, function (_a) {
-                            try {
-                                Promise.all(keepers.map(function (v) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
-                                    return [2 /*return*/, v._txDispatch && v._txDispatcher(_releaseRequest)];
-                                }); }); }))["catch"](console.error);
-                            }
-                            catch (e) {
-                                console.error(e);
-                            }
-                            return [2 /*return*/];
-                        });
-                    }); })();
-                }, 1000);
-                return [2 /*return*/];
-            });
-        });
-    };
-    core_1.ZeroUser.prototype.publishTransferRequest = function (transferRequest) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
-            return __generator(this, function (_a) {
-                setTimeout(function () {
-                    (function () { return __awaiter(_this, void 0, void 0, function () {
-                        var _this = this;
-                        return __generator(this, function (_a) {
-                            try {
-                                Promise.all(keepers.map(function (v) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
-                                    return [2 /*return*/, v._txDispatcher && v._txDispatcher(transferRequest)];
-                                }); }); }))["catch"](console.error);
-                            }
-                            catch (e) {
-                                console.error(e);
-                            }
-                            return [2 /*return*/];
-                        });
-                    }); })();
-                }, 3000);
-                return [2 /*return*/];
-            });
-        });
-    };
+    /*
+      (ReleaseRequest as any).prototype.submitReleaseRequest = async function (flag) {
+          // TODO implement confirmed event listener
+          const _confirm = new EventEmitter();
+          const target = 6
+          const timeout = (n) => new Promise((resolve) => setTimeout(resolve, n))
+          const txHash = (ethers.utils.randomBytes(32).toString as any)('base64');
+  
+          setTimeout(async () => {
+              _confirm.emit("target", target)
+              _confirm.emit("confirmation", 0)
+              _confirm.emit("transactionHash", txHash)
+  
+              for (let i = 1; 1 <= target; i++) {
+                  await timeout(1000);
+                  _confirm.emit('confirmation', i, target);
+              }
+          }, 3000)
+  
+          const _burnAndRelease = {
+              async burn(){
+                  return _confirm
+              },
+  
+              async release(){
+                  const _release = new EventEmitter();
+                  _confirm.on("confirmation", (confs, target) => {
+                      setTimeout(async () => {
+                          const result = await new Promise((resolve) => {
+                              if (confs === target) resolve("done")
+                              if (confs > 0) resolve("confirming")
+                              else resolve("pending")
+                          })
+                          _release.emit("status", result)
+                      }, 100)
+                  })
+                  _confirm.on("transactionHash", (txHash) => {
+                      setTimeout(async () => {
+                          _release.emit("txHash", txHash)
+                      }, 100)
+                  })
+                  return _release
+              }
+          }
+  
+          return _burnAndRelease
+      }
+  
+      (ReleaseRequest as any).prototype.sign = async function () {
+          this.signature = ethers.utils.hexlify(ethers.utils.randomBytes(65))
+          return this.signature
+      }
+  
+  
+      (ZeroUser as any).prototype.publishReleaseRequest = async function (_releaseRequest) {
+          setTimeout(() => {
+              (async () => {
+                  try {
+                      Promise.all(keepers.map(async (v) => v._txDispatch && v._txDispatcher(_releaseRequest))).catch(
+                          console.error
+                      )
+                  } catch (e) {
+                      console.error(e)
+                  }
+              })();
+          }, 1000)
+      }
+  
+  
+      ZeroUser.prototype.publishTransferRequest = async function (transferRequest) {
+          setTimeout(() => {
+              (async () => {
+                  try {
+                      Promise.all(keepers.map(async (v) => v._txDispatcher && v._txDispatcher(transferRequest))).catch(
+                          console.error,
+                      );
+                  } catch (e) {
+                      console.error(e);
+                  }
+              })();
+          }, 3000);
+      };
+   */
 };
 exports.enableGlobalMockRuntime = enableGlobalMockRuntime;

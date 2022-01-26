@@ -122,7 +122,8 @@ export const enableGlobalMockRuntime = () => {
 		(mint as any).gatewayAddress = gatewayAddress;
 		return mint;
 	};
-	ReleaseRequest.prototype.submitReleaseRequest = async function (flag) {
+  /*
+	(ReleaseRequest as any).prototype.submitReleaseRequest = async function (flag) {
 		// TODO implement confirmed event listener
 		const _confirm = new EventEmitter();
 		const target = 6
@@ -169,13 +170,13 @@ export const enableGlobalMockRuntime = () => {
 		return _burnAndRelease
 	}
 
-	ReleaseRequest.prototype.sign = async function () {
-		this.signature = ethers.utils.hexilfy(ethers.utils.randomBytes(65))
+	(ReleaseRequest as any).prototype.sign = async function () {
+		this.signature = ethers.utils.hexlify(ethers.utils.randomBytes(65))
 		return this.signature
 	}
 
 
-	ZeroUser.prototype.publishReleaseRequest = async function (_releaseRequest) {
+	(ZeroUser as any).prototype.publishReleaseRequest = async function (_releaseRequest) {
 		setTimeout(() => {
 			(async () => {
 				try {
@@ -203,4 +204,5 @@ export const enableGlobalMockRuntime = () => {
 			})();
 		}, 3000);
 	};
+ */
 };
