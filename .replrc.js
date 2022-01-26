@@ -3,14 +3,14 @@ var Zero = require('./');
 var { RenJS } = require('@renproject/ren');
 
 var RPC_ENDPOINTS = {
-	ARBITRUM: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
-	MATIC: 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
-	ETHEREUM: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+  ARBITRUM: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+  MATIC: 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+  ETHEREUM: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
 };
 
 var deployments = require('./deployments/deployments');
 const MATIC_RPC = 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2';
-var {contracts} = deployments[137].matic;
+var { contracts } = deployments[137].matic;
 var r = new RenJS('mainnet');
 var { getDefaultBitcoinClient } = require('./lib/rpc/btc');
 var Client = require('bitcoin-core');
@@ -27,16 +27,16 @@ var renbtc = new ethers.Contract('0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', [
   'function balanceOf(address) view returns (uint256)',
   'function transfer(address, uint256) returns (bool)'
 ], wallet);
-var usdc = new ethers.Contract('0x2791bca1f2de4661ed88a30c99a7a9449aa84174', [ 'function transfer(address, uint256)', 'function balanceOf(address) view returns (uint256)' ], wallet);
-var wbtc = new ethers.Contract('0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6', [ 'function transfer(address, uint256)', 'function balanceOf(address) view returns (uint256)' ], wallet);
+var usdc = new ethers.Contract('0x2791bca1f2de4661ed88a30c99a7a9449aa84174', ['function transfer(address, uint256)', 'function balanceOf(address) view returns (uint256)'], wallet);
+var wbtc = new ethers.Contract('0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6', ['function transfer(address, uint256)', 'function balanceOf(address) view returns (uint256)'], wallet);
 var zero = require('./');
 var controller = getContract('ZeroController');
 //var upgraded = new ethers.Contract(controller.address, [ 'function setGasParameters(uint256, uint256, uint256)' ], wallet);
 var vault = getContract('BTCVault');
 //controller = new ethers.Contract(controller.address, [ 'function approveModule(address, bool)', 'function approvedModules(address) view returns (bool)' ], wallet);
-var upgraded = new ethers.Contract(controller.address, [ 'function fee() view returns (uint256)', 'function setGasParameters(uint256, uint256, uint256)' ], wallet);
-var trivial = new ethers.Contract(getContract('TrivialUnderwriter').address, [ 'function loan(address, address, uint256, uint256, address, bytes, bytes)', 'function controller() view returns (address)', 'function owner() view returns (address)' ], wallet);
-controller = new ethers.Contract(controller.address, [ 'function approveModule(address, bool)', 'function fee() view returns (uint256)', 'function setBaseFeeByAsset(address, uint256)', 'function baseFeeByAsset(address) view returns (uint256)', 'function approvedModules(address) view returns (bool)' ], wallet);
+var upgraded = new ethers.Contract(controller.address, ['function fee() view returns (uint256)', 'function setGasParameters(uint256, uint256, uint256)'], wallet);
+var delegate = new ethers.Contract(getContract('DelegateUnderwriter').address, ['function loan(address, address, uint256, uint256, address, bytes, bytes)', 'function controller() view returns (address)', 'function owner() view returns (address)'], wallet);
+controller = new ethers.Contract(controller.address, ['function approveModule(address, bool)', 'function fee() view returns (uint256)', 'function setBaseFeeByAsset(address, uint256)', 'function baseFeeByAsset(address) view returns (uint256)', 'function approvedModules(address) view returns (bool)'], wallet);
 var makeKeeper = async () => await zero.createZeroKeeper(await zero.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
 
 //var makeUser = async () => await zero.createZeroUser(await zero.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
@@ -78,7 +78,7 @@ var transferRequest = new TransferRequest({
 
 
 var getLock = async () => {
-  return new ethers.Contract(await controller.lockFor(trivial.address), require('./artifacts/contracts/underwriter/ZeroUnderwriterLock.sol/ZeroUnderwriterLock').abi, trivial.signer);
+  return new ethers.Contract(await controller.lockFor(delegate.address), require('./artifacts/contracts/underwriter/ZeroUnderwriterLock.sol/ZeroUnderwriterLock').abi, delegate.signer);
 };
 
 

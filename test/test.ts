@@ -1,5 +1,5 @@
 import hre from 'hardhat';
-import { TrivialUnderwriterTransferRequest, TransferRequest } from '../lib/zero';
+import { DelegateUnderwriterTransferRequest, TransferRequest } from '../lib/zero';
 import { expect } from 'chai';
 import { override } from '../lib/test/inject-mock';
 import GatewayLogicV1 from '../artifacts/contracts/test/GatewayLogicV1.sol/GatewayLogicV1.json';
@@ -48,10 +48,10 @@ const mintRenBTC = async (amount: any, signer?: any) => {
 
 const getContract = async (...args: any[]) => {
 	try {
-/*
-		const c = require('../deployments/arbitrum/' + args[0]);
-		return new ethers.Contract(c.address, c.abi, args[args.length - 1]);
-*/
+		/*
+				const c = require('../deployments/arbitrum/' + args[0]);
+				return new ethers.Contract(c.address, c.abi, args[args.length - 1]);
+		*/
 		return (await ethers.getContract(...args));//.attach(require('../deployments/arbitrum/' + args[0]).address);
 	} catch (e) {
 		console.error(e);
@@ -108,7 +108,7 @@ var underwriterAddress = '0x' + '00'.repeat(20);
 
 const deployUnderwriter = async () => {
 	const { signer, controller, renBTC, btcVault } = await getFixtures();
-	const underwriterFactory = await getContractFactory('TrivialUnderwriter', signer);
+	const underwriterFactory = await getContractFactory('DelegateUnderwriter', signer);
 	underwriterAddress = (await underwriterFactory.deploy(controller.address)).address;
 	await renBTC.approve(btcVault.address, ethers.constants.MaxUint256); //let btcVault spend renBTC on behalf of signer
 	await btcVault.approve(controller.address, ethers.constants.MaxUint256); //let controller spend btcVault tokens
@@ -129,8 +129,8 @@ const underwriterDeposit = async (amountOfRenBTC: string) => {
 };
 
 const getStrategyContract = async (signer) => {
-  if (process.env.CHAIN === 'ARBITRUM') return await getContract('StrategyRenVMArbitrum', signer);
-  return await getContract('StrategyRenVM', signer);
+	if (process.env.CHAIN === 'ARBITRUM') return await getContract('StrategyRenVMArbitrum', signer);
+	return await getContract('StrategyRenVM', signer);
 };
 
 const getFixtures = async () => {
@@ -166,7 +166,7 @@ const getFixtures = async () => {
 };
 
 const getBalances = async () => {
-return;
+	return;
 	const { swapModule, strategy, controller, btcVault, signerAddress, renBTC, wETH, usdc, wBTC, yvWBTC } =
 		await getFixtures();
 	const wallets: { [index: string]: string } = {
@@ -239,7 +239,7 @@ const generateTransferRequest = async (amount: number) => {
 
 const getUnderwriter = async () => {
 	const { signer, controller } = await getFixtures();
-	const underwriterFactory = await getContractFactory('TrivialUnderwriter', signer);
+	const underwriterFactory = await getContractFactory('DelegateUnderwriter', signer);
 	return {
 		underwriterFactory,
 		underwriterAddress,
@@ -376,7 +376,7 @@ describe('Zero', () => {
 
 		//@ts-ignore
 		('0x42e48680f15b7207c7602fec83b9c252fa3548c8533246ed532a75c6d0c486394648ba8f42a73a0ce2482712f09d177c3641ef07fcfd3b5cd3b4329982f756141b');
-		const transferRequest = new TrivialUnderwriterTransferRequest({
+		const transferRequest = new DelegateUnderwriterTransferRequest({
 			module: process.env.CHAIN === 'ARBITRUM' || process.env.CHAIN === "MATIC" ? convertModule.address : swapModule.address,
 			to: '0xC6ccaC065fCcA640F44289886Ce7861D9A527F9E',
 			underwriter: '0xd0D8fA764352e33F40c66C75B3BC0204DC95973e',

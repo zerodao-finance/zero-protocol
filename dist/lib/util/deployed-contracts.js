@@ -1,12 +1,12 @@
 "use strict";
 exports.__esModule = true;
-exports.ZeroUnderwriterImpl = exports.ZeroUniswapFactory = exports.ZeroCurveFactory = exports.ZeroController = exports.WrapNative = exports.UnwrapNative = exports.TrivialUnderwriter = exports.Swap = exports.DummyVault = exports.BTCVault = void 0;
+exports.ZeroUnderwriterImpl = exports.ZeroUniswapFactory = exports.ZeroCurveFactory = exports.ZeroController = exports.WrapNative = exports.UnwrapNative = exports.DelegateUnderwriter = exports.Swap = exports.DummyVault = exports.BTCVault = void 0;
 var _a = require("ethers"), Contract = _a.Contract, Wallet = _a.Wallet, providers = _a.providers;
 var BTCVaultJson = require("../../../deployments/matic/BTCVault.json");
 var DummyVaultJson = require("../../../deployments/matic/DummyVault.json");
 var StrategyRenVMJson = require("../../../deployments/matic/StrategyRenVM.json");
 var SwapJson = require("../../../deployments/matic/Swap.json");
-var TrivialUnderwriterJson = require("../../../deployments/matic/TrivialUnderwriter.json");
+var DelegateUnderwriterJson = require("../../../deployments/matic/DelegateUnderwriter.json");
 var UnwrapNativeJson = require("../../../deployments/matic/UnwrapNative.json");
 var WrapNativeJson = require("../../../deployments/matic/WrapNative.json");
 var ZeroControllerJson = require("../../../deployments/matic/ZeroController.json");
@@ -20,10 +20,10 @@ signer.provider.getGasPrice = require('ethers-polygongastracker').createGetGasPr
 exports.BTCVault = new Contract(BTCVaultJson.address, BTCVaultJson.abi, signer);
 exports.DummyVault = new Contract(DummyVaultJson.address, DummyVaultJson.abi, signer);
 exports.Swap = new Contract(SwapJson.address, SwapJson.abi, signer);
-exports.TrivialUnderwriter = new Contract(TrivialUnderwriterJson.address, TrivialUnderwriterJson.abi, signer);
+exports.DelegateUnderwriter = new Contract(DelegateUnderwriterJson.address, DelegateUnderwriterJson.abi, signer);
 exports.UnwrapNative = new Contract(UnwrapNativeJson.address, UnwrapNativeJson.abi, signer);
 exports.WrapNative = new Contract(WrapNativeJson.address, WrapNativeJson.abi, signer);
 exports.ZeroController = new Contract(ZeroControllerJson.address, ZeroControllerJson.abi, signer);
 exports.ZeroCurveFactory = new Contract(ZeroCurveFactoryJson.address, ZeroCurveFactoryJson.abi, signer);
 exports.ZeroUniswapFactory = new Contract(ZeroUniswapFactoryJson.address, ZeroUniswapFactoryJson.abi, signer);
-exports.ZeroUnderwriterImpl = new Contract(TrivialUnderwriterJson.address, ZeroControllerJson.abi, signer);
+exports.ZeroUnderwriterImpl = new Contract(DelegateUnderwriterJson.address, ZeroControllerJson.abi, signer);

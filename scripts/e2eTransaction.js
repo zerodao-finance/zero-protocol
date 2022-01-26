@@ -1,10 +1,10 @@
 //require('ts-node').register(require('../tsconfig'));
 var sdk = require('../lib/zero');
 const hre = require('hardhat');
-const { TrivialUnderwriterTransferRequest, TransferRequest } = require('../lib/zero');
+const { DelegateUnderwriterTransferRequest, TransferRequest } = require('../lib/zero');
 const { ZeroController, Swap } = require('../dist/lib/util/deployed-contracts');
 const { Contract, Wallet, providers, utils } = require('ethers');
-const { address: underwriterAddress, abi: TrivialUnderwriterAbi } = require('../deployments/matic/TrivialUnderwriter.json');
+const { address: underwriterAddress, abi: DelegateUnderwriterAbi } = require('../deployments/matic/DelegateUnderwriter.json');
 const { abi: ControllerAbi, address: ControllerAddress } = require('../deployments/matic/ZeroController.json');
 const { abi: BTCVaultAbi, address: BTCVaultAddress } = require('../deployments/matic/BTCVault');
 const { ethers } = require('hardhat');
@@ -56,7 +56,7 @@ let done;
 const keeperCallback = async (msg) => {
 	//console.log("Transfer Request: ", msg)
 	try {
-		const tr = new TrivialUnderwriterTransferRequest(msg);
+		const tr = new DelegateUnderwriterTransferRequest(msg);
 		console.log(tr.nonce);
 		const mint = await transferRequest.submitToRenVM();
 		console.log(`(TransferRequest) Deposit ${utils.formatUnits(tr.amount, 8)} BTC to ${mint.gatewayAddress}`);
@@ -65,7 +65,7 @@ const keeperCallback = async (msg) => {
 			const hash = deposit.txHash();
 			const depositLog = (msg) => console.log(`RenVM Hash: ${hash}\nStatus: ${deposit.status}\n${msg}`);
 
-			
+
 			await deposit
 				.confirmed()
 				.on('target', (target) => {
@@ -87,7 +87,7 @@ const keeperCallback = async (msg) => {
 		console.log('got signature!');
 		console.log(waitedSignature);
 		console.log('repaying');
-	
+
 		const tx = await tr.repay(new ethers.Wallet(process.env.UNDERWRITER_WALLET).connect(signer.provider), { gasLimit: 500e3 });
 		console.log('tx submitted');
 		console.log(tx);
@@ -143,7 +143,7 @@ const main = async () => {
 	const keeper = await makeKeeper();
 	const user = await makeUser();
 	signer = await getSigner();
-	const TrivialUnderwriter = new Contract(underwriterAddress, TrivialUnderwriterAbi, signer);
+	const DelegateUnderwriter = new Contract(underwriterAddress, DelegateUnderwriterAbi, signer);
 	const Controller = new Contract(ControllerAddress, ControllerAbi, signer);
 	const BTCVault = new Contract(BTCVaultAddress, BTCVaultAbi, signer);
 
@@ -152,7 +152,7 @@ const main = async () => {
 	transferRequest = new TransferRequest({
 		module: Swap.address,
 		to: await signer.getAddress(),
-		underwriter: TrivialUnderwriter.address,
+		underwriter: DelegateUnderwriter.address,
 		asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', // renBTC on MATIC
 		nonce: '0x63fc9b778460077468d2e8fd44eb0d9c66810e551c9e983569f092133f37db2b',
 		pNonce: '0x46cbcf365ecad2171742b1adeecb4b3d74eb0fddb8988b690117bf550a9b19e9',
@@ -182,7 +182,7 @@ const main = async () => {
 	await user.start();
 	transferRequest.setUnderwriter(underwriterImpl.address);
 	const lock = await Controller.provider.getCode(
-		await Controller.lockFor(TrivialUnderwriter.address, {
+		await Controller.lockFor(DelegateUnderwriter.address, {
 			gasPrice: ethers.utils.parseUnits('400', 'gwei'),
 			gasLimit: '500000',
 		}),

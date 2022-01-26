@@ -69,16 +69,16 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
                     });
                 }); };
                 keeper.setTxDispatcher(function (transferRequest) { return __awaiter(void 0, void 0, void 0, function () {
-                    var trivial, loan_result, _a, _b, _c, err_1, mint;
+                    var delegate, loan_result, _a, _b, _c, err_1, mint;
                     var _d;
                     return __generator(this, function (_e) {
                         switch (_e.label) {
                             case 0:
-                                trivial = new zero_1.TrivialUnderwriterTransferRequest(transferRequest);
+                                delegate = new zero_1.DelegateUnderwriterTransferRequest(transferRequest);
                                 _e.label = 1;
                             case 1:
                                 _e.trys.push([1, 4, , 5]);
-                                _b = (_a = trivial).dry;
+                                _b = (_a = delegate).dry;
                                 _c = [keeperSigner];
                                 _d = {};
                                 return [4 /*yield*/, keeperSigner.getAddress()];
@@ -91,7 +91,7 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
                                 err_1 = _e.sent();
                                 console.log('ERROR', err_1);
                                 return [3 /*break*/, 5];
-                            case 5: return [4 /*yield*/, trivial.submitToRenVM(true)];
+                            case 5: return [4 /*yield*/, delegate.submitToRenVM(true)];
                             case 6:
                                 mint = _e.sent();
                                 return [4 /*yield*/, new Promise(function (resolve, reject) {
@@ -144,14 +144,14 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
                                     })];
                             case 7:
                                 _e.sent();
-                                trivial.waitForSignature = function () { return __awaiter(void 0, void 0, void 0, function () {
+                                delegate.waitForSignature = function () { return __awaiter(void 0, void 0, void 0, function () {
                                     return __generator(this, function (_a) {
                                         switch (_a.label) {
                                             case 0: return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 1000); })];
                                             case 1:
                                                 _a.sent();
                                                 return [2 /*return*/, {
-                                                        amount: ethers_1.ethers.BigNumber.from(trivial.amount).sub(ethers_1.ethers.utils.parseUnits('0.0015', 8)).toString(),
+                                                        amount: ethers_1.ethers.BigNumber.from(delegate.amount).sub(ethers_1.ethers.utils.parseUnits('0.0015', 8)).toString(),
                                                         nHash: ethers_1.ethers.utils.hexlify(ethers_1.ethers.utils.randomBytes(32)),
                                                         signature: ethers_1.ethers.utils.hexlify(ethers_1.ethers.utils.randomBytes(65))
                                                     }];

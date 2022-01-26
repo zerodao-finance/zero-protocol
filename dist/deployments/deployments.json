@@ -2101,7 +2101,7 @@
                         }
                     ]
                 },
-                "TrivialUnderwriter": {
+                "DelegateUnderwriter": {
                     "address": "0x81B83D47cCD3f169c7403010F70dB722C7f1CB41",
                     "abi": [
                         {

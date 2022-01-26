@@ -7,7 +7,7 @@ import {ZeroController} from '../controllers/ZeroController.sol';
 @title contract that is the simplest underwriter, just a proxy with an owner tag
 @author raymondpulver
 */
-contract TrivialUnderwriter is Ownable {
+contract DelegateUnderwriter is Ownable {
 	address payable public immutable controller;
 
 	constructor(address payable _controller) Ownable() {
