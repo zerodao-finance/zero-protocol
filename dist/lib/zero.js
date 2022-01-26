@@ -77,7 +77,7 @@ require("./util/renvm");
 require("./util/helpers");
 var p2p_1 = require("./p2p");
 var chains_1 = require("@renproject/chains");
-var chains_2 = __importDefault(require("@renproject/chains"));
+require("@renproject/chains");
 var ren_1 = __importDefault(require("@renproject/ren"));
 require("@renproject/interfaces");
 require("./persistence");
@@ -94,32 +94,37 @@ var RPC_ENDPOINTS = {
 var RENVM_PROVIDERS = {
     Arbitrum: chains_1.Arbitrum,
     Polygon: chains_1.Polygon,
-    Ethereum: chains_1.Ethereum
+    Ethereum: chains_1.Ethereum,
+    Bitcoin: chains_1.Bitcoin,
+    Fantom: chains_1.Fantom
 };
-var getProvider = function (transferRequest) {
+var getProvider = function (transferRequest, to) {
     var chain = Object.entries(CONTROLLER_DEPLOYMENTS).find(function (_a) {
         var k = _a[0], v = _a[1];
-        return transferRequest.contractAddress === v;
+        return to ? transferRequest.to : transferRequest.contractAddress === v;
     });
     var chain_key = chain[0];
     return (RENVM_PROVIDERS[chain_key])(new ethers_1.ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]), 'mainnet');
 };
+/*
+Steps to identify chains.
+
+1. Lookup `asset` by address to identify origin chain id.
+2. Get the ticker for the asset. Lookup in chains to find matching chain to send to.
+*/
 var logger = { debug: function (v) { console.error(v); } };
-console.log(chains_2["default"]);
 var ReleaseRequest = /** @class */ (function () {
     function ReleaseRequest(params) {
         this.to = params.to;
         this.underwriter = params.underwriter;
         this.asset = params.asset;
         this.amount = ethers_1.ethers.utils.hexlify(typeof params.amount === 'number' ? params.amount : typeof params.amount === 'string' ? ethers_1.ethers.BigNumber.from(params.amount) : params.amount);
-        console.log('params.nonce', params.nonce);
         this.nonce = params.nonce
             ? (0, bytes_1.hexlify)(params.nonce)
             : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
         this.chainId = params.chainId;
         this.contractAddress = params.contractAddress;
         this.signature = params.signature;
-        //this._config = 
         this._ren = new ren_1["default"]('mainnet', { loadCompletedDeposits: true });
     }
     ReleaseRequest.prototype.setProvider = function (provider) {
@@ -192,8 +197,8 @@ var ReleaseRequest = /** @class */ (function () {
                             return [2 /*return*/, this._burn];
                         _a = this;
                         return [4 /*yield*/, this._ren.burnAndRelease({
-                                asset: "BTC",
-                                to: (0, chains_1.Bitcoin)().Address(this.to),
+                                asset: getProvider(this, true).asset,
+                                to: getProvider(this, true).Address(this.to),
                                 nonce: this.nonce,
                                 from: (getProvider(this)).Contract({
                                     sendTo: this.contractAddress,
@@ -203,7 +208,6 @@ var ReleaseRequest = /** @class */ (function () {
                             })];
                     case 1:
                         result = _a._burn = _b.sent();
-                        //    result.params.nonce = this.nonce;
                         return [2 /*return*/, result];
                 }
             });

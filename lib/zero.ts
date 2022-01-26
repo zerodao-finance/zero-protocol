@@ -20,7 +20,7 @@ import { EIP712_TYPES, ERC20PERMIT_TYPES } from './config/constants';
 import RenVM from './util/renvm';
 import { computeP, computeNHash, maybeCoerceToGHash } from './util/helpers';
 import { createNode, ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
-import Chains, { Bitcoin, Polygon, Ethereum, Arbitrum } from "@renproject/chains"
+import Chains, { Bitcoin, Polygon, Ethereum, Arbitrum, Fantom } from "@renproject/chains"
 import chains from "@renproject/chains";
 import RenJS from "@renproject/ren";
 import { EthArgs } from "@renproject/interfaces";
@@ -45,7 +45,8 @@ const RENVM_PROVIDERS = {
 	Arbitrum,
 	Polygon,
 	Ethereum,
-	Bitcoin
+	Bitcoin,
+	Fantom
 };
 
 const getProvider = (transferRequest: any, to?: boolean) => {
@@ -132,6 +133,7 @@ export class ReleaseRequest {
 			primaryType: 'ReleaseRequest',
 		};
 	}
+
 	async sign(signer: Wallet & Signer, contractAddress: string): Promise<string> {
 		const provider = signer.provider as ethers.providers.JsonRpcProvider;
 		const { chainId } = await signer.provider.getNetwork();
@@ -151,7 +153,7 @@ export class ReleaseRequest {
 		console.log('submitToRenVM this.nonce', this.nonce);
 		if (this._burn) return this._burn;
 		const result = this._burn = await this._ren.burnAndRelease({
-			asset: "BTC",
+			asset: getProvider(this, true).asset,
 			to: getProvider(this, true).Address(this.to),
 			nonce: this.nonce,
 			from: (getProvider(this)).Contract({
@@ -160,7 +162,6 @@ export class ReleaseRequest {
 				contractParams: this._contractParams
 			})
 		});
-		//    result.params.nonce = this.nonce;
 		return result;
 	}
 
