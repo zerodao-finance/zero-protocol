@@ -1,4 +1,5 @@
-import { bufferToHex, keccak256 } from 'ethereumjs-util'
+import { ethers } from 'ethers';
+import { Buffer } from 'buffer';
 
 export default class MerkleTree {
   private readonly elements: Buffer[]
@@ -13,7 +14,7 @@ export default class MerkleTree {
     this.elements = MerkleTree.bufDedup(this.elements)
 
     this.bufferElementPositionIndex = this.elements.reduce<{ [hexElement: string]: number }>((memo, el, index) => {
-      memo[bufferToHex(el)] = index
+      memo[ethers.utils.hexlify(el)] = index
       return memo
     }, {})
 
@@ -56,7 +57,7 @@ export default class MerkleTree {
       return first
     }
 
-    return keccak256(MerkleTree.sortAndConcat(first, second))
+    return Buffer.from(ethers.utils.solidityKeccak256(['bytes'], [MerkleTree.sortAndConcat(first, second)]).substr(2), 'hex');
   }
 
   getRoot(): Buffer {
@@ -64,11 +65,11 @@ export default class MerkleTree {
   }
 
   getHexRoot(): string {
-    return bufferToHex(this.getRoot())
+    return ethers.utils.hexlify(this.getRoot())
   }
 
   getProof(el: Buffer) {
-    let idx = this.bufferElementPositionIndex[bufferToHex(el)]
+    let idx = this.bufferElementPositionIndex[ethers.utils.hexlify(el)]
 
     if (typeof idx !== 'number') {
       throw new Error('Element does not exist in Merkle tree')

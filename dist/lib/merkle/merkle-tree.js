@@ -9,16 +9,17 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
     return to.concat(ar || Array.prototype.slice.call(from));
 };
 exports.__esModule = true;
-var ethereumjs_util_1 = require("ethereumjs-util");
+var ethers_1 = require("ethers");
+var buffer_1 = require("buffer");
 var MerkleTree = /** @class */ (function () {
     function MerkleTree(elements) {
         this.elements = __spreadArray([], elements, true);
         // Sort elements
-        this.elements.sort(Buffer.compare);
+        this.elements.sort(buffer_1.Buffer.compare);
         // Deduplicate elements
         this.elements = MerkleTree.bufDedup(this.elements);
         this.bufferElementPositionIndex = this.elements.reduce(function (memo, el, index) {
-            memo[(0, ethereumjs_util_1.bufferToHex)(el)] = index;
+            memo[ethers_1.ethers.utils.hexlify(el)] = index;
             return memo;
         }, {});
         // Create layers
@@ -52,16 +53,16 @@ var MerkleTree = /** @class */ (function () {
         if (!second) {
             return first;
         }
-        return (0, ethereumjs_util_1.keccak256)(MerkleTree.sortAndConcat(first, second));
+        return buffer_1.Buffer.from(ethers_1.ethers.utils.solidityKeccak256(['bytes'], [MerkleTree.sortAndConcat(first, second)]).substr(2), 'hex');
     };
     MerkleTree.prototype.getRoot = function () {
         return this.layers[this.layers.length - 1][0];
     };
     MerkleTree.prototype.getHexRoot = function () {
-        return (0, ethereumjs_util_1.bufferToHex)(this.getRoot());
+        return ethers_1.ethers.utils.hexlify(this.getRoot());
     };
     MerkleTree.prototype.getProof = function (el) {
-        var idx = this.bufferElementPositionIndex[(0, ethereumjs_util_1.bufferToHex)(el)];
+        var idx = this.bufferElementPositionIndex[ethers_1.ethers.utils.hexlify(el)];
         if (typeof idx !== 'number') {
             throw new Error('Element does not exist in Merkle tree');
         }
@@ -93,7 +94,7 @@ var MerkleTree = /** @class */ (function () {
         });
     };
     MerkleTree.bufArrToHexArr = function (arr) {
-        if (arr.some(function (el) { return !Buffer.isBuffer(el); })) {
+        if (arr.some(function (el) { return !buffer_1.Buffer.isBuffer(el); })) {
             throw new Error('Array is not an array of buffers');
         }
         return arr.map(function (el) { return '0x' + el.toString('hex'); });
@@ -103,7 +104,7 @@ var MerkleTree = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             args[_i] = arguments[_i];
         }
-        return Buffer.concat(__spreadArray([], args, true).sort(Buffer.compare));
+        return buffer_1.Buffer.concat(__spreadArray([], args, true).sort(buffer_1.Buffer.compare));
     };
     return MerkleTree;
 }());
