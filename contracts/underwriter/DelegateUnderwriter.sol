@@ -11,7 +11,7 @@ contract DelegateUnderwriter is Ownable {
 	mapping(address => bool) private authorized;
 
 	modifier onlyAuthorized() {
-		require(authorized[msg.sender] || owner, '!authorized');
+		require(authorized[msg.sender], '!authorized');
 		_;
 	}
 
