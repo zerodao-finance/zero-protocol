@@ -15,11 +15,11 @@ contract DelegateUnderwriter is Ownable {
 		_;
 	}
 
-	function addAuthority(address _authority) public onlyAuthorized {
+	function addAuthority(address _authority) public onlyOwner {
 		authorized[_authority] = true;
 	}
 
-	function removeAuthority(address _authority) public onlyAuthorized {
+	function removeAuthority(address _authority) public onlyOwner {
 		authorized[_authority] = false;
 	}
 
