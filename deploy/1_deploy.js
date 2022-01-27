@@ -59,6 +59,7 @@ module.exports = async ({
   getUnnamedAccounts,
   getNamedAccounts,
 }) => {
+  if (process.env.CHAIN === 'ETHEREUM') return;
   const { deployer } = await getNamedAccounts(); //used as governance address
   const [ethersSigner] = await ethers.getSigners();
   const { provider } = ethersSigner;
@@ -135,18 +136,7 @@ module.exports = async ({
   console.log("GOT CONTROLLER"); 
   
   
-  const module = process.env.CHAIN === 'ARBITRUM' ? await deployFixedAddress('ArbitrumConvert', { args: [ zeroController.address ], contractName: 'ArbitrumConvert', from: deployer }) : process.env.CHAIN === "MATIC" ? await deployFixedAddress('PolygonConvert', { args: [zeroController.address], contractName: 'PolygonConvert', from: deployer }) : await deployFixedAddress('Swap', {
-    args: [
-      zeroController.address, // Controller
-      deployParameters[network]['wETH'], // wNative
-      deployParameters[network]['wBTC'], // Want
-      deployParameters[network]['sushiRouter'], // Sushi Router
-      deployParameters[network]['USDC'], // Fiat
-      deployParameters[network]['renBTC'] // controllerWant
-    ],
-    contractName: 'Swap',
-    from: deployer
-  });
+  const module = process.env.CHAIN === 'ARBITRUM' ? await deployFixedAddress('ArbitrumConvert', { args: [ zeroController.address ], contractName: 'ArbitrumConvert', from: deployer }) : process.env.CHAIN === "MATIC" ? await deployFixedAddress('PolygonConvert', { args: [zeroController.address], contractName: 'PolygonConvert', from: deployer }) : { address: ethers.constants.AddressZero };
   await controller.approveModule(module.address, true);
   
   const strategyRenVM = await deployments.deploy(network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : 'StrategyRenVM', {
