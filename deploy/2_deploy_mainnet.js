@@ -3,11 +3,12 @@ const { ethers, deployments, upgrades } = hre;
 
 const deployFixedAddress = async (...args) => {
     console.log('Deploying ' + args[0]);
+    console.log("Args Here: ", args);
     args[1].waitConfirmations = 1;
     const [signer] = await ethers.getSigners();
-  //  hijackSigner(signer);
+    //  hijackSigner(signer);
     const result = await deployments.deploy(...args);
-  //  restoreSigner(signer);
+    //  restoreSigner(signer);
     console.log('Deployed to ' + result.address);
     return result;
 };
@@ -24,7 +25,6 @@ module.exports = async ({
     getChainId,
     getUnnamedAccounts,
     getNamedAccounts
-
 }) => {
     if (process.env.CHAIN !== "ETHEREUM") return;
     const { deployer } = await getNamedAccounts();
@@ -38,30 +38,30 @@ module.exports = async ({
         })
     }
 
-
-    // deployments.deploy("ZERO")
-    console.log(deployer)
-    console.log(provider, chainId)
-
-
-    deployFixedAddress("MasterChef", {
-        contractName: "MasterChef",
+    const zeroToken = await deployFixedAddress("ZERO", {
+        contractName: "ZERO",
         args: [],
+        from: deployer
+    });
+
+    const zeroDistributor = await deployFixedAddress("ZeroDistributor", {
+        contractName: "ZeroDistributor",
+        args: [
+            // zeroToken,
+            // merkleRoot
+        ],
         from: deployer
     })
 
-    // deployFixedAddress("MasterChef", {
-    //     contractName: "MasterChef",
-    //     args: [],
-    //     from: deployer
-    // })
-
-    // deployFixedAddress("ZeroDistributor", {
-    //     contractName: "ZeroDistributor",
-    //     args: [],
-    //     from: deployer
-    // })
-
-
-
+    const masterChef = await deployFixedAddress("MasterChef", {
+        contractName: "MasterChef",
+        args: [
+            // ZERO _zero,
+            // address _devaddr,
+            // uint256 _zeroPerBlock,
+            // uint256 _startBlock,
+            // uint256 _bonusEndBlock
+        ],
+        from: deployer
+    })
 }

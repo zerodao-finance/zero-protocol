@@ -17,9 +17,9 @@ const deployFixedAddress = async (...args) => {
   console.log('Deploying ' + args[0]);
   args[1].waitConfirmations = 1;
   const [signer] = await ethers.getSigners();
-//  hijackSigner(signer);
+  //  hijackSigner(signer);
   const result = await deployments.deploy(...args);
-//  restoreSigner(signer);
+  //  restoreSigner(signer);
   console.log('Deployed to ' + result.address);
   return result;
 };
@@ -78,14 +78,14 @@ module.exports = async ({
   const [deployerSigner] = await ethers.getSigners();
   console.log("RUNNING");
 
-  
-  
+
+
   const zeroUnderwriterLockBytecodeLib = await deployFixedAddress('ZeroUnderwriterLockBytecodeLib', {
     contractName: 'ZeroUnderwriterLockBytecodeLib',
     args: [],
     from: deployer
   });
-  
+
   const zeroControllerFactory = (await hre.ethers.getContractFactory("ZeroController", {
     libraries: {
       ZeroUnderwriterLockBytecodeLib: zeroUnderwriterLockBytecodeLib.address
@@ -101,12 +101,12 @@ module.exports = async ({
     bytecode: zeroControllerArtifact.bytecode,
     abi: zeroControllerArtifact.abi
   });
-  
-	console.log('waiting on proxy deploy to mine ...');
+
+  console.log('waiting on proxy deploy to mine ...');
   await zeroController.deployTransaction.wait();
-  
-//	console.log('done!');
-  
+
+  //	console.log('done!');
+
   await deployFixedAddress('BTCVault', {
     contractName: 'BTCVault',
     args: [deployParameters[network]['renBTC'], zeroController.address, "zeroBTC", "zBTC"],
@@ -115,7 +115,7 @@ module.exports = async ({
   const v = await ethers.getContract('BTCVault');
   await v.attach(deployParameters[network]['renBTC'])
   // .balanceOf(ethers.constants.AddressZero);
-  
+
   const dummyVault = await deployFixedAddress('DummyVault', {
     contractName: 'DummyVault',
     args: [deployParameters[network]['wBTC'], zeroController.address, "yearnBTC", "yvWBTC"],
@@ -125,20 +125,20 @@ module.exports = async ({
   await w.attach(deployParameters[network]['wBTC'])
   // .balanceOf(ethers.constants.AddressZero);
   console.log("Deployed DummyVault to", dummyVault.address)
-  
+
   await deployFixedAddress("TrivialUnderwriter", {
     contractName: 'TrivialUnderwriter',
     args: [zeroController.address],
     from: deployer,
   });
-  
+
   const controller = await ethers.getContract('ZeroController');
-  console.log("GOT CONTROLLER"); 
-  
-  
-  const module = process.env.CHAIN === 'ARBITRUM' ? await deployFixedAddress('ArbitrumConvert', { args: [ zeroController.address ], contractName: 'ArbitrumConvert', from: deployer }) : process.env.CHAIN === "MATIC" ? await deployFixedAddress('PolygonConvert', { args: [zeroController.address], contractName: 'PolygonConvert', from: deployer }) : { address: ethers.constants.AddressZero };
+  console.log("GOT CONTROLLER");
+
+
+  const module = process.env.CHAIN === 'ARBITRUM' ? await deployFixedAddress('ArbitrumConvert', { args: [zeroController.address], contractName: 'ArbitrumConvert', from: deployer }) : process.env.CHAIN === "MATIC" ? await deployFixedAddress('PolygonConvert', { args: [zeroController.address], contractName: 'PolygonConvert', from: deployer }) : { address: ethers.constants.AddressZero };
   await controller.approveModule(module.address, true);
-  
+
   const strategyRenVM = await deployments.deploy(network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : 'StrategyRenVM', {
     args: [
       zeroController.address,
@@ -189,7 +189,7 @@ module.exports = async ({
     const lastEvent = events.find((v) => (v.args || {})._wrapper);
     return lastEvent.args._wrapper;
   };
-	/*
+  /*
   let getWrapperAddress = async () => {
     getWrapperAddress = _getWrapperAddress;
     return '0x400779D2e22d4dec04f6043114E88820E115903A';
