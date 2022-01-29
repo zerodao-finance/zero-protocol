@@ -23,6 +23,13 @@ module.exports = async ({
     // get abi
     let arbitraryTokens = (ethers.utils.parseUnits("8", 8)).toString()
     const { abi } = await deployments.getArtifact("BTCVault")
+    const selfdestructSend = await hre.ethers.getContractFactory('SelfdestructSend');
+    const [ hardhatSigner ] = await hre.ethers.getSigners();
+	console.log('sending eth');
+    await hardhatSigner.sendTransaction(selfdestructSend.getDeployTransaction(deployParameters[network].Curve_Ren, {
+      value: hre.ethers.utils.parseEther('0.5')
+    }));
+    console.log('sent eth');
 
     // impersonate Curve Ren for network
     await hre.network.provider.request({
