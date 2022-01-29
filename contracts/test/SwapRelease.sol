@@ -11,7 +11,11 @@ contract SwapRelease {
 
 	fallback() external {
 		IERC20(wbtc).transfer(swap, IERC20(wbtc).balanceOf(address(this)));
+		// Transfer all the wbtc that this contract has to the swap contract
 		Swap(swap).receiveLoan(address(0), address(0), IERC20(wbtc).balanceOf(swap), 1, hex'');
+		// Swap's amount of wbtc gets transferred to 'want'
+		// outstanding[1] = {qty: however much wbtc swap had , when: bloc.timestamp, token: address(0) }
 		Swap(swap).repayLoan(governance, address(0), IERC20(usdc).balanceOf(swap), uint256(1), hex'');
+		// Transfer however much wbtc swap had to the governance contract and delete the outstanding SwapRecord
 	}
 }

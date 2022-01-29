@@ -15,7 +15,7 @@
 
 ## Logic
 
-* 0.1% of received rnBTC should be a supplementary fee
+* 0.1% of received renBTC should be a supplementary fee
 * Deposit the supplementary fee into the BTCVault
 * Deposit the resulting zeroBTC to the ZeroUnderwriterLock contract w/ the underwriter 
   * This should be retrieved from `IZeroController(msg.sender).lockFor(underwriter)`

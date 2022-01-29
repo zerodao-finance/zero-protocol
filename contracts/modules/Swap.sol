@@ -41,8 +41,8 @@ contract Swap {
 		fiat = _fiat;
 		controllerWant = _controllerWant;
 		governance = IController(_controller).governance();
-		IERC20(_want).safeApprove(_router, ~uint256(0));
-		IERC20(_fiat).safeApprove(_router, ~uint256(0));
+		IERC20(_want).safeApprove(_router, ~uint256(0)); // The router is now allowed to transfer max wBTC
+		IERC20(_fiat).safeApprove(_router, ~uint256(0)); // The router is now allowed to transfer max USDC
 	}
 
 	function setBlockTimeout(uint256 _ct) public {
@@ -50,12 +50,13 @@ contract Swap {
 		blockTimeout = _ct;
 	}
 
+	// This function serves the purpose of letting the controller get the funds from a loan if does not get repaid within 10k blocks
 	function defaultLoan(uint256 _nonce) public {
-		require(block.number >= outstanding[_nonce].when + blockTimeout);
-		require(outstanding[_nonce].qty != 0, '!outstanding');
-		uint256 _amountSwapped = swapTokens(fiat, controllerWant, outstanding[_nonce].qty);
-		IERC20(controllerWant).safeTransfer(controller, _amountSwapped);
-		delete outstanding[_nonce];
+		require(block.number >= outstanding[_nonce].when + blockTimeout); // require that the block holding the SwapRecord is not the most recent in the chain
+		require(outstanding[_nonce].qty != 0, '!outstanding'); // require the passed SwapRecord to still have some tokens be outstanding
+		uint256 _amountSwapped = swapTokens(fiat, controllerWant, outstanding[_nonce].qty); // Actually swap however many tokens remain outstanding into renBTC
+		IERC20(controllerWant).safeTransfer(controller, _amountSwapped); // Moves resulting renBTC from the contract to the controller's account
+		delete outstanding[_nonce]; // delete the outstanding amount
 	}
 
 	function receiveLoan(
@@ -65,8 +66,10 @@ contract Swap {
 		uint256 _nonce,
 		bytes memory _data
 	) public onlyController {
-		uint256 amountSwapped = swapTokens(want, fiat, _actual);
+		uint256 amountSwapped = swapTokens(want, fiat, _actual); // swap `actual` amount of USDC into wBTC
+		// After this the contract then has the wBTC received from the transfer
 		outstanding[_nonce] = SwapLib.SwapRecord({qty: amountSwapped, when: uint64(block.timestamp), token: _asset});
+		// created a SwapRecord with quantity equal to the amount of wBTC received, time of the current block, and a token of the passed in asset
 	}
 
 	function swapTokens(
@@ -96,9 +99,9 @@ contract Swap {
 		uint256 _nonce,
 		bytes memory _data
 	) public onlyController {
-		require(outstanding[_nonce].qty != 0, '!outstanding');
-		IERC20(fiat).safeTransfer(_to, outstanding[_nonce].qty);
-		delete outstanding[_nonce];
+		require(outstanding[_nonce].qty != 0, '!outstanding'); // Require that there is an amount left on the loan
+		IERC20(fiat).safeTransfer(_to, outstanding[_nonce].qty); // The contract's account transfers the oustanding amount to `_to`
+		delete outstanding[_nonce]; // Delete the outstanding SwapRecord
 	}
 
 	function computeReserveRequirement(uint256 _in) external view returns (uint256) {
