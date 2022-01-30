@@ -38,6 +38,8 @@ module.exports = async ({
         })
     }
 
+    const merkleRoot = "0xc4a5934cb241f1bdf89790b2711d9bbfa9bfca77792378d1774970e072bcb033";
+
     const zeroToken = await deployFixedAddress("ZERO", {
         contractName: "ZERO",
         args: [],
@@ -47,21 +49,21 @@ module.exports = async ({
     const zeroDistributor = await deployFixedAddress("ZeroDistributor", {
         contractName: "ZeroDistributor",
         args: [
-            // zeroToken,
-            // merkleRoot
+            zeroToken,
+            merkleRoot
         ],
         from: deployer
     })
 
-    const masterChef = await deployFixedAddress("MasterChef", {
-        contractName: "MasterChef",
-        args: [
-            // ZERO _zero,
-            // address _devaddr,
-            // uint256 _zeroPerBlock,
-            // uint256 _startBlock,
-            // uint256 _bonusEndBlock
-        ],
-        from: deployer
-    })
+    // const masterChef = await deployFixedAddress("MasterChef", {
+    //     contractName: "MasterChef",
+    //     args: [
+    //         // ZERO _zero,
+    //         // address _devaddr,
+    //         // uint256 _zeroPerBlock,
+    //         // uint256 _startBlock,
+    //         // uint256 _bonusEndBlock
+    //     ],
+    //     from: deployer
+    // })
 }
