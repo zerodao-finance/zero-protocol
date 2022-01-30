@@ -49,7 +49,7 @@ module.exports = async ({
     const zeroDistributor = await deployFixedAddress("ZeroDistributor", {
         contractName: "ZeroDistributor",
         args: [
-            zeroToken,
+            zeroToken.address,
             merkleRoot
         ],
         from: deployer
