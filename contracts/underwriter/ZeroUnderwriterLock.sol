@@ -24,6 +24,16 @@ contract ZeroUnderwriterLock is Initializable {
 	address public vault;
 	ZeroLib.BalanceSheet internal _balanceSheet;
 
+	modifier onlyController() {
+		require(msg.sender == address(controller), '!controller');
+		_;
+	}
+
+	modifier onlyOwner() {
+		require(msg.sender == owner(), 'must be called by owner');
+		_;
+	}
+
 	function balanceSheet()
 		public
 		view
@@ -52,11 +62,6 @@ contract ZeroUnderwriterLock is Initializable {
 		result = IyVault(vault).balanceOf(address(this)).mul(IyVault(vault).getPricePerFullShare()).div(
 			uint256(1 ether)
 		);
-	}
-
-	modifier onlyOwner() {
-		require(msg.sender == owner(), 'must be called by owner');
-		_;
 	}
 
 	function owner() public view returns (address result) {
@@ -92,8 +97,7 @@ contract ZeroUnderwriterLock is Initializable {
 		selfdestruct(payable(msg.sender));
 	}
 
-	function trackOut(address module, uint256 amount) public {
-		require(msg.sender == address(controller), '!controller');
+	function trackOut(address module, uint256 amount) public onlyController {
 		uint256 loanedAfter = uint256(_balanceSheet.loaned).add(amount);
 		uint256 _owed = owed();
 		(_balanceSheet.loaned, _balanceSheet.required) = (
@@ -106,14 +110,17 @@ contract ZeroUnderwriterLock is Initializable {
 		);
 	}
 
+	function liquidate() public onlyController {
+		return;
+	}
+
 	function _logSheet() internal view {
 		console.log('required', _balanceSheet.required);
 		console.log('loaned', _balanceSheet.loaned);
 		console.log('repaid', _balanceSheet.repaid);
 	}
 
-	function trackIn(uint256 amount) public {
-		require(msg.sender == address(controller), '!controller');
+	function trackIn(uint256 amount) public onlyController {
 		uint256 _owed = owed();
 		uint256 _adjusted = uint256(_balanceSheet.required).mul(_owed).div(uint256(1 ether));
 		_balanceSheet.required = _owed < amount || _adjusted < amount
