@@ -1,4 +1,4 @@
-pragma solidity >=0.6.0;
+pragma solidity >=0.6.0<0.8.0;
 
 import {ICurveInt128} from '../interfaces/CurvePools/ICurveInt128.sol';
 import {ICurveUInt128} from '../interfaces/CurvePools/ICurveUInt128.sol';

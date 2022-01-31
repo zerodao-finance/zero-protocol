@@ -1,6 +1,6 @@
 pragma experimental ABIEncoderV2;
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.6.0;
+pragma solidity >=0.6.0<0.8.0;
 
 import {SliceLib} from './SliceLib.sol';
 
