@@ -1,9 +1,9 @@
 import { Wallet } from 'ethers';
 const { ethers } = require('hardhat');
-const { TrivialUnderwriterTransferRequest } = require('../lib/zero');
+const { UnderwriterTransferRequest } = require('../lib/zero');
 const { createZeroConnection, createZeroKeeper } = require('../lib/zero');
-const TrivialUnderwriter = require('../deployments/arbitrum/TrivialUnderwriter');
-const trivial = new ethers.Contract(TrivialUnderwriter.address, TrivialUnderwriter.abi, new ethers.providers.InfuraProvider('mainnet'));
+const Underwriter = require('../deployments/arbitrum/DelegateUnderwriter');
+const trivial = new ethers.Contract(Underwriter.address, Underwriter.abi, new ethers.providers.InfuraProvider('mainnet'));
 
 /*--------------------------- ENVIRONMENT VARIABLES -------------------------*/
 
@@ -23,27 +23,27 @@ const KEEPER_URL = '/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'
 //-----------------------------------------------------------------------------
 const _getSigners = ethers.getSigners;
 const getSigner = async () => {
-  const [ signer ] = await _getSigners.call(ethers);
-  return new ethers.Wallet(process.env.WALLET, process.env.FORKING ? signer.provider : new ethers.providers.JsonRpcProvider('https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2'));
+    const [signer] = await _getSigners.call(ethers);
+    return new ethers.Wallet(process.env.WALLET, process.env.FORKING ? signer.provider : new ethers.providers.JsonRpcProvider('https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2'));
 };
 
 ethers.getSigners = async () => {
-  return [ await getSigner() ];
+    return [await getSigner()];
 };
 
 const executeLoan = async (transferRequest) => {
     const [signer] = await ethers.getSigners();
     console.log(await signer.provider.getNetwork());
-	global.signer = signer;
-	global.provider = signer.provider;
+    global.signer = signer;
+    global.provider = signer.provider;
     const wallet = new Wallet(process.env.WALLET, signer.provider);
 
     console.log(transferRequest);
-	transferRequest.setProvider(signer.provider);
-	console.log('loaning');
+    transferRequest.setProvider(signer.provider);
+    console.log('loaning');
     const loan = await transferRequest.loan(wallet);
-console.log(loan);
-	console.log('loaned');
+    console.log(loan);
+    console.log('loaned');
     console.log(await loan.wait());
 
     await transferRequest.waitForSignature();
@@ -54,9 +54,9 @@ console.log(loan);
 
 const hasEnough = async (transferRequest) => {
     const [signer] = await ethers.getSigners();
-	global.signer = signer;
-	global.provider = signer.provider;
-	transferRequest.setProvider(signer.provider);
+    global.signer = signer;
+    global.provider = signer.provider;
+    transferRequest.setProvider(signer.provider);
     const wallet = new Wallet(process.env.WALLET, signer);
 
     const balance = await (new Contract(await underwriter.controller(), ['function balanceOf(address _owner) returns (uint256 balance)'], signer)).balanceOf(wallet.address);
@@ -67,22 +67,22 @@ let triggered = false;
 
 const handleTransferRequest = async (message) => {
     try {
-        const transferRequest = new TrivialUnderwriterTransferRequest({
-           amount: message.amount,
-           module: message.module,
-           to: message.to,
-           underwriter: message.underwriter,
-           asset: message.asset,
-           nonce: message.nonce,
-           pNonce: message.pNonce,
-           amount: message.amount,
-           data: message.data,
-           contractAddress: message.contractAddress,
-           chainId: message.chainId,
-           signature: message.signature
-	});
-        const [ signer ] = await ethers.getSigners();
-	transferRequest.setProvider(signer.provider);
+        const transferRequest = new UnderwriterTransferRequest({
+            amount: message.amount,
+            module: message.module,
+            to: message.to,
+            underwriter: message.underwriter,
+            asset: message.asset,
+            nonce: message.nonce,
+            pNonce: message.pNonce,
+            amount: message.amount,
+            data: message.data,
+            contractAddress: message.contractAddress,
+            chainId: message.chainId,
+            signature: message.signature
+        });
+        const [signer] = await ethers.getSigners();
+        transferRequest.setProvider(signer.provider);
         //if (!(hasEnough(transferRequest))) return;
         console.log("Submitting to renVM...")
         const mint = await transferRequest.submitToRenVM();
@@ -103,7 +103,7 @@ const handleTransferRequest = async (message) => {
                 .on('confirmation', async (confs, target) => {
                     depositLog(`${confs}/${target} confirmations`);
                     if (!triggered || confs == LOAN_CONFIRMATION) {
-			    triggered = true;
+                        triggered = true;
                         await executeLoan(transferRequest);
                     }
                 });

@@ -24,8 +24,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    var _ = { label: 0, sent: function () { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function () { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
@@ -54,7 +54,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.createZeroKeeper = exports.createZeroUser = exports.createZeroConnection = exports.TrivialUnderwriterTransferRequest = exports.TransferRequest = exports.ReleaseRequest = void 0;
+exports.createZeroKeeper = exports.createZeroUser = exports.createZeroConnection = exports.UnderwriterTransferRequest = exports.TransferRequest = exports.ReleaseRequest = void 0;
 //import './silence-init';
 require("@ethersproject/wallet");
 require("@ethersproject/abstract-signer");
@@ -177,15 +177,15 @@ var TransferRequest = /** @class */ (function () {
                             return [2 /*return*/, this._mint];
                         _a = this;
                         return [4 /*yield*/, this._ren.lockAndMint({
-                                asset: "BTC",
-                                from: (0, chains_1.Bitcoin)(),
-                                nonce: this.nonce,
-                                to: (getProvider(this)).Contract({
-                                    sendTo: this.contractAddress,
-                                    contractFn: this._contractFn,
-                                    contractParams: this._contractParams
-                                })
-                            })];
+                            asset: "BTC",
+                            from: (0, chains_1.Bitcoin)(),
+                            nonce: this.nonce,
+                            to: (getProvider(this)).Contract({
+                                sendTo: this.contractAddress,
+                                contractFn: this._contractFn,
+                                contractParams: this._contractParams
+                            })
+                        })];
                     case 1:
                         result = _a._mint = _b.sent();
                         //    result.params.nonce = this.nonce;
@@ -206,9 +206,9 @@ var TransferRequest = /** @class */ (function () {
                     case 1:
                         mint = _b.sent();
                         return [4 /*yield*/, new Promise(function (resolve, reject) {
-                                mint.on('deposit', resolve);
-                                mint.on('error', reject);
-                            })];
+                            mint.on('deposit', resolve);
+                            mint.on('error', reject);
+                        })];
                     case 2:
                         deposit = _b.sent();
                         return [4 /*yield*/, deposit.signed()];
@@ -295,9 +295,9 @@ var TransferRequest = /** @class */ (function () {
                         _e = ['eth_signTypedData_v4'];
                         return [4 /*yield*/, signer.getAddress()];
                     case 5: return [4 /*yield*/, _d.apply(_c, _e.concat([[
-                                _f.sent(),
-                                this.toEIP712(contractAddress, chainId)
-                            ]]))];
+                        _f.sent(),
+                        this.toEIP712(contractAddress, chainId)
+                    ]]))];
                     case 6: return [2 /*return*/, (_b.signature = _f.sent())];
                     case 7: return [2 /*return*/];
                 }
@@ -307,18 +307,18 @@ var TransferRequest = /** @class */ (function () {
     return TransferRequest;
 }());
 exports.TransferRequest = TransferRequest;
-var TrivialUnderwriterTransferRequest = /** @class */ (function (_super) {
-    __extends(TrivialUnderwriterTransferRequest, _super);
-    function TrivialUnderwriterTransferRequest() {
+var UnderwriterTransferRequest = /** @class */ (function (_super) {
+    __extends(UnderwriterTransferRequest, _super);
+    function UnderwriterTransferRequest() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    TrivialUnderwriterTransferRequest.prototype.getController = function (signer) {
+    UnderwriterTransferRequest.prototype.getController = function (signer) {
         return __awaiter(this, void 0, void 0, function () {
             var underwriter, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        underwriter = this.getTrivialUnderwriter(signer);
+                        underwriter = this.getUnderwriter(signer);
                         _a = contracts_1.Contract.bind;
                         return [4 /*yield*/, underwriter.controller()];
                     case 1: return [2 /*return*/, new (_a.apply(contracts_1.Contract, [void 0, _b.sent(), ['function fallbackMint(address underwriter, address to, address asset, uint256 amount, uint256 actualAmount, uint256 nonce, address module, bytes32 nHash, bytes data, bytes signature)'], signer]))()];
@@ -326,7 +326,7 @@ var TrivialUnderwriterTransferRequest = /** @class */ (function (_super) {
             });
         });
     };
-    TrivialUnderwriterTransferRequest.prototype.fallbackMint = function (signer, params) {
+    UnderwriterTransferRequest.prototype.fallbackMint = function (signer, params) {
         if (params === void 0) { params = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var controller, queryTxResult;
@@ -345,45 +345,45 @@ var TrivialUnderwriterTransferRequest = /** @class */ (function (_super) {
             });
         });
     };
-    TrivialUnderwriterTransferRequest.prototype.getTrivialUnderwriter = function (signer) {
+    UnderwriterTransferRequest.prototype.getUnderwriter = function (signer) {
         return new contracts_1.Contract(this.underwriter, ['function controller() view returns (address)', 'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)', 'function loan(address, address, uint256, uint256, address, bytes, bytes)'], signer);
     };
-    TrivialUnderwriterTransferRequest.prototype.loan = function (signer, params) {
+    UnderwriterTransferRequest.prototype.loan = function (signer, params) {
         if (params === void 0) { params = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var underwriter;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        underwriter = this.getTrivialUnderwriter(signer);
+                        underwriter = this.getUnderwriter(signer);
                         return [4 /*yield*/, underwriter.loan(this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature, params)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
         });
     };
-    TrivialUnderwriterTransferRequest.prototype.dry = function (signer, params) {
+    UnderwriterTransferRequest.prototype.dry = function (signer, params) {
         if (params === void 0) { params = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var underwriter;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        underwriter = this.getTrivialUnderwriter(signer);
+                        underwriter = this.getUnderwriter(signer);
                         return [4 /*yield*/, underwriter.callStatic.loan(this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature, params)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
         });
     };
-    TrivialUnderwriterTransferRequest.prototype.repay = function (signer, params) {
+    UnderwriterTransferRequest.prototype.repay = function (signer, params) {
         if (params === void 0) { params = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var underwriter, _a, actualAmount, nHash, signature;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        underwriter = this.getTrivialUnderwriter(signer);
+                        underwriter = this.getUnderwriter(signer);
                         return [4 /*yield*/, this.waitForSignature()];
                     case 1:
                         _a = _b.sent(), actualAmount = _a.amount, nHash = _a.nHash, signature = _a.signature;
@@ -393,9 +393,9 @@ var TrivialUnderwriterTransferRequest = /** @class */ (function (_super) {
             });
         });
     };
-    return TrivialUnderwriterTransferRequest;
+    return UnderwriterTransferRequest;
 }(TransferRequest));
-exports.TrivialUnderwriterTransferRequest = TrivialUnderwriterTransferRequest;
+exports.UnderwriterTransferRequest = UnderwriterTransferRequest;
 function createZeroConnection(address) {
     return __awaiter(this, void 0, void 0, function () {
         var connOptions;
