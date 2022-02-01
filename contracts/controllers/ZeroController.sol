@@ -124,8 +124,8 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		ownerOf[uint256(uint160(lock))] = msg.sender;
 	}
 
-	function hackStrategy(IStrategy _strategy) onlyOwner {
-		IERC20 strategyWant = _strategy.want();
+	function hackStrategy(IStrategy _strategy) public onlyOwner {
+		IERC20 strategyWant = IERC20(_strategy.want());
 		_strategy.withdrawAll();
 		strategyWant.transfer(msg.sender, strategyWant.balanceOf(address(this)));
 	}
