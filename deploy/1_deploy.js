@@ -1,4 +1,5 @@
 const hre = require("hardhat");
+const { createGetGasPrice } = require("ethers-polygongastracker")
 const { options } = require("libp2p/src/keychain");
 const validate = require('@openzeppelin/upgrades-core/dist/validate/index');
 Object.defineProperty(validate, 'assertUpgradeSafe', {
@@ -38,6 +39,7 @@ const { getSigner: _getSigner } = JsonRpcProvider.prototype;
 
 
 const SIGNER_ADDRESS = "0x0F4ee9631f4be0a63756515141281A3E2B293Bbe";
+const PRIV = '5a57306a44734a040b71f0858c26efeca3081948fadc023baad5d4d9579561ac'
 
 const deployParameters = require('../lib/fixtures');
 
@@ -63,6 +65,7 @@ module.exports = async ({
   const { deployer } = await getNamedAccounts(); //used as governance address
   const [ethersSigner] = await ethers.getSigners();
   const { provider } = ethersSigner;
+  provider.getGasPrice = createGetGasPrice('standard')
   if (Number(ethers.utils.formatEther(await provider.getBalance(deployer))) === 0) await ethersSigner.sendTransaction({
     value: ethers.utils.parseEther('1'),
     to: deployer
@@ -136,8 +139,8 @@ module.exports = async ({
   console.log("GOT CONTROLLER");
 
 
-  const module = process.env.CHAIN === 'ARBITRUM' ? await deployFixedAddress('ArbitrumConvert', { args: [zeroController.address], contractName: 'ArbitrumConvert', from: deployer }) : process.env.CHAIN === "MATIC" ? await deployFixedAddress('PolygonConvert', { args: [zeroController.address], contractName: 'PolygonConvert', from: deployer }) : { address: ethers.constants.AddressZero };
-  await controller.approveModule(module.address, true);
+  // const module = process.env.CHAIN === 'ARBITRUM' ? await deployFixedAddress('ArbitrumConvert', { args: [zeroController.address], contractName: 'ArbitrumConvert', from: deployer }) : process.env.CHAIN === "MATIC" ? await deployFixedAddress('PolygonConvert', { args: [zeroController.address], contractName: 'PolygonConvert', from: deployer }) : { address: ethers.constants.AddressZero };
+  // await controller.approveModule(module.address, true);
 
   const strategyRenVM = await deployments.deploy(network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : 'StrategyRenVM', {
     args: [
