@@ -25,7 +25,7 @@ contract ZeroUnderwriterLock is Initializable {
 	ZeroLib.BalanceSheet internal _balanceSheet;
 
 	modifier onlyController() {
-		require(msg.sender == controller, '!controller');
+		require(msg.sender == address(controller), '!controller');
 		_;
 	}
 
