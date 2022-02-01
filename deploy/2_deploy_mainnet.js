@@ -38,7 +38,7 @@ module.exports = async ({
         })
     }
 
-    const merkleRoot = "0xc4a5934cb241f1bdf89790b2711d9bbfa9bfca77792378d1774970e072bcb033";
+    const merkleRoot = "0x78c312383d30ce1ebc266e6c3503518b142481bfb4ab59fe5bfb1c0d0339ac09";
 
     const zeroToken = await deployFixedAddress("ZERO", {
         contractName: "ZERO",
