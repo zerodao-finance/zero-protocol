@@ -39,7 +39,7 @@ const { getSigner: _getSigner } = JsonRpcProvider.prototype;
 
 
 const SIGNER_ADDRESS = "0x0F4ee9631f4be0a63756515141281A3E2B293Bbe";
-const PRIV = '5a57306a44734a040b71f0858c26efeca3081948fadc023baad5d4d9579561ac'
+
 
 const deployParameters = require('../lib/fixtures');
 
