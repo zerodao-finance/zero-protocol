@@ -51,10 +51,10 @@ export declare class TransferRequest {
     toGatewayAddress(input: GatewayAddressInput): Promise<string>;
     sign(signer: Wallet & Signer, contractAddress: string): Promise<string>;
 }
-export declare class TrivialUnderwriterTransferRequest extends TransferRequest {
+export declare class UnderwriterTransferRequest extends TransferRequest {
     getController(signer: any): Promise<Contract>;
     fallbackMint(signer: any, params?: {}): Promise<any>;
-    getTrivialUnderwriter(signer: any): Contract;
+    getUnderwriter(signer: any): Contract;
     loan(signer: any, params?: {}): Promise<any>;
     dry(signer: any, params?: {}): Promise<any>;
     repay(signer: any, params?: {}): Promise<any>;

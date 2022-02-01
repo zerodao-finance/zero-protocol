@@ -24,6 +24,16 @@ contract ZeroUnderwriterLock is Initializable {
 	address public vault;
 	ZeroLib.BalanceSheet internal _balanceSheet;
 
+	modifier onlyController() {
+		require(msg.sender == controller, '!controller');
+		_;
+	}
+
+	modifier onlyOwner() {
+		require(msg.sender == owner(), 'must be called by owner');
+		_;
+	}
+
 	function balanceSheet()
 		public
 		view
@@ -54,11 +64,6 @@ contract ZeroUnderwriterLock is Initializable {
 		);
 	}
 
-	modifier onlyOwner() {
-		require(msg.sender == owner(), 'must be called by owner');
-		_;
-	}
-
 	function owner() public view returns (address result) {
 		result = IERC721(address(controller)).ownerOf(uint256(uint160(address(this))));
 	}
@@ -84,7 +89,7 @@ contract ZeroUnderwriterLock is Initializable {
 	/**
   @notice destroy this contract and send all vault tokens to NFT contract
   */
-	function burn(address receiver) public onlyOwner {
+	function burn(address receiver) public onlyController {
 		require(
 			IyVault(vault).transfer(receiver, IyVault(vault).balanceOf(address(this))),
 			'failed to transfer vault token to receiver'

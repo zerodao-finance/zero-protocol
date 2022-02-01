@@ -1,4 +1,4 @@
-import { TrivialUnderwriterTransferRequest, createZeroKeeper, TransferRequest } from './zero';
+import { UnderwriterTransferRequest, createZeroKeeper, TransferRequest } from './zero';
 import { ZeroUser } from './p2p/core';
 import { ethers } from 'ethers';
 import { EventEmitter } from 'events';
@@ -9,19 +9,19 @@ export const TEST_KEEPER_ADDRESS = '0x12fBc372dc2f433392CC6caB29CFBcD5082EF494';
 let keeperSigner;
 
 export const createMockKeeper = async (provider) => {
-	const keeper = (createZeroKeeper as any)({ on() {} });
+	const keeper = (createZeroKeeper as any)({ on() { } });
 	provider = provider || new ethers.providers.JsonRpcProvider('http://localhost:8545');
 	keepers.push(keeper);
 	if (!keeperSigner) {
 		await provider.send('hardhat_impersonateAccount', [TEST_KEEPER_ADDRESS]);
 		keeperSigner = provider.getSigner(TEST_KEEPER_ADDRESS);
 	}
-	keeper.advertiseAsKeeper = async () => {};
+	keeper.advertiseAsKeeper = async () => { };
 	keeper.setTxDispatcher = async (fn) => {
 		(keeper as any)._txDispatcher = fn;
 	};
 	keeper.setTxDispatcher(async (transferRequest) => {
-		const trivial = new TrivialUnderwriterTransferRequest(transferRequest);
+		const trivial = new UnderwriterTransferRequest(transferRequest);
 		try {
 			const loan_result = await trivial.dry(keeperSigner, { from: await keeperSigner.getAddress() });
 			console.log('Loan Result', loan_result);
@@ -122,87 +122,87 @@ export const enableGlobalMockRuntime = () => {
 		(mint as any).gatewayAddress = gatewayAddress;
 		return mint;
 	};
-  /*
-	(ReleaseRequest as any).prototype.submitReleaseRequest = async function (flag) {
-		// TODO implement confirmed event listener
-		const _confirm = new EventEmitter();
-		const target = 6
-		const timeout = (n) => new Promise((resolve) => setTimeout(resolve, n))
-		const txHash = (ethers.utils.randomBytes(32).toString as any)('base64');
-
-		setTimeout(async () => {
-			_confirm.emit("target", target)
-			_confirm.emit("confirmation", 0)
-			_confirm.emit("transactionHash", txHash)
-
-			for (let i = 1; 1 <= target; i++) {
-				await timeout(1000);
-				_confirm.emit('confirmation', i, target);
-			}
-		}, 3000)
-
-		const _burnAndRelease = {
-			async burn(){
-				return _confirm
-			},
-
-			async release(){
-				const _release = new EventEmitter();
-				_confirm.on("confirmation", (confs, target) => {
-					setTimeout(async () => {
-						const result = await new Promise((resolve) => {
-							if (confs === target) resolve("done")
-							if (confs > 0) resolve("confirming")
-							else resolve("pending")
-						})
-						_release.emit("status", result)
-					}, 100)
-				})
-				_confirm.on("transactionHash", (txHash) => {
-					setTimeout(async () => {
-						_release.emit("txHash", txHash)
-					}, 100)
-				})
-				return _release
-			}
-		}
-
-		return _burnAndRelease
-	}
-
-	(ReleaseRequest as any).prototype.sign = async function () {
-		this.signature = ethers.utils.hexlify(ethers.utils.randomBytes(65))
-		return this.signature
-	}
-
-
-	(ZeroUser as any).prototype.publishReleaseRequest = async function (_releaseRequest) {
-		setTimeout(() => {
-			(async () => {
-				try {
-					Promise.all(keepers.map(async (v) => v._txDispatch && v._txDispatcher(_releaseRequest))).catch(
-						console.error
-					)
-				} catch (e) {
-					console.error(e)
-				}
-			})();
-		}, 1000)
-	}
-
-
-	ZeroUser.prototype.publishTransferRequest = async function (transferRequest) {
-		setTimeout(() => {
-			(async () => {
-				try {
-					Promise.all(keepers.map(async (v) => v._txDispatcher && v._txDispatcher(transferRequest))).catch(
-						console.error,
-					);
-				} catch (e) {
-					console.error(e);
-				}
-			})();
-		}, 3000);
-	};
- */
+	/*
+	  (ReleaseRequest as any).prototype.submitReleaseRequest = async function (flag) {
+		  // TODO implement confirmed event listener
+		  const _confirm = new EventEmitter();
+		  const target = 6
+		  const timeout = (n) => new Promise((resolve) => setTimeout(resolve, n))
+		  const txHash = (ethers.utils.randomBytes(32).toString as any)('base64');
+  
+		  setTimeout(async () => {
+			  _confirm.emit("target", target)
+			  _confirm.emit("confirmation", 0)
+			  _confirm.emit("transactionHash", txHash)
+  
+			  for (let i = 1; 1 <= target; i++) {
+				  await timeout(1000);
+				  _confirm.emit('confirmation', i, target);
+			  }
+		  }, 3000)
+  
+		  const _burnAndRelease = {
+			  async burn(){
+				  return _confirm
+			  },
+  
+			  async release(){
+				  const _release = new EventEmitter();
+				  _confirm.on("confirmation", (confs, target) => {
+					  setTimeout(async () => {
+						  const result = await new Promise((resolve) => {
+							  if (confs === target) resolve("done")
+							  if (confs > 0) resolve("confirming")
+							  else resolve("pending")
+						  })
+						  _release.emit("status", result)
+					  }, 100)
+				  })
+				  _confirm.on("transactionHash", (txHash) => {
+					  setTimeout(async () => {
+						  _release.emit("txHash", txHash)
+					  }, 100)
+				  })
+				  return _release
+			  }
+		  }
+  
+		  return _burnAndRelease
+	  }
+  
+	  (ReleaseRequest as any).prototype.sign = async function () {
+		  this.signature = ethers.utils.hexlify(ethers.utils.randomBytes(65))
+		  return this.signature
+	  }
+  
+  
+	  (ZeroUser as any).prototype.publishReleaseRequest = async function (_releaseRequest) {
+		  setTimeout(() => {
+			  (async () => {
+				  try {
+					  Promise.all(keepers.map(async (v) => v._txDispatch && v._txDispatcher(_releaseRequest))).catch(
+						  console.error
+					  )
+				  } catch (e) {
+					  console.error(e)
+				  }
+			  })();
+		  }, 1000)
+	  }
+  
+  
+	  ZeroUser.prototype.publishTransferRequest = async function (transferRequest) {
+		  setTimeout(() => {
+			  (async () => {
+				  try {
+					  Promise.all(keepers.map(async (v) => v._txDispatcher && v._txDispatcher(transferRequest))).catch(
+						  console.error,
+					  );
+				  } catch (e) {
+					  console.error(e);
+				  }
+			  })();
+		  }, 3000);
+	  };
+   */
 };
