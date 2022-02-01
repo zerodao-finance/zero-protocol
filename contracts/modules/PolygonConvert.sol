@@ -1,4 +1,4 @@
-pragma solidity >=0.6.0;
+pragma solidity >=0.6.0<0.8.0;
 import {PolygonConvertLib} from './PolygonConvertLib.sol';
 import {IUniswapV2Router02} from '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import {SafeMath} from 'oz410/math/SafeMath.sol';
