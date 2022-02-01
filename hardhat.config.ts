@@ -68,10 +68,15 @@ module.exports = {
 			accounts,
 			chainId: 1,
 		},
+		// localhost: {
+		// 	live: false,
+		// 	saveDeployments: true,
+		// 	tags: ['development'],
+		// },
 		localhost: {
 			live: false,
 			saveDeployments: true,
-			tags: ['development'],
+			tags: ["local"]
 		},
 		hardhat: {
 			live: false,
