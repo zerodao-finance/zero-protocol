@@ -39,3 +39,9 @@
 
 * Should be a no-op
 * Just execute the trade eagerly
+
+###
+
+1. Write the one that is fully collaterized 
+2. It doesn't need the swap record
+3. Loan then repay will need the swap record

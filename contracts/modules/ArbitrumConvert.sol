@@ -10,7 +10,7 @@ import {IRenCrvArbitrum} from '../interfaces/CurvePools/IRenCrvArbitrum.sol';
 contract ArbitrumConvert {
 	using SafeERC20 for *;
 	using SafeMath for *;
-	mapping(uint256 => ArbitrumConvertLib.ConvertRecord) public outstanding;
+	mapping(uint256 => ArbitrumConvertLib.ConvertRecord) public outstanding; // Debt records
 	address public immutable controller;
 	address public immutable governance;
 	uint256 public blockTimeout;
@@ -26,9 +26,9 @@ contract ArbitrumConvert {
 
 	constructor(address _controller) {
 		controller = _controller;
-		governance = IController(_controller).governance();
-		IERC20(want).safeApprove(renCrvArbitrum, ~uint256(0) >> 2);
-		IERC20(wbtc).safeApprove(tricryptoArbitrum, ~uint256(0) >> 2);
+		governance = IController(_controller).governance(); // Set owner
+		IERC20(want).safeApprove(renCrvArbitrum, ~uint256(0) >> 2); // Approve renCrvArbitrum to transact max amount
+		IERC20(wbtc).safeApprove(tricryptoArbitrum, ~uint256(0) >> 2); // Approve tricryptoArbitrum to transact max amount
 	}
 
 	function setBlockTimeout(uint256 _ct) public {
@@ -37,12 +37,14 @@ contract ArbitrumConvert {
 	}
 
 	function isActive(ArbitrumConvertLib.ConvertRecord storage record) internal view returns (bool) {
-		return record.qty != 0 || record.qtyETH != 0;
+		// internal means only the contract can call it
+		// view means that it will not change the state
+		return record.qty != 0 || record.qtyETH != 0; // Check if there is an amount on the ConvertRecord
 	}
 
 	function defaultLoan(uint256 _nonce) public {
-		require(block.number >= outstanding[_nonce].when + blockTimeout);
-		require(isActive(outstanding[_nonce]), '!outstanding');
+		require(block.number >= outstanding[_nonce].when + blockTimeout); // Check to see if the loan is past due
+		require(isActive(outstanding[_nonce]), '!outstanding'); // Require there is still an amount on the loan
 		uint256 _amountSwappedBack = swapTokensBack(outstanding[_nonce]);
 		IERC20(want).safeTransfer(controller, _amountSwappedBack);
 		delete outstanding[_nonce];
@@ -90,12 +92,12 @@ contract ArbitrumConvert {
 	}
 
 	function swapTokensBack(ArbitrumConvertLib.ConvertRecord storage record) internal returns (uint256 amountReturned) {
-		uint256 _amountStart = IERC20(wbtc).balanceOf(address(this));
+		uint256 _amountStart = IERC20(wbtc).balanceOf(address(this)); // Get the amount of wbtc the contract currently holds
 		(bool success, ) = tricryptoArbitrum.call{value: record.qtyETH}(
 			abi.encodeWithSelector(ICurveETHUInt256.exchange.selector, 2, 1, record.qtyETH, 0, true)
-		);
-		require(success, '!exchange');
-		uint256 wbtcOut = IERC20(wbtc).balanceOf(address(this));
+		); // Call the exchange function to
+		require(success, '!exchange'); // The swap must be succesful
+		uint256 wbtcOut = IERC20(wbtc).balanceOf(address(this)); // Get the new amount of wbtc this contract has
 		amountReturned = IRenCrvArbitrum(renCrvArbitrum).exchange(0, 1, wbtcOut, 0, address(this)).add(record.qty);
 	}
 

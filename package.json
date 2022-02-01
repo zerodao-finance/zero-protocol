@@ -31,7 +31,7 @@
 		"@boringcrypto/boring-solidity": "https://github.com/boringcrypto/BoringSolidity",
 		"@nomiclabs/hardhat-ethers": "^2.0.2",
 		"@nomiclabs/hardhat-etherscan": "^2.1.7",
-		"@openzeppelin/contracts": "3.4.0",
+		"@openzeppelin/contracts": "^4.4.2",
 		"@openzeppelin/contracts-upgradeable": "3.4.1-solc-0.7-2",
 		"@renproject/ren": "^2.5.10-1",
 		"@types/bignumber.js": "^5.0.0",
