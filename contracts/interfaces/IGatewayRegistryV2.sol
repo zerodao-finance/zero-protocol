@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.6.0;
 
-import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
+import {IERC20} from '@openzeppelin/contracts-new/token/ERC20/IERC20.sol';
 
 import './IGateway.sol';
 
 /// @notice GatewayRegistry is a mapping from assets to their associated
 /// RenERC20 and Gateway contracts.
-interface IGatewayRegistry {
+interface IGatewayRegistryV2 {
 	/// @dev The symbol is included twice because strings have to be hashed
 	/// first in order to be used as a log index/topic.
 	event LogGatewayRegistered(

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.6.0<0.8.0;
+pragma solidity >=0.6.0;
 
 import {IZeroModule} from '../interfaces/IZeroModule.sol';
 import {Initializable} from 'oz410/proxy/Initializable.sol';

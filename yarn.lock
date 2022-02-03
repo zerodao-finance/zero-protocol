@@ -1687,10 +1687,10 @@
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-3.4.1-solc-0.7-2.tgz#8d46f2310560d3756bd5235e20f4e50caa947e92"
   integrity sha512-hGbNTTlkcsRhMdJ+IMAWKn5uI1IK9yvJamZpQou1aOjgr+VOFo7eqdiqs+Dwv8fGzN7L/Wdg4XqiW3vGqTHk3g==
 
-"@openzeppelin/contracts@^4.4.2":
-  version "4.4.2"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.4.2.tgz#4e889c9c66e736f7de189a53f8ba5b8d789425c2"
-  integrity sha512-NyJV7sJgoGYqbtNUWgzzOGW4T6rR19FmX1IJgXGdapGPWsuMelGJn9h03nos0iqfforCbCB0iYIR0MtIuIFLLw==
+"@openzeppelin/contracts@3.4.0":
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-3.4.0.tgz#9a1669ad5f9fdfb6e273bb5a4fed10cb4cc35eb0"
+  integrity sha512-qh+EiHWzfY/9CORr+eRUkeEUP1WiFUcq3974bLHwyYzLBUtK6HPaMkIUHi74S1rDTZ0sNz42DwPc5A4IJvN3rg==
 
 "@openzeppelin/hardhat-upgrades@^1.8.2":
   version "1.13.0"
@@ -6164,6 +6164,11 @@ emailjs@^2.2.0:
   dependencies:
     addressparser "^0.3.2"
     emailjs-mime-codec "^2.0.7"
+
+emoji-regex@^10.0.0:
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/emoji-regex/-/emoji-regex-10.0.0.tgz#96559e19f82231b436403e059571241d627c42b8"
+  integrity sha512-KmJa8l6uHi1HrBI34udwlzZY1jOEuID/ft4d8BSSEdRyap7PwBEt910453PJa5MuGvxkLqlt4Uvhu7tttFHViw==
 
 emoji-regex@^7.0.1:
   version "7.0.3"
@@ -14030,7 +14035,19 @@ prettier-linter-helpers@^1.0.0:
   dependencies:
     fast-diff "^1.1.2"
 
-prettier@^2.3.2:
+prettier-plugin-solidity@^1.0.0-beta.19:
+  version "1.0.0-beta.19"
+  resolved "https://registry.yarnpkg.com/prettier-plugin-solidity/-/prettier-plugin-solidity-1.0.0-beta.19.tgz#7c3607fc4028f5e6a425259ff03e45eedf733df3"
+  integrity sha512-xxRQ5ZiiZyUoMFLE9h7HnUDXI/daf1tnmL1msEdcKmyh7ZGQ4YklkYLC71bfBpYU2WruTb5/SFLUaEb3RApg5g==
+  dependencies:
+    "@solidity-parser/parser" "^0.14.0"
+    emoji-regex "^10.0.0"
+    escape-string-regexp "^4.0.0"
+    semver "^7.3.5"
+    solidity-comments-extractor "^0.0.7"
+    string-width "^4.2.3"
+
+prettier@^2.5.1:
   version "2.5.1"
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.5.1.tgz#fff75fa9d519c54cf0fce328c1017d94546bc56a"
   integrity sha512-vBZcPRUR5MZJwoyi3ZoyQlc1rXeEck8KgeC9AwwOn+exuxLxq5toTRDTSaVrXHxelDMHy9zlicw8u66yxoSUFg==
@@ -15639,6 +15656,11 @@ solidity-ast@^0.4.15:
   version "0.4.29"
   resolved "https://registry.yarnpkg.com/solidity-ast/-/solidity-ast-0.4.29.tgz#faa06b93467501cf7069436c8a9255dd0a9a195c"
   integrity sha512-sp4+lbgZPQJLBNFWoLiRb/NXZOhqAEPK9AIOh5htKOTx72w5j9Bu5eQl0jcUc5wiyCqsgpFWLCGfgu3edkSWog==
+
+solidity-comments-extractor@^0.0.7:
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/solidity-comments-extractor/-/solidity-comments-extractor-0.0.7.tgz#99d8f1361438f84019795d928b931f4e5c39ca19"
+  integrity sha512-wciNMLg/Irp8OKGrh3S2tfvZiZ0NEyILfcRCXCD4mp7SgK/i9gzLfhY2hY7VMCQJ3kH9UB9BzNdibIVMchzyYw==
 
 sort-keys-length@^1.0.0:
   version "1.0.1"
@@ -17991,4 +18013,4 @@ yocto-queue@^1.0.0:
 
 "zero-varenx@https://github.com/zerodao-finance/zero-varenx":
   version "0.1.0"
-  resolved "https://github.com/zerodao-finance/zero-varenx#8d7b6de821b4ee00367d46d0e6f76f5f0485f0a9"
+  resolved "https://github.com/zerodao-finance/zero-varenx#af1d86ed051a076fd8845cf21a43a6f54bfced20"
