@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.5.17;
+pragma solidity >=0.5.17<0.8.0;
 
 import 'oz410/token/ERC20/IERC20.sol';
 import 'oz410/math/SafeMath.sol';

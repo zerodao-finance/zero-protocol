@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.7.0;
+pragma solidity >=0.7.0<0.8.0;
 
 import {yVault} from '../vendor/yearn/vaults/yVault.sol';
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';

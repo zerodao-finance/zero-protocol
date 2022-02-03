@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.5.0;
+pragma solidity >=0.5.0<0.8.0;
 
 import {Implementation} from './Implementation.sol';
 import {Create2} from 'oz410/utils/Create2.sol';

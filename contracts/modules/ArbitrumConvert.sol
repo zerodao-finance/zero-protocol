@@ -1,4 +1,4 @@
-pragma solidity >=0.6.0;
+pragma solidity >=0.6.0<0.8.0;
 import {ArbitrumConvertLib} from './ArbitrumConvertLib.sol';
 import {SafeMath} from 'oz410/math/SafeMath.sol';
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';

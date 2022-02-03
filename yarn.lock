@@ -1677,6 +1677,11 @@
   dependencies:
     "@octokit/openapi-types" "^11.2.0"
 
+"@openzeppelin/contracts-new@npm:@openzeppelin/contracts":
+  version "4.4.2"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.4.2.tgz#4e889c9c66e736f7de189a53f8ba5b8d789425c2"
+  integrity sha512-NyJV7sJgoGYqbtNUWgzzOGW4T6rR19FmX1IJgXGdapGPWsuMelGJn9h03nos0iqfforCbCB0iYIR0MtIuIFLLw==
+
 "@openzeppelin/contracts-upgradeable@3.4.1-solc-0.7-2":
   version "3.4.1-solc-0.7-2"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-3.4.1-solc-0.7-2.tgz#8d46f2310560d3756bd5235e20f4e50caa947e92"
@@ -17983,3 +17988,7 @@ yocto-queue@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-1.0.0.tgz#7f816433fb2cbc511ec8bf7d263c3b58a1a3c251"
   integrity sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==
+
+"zero-varenx@https://github.com/zerodao-finance/zero-varenx":
+  version "0.1.0"
+  resolved "https://github.com/zerodao-finance/zero-varenx#8d7b6de821b4ee00367d46d0e6f76f5f0485f0a9"
