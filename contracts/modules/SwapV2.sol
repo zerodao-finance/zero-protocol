@@ -15,7 +15,7 @@ contract SwapV2 is IZeroModule, ReentrancyGuard {
 	using SafeERC20 for IERC20;
 	using SafeMath for *;
 
-	uint256 public SUPPLEMENTARY_FEE = 1000;
+	uint256 public SUPPLEMENTARY_FEE = 100;
 	uint256 public constant PERCENTAGE_DIVIDER = 100_000;
 
 	IGatewayRegistry public immutable registry;
@@ -27,19 +27,6 @@ contract SwapV2 is IZeroModule, ReentrancyGuard {
 	// Events
 	event Swap(address indexed sender, address indexed from, address indexed to, uint256 amount);
 	address public immutable controller;
-	struct SwapRecord {
-		address to;
-		address inToken;
-		address outToken;
-		address recipient;
-		uint256 amountIn;
-		uint256 when;
-		uint256 qty;
-		uint256 qtyFee;
-		bytes burnSendTo;
-		uint256 amount;
-	}
-	mapping(uint256 => SwapRecord) public records;
 
 	constructor(
 		address _controller,
@@ -74,43 +61,38 @@ contract SwapV2 is IZeroModule, ReentrancyGuard {
 		uint256 _nonce,
 		bytes memory _data
 	) public override onlyController {
-		SwapRecord memory swapRecord;
-		swapRecord.when = block.number;
-		swapRecord.to = _to;
-		swapRecord.amount = _amount;
 		address[] memory path;
+		uint256 amountIn;
+		address recipient;
 		bytes memory data;
 		//decode data
-		(path, swapRecord.amountIn, swapRecord.recipient, data) = abi.decode(
-			_data,
-			(address[], uint256, address, bytes)
-		);
+		(path, amountIn, recipient, data) = abi.decode(_data, (address[], uint256, address, bytes));
 
 		//set swapRecord params
-		swapRecord.inToken = path[0];
-		swapRecord.outToken = path[1];
-		swapRecord.when = block.timestamp;
-		swapRecord.qtyFee = swapRecord.amountIn.mul(SUPPLEMENTARY_FEE).div(PERCENTAGE_DIVIDER);
+		uint256 qtyFee = swapRecord.amountIn.mul(SUPPLEMENTARY_FEE).div(PERCENTAGE_DIVIDER);
 		//deposit 0.01% renBTC fee received into the btcVault
-		IyVaultV2(btcVault).deposit(swapRecord.qtyFee);
+		IyVaultV2(btcVault).deposit(qtyFee);
 		//fetch resulting zeroBTC
 		uint256 zeroBTCAmount = currentBalance(btcVault);
 		//fetch underwriter
-		address lockContract = IZeroController(msg.sender).lockFor(swapRecord.to);
+		address lockContract = IZeroController(msg.sender).lockFor(path[1]);
 		//send zeroBtc to underwriter
-		IERC20(btcVault).transferFrom(swapRecord.to, lockContract, zeroBTCAmount);
+		IyVaultV2(btcVault).harvest(lockContract, zeroBTCAmount);
 
 		// handle trade execution
-		if (IERC20(swapRecord.inToken).allowance(address(this), router) < _amount) {
-			IERC20(swapRecord.inToken).approve(router, type(uint256).max);
+		if (IERC20(path[0]).allowance(address(this), router) < _amount) {
+			IERC20(path[0]).approve(router, type(uint256).max);
 		}
-		Address.functionCall(router, data);
 
-		uint256 currentDestTokenBalance = currentBalance(swapRecord.outToken);
-
-		swapRecord.qty = currentBalance(swapRecord.outToken) - currentDestTokenBalance;
-		records[_nonce] = swapRecord;
-		emit Swap(swapRecord.to, swapRecord.inToken, swapRecord.outToken, swapRecord.qty);
+		uint256 currentDestTokenBalance = currentBalance(path[1]);
+		// perform the swap
+		IUniswapV2Router02(router).swapExactTokensForTokens(amountIn, 1, path, _to, block.timestamp + 1);
+		uint256 qty = currentBalance(path[1]) - currentDestTokenBalance;
+		emit Swap(_to, path[0], path[1], qty);
+		if (data.length > 0) {
+			//callback
+			Address.functionCall{gas: 2e6}(recipient, data);
+		}
 	}
 
 	function repayLoan(
@@ -150,8 +132,6 @@ contract SwapV2 is IZeroModule, ReentrancyGuard {
 		// @TODO: get back to this later while testing and determine if it actually does lock up 100% (lol)
 		return _in;
 	}
-
-	receive() external payable {}
 
 	function want() external view override returns (address _ret) {}
 }
