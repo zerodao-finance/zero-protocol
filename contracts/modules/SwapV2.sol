@@ -58,6 +58,15 @@ contract SwapV2 is IZeroModule, ReentrancyGuard {
 		_;
 	}
 
+	// to: address that the renbtc loan goes to
+	// inToken: renbtc address
+	// amount: renbtc amount
+	// nonce: nonce
+	// _data:
+	//  address[] memory path: [inToken, outToken]
+	//  amountIn: amount of inToken given
+	//  recipient: recipient of the swap (?)
+	//  data: callData
 	function receiveLoan(
 		address _to,
 		address _inToken,
@@ -71,40 +80,34 @@ contract SwapV2 is IZeroModule, ReentrancyGuard {
 		swapRecord.amount = _amount;
 		address[] memory path;
 		bytes memory data;
+		//decode data
 		(path, swapRecord.amountIn, swapRecord.recipient, data) = abi.decode(
 			_data,
 			(address[], uint256, address, bytes)
 		);
-		// else token is in the contract because of the minting process or the user sent ETH
 
+		//set swapRecord params
 		swapRecord.inToken = path[0];
 		swapRecord.outToken = path[1];
 		swapRecord.when = block.timestamp;
-		// Charge the fee
 		swapRecord.qtyFee = swapRecord.amountIn.mul(SUPPLEMENTARY_FEE).div(PERCENTAGE_DIVIDER);
+		//deposit 0.01% renBTC fee received into the btcVault
 		IyVaultV2(btcVault).deposit(swapRecord.qtyFee);
+		//fetch resulting zeroBTC
 		uint256 zeroBTCAmount = currentBalance(btcVault);
+		//fetch underwriter
 		address lockContract = IZeroController(msg.sender).lockFor(swapRecord.to);
-		// send resulting zerobtc to underwriter - very unsure about this one
+		//send zeroBtc to underwriter
 		IERC20(btcVault).transferFrom(swapRecord.to, lockContract, zeroBTCAmount);
 
-		// Saving ref to current balance of destination token to know how much was swapped
-
-		// Executing the swap
+		// handle trade execution
 		if (IERC20(swapRecord.inToken).allowance(address(this), router) < _amount) {
 			IERC20(swapRecord.inToken).approve(router, type(uint256).max);
 		}
-		// Swapping and calling the router if theres any data
-		if (data.length != 0) {
-			Address.functionCall(router, data);
-		} else {
-			// @TODO: write this out
-			//data = abi.encode()
-		}
+		Address.functionCall(router, data);
 
 		uint256 currentDestTokenBalance = currentBalance(swapRecord.outToken);
 
-		// How much was swapped
 		swapRecord.qty = currentBalance(swapRecord.outToken) - currentDestTokenBalance;
 		records[_nonce] = swapRecord;
 		emit Swap(swapRecord.to, swapRecord.inToken, swapRecord.outToken, swapRecord.qty);
@@ -117,7 +120,7 @@ contract SwapV2 is IZeroModule, ReentrancyGuard {
 		uint256 _nonce,
 		bytes memory /* _data */
 	) public override onlyController {
-		this;
+		// no-op
 	}
 
 	function swapTokens(
