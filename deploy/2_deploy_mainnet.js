@@ -1,5 +1,6 @@
 const hre = require("hardhat")
-const { ethers, deployments, upgrades } = hre;
+const { ethers, deployments } = hre;
+import { Contract } from 'ethers';
 
 const deployFixedAddress = async (...args) => {
     console.log('Deploying ' + args[0]);
@@ -20,10 +21,7 @@ const deployParameters = require('../lib/fixtures');
 
 const SIGNER_ADDRESS = "0x0F4ee9631f4be0a63756515141281A3E2B293Bbe";
 
-
 module.exports = async ({
-    getChainId,
-    getUnnamedAccounts,
     getNamedAccounts
 }) => {
     if (process.env.CHAIN !== "ETHEREUM") return;
@@ -38,7 +36,13 @@ module.exports = async ({
         })
     }
 
-    const merkleRoot = "0x78c312383d30ce1ebc266e6c3503518b142481bfb4ab59fe5bfb1c0d0339ac09";
+    const merkleRoot = "0xe52564f93ddc09e2d60c8150e4a11c5be656f147bf1f8c64a492b6a34c11dc6a";
+
+    // For testing airdrop - Start
+    const { abi: erc20abi } = await deployments.getArtifact('BTCVault');
+    const [testTreasury] = await ethers.getSigners();
+    const renBTC = new Contract(deployParameters['ETHEREUM']['renBTC'], erc20abi, testTreasury);
+    // For testing airdrop - End
 
     const zeroToken = await deployFixedAddress("ZERO", {
         contractName: "ZERO",
@@ -49,21 +53,28 @@ module.exports = async ({
     const zeroDistributor = await deployFixedAddress("ZeroDistributor", {
         contractName: "ZeroDistributor",
         args: [
+            testTreasury.address, // change to actual treasury address
             zeroToken.address,
-            merkleRoot
+            merkleRoot,
         ],
         from: deployer
-    })
+    });
 
-    // const masterChef = await deployFixedAddress("MasterChef", {
-    //     contractName: "MasterChef",
-    //     args: [
-    //         // ZERO _zero,
-    //         // address _devaddr,
-    //         // uint256 _zeroPerBlock,
-    //         // uint256 _startBlock,
-    //         // uint256 _bonusEndBlock
-    //     ],
-    //     from: deployer
-    // })
+    // For testing airdrop - Start
+    const testTransfer = await renBTC.approve(zeroDistributor.address, ethers.constants.MaxUint256);
+    // For testing airdrop - End
+
+    /* For staking after airdrop complete
+    const masterChef = await deployFixedAddress("MasterChef", {
+        contractName: "MasterChef",
+        args: [
+            // ZERO _zero,
+            // address _devaddr,
+            // uint256 _zeroPerBlock,
+            // uint256 _startBlock,
+            // uint256 _bonusEndBlock
+        ],
+        from: deployer
+    }) 
+    */
 }
