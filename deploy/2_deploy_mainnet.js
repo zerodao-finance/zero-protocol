@@ -1,6 +1,6 @@
 const hre = require("hardhat")
 const { ethers, deployments, upgrades } = hre;
-import { Contract, utils } from 'ethers';
+const { Contract, utils } = ethers;
 
 const deployFixedAddress = async (...args) => {
     console.log('Deploying ' + args[0]);
@@ -52,8 +52,6 @@ module.exports = async ({
     const [testTreasury] = await ethers.getSigners();
     // Zero / BTC
     const renBTC = new Contract(deployParameters['ETHEREUM']['renBTC'], erc20abi, testTreasury);
-    console.log("RenBTC Address: ", renBTC.address);
-    console.log("RenBTC Interface: ", renBTC.interface.format(utils.FormatTypes.minimal));
     const zeroUnderwriterLockBytecodeLib = await deployFixedAddress('ZeroUnderwriterLockBytecodeLib', {
         contractName: 'ZeroUnderwriterLockBytecodeLib',
         args: [],
@@ -87,8 +85,6 @@ module.exports = async ({
         from: deployer
     });
 
-    const balanceZero = await testTreasury.provider.getBalance(zeroToken.address)
-
     const zeroDistributor = await deployFixedAddress("ZeroDistributor", {
         contractName: "ZeroDistributor",
         args: [
@@ -100,7 +96,21 @@ module.exports = async ({
     });
 
     // For testing airdrop - Start
-    const testTransfer = await renBTC.approve(zeroDistributor.address, ethers.constants.MaxUint256);
+    const RENBTC_HOLDER = '0xb523e12baf0d032f0180ca109b5c3759e330a8d4';
+    await hre.network.provider.request({ method: 'hardhat_impersonateAccount', params: [RENBTC_HOLDER] });
+    const [hardhatSigner] = await ethers.getSigners();
+    await hardhatSigner.sendTransaction({ value: ethers.utils.parseEther('0.05'), to: RENBTC_HOLDER });
+    const [curveSigner] = await ethers.getSigners(RENBTC_HOLDER);
+    const [signer] = await ethers.getSigners();
+    const contract = renBTC.connect(curveSigner);
+    const approveRenBtc = await renBTC.approve(testTreasury.address, ethers.constants.MaxUint256);
+    const tx = await contract.transfer(testTreasury.address, await renBTC.balanceOf(signer.address));
+
+    const testApprove = await renBTC.approve(zeroDistributor.address, ethers.constants.MaxUint256);
+    console.log(testTreasury.address);
+    console.log(await renBTC.balanceOf(testTreasury.address));
+    const testTransfer = await renBTC.transfer(zeroDistributor.address, await renBTC.balanceOf(testTreasury.address));
+    console.log(testApprove);
     console.log(testTransfer);
     // For testing airdrop - End
 
