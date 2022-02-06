@@ -67,6 +67,13 @@ module.exports = async ({
     const zeroController = await deployProxyFixedAddress(zeroControllerFactory, ["0x0F4ee9631f4be0a63756515141281A3E2B293Bbe", deployParameters["ETHEREUM"].gatewayRegistry], {
         unsafeAllowLinkedLibraries: true
     });
+    const zeroControllerArtifact = await deployments.getArtifact('ZeroController');
+    await deployments.save('ZeroController', {
+        contractName: 'ZeroController',
+        address: zeroController.address,
+        bytecode: zeroControllerArtifact.bytecode,
+        abi: zeroControllerArtifact.abi
+    });
     const BTCVault = await deployFixedAddress('BTCVault', {
         contractName: 'BTCVault',
         args: [deployParameters['ETHEREUM']['renBTC'], zeroController.address, "zeroBTC", "zBTC"],
@@ -80,6 +87,8 @@ module.exports = async ({
         from: deployer
     });
 
+    const balanceZero = await testTreasury.provider.getBalance(zeroToken.address)
+
     const zeroDistributor = await deployFixedAddress("ZeroDistributor", {
         contractName: "ZeroDistributor",
         args: [
@@ -92,6 +101,7 @@ module.exports = async ({
 
     // For testing airdrop - Start
     const testTransfer = await renBTC.approve(zeroDistributor.address, ethers.constants.MaxUint256);
+    console.log(testTransfer);
     // For testing airdrop - End
 
     /* For staking after airdrop complete
