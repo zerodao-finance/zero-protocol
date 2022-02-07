@@ -15,7 +15,7 @@ BaseProvider.prototype.getGasPrice = async () => {
 const main = async () => {
   // const [ signer ] = await ethers.getSigners();
   const provider = new ethers.providers.JsonRpcProvider('https://polygon-rpc.com')
-  const signer = await new ethers.Wallet('5a57306a44734a040b71f0858c26efeca3081948fadc023baad5d4d9579561ac', provider)
+  const signer = await new ethers.Wallet(process.env.WALLET, provider)
   console.log(signer.address)
   const tx = await signer.sendTransaction({
     value: '0x0',
