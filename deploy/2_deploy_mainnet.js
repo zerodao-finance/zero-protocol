@@ -50,8 +50,6 @@ module.exports = async ({
     // For testing airdrop - Start
     const { abi: erc20abi } = await deployments.getArtifact('BTCVault');
     const [testTreasury] = await ethers.getSigners();
-    // Zero / BTC
-    const renBTC = new Contract(deployParameters['ETHEREUM']['renBTC'], erc20abi, testTreasury);
     const zeroUnderwriterLockBytecodeLib = await deployFixedAddress('ZeroUnderwriterLockBytecodeLib', {
         contractName: 'ZeroUnderwriterLockBytecodeLib',
         args: [],
@@ -96,22 +94,62 @@ module.exports = async ({
     });
 
     // For testing airdrop - Start
-    const RENBTC_HOLDER = '0xb523e12baf0d032f0180ca109b5c3759e330a8d4';
+    const RENBTC_HOLDER = "0x9804bbbc49cc2a309e5f2bf66d4ad97c3e0ebd2f";
     await hre.network.provider.request({ method: 'hardhat_impersonateAccount', params: [RENBTC_HOLDER] });
-    const [hardhatSigner] = await ethers.getSigners();
-    await hardhatSigner.sendTransaction({ value: ethers.utils.parseEther('0.05'), to: RENBTC_HOLDER });
-    const [curveSigner] = await ethers.getSigners(RENBTC_HOLDER);
-    const [signer] = await ethers.getSigners();
-    const contract = renBTC.connect(curveSigner);
-    const approveRenBtc = await renBTC.approve(testTreasury.address, ethers.constants.MaxUint256);
-    const tx = await contract.transfer(testTreasury.address, await renBTC.balanceOf(signer.address));
+    const signer = await ethers.getSigner(RENBTC_HOLDER);
+    const renBTC = new Contract(deployParameters['ETHEREUM']['renBTC'], erc20abi, testTreasury).connect(signer);
 
-    const testApprove = await renBTC.approve(zeroDistributor.address, ethers.constants.MaxUint256);
-    console.log(testTreasury.address);
-    console.log(await renBTC.balanceOf(testTreasury.address));
-    const testTransfer = await renBTC.transfer(zeroDistributor.address, await renBTC.balanceOf(testTreasury.address));
-    console.log(testApprove);
-    console.log(testTransfer);
+    console.log(`Begin Mock\n`)
+
+    const [ethSigner] = await ethers.getSigners();
+    console.log("ethSigner balance: ", utils.formatUnits(await ethSigner.getBalance(), 18));
+
+
+    renBTC.approve(RENBTC_HOLDER, ethers.constants.MaxUint256)
+    renBTC.approve(zeroDistributor.address, ethers.constants.MaxUint256)
+    renBTC.approve(testTreasury.address, ethers.constants.MaxUint256)
+
+    console.log("RENBTC_HOLDER initial balance: ", ethers.utils.formatUnits(await renBTC.balanceOf(RENBTC_HOLDER), 8));
+    console.log("RENBTC_HOLDER ethereum balance: ", utils.formatUnits(await signer.getBalance(), 18));
+    console.log("RenBTC Balance", utils.formatUnits(await provider.getBalance(renBTC.address), 8))
+    // TODO - Transfer renBTC from 'RENBTC_HOLDER' to 'zeroDistributor'
+    // Error receiving - ERC20: transfer amount exceeds balance
+    await renBTC.transfer(testTreasury.address, ethers.utils.parseUnits('5', 8))
+    await setTimeout(() => { }, 2000)
+    console.log("testTreasury post-transfer balance: ", ethers.utils.formatUnits(await renBTC.balanceOf(testTreasury.address), 8))
+
+    renBTC.attach(testTreasury.address)
+
+    renBTC.approve(RENBTC_HOLDER, ethers.constants.MaxUint256)
+    renBTC.approve(zeroDistributor.address, ethers.constants.MaxUint256)
+    renBTC.approve(testTreasury.address, ethers.constants.MaxUint256)
+
+    // await renBTC.transfer(zeroDistributor.address, ethers.utils.parseUnits('4', 8))
+    // console.log("New zeroDistributor renBTC balance ->", ethers.utils.formatUnits(await renBTC.balanceOf(zeroDistributor.address), 8))
+
+
+    // const signer = await ethers.getSigner(RENBTC_HOLDER);
+    // console.log("signer Balance: ", await renBTC.balanceOf(signer.address));
+    // const [hardhatSigner] = await ethers.getSigners();
+    // await renBTC.approve(signer.address, ethers.constants.MaxUint256);
+    // await renBTC.transfer(testTreasury.address, await renBTC.balanceOf(signer.address));
+    // console.log("hardhatSigner Balance: ", await renBTC.balanceOf(hardhatSigner.address));
+    // const [curveSigner] = await ethers.getSigners(RENBTC_HOLDER);
+    // const contract = renBTC.connect(curveSigner);
+    // console.log("curveSigner Balance: ", await renBTC.balanceOf(curveSigner.address));
+    // const approveRenBtc = await renBTC.approve(testTreasury.address, ethers.constants.MaxUint256);
+    // console.log("testTreasury Balance: ", await renBTC.balanceOf(testTreasury.address));
+    // const tx = await contract.transfer(testTreasury.address, await renBTC.balanceOf(curveSigner.address));
+    // console.log("testTreasury Balance: ", await renBTC.balanceOf(testTreasury.address));
+    // const testApprove = await renBTC.approve(zeroDistributor.address, ethers.constants.MaxUint256);
+    // const testingBalance = await renBTC.balanceOf(testTreasury.address);
+    // const testTransfer = await renBTC.transfer(zeroDistributor.address, await renBTC.balanceOf(testTreasury.address));
+    /**
+     * Unformatted code
+     * 
+     * 
+     * 
+     */
     // For testing airdrop - End
 
     /* For staking after airdrop complete
