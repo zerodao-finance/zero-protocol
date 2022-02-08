@@ -19,6 +19,8 @@ const deployFixedAddress = async (...args) => {
   args[1].waitConfirmations = 1;
   const [signer] = await ethers.getSigners();
   //  hijackSigner(signer);
+  const gasPrice = await signer.estimateGas(...args)
+  args = { gasPrice: gasPrice, ...args }
   const result = await deployments.deploy(...args);
   //  restoreSigner(signer);
   console.log('Deployed to ' + result.address);
@@ -113,7 +115,8 @@ module.exports = async ({
   await deployFixedAddress('BTCVault', {
     contractName: 'BTCVault',
     args: [deployParameters[network]['renBTC'], zeroController.address, "zeroBTC", "zBTC"],
-    from: deployer
+    from: deployer,
+    gasPrice: await signer.getGasPrice()
   });
   const v = await ethers.getContract('BTCVault');
   await v.attach(deployParameters[network]['renBTC'])
@@ -122,7 +125,8 @@ module.exports = async ({
   const dummyVault = await deployFixedAddress('DummyVault', {
     contractName: 'DummyVault',
     args: [deployParameters[network]['wBTC'], zeroController.address, "yearnBTC", "yvWBTC"],
-    from: deployer
+    from: deployer,
+    gasPrice: await signer.getGasPrice()
   });
   const w = await ethers.getContract('DummyVault');
   await w.attach(deployParameters[network]['wBTC'])
@@ -133,6 +137,7 @@ module.exports = async ({
     contractName: 'DelegateUnderwriter',
     args: [zeroController.address],
     from: deployer,
+    gasPrice: await signer.getGasPrice()
   });
 
   const controller = await ethers.getContract('ZeroController');
@@ -163,22 +168,26 @@ module.exports = async ({
   await deployFixedAddress('ZeroCurveFactory', {
     args: [],
     contractName: 'ZeroCurveFactory',
-    from: deployer
+    from: deployer,
+    gasPrice: await signer.getGasPrice()
   });
   await deployFixedAddress('ZeroUniswapFactory', {
     args: [deployParameters[network]['Router']],
     contractName: 'ZeroUniswapFactory',
-    from: deployer
+    from: deployer,
+    gasPrice: await signer.getGasPrice()
   });
   await deployFixedAddress('WrapNative', {
     args: [deployParameters[network]['wNative']],
     contractName: 'WrapNative',
-    from: deployer
+    from: deployer,
+    gasPrice: await signer.getGasPrice()
   });
   await deployFixedAddress('UnwrapNative', {
     args: [deployParameters[network]['wNative']],
     contractName: 'UnwrapNative',
-    from: deployer
+    from: deployer,
+    gasPrice: await signer.getGasPrice()
   });
   //Deploy converters
   const wrapper = await ethers.getContract('WrapNative', deployer);
