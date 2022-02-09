@@ -228,6 +228,10 @@ export class TransferRequest {
 			]));
 		}
 	}
+	encodeSwapV2Data(...args: [[string, string], BigNumberish, string, any]): string {
+		const data: string = utils.defaultAbiCoder.encode(["address[], uint256, address, bytes"], args)
+		return data
+	}
 }
 
 export class UnderwriterTransferRequest extends TransferRequest {
