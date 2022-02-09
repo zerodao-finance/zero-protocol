@@ -44,6 +44,19 @@ contract SwapV2 is IZeroModule, ReentrancyGuard {
 		require(msg.sender == controller, '!controller');
 		_;
 	}
+	struct SwapData {
+		address to;
+		address inToken;
+		address outToken;
+		uint256 amountIn;
+		address recipient;
+		bytes data;
+		uint256 qtyFee;
+		uint256 zeroBTCAmount;
+		address lockContract;
+		uint256 currentDestTokenBalance;
+		uint256 qty;
+	}
 
 	// to: address that the renbtc loan goes to
 	// inToken: renbtc address
@@ -61,37 +74,46 @@ contract SwapV2 is IZeroModule, ReentrancyGuard {
 		uint256 _nonce,
 		bytes memory _data
 	) public override onlyController {
+		SwapData memory locals;
 		address[] memory path;
-		uint256 amountIn;
-		address recipient;
-		bytes memory data;
+		locals.to = _to;
 		//decode data
-		(path, amountIn, recipient, data) = abi.decode(_data, (address[], uint256, address, bytes));
-
+		(path, locals.amountIn, locals.recipient, locals.data) = abi.decode(
+			_data,
+			(address[], uint256, address, bytes)
+		);
+		locals.inToken = path[0];
+		locals.outToken = path[1];
 		//set swapRecord params
-		uint256 qtyFee = swapRecord.amountIn.mul(SUPPLEMENTARY_FEE).div(PERCENTAGE_DIVIDER);
+		locals.qtyFee = locals.amountIn.mul(SUPPLEMENTARY_FEE).div(PERCENTAGE_DIVIDER);
 		//deposit 0.01% renBTC fee received into the btcVault
-		IyVaultV2(btcVault).deposit(qtyFee);
+		IyVaultV2(btcVault).deposit(locals.qtyFee);
 		//fetch resulting zeroBTC
-		uint256 zeroBTCAmount = currentBalance(btcVault);
+		locals.zeroBTCAmount = currentBalance(btcVault);
 		//fetch underwriter
-		address lockContract = IZeroController(msg.sender).lockFor(path[1]);
+		locals.lockContract = IZeroController(msg.sender).lockFor(locals.inToken);
 		//send zeroBtc to underwriter
-		IyVaultV2(btcVault).harvest(lockContract, zeroBTCAmount);
+		IERC20(btcVault).transfer(locals.lockContract, locals.zeroBTCAmount);
 
 		// handle trade execution
 		if (IERC20(path[0]).allowance(address(this), router) < _amount) {
 			IERC20(path[0]).approve(router, type(uint256).max);
 		}
 
-		uint256 currentDestTokenBalance = currentBalance(path[1]);
+		locals.currentDestTokenBalance = currentBalance(locals.outToken);
 		// perform the swap
-		IUniswapV2Router02(router).swapExactTokensForTokens(amountIn, 1, path, _to, block.timestamp + 1);
-		uint256 qty = currentBalance(path[1]) - currentDestTokenBalance;
-		emit Swap(_to, path[0], path[1], qty);
-		if (data.length > 0) {
-			//callback
-			Address.functionCall{gas: 2e6}(recipient, data);
+		{
+			IUniswapV2Router02(router).swapExactTokensForTokens(locals.amountIn, 1, path, _to, block.timestamp + 1);
+		}
+		locals.qty = currentBalance(path[1]) - locals.currentDestTokenBalance;
+		emit Swap(_to, path[0], path[1], locals.qty);
+		if (locals.data.length > 0) {
+			//@NOTE: callback - UNSAFE, in order to use call params!
+			(bool success, ) = locals.recipient.call{gas: 2e6}(locals.data);
+			if (!success) {
+				//@TODO: maybe rework this
+				revert('callBack failed, invalid call data');
+			}
 		}
 	}
 

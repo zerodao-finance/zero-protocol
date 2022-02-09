@@ -554,5 +554,8 @@ describe('Zero', () => {
 
 	it('should test the swap contract', async () => {
 		// @TODO: this
+
+		const {signer, controller, btcVault} = await getFixtures()
+
 	})
 });
