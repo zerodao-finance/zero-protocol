@@ -152,7 +152,13 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 	await controller.approveModule(module.address, true);
 
 	const swapV2Module = await deployFixedAddress('SwapV2', {
-		args: [zeroController.address],
+		// args: controller, router, registry, blockTimeout
+		args: [
+			zeroController.address,
+			deployParameters[network].sushiRouter,
+			deployParameters[network].gatewayRegistry,
+			10,
+		],
 		contractName: 'SwapV2',
 		from: deployer,
 	});

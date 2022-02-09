@@ -52,6 +52,7 @@ const getContract = async (...args: any[]) => {
 				const c = require('../deployments/arbitrum/' + args[0]);
 				return new ethers.Contract(c.address, c.abi, args[args.length - 1]);
 		*/
+
 		return (await ethers.getContract(...args));//.attach(require('../deployments/arbitrum/' + args[0]).address);
 	} catch (e) {
 		console.error(e);
@@ -552,10 +553,11 @@ describe('Zero', () => {
 		await getBalances();
 	});
 
-	it('should test the swap contract', async () => {
+	it('should test the swap contract (_swapv2test)', async () => {
 		// @TODO: this
 
 		const {signer, controller, btcVault} = await getFixtures()
+		const swapV2 = await getContract('SwapV2')
 
 	})
 });
