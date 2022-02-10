@@ -113,9 +113,10 @@ const deployUnderwriter = async () => {
     const underwriterFactory = await getContractFactory('DelegateUnderwriter', signer);
     const underwriter = await underwriterFactory.deploy(controller.address)
     underwriterAddress = underwriter.address;
+    await underwriter.addAuthority(signer.address)
     await renBTC.approve(btcVault.address, ethers.constants.MaxUint256); //let btcVault spend renBTC on behalf of signer
     await btcVault.approve(controller.address, ethers.constants.MaxUint256); //let controller spend btcVault tokens
-    //	await mintUnderwriterNFTIfNotMinted();
+    await mintUnderwriterNFTIfNotMinted();
 };
 
 const mintUnderwriterNFTIfNotMinted = async () => {
@@ -226,7 +227,7 @@ const getBalances = async () => {
     );
 };
 
-const generateTransferRequest = async (amount: number, module?: string) => {
+const generateTransferRequest = async (amount: number, module?: string, data?: string) => {
     const { convertModule, swapModule, signerAddress } = await getFixtures();
     const { underwriter } = await getUnderwriter();
     return new TransferRequest({
@@ -563,24 +564,27 @@ describe('Zero', () => {
         const { underwriter, underwriterImpl } = await getUnderwriter();
         const renbtc = new ethers.Contract(await btcVault.token(), btcVault.interface, signer);
         await renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
+        const transferData = TransferRequest.encodeSwapV2Data([constants.AddressZero, constants.AddressZero], 1, constants.AddressZero, 0x0)
 
         await btcVault.deposit('1000');
 
         //@ts-ignore
-        const transferRequest = await generateTransferRequest(0, swapV2Module.address);
+        const transferRequest = await generateTransferRequest(0, swapV2Module.address, transferData);
 
 
         transferRequest.setUnderwriter(underwriter.address);
         const signature = await transferRequest.sign(signer, controller.address);
 
+        console.log("writing loan")
 
+		console.log(transferRequest.to)
         await underwriterImpl.loan(
             transferRequest.to,
             transferRequest.asset,
             transferRequest.amount,
             transferRequest.pNonce,
             transferRequest.module,
-            transferRequest.encodeSwapV2Data([constants.AddressZero, constants.AddressZero], 1, constants.AddressZero, 0x0),
+            transferRequest.data,
             signature,
         );
         await getBalances();
