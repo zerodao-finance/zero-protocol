@@ -74,7 +74,7 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
                     return __generator(this, function (_e) {
                         switch (_e.label) {
                             case 0:
-                                trivial = new zero_1.UnderwriterTransferRequest(transferRequest);
+                                trivial = new zero_1.DelegateUnderwriterTransferRequest(transferRequest);
                                 _e.label = 1;
                             case 1:
                                 _e.trys.push([1, 4, , 5]);
