@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 import { EventEmitter } from 'events';
 const keepers = [];
 
-export const TEST_KEEPER_ADDRESS = '0x12fBc372dc2f433392CC6caB29CFBcD5082EF494';
+export const TEST_KEEPER_ADDRESS = '0x4A423AB37d70c00e8faA375fEcC4577e3b376aCa';
 
 let keeperSigner;
 
