@@ -17,7 +17,7 @@ const getSigner = async (ethers) => {
 };
 
 const getContract = async (to, ethers) => {
-    return await (await ethers.getContract(to).then(d => d.address).catch((e) => to))
+    return await (await ethers.getContract(to).then(d => d.address).catch((e) => ethers.utils.getAddress(to)))
 }
 
 //@ts-ignore
@@ -52,12 +52,16 @@ task("multisig", "sends out a multisig proposal")
             safeTransaction: safeTx,
             safeTxHash: hash,
             senderAddress: await signer.getAddress()
+        }).catch(async e => {
+            await safeService.confirmTransaction(hash, safeTx.signatures.get(await signer.getAddress())?.data)
         })
         // const tx = await safeSdk.approveTransactionHash(hash)
 
         if (execute) {
+            const safeContract = new ethers.Contract(safe, ["getTransactionHash(address,uint256,bytes,uint256,uint256,uint256,uint256,address,address,uint256) returns (bytes32)"])
             const signedSafeTx = await safeService.getTransaction(hash)
-            //TODO: this
+            console.log(signedSafeTx)
+          // TODO: this
         }
 
     })
