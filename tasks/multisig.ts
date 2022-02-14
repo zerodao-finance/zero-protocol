@@ -1,6 +1,7 @@
 // @ts-ignore
 import { task } from 'hardhat/config'
 import Safe from '@gnosis.pm/safe-core-sdk'
+import SafeServiceClient from '@gnosis.pm/safe-service-client'
 import EthersAdapter from '@gnosis.pm/safe-ethers-lib'
 
 const getSigner = async (ethers) => {
@@ -26,7 +27,16 @@ task("multisig", "sends out a multisig proposal")
     .addParam("safe", "safe address")
     .addOptionalParam("execute", "execute transaction")
     //@ts-ignore
-    .setAction(async ({ to, data, safe, execute }, { ethers }) => {
+    .setAction(async ({ to, data, safe, execute }, { ethers, network }) => {
+       const serviceUrl = (() => {
+           const networkName = (() => {switch(network.name) {
+                case 'matic':
+                    return
+                case 'arbitrum':
+           }})()
+           return `https://safe-transaction.${networkName}.gnosis.io`
+        })()
+        const safeService = new SafeServiceClient(serviceUrl)
         const contract = await getContract(to, ethers)
         const signer = await getSigner(ethers)
         const owner = new EthersAdapter({
@@ -36,12 +46,18 @@ task("multisig", "sends out a multisig proposal")
         const safeSdk = await Safe.create({ safeAddress: safe, ethAdapter: owner })
         const safeTx = await safeSdk.createTransaction({ data, to: contract, value: "0" })
         const hash = await safeSdk.getTransactionHash(safeTx)
-        const tx = await safeSdk.approveTransactionHash(hash)
+        await safeSdk.signTransaction(safeTx)
+        await safeService.proposeTransaction({
+            safeAddress: safe,
+            safeTransaction: safeTx,
+            safeTxHash: hash,
+            senderAddress: await signer.getAddress()
+        })
+        // const tx = await safeSdk.approveTransactionHash(hash)
 
-        console.log("Approving Tx: ", hash)
-        console.log(tx)
         if (execute) {
-            await safeSdk.executeTransaction(safeTx)
+            const signedSafeTx = await safeService.getTransaction(hash)
+            //TODO: this
         }
 
     })
