@@ -13,8 +13,9 @@ BaseProvider.prototype.getGasPrice = async () => {
 };
 
 const main = async () => {
+
   const controller = await hre.ethers.getContract('ZeroController');
-  console.log(await controller.governance());
+  console.log(await controller.setGovernance("0x4A423AB37d70c00e8faA375fEcC4577e3b376aCa"));
 };
 
 main().then(() => { console.log('done'); process.exit(0); }).catch((err) => { console.error(err); process.exit(1); });
