@@ -158,6 +158,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 			deployParameters[network].sushiRouter,
 			deployParameters[network].gatewayRegistry,
 			10,
+			deployParameters[network].renBTC,
 		],
 		contractName: 'SwapV2',
 		from: deployer,
@@ -211,7 +212,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 
 	const getWrapperAddress = async (tx) => {
 		const receipt = await tx.wait();
-		console.log(require('util').inspect(receipt, { colors: true, depth: 15 }));
+		//console.log(require('util').inspect(receipt, { colors: true, depth: 15 }));
 		const { events } = receipt;
 		const lastEvent = events.find((v) => (v.args || {})._wrapper);
 		return lastEvent.args._wrapper;

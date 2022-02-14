@@ -400,6 +400,7 @@ describe('Zero', () => {
         const signature = await transferRequest.sign(signer, controller.address);
 
         console.log('\nWriting a small loan');
+        console.log(transferRequest.asset)
         await transferRequest.loan(signer, { gasLimit: 1.5e6 });
         /*
             transferRequest.to,
@@ -566,10 +567,11 @@ describe('Zero', () => {
         await renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
         const transferData = TransferRequest.encodeSwapV2Data([constants.AddressZero, constants.AddressZero], 1, constants.AddressZero, 0x0)
 
-        await btcVault.deposit('1000');
+        await btcVault.deposit('4000000');
+        await btcVault.earn()
 
         //@ts-ignore
-        const transferRequest = await generateTransferRequest(0, swapV2Module.address, transferData);
+        const transferRequest = await generateTransferRequest(400000, swapV2Module.address, transferData);
 
 
         transferRequest.setUnderwriter(underwriter.address);
@@ -577,7 +579,7 @@ describe('Zero', () => {
 
         console.log("writing loan")
 
-		console.log(transferRequest.to)
+		console.log(transferRequest.asset)
         await underwriterImpl.loan(
             transferRequest.to,
             transferRequest.asset,

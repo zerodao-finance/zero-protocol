@@ -27,17 +27,20 @@ contract SwapV2 is IZeroModule, ReentrancyGuard {
 	// Events
 	event Swap(address indexed sender, address indexed from, address indexed to, uint256 amount);
 	address public immutable controller;
+	address private immutable _want;
 
 	constructor(
 		address _controller,
 		address _router,
 		address _registry,
-		uint256 _blockTimeout
+		uint256 _blockTimeout,
+		address _wantToken
 	) {
 		controller = _controller;
 		router = _router;
 		registry = IGatewayRegistry(_registry);
 		blockTimeout = _blockTimeout;
+		_want = _wantToken;
 	}
 
 	modifier onlyController() {
@@ -155,5 +158,7 @@ contract SwapV2 is IZeroModule, ReentrancyGuard {
 		return _in;
 	}
 
-	function want() external view override returns (address _ret) {}
+	function want() external view override returns (address _ret) {
+		return _want;
+	}
 }
