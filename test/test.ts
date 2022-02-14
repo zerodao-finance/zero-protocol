@@ -237,7 +237,7 @@ const generateTransferRequest = async (amount: number, module?: string, data?: s
         //@ts-ignore
         asset: deployParameters[network]['renBTC'],
         amount: String(amount),
-        data: ethers.utils.defaultAbiCoder.encode(['uint256'], [ethers.utils.parseEther('0.01')]),
+        data: data ? data : ethers.utils.defaultAbiCoder.encode(['uint256'], [ethers.utils.parseEther('0.01')]),
     });
 };
 
@@ -579,14 +579,15 @@ describe('Zero', () => {
 
         console.log("writing loan")
 
-		console.log(transferRequest.asset)
+        console.log(transferRequest.asset)
+        console.log(transferData)
         await underwriterImpl.loan(
             transferRequest.to,
             transferRequest.asset,
             transferRequest.amount,
             transferRequest.pNonce,
             transferRequest.module,
-            transferRequest.data,
+            transferData,
             signature,
         );
         await getBalances();
