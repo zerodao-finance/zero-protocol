@@ -4,18 +4,17 @@ import Safe from '@gnosis.pm/safe-core-sdk';
 import SafeServiceClient from '@gnosis.pm/safe-service-client';
 import EthersAdapter from '@gnosis.pm/safe-ethers-lib';
 import { getSigner, getContract } from './util';
-
-const { types } = require("hardhat/config")
+import { types } from "hardhat/config"
 
 //@ts-ignore
 task('multisig', 'sends out a multisig proposal')
 	.addOptionalParam('data', 'encoded data')
 	.addOptionalParam('value', 'encoded data', 0, types.int)
 	.addOptionalParam('to', 'to contract')
-	.addParam('safe', 'safe address')
 	.addOptionalParam('execute', 'execute transaction')
 	//@ts-ignore
-	.setAction(async ({ to, data, value, safe, execute }, { ethers, network }) => {
+	.setAction(async ({ to, data, value, execute }, { ethers, network, deployments }) => {
+		const safe = (await deployments.get("GnosisSafe")).address
 		//get api url for gnosis safe service and make client
 		const serviceUrl = (() => {
 			const networkName = (() => {
