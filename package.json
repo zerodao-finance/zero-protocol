@@ -30,6 +30,7 @@
 		"@babel/preset-typescript": "^7.14.5",
 		"@boringcrypto/boring-solidity": "https://github.com/boringcrypto/BoringSolidity",
 		"@ethersproject/cli": "^5.5.0",
+		"@gnosis.pm/safe-contracts": "^1.3.0",
 		"@gnosis.pm/safe-core-sdk": "^2.0.0",
 		"@gnosis.pm/safe-ethers-lib": "^1.0.0",
 		"@gnosis.pm/safe-service-client": "^1.1.1",
