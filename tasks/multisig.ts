@@ -12,8 +12,9 @@ task('multisig', 'sends out a multisig proposal')
 	.addOptionalParam('value', 'encoded data', 0, types.int)
 	.addOptionalParam('to', 'to contract')
 	.addOptionalParam('execute', 'execute transaction')
+    .addOptionalParam('value', 'tx value')
 	//@ts-ignore
-	.setAction(async ({ to, data, value, execute }, { ethers, network, deployments }) => {
+	.setAction(async ({ to, data, value, execute, value }, { ethers, network, deployments }) => {
 		const safe = (await deployments.get("GnosisSafe")).address
 		//get api url for gnosis safe service and make client
 		const serviceUrl = (() => {
