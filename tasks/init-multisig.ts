@@ -20,13 +20,14 @@ task('init-multisig', 'initializes a multisig gnosis safe')
 			signer,
 		});
         Object.assign(owner, 'getChainId', getNetworkId)
-		const safeFactory = await SafeFactory.create({ ethAdapter: owner, contractNetworks: {
-            [`${getNetworkId()}`]: {
-                multiSendAddress: fixtures[process.env.CHAINID].multiSend,
-                safeProxyFactoryAddress: fixtures[process.env.CHAINID].safeProxyFactory,
-                safeMasterCopyAddress: fixtures[process.env.CHAINID].safeMasterCopy
+        const contractNetworks = {
+            [`${await owner.getChainId()}`]: {
+                multiSendAddress: fixtures[process.env.CHAIN].multiSend,
+                safeProxyFactoryAddress: fixtures[process.env.CHAIN].safeProxyFactory,
+                safeMasterCopyAddress: fixtures[process.env.CHAIN].safeMasterCopy
             }
-        } });
+        }
+		const safeFactory = await SafeFactory.create({ ethAdapter: owner, contractNetworks  });
 		const safeAccountConfig: SafeAccountConfig = { owners, threshold };
         //making safe
 		const safeSdk: Safe = await safeFactory.deploySafe({ safeAccountConfig });
