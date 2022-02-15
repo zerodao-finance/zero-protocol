@@ -11,7 +11,7 @@ const deployFixedAddress = async (...args) => {
     const result = await deployments.deploy(...args);
     //  restoreSigner(signer);
     console.log('Deployed to ' + result.address);
-    return result;
+    return await ethers.getContract(args[0]);
 };
 
 const deployProxyFixedAddress = async (...args) => {
