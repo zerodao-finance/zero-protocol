@@ -23,7 +23,9 @@ task('multisig', 'sends out a multisig proposal')
 					case 'matic':
 						return 'polygon';
 					case 'arbitrum':
+						return 'arbitrum';
 					case 'mainnet':
+						return 'Ethereum Mainnet';
 					case 'rinkeby':
 						return network.name;
 					default:
