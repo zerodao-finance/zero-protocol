@@ -10,7 +10,10 @@ module.exports = {
         Router: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
         Curve_Ren: '0xC2d95EEF97Ec6C17551d45e77B590dc1F9117C67',
         sushiRouter: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
-        gatewayRegistry: '0x21C482f153D0317fe85C60bE1F7fa079019fcEbD'
+        gatewayRegistry: '0x21C482f153D0317fe85C60bE1F7fa079019fcEbD',
+        safeProxyFactory: '0xa6B71E26C5e0845f74c812102Ca7114b6a896AB2',
+        multiSend: '0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761',
+        safeMasterCopy: '0xd9Db270c1B5E3Bd161E8c8503c55cEABeE709552'
     },
     ARBITRUM: {
         renBTC: '0xdbf31df14b66535af65aac99c32e9ea844e14501',
@@ -21,7 +24,10 @@ module.exports = {
         Router: '0x1b02da8cb0d097eb8d57a175b88c7d8b47997506',
         sushiRouter: '0x1b02da8cb0d097eb8d57a175b88c7d8b47997506',
         Curve_Ren: '0x3E01dD8a5E1fb3481F0F589056b428Fc308AF0Fb',
-        gatewayRegistry: '0x21C482f153D0317fe85C60bE1F7fa079019fcEbD'
+        gatewayRegistry: '0x21C482f153D0317fe85C60bE1F7fa079019fcEbD',
+        safeProxyFactory: '0xa6B71E26C5e0845f74c812102Ca7114b6a896AB2',
+        multiSend: '0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761',
+        safeMasterCopy: '0xd9Db270c1B5E3Bd161E8c8503c55cEABeE709552'
     },
     ETHEREUM: {
         renBTC: '0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D',
@@ -34,6 +40,9 @@ module.exports = {
         Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
         sushiRouter: '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F',
         gatewayRegistry: '0xe80d347DF1209a76DD9d2319d62912ba98C54DDD',
-        btcGateway: '0xe4b679400F0f267212D5D812B95f58C83243EE71'
+        btcGateway: '0xe4b679400F0f267212D5D812B95f58C83243EE71',
+        safeProxyFactory: '0xa6B71E26C5e0845f74c812102Ca7114b6a896AB2',
+        multiSend: '0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761',
+        safeMasterCopy: '0xd9Db270c1B5E3Bd161E8c8503c55cEABeE709552'
     }
 };

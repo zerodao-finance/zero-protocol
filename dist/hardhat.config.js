@@ -42,6 +42,8 @@ require('hardhat-gas-reporter');
 require('@openzeppelin/hardhat-upgrades');
 require('@nomiclabs/hardhat-etherscan');
 require('dotenv').config();
+require('./tasks/multisig');
+require('./tasks/init-multisig');
 var ethers = require('ethers');
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'ARBITRUM')
     process.env.CHAIN_ID = '42161';
