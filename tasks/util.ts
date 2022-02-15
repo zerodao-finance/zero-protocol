@@ -8,3 +8,12 @@ export const getContract = async (to, ethers) => {
 		.then((d) => d.address)
 		.catch((e) => ethers.utils.getAddress(to));
 };
+
+export const getNetworkId = () => {
+	switch (process.env.CHAIN) {
+		case 'ARBITRUM':
+			return 42161;
+		case 'MATIC':
+			return 137;
+	}
+};
