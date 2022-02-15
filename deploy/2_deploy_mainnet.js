@@ -50,31 +50,31 @@ module.exports = async ({
     // For testing airdrop - Start
     const { abi: erc20abi } = await deployments.getArtifact('BTCVault');
     const [testTreasury] = await ethers.getSigners();
-    // const zeroUnderwriterLockBytecodeLib = await deployFixedAddress('ZeroUnderwriterLockBytecodeLib', {
-    //     contractName: 'ZeroUnderwriterLockBytecodeLib',
-    //     args: [],
-    //     from: deployer
-    // });
-    // const zeroControllerFactory = (await hre.ethers.getContractFactory("ZeroController", {
-    //     libraries: {
-    //         ZeroUnderwriterLockBytecodeLib: zeroUnderwriterLockBytecodeLib.address
-    //     }
-    // }));
-    // const zeroController = await deployProxyFixedAddress(zeroControllerFactory, ["0x0F4ee9631f4be0a63756515141281A3E2B293Bbe", deployParameters["ETHEREUM"].gatewayRegistry], {
-    //     unsafeAllowLinkedLibraries: true
-    // });
-    // const zeroControllerArtifact = await deployments.getArtifact('ZeroController');
-    // await deployments.save('ZeroController', {
-    //     contractName: 'ZeroController',
-    //     address: zeroController.address,
-    //     bytecode: zeroControllerArtifact.bytecode,
-    //     abi: zeroControllerArtifact.abi
-    // });
-    // const BTCVault = await deployFixedAddress('BTCVault', {
-    //     contractName: 'BTCVault',
-    //     args: [deployParameters['ETHEREUM']['renBTC'], zeroController.address, "zeroBTC", "zBTC"],
-    //     from: deployer
-    // });
+    const zeroUnderwriterLockBytecodeLib = await deployFixedAddress('ZeroUnderwriterLockBytecodeLib', {
+        contractName: 'ZeroUnderwriterLockBytecodeLib',
+        args: [],
+        from: deployer
+    });
+    const zeroControllerFactory = (await hre.ethers.getContractFactory("ZeroController", {
+        libraries: {
+            ZeroUnderwriterLockBytecodeLib: zeroUnderwriterLockBytecodeLib.address
+        }
+    }));
+    const zeroController = await deployProxyFixedAddress(zeroControllerFactory, ["0x0F4ee9631f4be0a63756515141281A3E2B293Bbe", deployParameters["ETHEREUM"].gatewayRegistry], {
+        unsafeAllowLinkedLibraries: true
+    });
+    const zeroControllerArtifact = await deployments.getArtifact('ZeroController');
+    await deployments.save('ZeroController', {
+        contractName: 'ZeroController',
+        address: zeroController.address,
+        bytecode: zeroControllerArtifact.bytecode,
+        abi: zeroControllerArtifact.abi
+    });
+    const BTCVault = await deployFixedAddress('BTCVault', {
+        contractName: 'BTCVault',
+        args: [deployParameters['ETHEREUM']['renBTC'], zeroController.address, "zeroBTC", "zBTC"],
+        from: deployer
+    });
     // For testing airdrop - End
 
     const zeroToken = await deployFixedAddress("ZERO", {
@@ -93,28 +93,29 @@ module.exports = async ({
         from: deployer
     });
 
-    // For testing airdrop - Start
+    console.log(`Begin Testing\n`)
+
     const RENBTC_HOLDER = "0x9804bbbc49cc2a309e5f2bf66d4ad97c3e0ebd2f";
     await hre.network.provider.request({ method: 'hardhat_impersonateAccount', params: [RENBTC_HOLDER] });
     const signer = await ethers.getSigner(RENBTC_HOLDER);
     const renBTC = new Contract(deployParameters['ETHEREUM']['renBTC'], erc20abi, signer);
 
-    // const [zSigner] = await ethers.getSigners();
-    // const _zeroToken = new Contract(zeroToken.address, erc20abi, zSigner);
-
-    console.log(`Begin Testing\n`)
-
     renBTC.approve(RENBTC_HOLDER, ethers.constants.MaxUint256)
     renBTC.approve(zeroDistributor.address, ethers.constants.MaxUint256)
     renBTC.approve(testTreasury.address, ethers.constants.MaxUint256)
 
-    console.log(zeroToken.abi);
+    zeroToken.approve(zeroDistributor.address, ethers.constants.MaxInt256)
+    await zeroToken.mint(zeroDistributor.address, ethers.utils.parseUnits('88000000', 18))
+    const zBalance = ethers.utils.formatUnits(await zeroToken.balanceOf(zeroDistributor.address), 18)
+    console.log(zBalance)
 
     await renBTC.transfer(testTreasury.address, ethers.utils.parseUnits('5', 8))
 
     renBTC.attach(testTreasury.address)
 
 
+    // const [zSigner] = await ethers.getSigners();
+    // const _zeroToken = new Contract(zeroToken.address, erc20abi, zSigner);
 
     // const signer = await ethers.getSigner(RENBTC_HOLDER);
     // console.log("signer Balance: ", await renBTC.balanceOf(signer.address));
