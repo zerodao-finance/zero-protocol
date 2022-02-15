@@ -91,6 +91,7 @@
 		"gun": "^0.2020.1232",
 		"hardhat-deploy-ethers": "^0.3.0-beta.13",
 		"is-browser": "^2.1.0",
+		"keccak256": "^1.0.6",
 		"libp2p": "^0.35.8",
 		"libp2p-bootstrap": "^0.14.0",
 		"libp2p-gossipsub": "^0.12.1",

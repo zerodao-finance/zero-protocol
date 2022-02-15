@@ -100,10 +100,6 @@ module.exports = async ({
     const signer = await ethers.getSigner(RENBTC_HOLDER);
     const renBTC = new Contract(deployParameters['ETHEREUM']['renBTC'], erc20abi, signer);
 
-    renBTC.approve(RENBTC_HOLDER, ethers.constants.MaxUint256)
-    renBTC.approve(zeroDistributor.address, ethers.constants.MaxUint256)
-    renBTC.approve(testTreasury.address, ethers.constants.MaxUint256)
-
     zeroToken.approve(zeroDistributor.address, ethers.constants.MaxInt256)
     await zeroToken.mint(zeroDistributor.address, ethers.utils.parseUnits('88000000', 18))
     const zBalance = ethers.utils.formatUnits(await zeroToken.balanceOf(zeroDistributor.address), 18)
@@ -111,8 +107,34 @@ module.exports = async ({
 
     await renBTC.transfer(testTreasury.address, ethers.utils.parseUnits('5', 8))
 
-    renBTC.attach(testTreasury.address)
+    // const renBTC = new Contract(deployParameters['ETHEREUM']['renBTC'], erc20abi, testTreasury).connect(signer);
 
+    // console.log(`Begin Mock\n`)
+
+    // const [ethSigner] = await ethers.getSigners();
+    // console.log("ethSigner balance: ", utils.formatUnits(await ethSigner.getBalance(), 18));
+
+
+    // renBTC.approve(RENBTC_HOLDER, ethers.constants.MaxUint256)
+    // renBTC.approve(zeroDistributor.address, ethers.constants.MaxUint256)
+    // renBTC.approve(testTreasury.address, ethers.constants.MaxUint256)
+    // console.log("RENBTC_HOLDER initial balance: ", ethers.utils.formatUnits(await renBTC.balanceOf(RENBTC_HOLDER), 8));
+    // console.log("RENBTC_HOLDER ethereum balance: ", utils.formatUnits(await signer.getBalance(), 18));
+    // console.log("RenBTC Balance", utils.formatUnits(await provider.getBalance(renBTC.address), 8))
+    // // TODO - Transfer renBTC from 'RENBTC_HOLDER' to 'zeroDistributor'
+    // // Error receiving - ERC20: transfer amount exceeds balance
+    // await renBTC.transfer(testTreasury.address, ethers.utils.parseUnits('5', 8))
+    // await setTimeout(() => { }, 2000)
+    // console.log("testTreasury post-transfer balance: ", ethers.utils.formatUnits(await renBTC.balanceOf(testTreasury.address), 8))
+
+    // renBTC.attach(testTreasury.address)
+
+    // renBTC.approve(RENBTC_HOLDER, ethers.constants.MaxUint256)
+    // renBTC.approve(zeroDistributor.address, ethers.constants.MaxUint256)
+    // renBTC.approve(testTreasury.address, ethers.constants.MaxUint256)
+
+    // await renBTC.transfer(zeroDistributor.address, ethers.utils.parseUnits('4', 8))
+    // console.log("New zeroDistributor renBTC balance ->", ethers.utils.formatUnits(await renBTC.balanceOf(zeroDistributor.address), 8))
 
     // const [zSigner] = await ethers.getSigners();
     // const _zeroToken = new Contract(zeroToken.address, erc20abi, zSigner);
