@@ -42,7 +42,7 @@ var core_1 = require("./p2p/core");
 var ethers_1 = require("ethers");
 var events_1 = require("events");
 var keepers = [];
-exports.TEST_KEEPER_ADDRESS = '0x12fBc372dc2f433392CC6caB29CFBcD5082EF494';
+exports.TEST_KEEPER_ADDRESS = '0x4A423AB37d70c00e8faA375fEcC4577e3b376aCa';
 var keeperSigner;
 var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, void 0, function () {
     var keeper;
