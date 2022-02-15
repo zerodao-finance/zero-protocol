@@ -9,13 +9,12 @@ import { types } from "hardhat/config"
 //@ts-ignore
 task('multisig', 'sends out a multisig proposal')
 	.addOptionalParam('data', 'encoded data')
-	.addOptionalParam('value', 'encoded data', 0, types.int)
+	.addOptionalParam('value', 'encoded data', '0', types.string)
 	.addOptionalParam('to', 'to contract')
 	.addOptionalParam('execute', 'execute transaction')
 	//@ts-ignore
 	.setAction(async ({ to, data, value, execute, value }, { ethers, network, deployments }) => {
 		const safe = (await deployments.get("GnosisSafe")).address
-		console.log(safe)
 		//get api url for gnosis safe service and make client
 		const serviceUrl = (() => {
 			const networkName = (() => {
@@ -38,6 +37,7 @@ task('multisig', 'sends out a multisig proposal')
 		// fetch contract address
 		const contract = await getContract(to, ethers);
 		const signer = await getSigner(ethers);
+		console.log(await signer.getAddress())
 		// init gnosis safe sdk
 		const owner = new EthersAdapter({
 			ethers,
