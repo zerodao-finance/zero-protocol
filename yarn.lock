@@ -18148,4 +18148,4 @@ yocto-queue@^1.0.0:
 
 "zero-varenx@https://github.com/zerodao-finance/zero-varenx":
   version "0.1.0"
-  resolved "https://github.com/zerodao-finance/zero-varenx#8d7b6de821b4ee00367d46d0e6f76f5f0485f0a9"
+  resolved "https://github.com/zerodao-finance/zero-varenx#af1d86ed051a076fd8845cf21a43a6f54bfced20"
