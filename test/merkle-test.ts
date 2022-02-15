@@ -11,6 +11,7 @@ import MerkleTree from '../lib/merkle/merkle-tree'
 import { Buffer } from 'buffer'
 import keccak256  from 'keccak256';
 import BalanceTree from '../lib/merkle/balance-tree'
+import { parseBalanceMap } from '../lib/merkle/parse-balance-map'
 // import { zeroDistributor } from '../../zero-app/src/utils/constants';
 
 /**
@@ -23,6 +24,7 @@ const network = process.env.CHAIN || 'ETHEREUM'
 
 // @ts-expect-error
 const { ethers, deployments } = hre
+import { BigNumber } from 'ethers'
 
 //TODO: validate deployment of all contracts
 //TODO: mint zBTC and test balance of all contracts
@@ -59,7 +61,11 @@ const getImplementation = async (proxyAddress: string) => {
 	);
 };
 
-
+const config_2: {account: string, amount: BigNumber}[] = [
+    {account: "0xe32d9D1F1484f57F8b5198f90bcdaBC914de0B5A", amount: ethers.utils.parseUnits("100", config.decimals)},
+    {account: "0x7f78Da15E8298e7afe6404c54D93cb5269D97570", amount: ethers.utils.parseUnits("100", config.decimals)},
+    {account: "0xdd2fd4581271e230360230f9337d5c0430bf44c0", amount: ethers.utils.parseUnits("100", config.decimals)}
+]
 
 
 const getFixtures = async () => {
@@ -67,6 +73,12 @@ const getFixtures = async () => {
     const controller = await getContract('ZeroController', signer)
     const { abi: erc20abi } = await deployments.getArtifact('BTCVault');
     const { chainId } = await controller.provider.getNetwork();
+
+    let zeroToken = await getContract('ZERO', signer)
+    let zeroDistributor = await getContractFactory('ZeroDistributor', signer)
+    let tree = new BalanceTree(config_2)
+    let HexRoot = tree.getHexRoot()
+    const distributor = await zeroDistributor.deploy(zeroToken.address, treasury.address, HexRoot)
 
     return {
         owner: signer,
@@ -76,7 +88,7 @@ const getFixtures = async () => {
         controller: controller,
         btcVault: await getContract('BTCVault', signer),
         zeroToken: await getContract('ZERO', signer),
-        zeroDistributor: await getContractFactory('ZeroDistributor', signer),
+        zeroDistributor: distributor,
         renBTC: new Contract(deployParameters[network]['renBTC'], GatewayLogicV1.abi, signer),
         //@ts-ignore
         gateway: new Contract(deployParameters[network]['btcGateway'], GatewayLogicV1.abi, signer)
@@ -116,6 +128,7 @@ describe('ZERO', () => {
             "0xdd2fd4581271e230360230f9337d5c0430bf44c0": "100"
         }
     };
+   
     
     const merkleTree = new MerkleTree(
         Object.entries(config.airdrop).map(([address, tokens]) =>
@@ -135,7 +148,8 @@ describe('ZERO', () => {
         override(implementationAddress, artifact.deployedBytecode);
         await gateway.mint(utils.randomBytes(32), utils.parseUnits('50', 8), utils.randomBytes(32), '0x');
         // console.log(treasury.address)
-        await zeroToken.mint(treasury.address, ethers.utils.parseUnits("88000000.00000000", 8))
+        await zeroToken.mint(treasury.address, ethers.utils.parseUnits("88000000.00000000", 18))
+        //merkleTree.getHexRoot()
     });
 
     beforeEach(async function () {
@@ -161,7 +175,7 @@ describe('ZERO', () => {
         const { zeroDistributor, zeroToken } = await getFixtures()
         const distributor = await zeroDistributor.deploy(zeroToken.address, treasury.address, merkleTree.getHexRoot())
         expect(await zeroToken.owner()).to.equal(owner.address)
-        expect(Number(ethers.utils.formatUnits(await zeroToken.balanceOf(treasury.address), 8))).to.equal(88000000)
+        expect(Number(ethers.utils.formatUnits(await zeroToken.balanceOf(treasury.address), 8))).to.equal(880000000000000000)
         expect(await distributor.treasury(), "zero treasury is equal to the treasury").is.equal(treasury.address)
     })
 
@@ -181,28 +195,34 @@ describe('ZERO', () => {
 
     it("should let a white listed address claim zero tokens", async() => {
         const [ owner, treasury, address1, address2, address3 ] = await ethers.getSigners()
-        const { zeroDistributor, zeroToken } = await getFixtures() 
-
-        console.log(merkleTree.getHexRoot())
-        const distributor = await zeroDistributor.deploy(zeroToken.address, treasury.address, merkleTree.getHexRoot()) //merkleTree.getHexRoot()
-        zeroToken.attach(treasury.address)
-        zeroToken.approve(distributor.address, ethers.constants.MaxUint256)
-
-
+        const { zeroDistributor } = await getFixtures() 
+        const zeroToken = await ethers.getContract('ZERO', treasury)
         let key = Object.keys(config.airdrop)[0]
         let value = Object.values(config.airdrop)[0].toString()
-
+        let tree = new BalanceTree(config_2)
+        
+        const distributor = await getContract('ZeroDistributor', owner)
+        await ethers.getSigner(treasury.address)
+        await zeroToken.attach(treasury.address)
+        await zeroToken.approve(distributor.address, await zeroToken.balanceOf(treasury.address))
+        console.log("allowance", ethers.utils.formatUnits(await zeroToken.allowance(treasury.address, distributor.address), 18))
+        await zeroToken.approve(key, ethers.constants.MaxUint256)
+        
         console.log('key/value', key, value)
-
+        
         console.log("check if claimed", await distributor.isClaimed(0))
 
 
         let leaf = genLeaf(await ethers.utils.getAddress(key), ethers.utils.parseUnits(value, config.decimals))
         console.log("leaf", leaf)
-        let proof = merkleTree.getHexProof(leaf)
+        let proof = tree.getProof(0, key, ethers.utils.parseUnits(value, config.decimals))
         console.log("proof", proof)
 
-        await distributor.claim(0, key, ethers.utils.parseUnits(value, config.decimals).toString(), proof, { gasPrice: 197283629})
+        await distributor.claim(0, key, ethers.utils.parseUnits(value, config.decimals).toString(), proof, { gasPrice: 197283674})
         console.log(key, value)
+    })
+
+    it("should confirm the claim request", async() => {
+
     })
 })

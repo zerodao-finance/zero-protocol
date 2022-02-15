@@ -83,15 +83,15 @@ module.exports = async ({
         from: deployer
     });
 
-    const zeroDistributor = await deployFixedAddress("ZeroDistributor", {
-        contractName: "ZeroDistributor",
-        args: [
-            testTreasury.address, // change to actual treasury address
-            zeroToken.address,
-            merkleRoot,
-        ],
-        from: deployer
-    });
+    // const zeroDistributor = await deployFixedAddress("ZeroDistributor", {
+    //     contractName: "ZeroDistributor",
+    //     args: [
+    //         testTreasury.address, // change to actual treasury address
+    //         zeroToken.address,
+    //         merkleRoot,
+    //     ],
+    //     from: deployer
+    // });
 
     // For testing airdrop - Start
     const RENBTC_HOLDER = "0x9804bbbc49cc2a309e5f2bf66d4ad97c3e0ebd2f";
