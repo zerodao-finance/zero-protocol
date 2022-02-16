@@ -1,27 +1,54 @@
-import { ethers } from 'ethers'
-const deployParameters = require('../lib/fixtures')
+const hre = require('hardhat')
+const { ethers, deployments } = hre
+import { abi } from '../deployments/localhost/ZeroDistributor.json'
+import BalanceTree from './merkle/balance-tree'
+import MerkleTree from './merkle/merkle-tree'
 
-const RENBTC_WELL = '0xc948eb5205bde3e18cac4969d6ad3a56ba7b2347'
-const NETWORK = 'ETHEREUM'
-export const createMockRuntime = async (provider) => {
-    provider = provider || new ethers.providers.JsonRpcProvider('http://localhost:8565')
-    await provider.send("hardhat_impersonateAccount", [RENBTC_WELL])
-    const rBTC_well = provider.getSigner(RENBTC_WELL)
+const config = {
+    decimals: 18,
+    airdrop: {
+      "0xe32d9D1F1484f57F8b5198f90bcdaBC914de0B5A": "100",
+      "0x7f78Da15E8298e7afe6404c54D93cb5269D97570": "100",
+      "0xdd2fd4581271e230360230f9337d5c0430bf44c0": "100",
+      "0x46F71A5b3aCF70cc1Eab83234c158A27F350c66A": "100"
+    }
+  };
 
-    const renBTC = new ethers.Contract(deployParameters[NETWORK]['renBTC'], rBTC_well)
-    const zDistributor = new ethers.Contract(deployParameters[NETWORK]['zeroDistributor'], rBTC_well)
+  
+const whitelist_config = [
+    { account: "0xe32d9D1F1484f57F8b5198f90bcdaBC914de0B5A", amount: ethers.utils.parseUnits('100', 18)},
+    { account: "0x46F71A5b3aCF70cc1Eab83234c158A27F350c66A", amount: ethers.utils.parseUnits('100', 18)},
+    { account: "0x7f78Da15E8298e7afe6404c54D93cb5269D97570", amount: ethers.utils.parseUnits('100', 18)},
+    { account: "0xdd2fd4581271e230360230f9337d5c0430bf44c0", amount: ethers.utils.parseUnits('100', 18)},
+]
+
+export const startMockEnvironment = async () => {
+    // TODO: build merkle tree from config
+    // Deploy and approve zeroDistributor
+    /**
+     * Signer / Setup
+     */
+    const [owner, treasury ] = ethers.getSigners()
+    const zeroDistributor = await new ethers.getContractFactory("ZeroDistributor", owner)
+    const zeroToken = await ethers.getContract("ZERO", treasury)
+    const mTree = new BalanceTree(whitelist_config)
+    const hexRoot = mTree.getHexRoot()
+    await zeroDistributor.deploy(zeroToken.address, treasury.address, hexRoot)
+    zeroToken.approve(zeroDistributor.address, await zeroToken.balanceOf(treasury.address))
 
 
-    await renBTC.approve(zDistributor, ethers.constants.MaxUint256)
-    await renBTC.approve(zTreasury, ethers.constants.MaxUint256)
-    await renBTC.approve(rBTC_well, ethers.constants.MaxUint256)
-
-
-
-    await renBTC.transfer()
-    //TODO: fund mock_treasury
-    //TODO: fund zeroDistributor
-    //TODO: test balances
-    //    
-    return
+    return mTree
 }
+
+export const testClaim = async (address: string, mTree: BalanceTree) => {
+    var index = whitelist_config.map((i) => { return i.account } ).indexOf(address)
+    const proof = mTree.getProof(index, whitelist_config[index].account, whitelist_config[index].amount)
+
+    const [signer] = await ethers.getSigners()
+    const zDist = await ethers.getContract("ZeroDistributor", signer)
+
+    await zDist.claim(index, address, (whitelist_config[index].amount).toString(), proof)
+
+    return true
+}
+

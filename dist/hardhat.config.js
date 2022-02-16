@@ -47,6 +47,8 @@ if (!process.env.CHAIN_ID && process.env.CHAIN === 'ARBITRUM')
     process.env.CHAIN_ID = '42161';
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'MATIC')
     process.env.CHAIN_ID = '137';
+if (!process.env.CHAIN_ID && process.env.CHAIN === 'ETHEREUM')
+    process.env.CHAIN_ID = '1';
 var override = require('./lib/test/inject-mock').override;
 var RPC_ENDPOINTS = {
     ARBITRUM: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
@@ -111,10 +113,15 @@ module.exports = {
             accounts: accounts,
             chainId: 1
         },
+        // localhost: {
+        // 	live: false,
+        // 	saveDeployments: true,
+        // 	tags: ['development'],
+        // },
         localhost: {
             live: false,
             saveDeployments: true,
-            tags: ['development']
+            tags: ["local"]
         },
         hardhat: {
             live: false,
