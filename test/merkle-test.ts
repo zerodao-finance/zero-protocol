@@ -181,7 +181,7 @@ describe('ZERO', () => {
             console.log(`\n=== Account ${counter + 1} ===`)
             console.log("Key: ", key);
             console.log("Value: ", config.airdrop[key]);
-            console.log("\nCheck if claimed", await distributor.isClaimed(counter))
+            console.log("\nCheck if claimed, pre-claim", await distributor.isClaimed(counter))
 
             await zeroToken.approve(key, ethers.constants.MaxUint256)
 
@@ -193,6 +193,7 @@ describe('ZERO', () => {
 
             await distributor.claim(counter, key, ethers.utils.parseUnits(config.airdrop[key], config.decimals).toString(), proof, { gasPrice: 197283674 })
 
+            console.log("\nCheck if claimed, post-claim", await distributor.isClaimed(counter))
             console.log(`Post-Claim Balance:`, ethers.utils.formatUnits(await zeroToken.balanceOf(key), config.decimals))
 
             counter++;
