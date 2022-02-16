@@ -24,14 +24,14 @@ task('multisig', 'sends out a multisig proposal')
 					case 'arbitrum':
 						return 'arbitrum';
 					case 'mainnet':
-						return 'Ethereum Mainnet';
+						return 'mainnet';
 					case 'rinkeby':
 						return network.name;
 					default:
 						throw new Error('Network not yet supported on safes');
 				}
 			})();
-			return `https://safe-transaction.${networkName}.gnosis.io`;
+			return networkName === 'mainnet' ? 'https://safe-transaction.gnosis.io' : `https://safe-transaction.${networkName}.gnosis.io`;
 		})();
 		const safeService = new SafeServiceClient(serviceUrl);
 		// fetch contract address
