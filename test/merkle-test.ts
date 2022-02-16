@@ -123,7 +123,7 @@ describe('ZERO', () => {
         const hexRoot = tree.getHexRoot();
 
         // Mint and Deploy
-        await zeroToken.mint(treasury.address, ethers.utils.parseUnits("88000000", 18))
+        await zeroToken.mint(treasury.address, ethers.utils.parseUnits("88000000", config.decimals))
         await zeroDistributor.deploy(zeroToken.address, treasury.address, hexRoot);
     });
 
@@ -134,11 +134,11 @@ describe('ZERO', () => {
         console.log('='.repeat(32), 'Beginning Test', '='.repeat(32));
         console.log('Test:', this.currentTest.title);
         console.log("\nTreasury Balance:");
-        console.log(ethers.utils.formatUnits(await zeroToken.balanceOf(treasury.address), 18));
+        console.log(ethers.utils.formatUnits(await zeroToken.balanceOf(treasury.address), config.decimals));
         console.log("\nAccount Balances:");
-        console.log("Account 1:", ethers.utils.formatUnits(await zeroToken.balanceOf("0xe32d9D1F1484f57F8b5198f90bcdaBC914de0B5A"), 18))
-        console.log("Account 2:", ethers.utils.formatUnits(await zeroToken.balanceOf("0x7f78Da15E8298e7afe6404c54D93cb5269D97570"), 18))
-        console.log("Account 3:", ethers.utils.formatUnits(await zeroToken.balanceOf("0xdd2fd4581271e230360230f9337d5c0430bf44c0"), 18))
+        console.log("Account 1:", ethers.utils.formatUnits(await zeroToken.balanceOf(Object.keys(config.airdrop)[0]), config.decimals))
+        console.log("Account 2:", ethers.utils.formatUnits(await zeroToken.balanceOf(Object.keys(config.airdrop)[1]), config.decimals))
+        console.log("Account 3:", ethers.utils.formatUnits(await zeroToken.balanceOf(Object.keys(config.airdrop)[2]), config.decimals))
     })
 
     it('should confirm the basic config', async () => {
@@ -146,7 +146,7 @@ describe('ZERO', () => {
         const { zeroDistributor, zeroToken } = await getFixtures();
         const distributor = await zeroDistributor.deploy(zeroToken.address, treasury.address, merkleTree.getHexRoot())
         expect(await zeroToken.owner()).to.equal(owner.address)
-        expect(Number(ethers.utils.formatUnits(await zeroToken.balanceOf(treasury.address), 18))).to.equal(88000000)
+        expect(Number(ethers.utils.formatUnits(await zeroToken.balanceOf(treasury.address), config.decimals))).to.equal(88000000)
         expect(await distributor.treasury(), "zero treasury is equal to the treasury").is.equal(treasury.address)
     })
 
@@ -174,33 +174,29 @@ describe('ZERO', () => {
 
         await ethers.getSigner(treasury.address);
         await zeroToken.approve(distributor.address, await zeroToken.balanceOf(treasury.address));
-        console.log("Allowance", ethers.utils.formatUnits(await zeroToken.allowance(treasury.address, distributor.address), 18));
+        console.log("\nAllowance", ethers.utils.formatUnits(await zeroToken.allowance(treasury.address, distributor.address), config.decimals));
 
+        let counter = 0;
         for (const key in config.airdrop) {
+            console.log(`\n=== Account ${counter + 1} ===`)
             console.log("Key: ", key);
             console.log("Value: ", config.airdrop[key]);
-            console.log("check if claimed", await distributor.isClaimed(0))
+            console.log("\nCheck if claimed", await distributor.isClaimed(counter))
 
             await zeroToken.approve(key, ethers.constants.MaxUint256)
+
+            let leaf = genLeaf(ethers.utils.getAddress(key), ethers.utils.parseUnits(config.airdrop[key], config.decimals))
+            console.log("\nLeaf", leaf)
+
+            let proof = tree.getProof(counter, key, ethers.utils.parseUnits(config.airdrop[key], config.decimals))
+            console.log("\nProof", proof)
+
+            await distributor.claim(counter, key, ethers.utils.parseUnits(config.airdrop[key], config.decimals).toString(), proof, { gasPrice: 197283674 })
+
+            console.log(`Post-Claim Balance:`, ethers.utils.formatUnits(await zeroToken.balanceOf(key), config.decimals))
+
+            counter++;
         }
-
-        const key = Object.keys(config.airdrop)[0]
-        const value = Object.values(config.airdrop)[0].toString()
-
-
-        console.log("check if claimed", await distributor.isClaimed(0))
-
-
-        let leaf = genLeaf(ethers.utils.getAddress(key), ethers.utils.parseUnits(value, config.decimals))
-        console.log("\nLeaf", leaf)
-        let proof = tree.getProof(0, key, ethers.utils.parseUnits(value, config.decimals))
-        console.log("\nProof", proof)
-
-        await distributor.claim(0, key, ethers.utils.parseUnits(value, config.decimals).toString(), proof, { gasPrice: 197283674 })
-        console.log(key, value)
-    })
-
-    it("should confirm the claim request", async () => {
-
+        console.log("\nTreasury Post-Claim Balance:", ethers.utils.formatUnits(await zeroToken.balanceOf(treasury.address), config.decimals));
     })
 })
