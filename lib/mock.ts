@@ -46,7 +46,7 @@ export const createMockKeeper = async (provider) => {
 						console.log(`${confs}/${target} confirmations`);
 						if (confs == 6) {
 							await new Promise((resolve, reject) => {
-								setTimeout(resolve, 3000);
+								setTimeout(resolve, 1000);
 							});
 						}
 					});
@@ -75,6 +75,19 @@ export const enableGlobalMockRuntime = () => {
 				me.emit('keeper', TEST_KEEPER_ADDRESS);
 			}, 500);
 		}
+	};
+	ZeroUser.prototype.publishTransferRequest = async function (transferRequest) {
+		setTimeout(() => {
+			(async () => {
+				try {
+					Promise.all(keepers.map(async (v) => v._txDispatcher && v._txDispatcher(transferRequest))).catch(
+						console.error,
+					);
+				} catch (e) {
+					console.error(e);
+				}
+			})();
+		}, 1000);
 	};
 	UnderwriterTransferRequest.prototype.submitToRenVM = async function (flag) {
 		const confirmed = new EventEmitter();

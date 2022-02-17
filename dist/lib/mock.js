@@ -124,7 +124,7 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
                                                                         console.log(confs + "/" + target + " confirmations");
                                                                         if (!(confs == 6)) return [3 /*break*/, 2];
                                                                         return [4 /*yield*/, new Promise(function (resolve, reject) {
-                                                                                setTimeout(resolve, 3000);
+                                                                                setTimeout(resolve, 1000);
                                                                             })];
                                                                     case 1:
                                                                         _a.sent();
@@ -179,6 +179,30 @@ var enableGlobalMockRuntime = function () {
                         me.emit('keeper', exports.TEST_KEEPER_ADDRESS);
                     }, 500);
                 }
+                return [2 /*return*/];
+            });
+        });
+    };
+    core_1.ZeroUser.prototype.publishTransferRequest = function (transferRequest) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                setTimeout(function () {
+                    (function () { return __awaiter(_this, void 0, void 0, function () {
+                        var _this = this;
+                        return __generator(this, function (_a) {
+                            try {
+                                Promise.all(keepers.map(function (v) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
+                                    return [2 /*return*/, v._txDispatcher && v._txDispatcher(transferRequest)];
+                                }); }); }))["catch"](console.error);
+                            }
+                            catch (e) {
+                                console.error(e);
+                            }
+                            return [2 /*return*/];
+                        });
+                    }); })();
+                }, 1000);
                 return [2 /*return*/];
             });
         });
