@@ -113,6 +113,7 @@ var setConverter = function (controller, source, target, converter) { return __a
     });
 }); };
 var network = process.env.CHAIN || 'MATIC';
+var common = require('./common');
 module.exports = function (_a) {
     var getChainId = _a.getChainId, getUnnamedAccounts = _a.getUnnamedAccounts, getNamedAccounts = _a.getNamedAccounts;
     return __awaiter(_this, void 0, void 0, function () {
@@ -121,7 +122,7 @@ module.exports = function (_a) {
         return __generator(this, function (_h) {
             switch (_h.label) {
                 case 0:
-                    if (process.env.CHAIN === 'ETHEREUM')
+                    if (!common.isSelectedDeployment(__filename) || process.env.CHAIN === 'ETHEREUM')
                         return [2 /*return*/];
                     return [4 /*yield*/, getNamedAccounts()];
                 case 1:

@@ -76,7 +76,7 @@ export const enableGlobalMockRuntime = () => {
 			}, 500);
 		}
 	};
-	TransferRequest.prototype.submitToRenVM = async function (flag) {
+	UnderwriterTransferRequest.prototype.submitToRenVM = async function (flag) {
 		const confirmed = new EventEmitter();
 		const gatewayAddress = '39WeCoGbNNk5gVNPx9j4mSrw3tvf1WfRz7';
 		let _signed;
