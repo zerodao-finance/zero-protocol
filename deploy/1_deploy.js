@@ -55,13 +55,14 @@ const setConverter = async (controller, source, target, converter) => {
 
 const network = process.env.CHAIN || 'MATIC'
 
+const common = require('./common');
 
 module.exports = async ({
   getChainId,
   getUnnamedAccounts,
   getNamedAccounts,
 }) => {
-  if (process.env.CHAIN === 'ETHEREUM') return;
+  if (!common.isSelectedDeployment(__filename) || process.env.CHAIN === 'ETHEREUM') return;
   const { deployer } = await getNamedAccounts(); //used as governance address
   const [ethersSigner] = await ethers.getSigners();
   const { provider } = ethersSigner;
