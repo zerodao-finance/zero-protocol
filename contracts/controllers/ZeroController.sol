@@ -223,6 +223,25 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		return digest;
 	}
 
+	function toMetaTypedDataHash(ZeroLib.MetaParams memory params, address underwriter)
+		internal
+		view
+		returns (bytes32 result)
+	{
+		result = _hashTypedDataV4(
+			keccak256(
+				abi.encode(
+					keccak256('MetaRequest(address asset,address underwriter,address module,uint256 nonce,bytes data)'),
+					params.asset,
+					underwriter,
+					params.module,
+					params.nonce,
+					keccak256(params.data)
+				)
+			)
+		);
+	}
+
 	function loan(
 		address to,
 		address asset,
@@ -273,6 +292,17 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		bytes memory data,
 		bytes memory signature
 	) public onlyUnderwriter returns (uint256 gasValueAndFee) {
+		require(approvedModules[module], '!approved');
+		uint256 gasAtStart = gasleft();
+		ZeroLib.MetaParams memory params = ZeroLib.MetaParams({
+			from: from,
+			asset: asset,
+			module: module,
+			nonce: nonce,
+			data: data
+		});
+		bytes32 digest = toMetaTypedDataHash(params, msg.sender);
+		require(ECDSA.recover(digest, signature) == params.from, 'invalid signature');
 		// does stuff
 		IZeroModule(module).receiveMeta(from, asset, nonce, data);
 		// does stuff
