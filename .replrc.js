@@ -10,15 +10,15 @@ var RPC_ENDPOINTS = {
 
 var deployments = require('./deployments/deployments');
 const MATIC_RPC = 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2';
-var { contracts } = deployments[137].matic;
+//var { contracts } = deployments[137].matic;
 var r = new RenJS('mainnet');
 var { getDefaultBitcoinClient } = require('./lib/rpc/btc');
 var Client = require('bitcoin-core');
 var ethers = require('ethers');
-var provider = new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS.MATIC);
+var provider = new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS.ARBITRUM);
 var wallet = new ethers.Wallet(process.env.WALLET).connect(provider);
 var getContract = (contract) => {
-  return new ethers.Contract(require('./deployments/arbitrum/' + contract).address, require('./deployments/matic/' + contract).abi, wallet);
+  return new ethers.Contract(require('./deployments/arbitrum/' + contract).address, require('./deployments/arbitrum/' + contract).abi, wallet);
 };
 var renVMStrategy = getContract('StrategyRenVM');
 var dummy = getContract('DummyVault');
