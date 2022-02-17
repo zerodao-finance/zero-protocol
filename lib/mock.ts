@@ -46,7 +46,7 @@ export const createMockKeeper = async (provider) => {
 						console.log(`${confs}/${target} confirmations`);
 						if (confs == 6) {
 							await new Promise((resolve, reject) => {
-								setTimeout(resolve, 1000);
+								setTimeout(resolve, 500);
 							});
 						}
 					});
@@ -56,7 +56,7 @@ export const createMockKeeper = async (provider) => {
 		);
 
 		trivial.waitForSignature = async () => {
-			await new Promise((resolve) => setTimeout(resolve, 1000));
+			await new Promise((resolve) => setTimeout(resolve, 500));
 			return {
 				amount: ethers.BigNumber.from(trivial.amount).sub(ethers.utils.parseUnits('0.0015', 8)).toString(),
 				nHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
@@ -87,7 +87,7 @@ export const enableGlobalMockRuntime = () => {
 					console.error(e);
 				}
 			})();
-		}, 1000);
+		}, 500);
 	};
 	UnderwriterTransferRequest.prototype.submitToRenVM = async function (flag) {
 		const confirmed = new EventEmitter();
@@ -131,7 +131,7 @@ export const enableGlobalMockRuntime = () => {
 		};
 		setTimeout(() => {
 			mint.emit('deposit', deposit);
-		}, 10000);
+		}, 5000);
 		(mint as any).gatewayAddress = gatewayAddress;
 		return mint;
 	};
@@ -149,7 +149,7 @@ export const enableGlobalMockRuntime = () => {
 			  _confirm.emit("transactionHash", txHash)
   
 			  for (let i = 1; 1 <= target; i++) {
-				  await timeout(1000);
+				  await timeout(500);
 				  _confirm.emit('confirmation', i, target);
 			  }
 		  }, 3000)
@@ -200,7 +200,7 @@ export const enableGlobalMockRuntime = () => {
 					  console.error(e)
 				  }
 			  })();
-		  }, 1000)
+		  }, 500)
 	  }
   
   

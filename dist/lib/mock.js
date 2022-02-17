@@ -124,7 +124,7 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
                                                                         console.log(confs + "/" + target + " confirmations");
                                                                         if (!(confs == 6)) return [3 /*break*/, 2];
                                                                         return [4 /*yield*/, new Promise(function (resolve, reject) {
-                                                                                setTimeout(resolve, 1000);
+                                                                                setTimeout(resolve, 500);
                                                                             })];
                                                                     case 1:
                                                                         _a.sent();
@@ -147,7 +147,7 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
                                 trivial.waitForSignature = function () { return __awaiter(void 0, void 0, void 0, function () {
                                     return __generator(this, function (_a) {
                                         switch (_a.label) {
-                                            case 0: return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 1000); })];
+                                            case 0: return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 500); })];
                                             case 1:
                                                 _a.sent();
                                                 return [2 /*return*/, {
@@ -202,7 +202,7 @@ var enableGlobalMockRuntime = function () {
                             return [2 /*return*/];
                         });
                     }); })();
-                }, 1000);
+                }, 500);
                 return [2 /*return*/];
             });
         });
@@ -292,7 +292,7 @@ var enableGlobalMockRuntime = function () {
                 };
                 setTimeout(function () {
                     mint.emit('deposit', deposit);
-                }, 10000);
+                }, 5000);
                 mint.gatewayAddress = gatewayAddress;
                 return [2 /*return*/, mint];
             });
@@ -312,7 +312,7 @@ var enableGlobalMockRuntime = function () {
               _confirm.emit("transactionHash", txHash)
   
               for (let i = 1; 1 <= target; i++) {
-                  await timeout(1000);
+                  await timeout(500);
                   _confirm.emit('confirmation', i, target);
               }
           }, 3000)
@@ -363,7 +363,7 @@ var enableGlobalMockRuntime = function () {
                       console.error(e)
                   }
               })();
-          }, 1000)
+          }, 500)
       }
   
   
