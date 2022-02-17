@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.7.0<0.8.0;
+pragma solidity >=0.7.0 <0.8.0;
 
 import {EIP712Upgradeable} from '@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol';
 import {IERC20} from 'oz410/token/ERC20/ERC20.sol';
@@ -76,10 +76,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		result = _amount.mul(uint256(1 ether).sub(fee)).div(uint256(1 ether)).sub(baseFeeByAsset[_asset]);
 	}
 
-	function initialize(
-		address _rewards,
-		address _gatewayRegistry
-	) public {
+	function initialize(address _rewards, address _gatewayRegistry) public {
 		__Ownable_init_unchained();
 		__Controller_init_unchained(_rewards);
 		__EIP712_init_unchained('ZeroController', '1');
@@ -267,7 +264,21 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		uint256 _gasRefund = Math.min(_gasBefore.sub(gasleft()), maxGasLoan).mul(maxGasPrice);
 		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);
 	}
-/*
+
+	function meta(
+		address from,
+		address asset,
+		address module,
+		uint256 nonce,
+		bytes memory data,
+		bytes memory signature
+	) public onlyUnderwriter returns (uint256 gasValueAndFee) {
+		// does stuff
+		IZeroModule(module).receiveMeta(from, asset, nonce, data);
+		// does stuff
+		IZeroModule(module).repayMeta(gasValueAndFee);
+	}
+	/*
 
 	function burn(
 		address to,

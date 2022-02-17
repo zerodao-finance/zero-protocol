@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.6.0<0.8.0;
+pragma solidity >=0.6.0 <0.8.0;
 
 import {SwapLib} from './SwapLib.sol';
 import {SafeMath} from 'oz410/math/SafeMath.sol';
@@ -7,8 +7,9 @@ import {IUniswapV2Router02} from '@uniswap/v2-periphery/contracts/interfaces/IUn
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
 import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
 import {IController} from '../interfaces/IController.sol';
+import {IZeroModule} from '../interfaces/IZeroModule.sol';
 
-contract Swap {
+contract Swap is IZeroModule {
 	using SafeERC20 for *;
 	using SafeMath for *;
 	mapping(uint256 => SwapLib.SwapRecord) public outstanding;
@@ -17,7 +18,7 @@ contract Swap {
 	uint256 public blockTimeout;
 	address public immutable fiat; //USDC
 	address public immutable wNative; //wETH
-	address public immutable want; //wBTC
+	address public immutable override want; //wBTC
 	address public immutable router; //Sushi V2
 	address public immutable controllerWant; // Controller want (renBTC)
 
@@ -64,7 +65,7 @@ contract Swap {
 		uint256 _actual,
 		uint256 _nonce,
 		bytes memory _data
-	) public onlyController {
+	) public override onlyController {
 		uint256 amountSwapped = swapTokens(want, fiat, _actual);
 		outstanding[_nonce] = SwapLib.SwapRecord({qty: amountSwapped, when: uint64(block.timestamp), token: _asset});
 	}
@@ -95,13 +96,22 @@ contract Swap {
 		uint256 _actualAmount,
 		uint256 _nonce,
 		bytes memory _data
-	) public onlyController {
+	) public override onlyController {
 		require(outstanding[_nonce].qty != 0, '!outstanding');
 		IERC20(fiat).safeTransfer(_to, outstanding[_nonce].qty);
 		delete outstanding[_nonce];
 	}
 
-	function computeReserveRequirement(uint256 _in) external view returns (uint256) {
+	function computeReserveRequirement(uint256 _in) external view override returns (uint256) {
 		return _in.mul(uint256(1e17)).div(uint256(1 ether));
 	}
+
+	function receiveMeta(
+		address from,
+		address asset,
+		uint256 nonce,
+		bytes memory data
+	) public override onlyController {}
+
+	function repayMeta(uint256 value) public override onlyController {}
 }

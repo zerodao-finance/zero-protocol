@@ -1,4 +1,4 @@
-pragma solidity >=0.6.0<0.8.0;
+pragma solidity >=0.6.0 <0.8.0;
 import {ArbitrumConvertLib} from './ArbitrumConvertLib.sol';
 import {SafeMath} from 'oz410/math/SafeMath.sol';
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
@@ -6,8 +6,9 @@ import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
 import {IController} from '../interfaces/IController.sol';
 import {ICurveETHUInt256} from '../interfaces/CurvePools/ICurveETHUInt256.sol';
 import {IRenCrvArbitrum} from '../interfaces/CurvePools/IRenCrvArbitrum.sol';
+import {IZeroModule} from '../interfaces/IZeroModule.sol';
 
-contract ArbitrumMIMConvert {
+contract ArbitrumMIMConvert is IZeroModule {
 	using SafeERC20 for *;
 	using SafeMath for *;
 	mapping(uint256 => ArbitrumConvertLib.ConvertRecord) public outstanding;
@@ -16,7 +17,7 @@ contract ArbitrumMIMConvert {
 	uint256 public blockTimeout;
 	address public constant weth = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
 	address public constant wbtc = 0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f;
-	address public constant want = 0xDBf31dF14B66535aF65AaC99C32e9eA844e14501;
+	address public constant override want = 0xDBf31dF14B66535aF65AaC99C32e9eA844e14501;
 	address public constant renCrvArbitrum = 0x3E01dD8a5E1fb3481F0F589056b428Fc308AF0Fb;
 	address public constant tricryptoArbitrum = 0x960ea3e3C7FB317332d990873d354E18d7645590;
 	address public constant mimCrvArbitrum = 0x30dF229cefa463e991e29D42DB0bae2e122B2AC7;
@@ -59,7 +60,7 @@ contract ArbitrumMIMConvert {
 		uint256 _actual,
 		uint256 _nonce,
 		bytes memory _data
-	) public onlyController {
+	) public override onlyController {
 		uint256 ratio = abi.decode(_data, (uint256));
 		(uint256 amountSwappedETH, uint256 amountSwappedMIM) = swapTokens(_actual, ratio);
 		outstanding[_nonce] = ArbitrumConvertLib.ConvertRecord({
@@ -109,7 +110,7 @@ contract ArbitrumMIMConvert {
 		uint256 _actualAmount,
 		uint256 _nonce,
 		bytes memory _data
-	) public onlyController {
+	) public override onlyController {
 		require(outstanding[_nonce].qty != 0 || outstanding[_nonce].qtyETH != 0, '!outstanding');
 		IERC20(mim).safeTransfer(_to, outstanding[_nonce].qty);
 		address payable to = address(uint160(_to));
@@ -117,7 +118,16 @@ contract ArbitrumMIMConvert {
 		delete outstanding[_nonce];
 	}
 
-	function computeReserveRequirement(uint256 _in) external view returns (uint256) {
+	function computeReserveRequirement(uint256 _in) external view override returns (uint256) {
 		return _in.mul(uint256(1e17)).div(uint256(1 ether));
 	}
+
+	function receiveMeta(
+		address from,
+		address asset,
+		uint256 nonce,
+		bytes memory data
+	) public override onlyController {}
+
+	function repayMeta(uint256 value) public override onlyController {}
 }
