@@ -9,7 +9,6 @@ var RPC_ENDPOINTS = {
 };
 
 var deployments = require('./deployments/deployments');
-const MATIC_RPC = 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2';
 //var { contracts } = deployments[137].matic;
 var r = new RenJS('mainnet');
 var { getDefaultBitcoinClient } = require('./lib/rpc/btc');
@@ -21,6 +20,8 @@ var getContract = (contract) => {
   return new ethers.Contract(require('./deployments/arbitrum/' + contract).address, require('./deployments/arbitrum/' + contract).abi, wallet);
 };
 var renVMStrategy = getContract('StrategyRenVM');
+var delegate = getContract('DelegateUnderwriter');
+
 var dummy = getContract('DummyVault');
 var renbtc = new ethers.Contract('0xDBf31dF14B66535aF65AaC99C32e9eA844e14501', [
   'function approve(address, uint256) returns (bool)',
@@ -36,7 +37,7 @@ var vault = getContract('BTCVault');
 //controller = new ethers.Contract(controller.address, [ 'function approveModule(address, bool)', 'function approvedModules(address) view returns (bool)' ], wallet);
 var upgraded = new ethers.Contract(controller.address, ['function fee() view returns (uint256)', 'function setGasParameters(uint256, uint256, uint256)'], wallet);
 var underwriter = new ethers.Contract(getContract('DelegateUnderwriter').address, ['function loan(address, address, uint256, uint256, address, bytes, bytes)', 'function controller() view returns (address)', 'function owner() view returns (address)'], wallet);
-controller = new ethers.Contract(controller.address, ['function approveModule(address, bool)', 'function fee() view returns (uint256)', 'function setBaseFeeByAsset(address, uint256)', 'function baseFeeByAsset(address) view returns (uint256)', 'function approvedModules(address) view returns (bool)'], wallet);
+//controller = new ethers.Contract(controller.address, ['function approveModule(address, bool)', 'function fee() view returns (uint256)', 'function setBaseFeeByAsset(address, uint256)', 'function baseFeeByAsset(address) view returns (uint256)', 'function approvedModules(address) view returns (bool)'], wallet);
 var makeKeeper = async () => await zero.createZeroKeeper(await zero.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
 
 //var makeUser = async () => await zero.createZeroUser(await zero.createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'));
@@ -78,7 +79,7 @@ var transferRequest = new TransferRequest({
 
 
 var getLock = async () => {
-  return new ethers.Contract(await controller.lockFor(underwriter.address), require('./artifacts/contracts/underwriter/ZeroUnderwriterLock.sol/ZeroUnderwriterLock').abi, underwriter.signer);
+  return new ethers.Contract(await controller.lockFor(delegate.address), require('./artifacts/contracts/underwriter/ZeroUnderwriterLock.sol/ZeroUnderwriterLock').abi, wallet);
 };
 
 
