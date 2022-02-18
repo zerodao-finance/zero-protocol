@@ -85,7 +85,6 @@ module.exports = async ({
         from: deployer
     });
 
-    // Zero Contract Instance with Treasury as Signer
     // TODO change to multisig signer instead of this hardhat one
     const zero = await ethers.getContract('ZERO', testTreasury);
 

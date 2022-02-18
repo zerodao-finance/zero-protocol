@@ -48,7 +48,10 @@ var deployFixedAddress = function () {
             switch (_a.label) {
                 case 0:
                     console.log('Deploying ' + args[0]);
+<<<<<<< HEAD
                     console.log("Args Here: ", args);
+=======
+>>>>>>> c08de23bed960a1e9971489187b51d410f7d8c84
                     args[1].waitConfirmations = 1;
                     return [4 /*yield*/, ethers.getSigners()];
                 case 1:
@@ -56,6 +59,7 @@ var deployFixedAddress = function () {
                     return [4 /*yield*/, deployments.deploy.apply(deployments, args)];
                 case 2:
                     result = _a.sent();
+<<<<<<< HEAD
                     console.log('Deployed to ' + result.address);
                     if (!(args[0] === 'ZERO')) return [3 /*break*/, 3];
                     return [2 /*return*/];
@@ -79,6 +83,10 @@ var deployProxyFixedAddress = function () {
                     return [4 /*yield*/, upgrades.deployProxy.apply(upgrades, args)];
                 case 1:
                     result = _a.sent();
+=======
+                    //  restoreSigner(signer);
+                    console.log('Deployed to ' + result.address);
+>>>>>>> c08de23bed960a1e9971489187b51d410f7d8c84
                     return [2 /*return*/, result];
             }
         });
@@ -89,9 +97,15 @@ var _getSigner = JsonRpcProvider.prototype.getSigner;
 var deployParameters = require('../lib/fixtures');
 var SIGNER_ADDRESS = "0x0F4ee9631f4be0a63756515141281A3E2B293Bbe";
 module.exports = function (_a) {
+<<<<<<< HEAD
     var getNamedAccounts = _a.getNamedAccounts;
     return __awaiter(_this, void 0, void 0, function () {
         var deployer, ethersSigner, provider, chainId, merkleRoot, erc20abi, testTreasury, zeroUnderwriterLockBytecodeLib, zeroControllerFactory, zeroController, zeroControllerArtifact, BTCVault, zeroToken, zero, zeroDistributor, RENBTC_HOLDER, signer, renBTC;
+=======
+    var getChainId = _a.getChainId, getUnnamedAccounts = _a.getUnnamedAccounts, getNamedAccounts = _a.getNamedAccounts;
+    return __awaiter(_this, void 0, void 0, function () {
+        var deployer, ethersSigner, provider, chainId;
+>>>>>>> c08de23bed960a1e9971489187b51d410f7d8c84
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -116,6 +130,7 @@ module.exports = function (_a) {
                     _b.sent();
                     _b.label = 5;
                 case 5:
+<<<<<<< HEAD
                     merkleRoot = "0xe52564f93ddc09e2d60c8150e4a11c5be656f147bf1f8c64a492b6a34c11dc6a";
                     return [4 /*yield*/, deployments.getArtifact('BTCVault')];
                 case 6:
@@ -208,6 +223,16 @@ module.exports = function (_a) {
                     ];
                 case 19:
                     _b.sent();
+=======
+                    // deployments.deploy("ZERO")
+                    console.log(deployer);
+                    console.log(provider, chainId);
+                    deployFixedAddress("MasterChef", {
+                        contractName: "MasterChef",
+                        args: [],
+                        from: deployer
+                    });
+>>>>>>> c08de23bed960a1e9971489187b51d410f7d8c84
                     return [2 /*return*/];
             }
         });

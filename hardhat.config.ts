@@ -5,14 +5,15 @@ require('hardhat-gas-reporter');
 require('@openzeppelin/hardhat-upgrades');
 require('@nomiclabs/hardhat-etherscan');
 require('dotenv').config();
-const ethers = require('ethers');
+require('./tasks/multisig');
+require('./tasks/init-multisig');
 
+const ethers = require('ethers')
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'ARBITRUM') process.env.CHAIN_ID = '42161';
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'MATIC') process.env.CHAIN_ID = '137';
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'ETHEREUM') process.env.CHAIN_ID = '1';
 
 const { override } = require('./lib/test/inject-mock');
-
 
 const RPC_ENDPOINTS = {
 	ARBITRUM: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
@@ -50,7 +51,7 @@ process.env.ETHEREUM_MAINNET_URL =
 
 const ETHERSCAN_API_KEYS = {
 	ARBITRUM: '7PW6SPNBFYV1EM5E5NT36JW7ARMS1FB4HW',
-	MATIC: 'I13U9EN9YQ9931GYK9CJYQS9ZF51D5Z1F9'
+	MATIC: 'I13U9EN9YQ9931GYK9CJYQS9ZF51D5Z1F9',
 };
 
 const ETHERSCAN_API_KEY = ETHERSCAN_API_KEYS[process.env.CHAIN || 'ARBITRUM'] || ETHERSCAN_API_KEYS['ARBITRUM'];
@@ -140,6 +141,15 @@ module.exports = {
 			},
 			{
 				version: '0.7.6',
+				settings: {
+					optimizer: {
+						enabled: true,
+						runs: 200,
+					},
+				},
+			},
+			{
+				version: '0.8.4',
 				settings: {
 					optimizer: {
 						enabled: true,

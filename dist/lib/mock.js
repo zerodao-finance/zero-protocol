@@ -42,7 +42,7 @@ var core_1 = require("./p2p/core");
 var ethers_1 = require("ethers");
 var events_1 = require("events");
 var keepers = [];
-exports.TEST_KEEPER_ADDRESS = '0x12fBc372dc2f433392CC6caB29CFBcD5082EF494';
+exports.TEST_KEEPER_ADDRESS = '0xec5d65739c722a46cd79951e069753c2fc879b27';
 var keeperSigner;
 var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, void 0, function () {
     var keeper;
@@ -74,7 +74,7 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
                     return __generator(this, function (_e) {
                         switch (_e.label) {
                             case 0:
-                                trivial = new zero_1.TrivialUnderwriterTransferRequest(transferRequest);
+                                trivial = new zero_1.UnderwriterTransferRequest(transferRequest);
                                 _e.label = 1;
                             case 1:
                                 _e.trys.push([1, 4, , 5]);
@@ -124,7 +124,7 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
                                                                         console.log(confs + "/" + target + " confirmations");
                                                                         if (!(confs == 6)) return [3 /*break*/, 2];
                                                                         return [4 /*yield*/, new Promise(function (resolve, reject) {
-                                                                                setTimeout(resolve, 3000);
+                                                                                setTimeout(resolve, 500);
                                                                             })];
                                                                     case 1:
                                                                         _a.sent();
@@ -147,7 +147,7 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
                                 trivial.waitForSignature = function () { return __awaiter(void 0, void 0, void 0, function () {
                                     return __generator(this, function (_a) {
                                         switch (_a.label) {
-                                            case 0: return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 1000); })];
+                                            case 0: return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 500); })];
                                             case 1:
                                                 _a.sent();
                                                 return [2 /*return*/, {
@@ -183,7 +183,31 @@ var enableGlobalMockRuntime = function () {
             });
         });
     };
-    zero_1.TransferRequest.prototype.submitToRenVM = function (flag) {
+    core_1.ZeroUser.prototype.publishTransferRequest = function (transferRequest) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                setTimeout(function () {
+                    (function () { return __awaiter(_this, void 0, void 0, function () {
+                        var _this = this;
+                        return __generator(this, function (_a) {
+                            try {
+                                Promise.all(keepers.map(function (v) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
+                                    return [2 /*return*/, v._txDispatcher && v._txDispatcher(transferRequest)];
+                                }); }); }))["catch"](console.error);
+                            }
+                            catch (e) {
+                                console.error(e);
+                            }
+                            return [2 /*return*/];
+                        });
+                    }); })();
+                }, 500);
+                return [2 /*return*/];
+            });
+        });
+    };
+    zero_1.UnderwriterTransferRequest.prototype.submitToRenVM = function (flag) {
         return __awaiter(this, void 0, void 0, function () {
             var confirmed, gatewayAddress, _signed, target, timeout, txHash, mint, deposit;
             var _this = this;
@@ -268,7 +292,7 @@ var enableGlobalMockRuntime = function () {
                 };
                 setTimeout(function () {
                     mint.emit('deposit', deposit);
-                }, 10000);
+                }, 5000);
                 mint.gatewayAddress = gatewayAddress;
                 return [2 /*return*/, mint];
             });
@@ -288,7 +312,7 @@ var enableGlobalMockRuntime = function () {
               _confirm.emit("transactionHash", txHash)
   
               for (let i = 1; 1 <= target; i++) {
-                  await timeout(1000);
+                  await timeout(500);
                   _confirm.emit('confirmation', i, target);
               }
           }, 3000)
@@ -339,7 +363,7 @@ var enableGlobalMockRuntime = function () {
                       console.error(e)
                   }
               })();
-          }, 1000)
+          }, 500)
       }
   
   

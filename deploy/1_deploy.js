@@ -1,4 +1,5 @@
 const hre = require("hardhat");
+const { createGetGasPrice } = require("ethers-polygongastracker")
 const { options } = require("libp2p/src/keychain");
 const validate = require('@openzeppelin/upgrades-core/dist/validate/index');
 Object.defineProperty(validate, 'assertUpgradeSafe', {
@@ -39,6 +40,7 @@ const { getSigner: _getSigner } = JsonRpcProvider.prototype;
 
 const SIGNER_ADDRESS = "0x0F4ee9631f4be0a63756515141281A3E2B293Bbe";
 
+
 const deployParameters = require('../lib/fixtures');
 
 const toAddress = (contractOrAddress) => ((contractOrAddress || {})).address || contractOrAddress;
@@ -53,16 +55,18 @@ const setConverter = async (controller, source, target, converter) => {
 
 const network = process.env.CHAIN || 'MATIC'
 
+const common = require('./common');
 
 module.exports = async ({
   getChainId,
   getUnnamedAccounts,
   getNamedAccounts,
 }) => {
-  if (process.env.CHAIN === 'ETHEREUM') return;
+  if (!common.isSelectedDeployment(__filename) || process.env.CHAIN === 'ETHEREUM') return;
   const { deployer } = await getNamedAccounts(); //used as governance address
   const [ethersSigner] = await ethers.getSigners();
   const { provider } = ethersSigner;
+  provider.getGasPrice = createGetGasPrice('standard')
   if (Number(ethers.utils.formatEther(await provider.getBalance(deployer))) === 0) await ethersSigner.sendTransaction({
     value: ethers.utils.parseEther('1'),
     to: deployer
@@ -126,8 +130,8 @@ module.exports = async ({
   // .balanceOf(ethers.constants.AddressZero);
   console.log("Deployed DummyVault to", dummyVault.address)
 
-  await deployFixedAddress("TrivialUnderwriter", {
-    contractName: 'TrivialUnderwriter',
+  await deployFixedAddress("DelegateUnderwriter", {
+    contractName: 'DelegateUnderwriter',
     args: [zeroController.address],
     from: deployer,
   });
@@ -136,8 +140,8 @@ module.exports = async ({
   console.log("GOT CONTROLLER");
 
 
-  const module = process.env.CHAIN === 'ARBITRUM' ? await deployFixedAddress('ArbitrumConvert', { args: [zeroController.address], contractName: 'ArbitrumConvert', from: deployer }) : process.env.CHAIN === "MATIC" ? await deployFixedAddress('PolygonConvert', { args: [zeroController.address], contractName: 'PolygonConvert', from: deployer }) : { address: ethers.constants.AddressZero };
-  await controller.approveModule(module.address, true);
+  // const module = process.env.CHAIN === 'ARBITRUM' ? await deployFixedAddress('ArbitrumConvert', { args: [zeroController.address], contractName: 'ArbitrumConvert', from: deployer }) : process.env.CHAIN === "MATIC" ? await deployFixedAddress('PolygonConvert', { args: [zeroController.address], contractName: 'PolygonConvert', from: deployer }) : { address: ethers.constants.AddressZero };
+  // await controller.approveModule(module.address, true);
 
   const strategyRenVM = await deployments.deploy(network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : 'StrategyRenVM', {
     args: [
