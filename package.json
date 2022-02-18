@@ -21,7 +21,8 @@
 		"lint": "prettier --check \"lib/**/*.{js,jsx,ts,tsx}\"",
 		"build": "tsc -p ./tsconfig.json",
 		"node:arbitrum": "CHAIN=ARBITRUM CHAIN_ID=42161 FORKING=true hardhat node --no-deploy",
-		"node:polygon": "CHAIN=MATIC CHAIN_ID=137 FORKING=true hardhat node --no-deploy"
+		"node:polygon": "CHAIN=MATIC CHAIN_ID=137 FORKING=true hardhat node --no-deploy",
+		"node:mainnet": "CHAIN=ETHEREUM CHAIN_ID=1 FORKING=true hardhat node"
 	},
 	"author": "zeroDAO",
 	"license": "MIT",

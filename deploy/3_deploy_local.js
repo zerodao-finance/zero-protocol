@@ -17,7 +17,7 @@ module.exports = async ({
     getUnnamedAccounts,
     getNamedAccounts
 }) => {
-    if (!process.env.FORKING) return
+    if (!process.env.FORKING || process.env.CHAIN === 'ETHEREUM') return
     
     // set an arbitrary amount of tokens to send
     // get abi

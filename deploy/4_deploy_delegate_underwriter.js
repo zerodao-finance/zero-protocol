@@ -4,7 +4,7 @@ const hre = require('hardhat');
 const common = require('./common');
 
 module.exports = async () => {
-  if (!common.isSelectedDeployment(__filename)) return;
+  if (!common.isSelectedDeployment(__filename) || process.env.CHAIN === 'ETHEREUM') return;
   const multisig = await hre.ethers.getContract('GnosisSafe');
   const controller = await hre.ethers.getContract('ZeroController');
   const [ signer ] = await hre.ethers.getSigners();
