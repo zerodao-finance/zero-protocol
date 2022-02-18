@@ -214,7 +214,7 @@ export class TransferRequest {
 		const mint = await this.submitToRenVM(false);
 		return mint.gatewayAddress;
 	}
-	async sign(signer: Wallet & Signer, contractAddress: string): Promise<string> {
+	async sign(signer: Wallet & Signer, contractAddress?: string): Promise<string> {
 		const provider = signer.provider as ethers.providers.JsonRpcProvider;
 		const { chainId } = await signer.provider.getNetwork();
 		try {
@@ -224,7 +224,7 @@ export class TransferRequest {
 		} catch (e) {
 			return (this.signature = await provider.send('eth_signTypedData_v4', [
 				await signer.getAddress(),
-				this.toEIP712(contractAddress, chainId),
+				this.toEIP712(this.contractAddress || contractAddress, chainId),
 			]));
 		}
 	}

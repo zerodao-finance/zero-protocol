@@ -108,8 +108,11 @@ var underwriterAddress = '0x' + '00'.repeat(20);
 
 const deployUnderwriter = async () => {
 	const { signer, controller, renBTC, btcVault } = await getFixtures();
+	/*
 	const underwriterFactory = await getContractFactory('DelegateUnderwriter', signer);
 	underwriterAddress = (await underwriterFactory.deploy(controller.address)).address;
+       */
+        underwriterAddress = (await ethers.getContract('DelegateUnderwriter')).address;
 	await renBTC.approve(btcVault.address, ethers.constants.MaxUint256); //let btcVault spend renBTC on behalf of signer
 	await btcVault.approve(controller.address, ethers.constants.MaxUint256); //let controller spend btcVault tokens
 	//	await mintUnderwriterNFTIfNotMinted();
@@ -124,6 +127,7 @@ const mintUnderwriterNFTIfNotMinted = async () => {
 const underwriterDeposit = async (amountOfRenBTC: string) => {
 	const { btcVault, controller } = await getFixtures();
 	await btcVault.deposit(amountOfRenBTC); //deposit renBTC into btcVault from signer
+	console.log('deposited renBTC');
 	console.log('Underwriter address is', underwriterAddress);
 	await mintUnderwriterNFTIfNotMinted();
 };
@@ -267,6 +271,14 @@ describe('Zero', () => {
 		override(implementationAddress, artifact.deployedBytecode);
 		const { gateway } = await getFixtures();
 		await gateway.mint(utils.randomBytes(32), utils.parseUnits('50', 8), utils.randomBytes(32), '0x'); //mint renBTC to signer
+		const delegate = await ethers.getContract('DelegateUnderwriter');
+		const controller = await ethers.getContract('ZeroController');
+		const lock = await controller.lockFor(delegate.address);
+		const btcVault = await ethers.getContract('BTCVault');
+		const renbtc = new ethers.Contract(deployParameters[network].renBTC, btcVault.interface, btcVault.signer);
+                await renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
+		await btcVault.deposit(ethers.utils.parseUnits('10', 8));
+		await btcVault.transfer(lock, btcVault.balanceOf(btcVault.signer.getAddress()));
 	});
 
 	beforeEach(async function () {
@@ -551,5 +563,30 @@ describe('Zero', () => {
 			signature,
 		);
 		await getBalances();
+	});
+	it('ArbitrumConvertQuick.sol', async () => {
+          if (process.env.CHAIN !== 'ARBITRUM') return;
+	  const { signer, controller, btcVault } = await getFixtures();
+	  const renbtc = await btcVault.token();
+	  
+	  await btcVault.earn();
+	  console.log('called earn');
+	  const module = await ethers.getContract('ArbitrumConvertQuick');
+	  const underwriter = await ethers.getContract('DelegateUnderwriter');
+	  await underwriterDeposit(utils.parseUnits('0.5', 8).toString());
+	  const transferRequest = new UnderwriterTransferRequest({
+            contractAddress: controller.address,
+	    underwriter: underwriter.address,
+	    module: module.address,
+	    data: ethers.utils.defaultAbiCoder.encode(['uint256'], [ethers.utils.parseEther('1')]),
+	    pNonce: utils.hexlify(utils.randomBytes(32)),
+	    nonce: utils.hexlify(utils.randomBytes(32)),
+	    to: await signer.getAddress(),
+	    asset: renbtc,
+	    amount: utils.parseUnits('0.05', 8)
+	  });
+	  await transferRequest.sign(signer);
+	  const tx = await transferRequest.loan(signer);
+	  console.log(await tx.wait());
 	});
 });

@@ -130,19 +130,31 @@ module.exports = async ({
   // .balanceOf(ethers.constants.AddressZero);
   console.log("Deployed DummyVault to", dummyVault.address)
 
-  await deployFixedAddress("DelegateUnderwriter", {
+  const delegate = await deployFixedAddress("DelegateUnderwriter", {
     contractName: 'DelegateUnderwriter',
-    args: [hre.network.name === 'hardhat' ? deployer : (await hre.ethers.getContract('GnosisSafe')).address, zeroController.address, hre.network.name === 'hardhat' ? [ deployer ] : []],
+    args: [ hre.network.name === 'hardhat' ? deployer : (await ethers.getContract('GnosisSafe')).address, zeroController.address, hre.network.name === 'hardhat' ? [ deployer ] : [] ],
+    libraries: {},
     from: deployer,
   });
+  
 
   const controller = await ethers.getContract('ZeroController');
+  await controller.mint(delegate.address, deployParameters[network].renBTC);
   console.log("GOT CONTROLLER");
 
 
   const module = process.env.CHAIN === 'ARBITRUM' ? await deployFixedAddress('ArbitrumConvert', { args: [zeroController.address], contractName: 'ArbitrumConvert', from: deployer }) : process.env.CHAIN === "MATIC" ? await deployFixedAddress('PolygonConvert', { args: [zeroController.address], contractName: 'PolygonConvert', from: deployer }) : { address: ethers.constants.AddressZero };
   await controller.approveModule(module.address, true);
-
+  if (network === 'ARBITRUM') {
+    const quick = await deployFixedAddress('ArbitrumConvertQuick', {
+      args: [ controller.address, ethers.utils.parseUnits('15', 8), '100000' ],
+      contractName: 'ArbitrumConvertQuick',
+      libraries: {},
+      from: deployer
+    });
+    await controller.approveModule(quick.address, true);
+  }
+  // await controller.approveModule(module.address, true);
   const strategyRenVM = await deployments.deploy(network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : 'StrategyRenVM', {
     args: [
       zeroController.address,
