@@ -82,6 +82,14 @@ function genLeaf(address, value) {
     )
 }
 
+function balanceTreeFriendly(airdropList: Object, decimals: number) {
+    const list = [];
+    Object.entries(airdropList).map(([address, tokens]) => {
+        list.push({ account: address, amount: ethers.utils.parseUnits(tokens, decimals) })
+    })
+    return list;
+}
+
 /**
  * Testing ZERO airdrop
  */
@@ -94,12 +102,6 @@ describe('ZERO', () => {
             "0xdd2fd4581271e230360230f9337d5c0430bf44c0": "100"
         }
     };
-
-    const config_2: { account: string, amount: BigNumber }[] = [
-        { account: "0xe32d9D1F1484f57F8b5198f90bcdaBC914de0B5A", amount: ethers.utils.parseUnits("100", config.decimals) },
-        { account: "0x7f78Da15E8298e7afe6404c54D93cb5269D97570", amount: ethers.utils.parseUnits("100", config.decimals) },
-        { account: "0xdd2fd4581271e230360230f9337d5c0430bf44c0", amount: ethers.utils.parseUnits("100", config.decimals) }
-    ]
 
     const merkleTree = new MerkleTree(
         Object.entries(config.airdrop).map(([address, tokens]) =>
@@ -119,7 +121,7 @@ describe('ZERO', () => {
         override(implementationAddress, artifact.deployedBytecode);
 
         // Create Merkle
-        const tree = new BalanceTree(config_2);
+        const tree = new BalanceTree(balanceTreeFriendly(config.airdrop, config.decimals));
         const hexRoot = tree.getHexRoot();
 
         // Mint and Deploy
@@ -168,7 +170,7 @@ describe('ZERO', () => {
         const { zeroDistributor } = await getFixtures();
         const zeroToken = await ethers.getContract('ZERO', treasury);
 
-        const tree = new BalanceTree(config_2);
+        const tree = new BalanceTree(balanceTreeFriendly(config.airdrop, config.decimals));
         const hexRoot = tree.getHexRoot();
         const distributor = await zeroDistributor.deploy(zeroToken.address, treasury.address, hexRoot);
 
