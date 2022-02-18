@@ -22,7 +22,6 @@ module.exports = async ({
     // set an arbitrary amount of tokens to send
     // get abi
     let arbitraryTokens = (ethers.utils.parseUnits("8", 8)).toString()
-    const { abi } = await deployments.getArtifact("BTCVault")
     const selfdestructSend = await hre.ethers.getContractFactory('SelfdestructSend');
     const [ hardhatSigner ] = await hre.ethers.getSigners();
 	console.log('sending eth');
@@ -45,7 +44,8 @@ module.exports = async ({
     console.log("zero controller address", zcntrl_address)
 
 
-    const renBTC = new ethers.Contract(deployParameters[network]['renBTC'], abi, signer);
+    const vault = await ethers.getContract('BTCVault');
+    const renBTC = new ethers.Contract(deployParameters[network]['renBTC'], vault.interface, signer);
     const connectedRenBTC = await renBTC.connect(signer) // attach curve_ren provider
 
     const balance = await renBTC.balanceOf(deployParameters[network]["Curve_Ren"])
@@ -54,6 +54,7 @@ module.exports = async ({
     console.log(await renBTC.balanceOf(zcntrl_address))
 
     await connectedRenBTC.transfer(zcntrl_address, arbitraryTokens, {from: signer.address, value: '0'})
+	console.log('DONE');
 
 
 
