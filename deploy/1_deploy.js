@@ -132,7 +132,7 @@ module.exports = async ({
 
   await deployFixedAddress("DelegateUnderwriter", {
     contractName: 'DelegateUnderwriter',
-    args: [zeroController.address],
+    args: [hre.network.name === 'hardhat' ? deployer : (await hre.ethers.getContract('GnosisSafe')).address, zeroController.address, hre.network.name === 'hardhat' ? [ deployer ] : []],
     from: deployer,
   });
 
@@ -140,8 +140,8 @@ module.exports = async ({
   console.log("GOT CONTROLLER");
 
 
-  // const module = process.env.CHAIN === 'ARBITRUM' ? await deployFixedAddress('ArbitrumConvert', { args: [zeroController.address], contractName: 'ArbitrumConvert', from: deployer }) : process.env.CHAIN === "MATIC" ? await deployFixedAddress('PolygonConvert', { args: [zeroController.address], contractName: 'PolygonConvert', from: deployer }) : { address: ethers.constants.AddressZero };
-  // await controller.approveModule(module.address, true);
+  const module = process.env.CHAIN === 'ARBITRUM' ? await deployFixedAddress('ArbitrumConvert', { args: [zeroController.address], contractName: 'ArbitrumConvert', from: deployer }) : process.env.CHAIN === "MATIC" ? await deployFixedAddress('PolygonConvert', { args: [zeroController.address], contractName: 'PolygonConvert', from: deployer }) : { address: ethers.constants.AddressZero };
+  await controller.approveModule(module.address, true);
 
   const strategyRenVM = await deployments.deploy(network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : 'StrategyRenVM', {
     args: [

@@ -256,6 +256,7 @@ const getWrapperContract = async (address: string) => {
 };
 
 describe('Zero', () => {
+	if (process.env.CHAIN === 'ETHEREUm') return;
 	var prop;
 	before(async () => {
 		await deployments.fixture();

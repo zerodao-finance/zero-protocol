@@ -5,7 +5,8 @@ const common = require('./common');
 
 module.exports = async () => {
   if (!common.isSelectedDeployment(__filename) || process.env.CHAIN === 'ETHEREUM') return;
-  const multisig = await hre.ethers.getContract('GnosisSafe');
+  const [ signer ] = await hre.ethers.getSigners();
+  const multisig = hre.network.name === 'hardhat' ? { address: await signer.getAddress() } : await hre.ethers.getContract('GnosisSafe');
   const controller = await hre.ethers.getContract('ZeroController');
   const [ signer ] = await hre.ethers.getSigners();
   const underwriter = await hre.deployments.deploy('DelegateUnderwriter', {

@@ -94,6 +94,7 @@ function balanceTreeFriendly(airdropList: Object, decimals: number) {
  * Testing ZERO airdrop
  */
 describe('ZERO', () => {
+    if (process.env.CHAIN !== 'ETHEREUM') return;
     const config = {
         decimals: 18,
         airdrop: {
