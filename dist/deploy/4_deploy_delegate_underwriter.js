@@ -38,45 +38,35 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 var hre = require('hardhat');
 var common = require('./common');
 module.exports = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var multisig, controller, signer, _a, _b, _c, delegate, _d, _e, _f, _g;
-    var _h;
-    return __generator(this, function (_j) {
-        switch (_j.label) {
+    var multisig, controller, signer, underwriter, _a, _b, _c;
+    var _d;
+    return __generator(this, function (_e) {
+        switch (_e.label) {
             case 0:
                 if (!common.isSelectedDeployment(__filename))
                     return [2 /*return*/];
                 return [4 /*yield*/, hre.ethers.getContract('GnosisSafe')];
             case 1:
-                multisig = _j.sent();
+                multisig = _e.sent();
                 return [4 /*yield*/, hre.ethers.getContract('ZeroController')];
             case 2:
-                controller = _j.sent();
+                controller = _e.sent();
                 return [4 /*yield*/, hre.ethers.getSigners()];
             case 3:
-                signer = (_j.sent())[0];
+                signer = (_e.sent())[0];
                 _b = (_a = hre.deployments).deploy;
                 _c = ['DelegateUnderwriter'];
-                _h = {
+                _d = {
                     contractName: 'DelegateUnderwriter',
-                    args: [controller.address],
+                    args: [multisig.address, controller.address, ['0xec5d65739c722a46cd79951e069753c2fc879b27']],
                     libraries: {}
                 };
                 return [4 /*yield*/, signer.getAddress()];
-            case 4: return [4 /*yield*/, _b.apply(_a, _c.concat([(_h.from = _j.sent(),
-                        _h)]))];
+            case 4: return [4 /*yield*/, _b.apply(_a, _c.concat([(_d.from = _e.sent(),
+                        _d)]))];
             case 5:
-                _j.sent();
-                return [4 /*yield*/, hre.ethers.getContract('DelegateUnderwriter')];
-            case 6:
-                delegate = _j.sent();
-                _e = (_d = console).log;
-                return [4 /*yield*/, delegate.addAuthority('0xFFEDC765778db2859820eE4869393e7939a847b7')];
-            case 7:
-                _e.apply(_d, [(_j.sent()).hash]);
-                _g = (_f = console).log;
-                return [4 /*yield*/, delegate.transferOwnership(multisig.address)];
-            case 8:
-                _g.apply(_f, [(_j.sent()).hash]);
+                underwriter = _e.sent();
+                console.log(underwriter.address);
                 return [2 /*return*/];
         }
     });
