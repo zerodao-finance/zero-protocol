@@ -8,7 +8,7 @@ const transferRequest = new UnderwriterTransferRequest(
 ); 
 
 (async () => {
-	const tx = await transferRequest.loan((await hre.ethers.getSigners())[0]);
+	const tx = await transferRequest.repay((await hre.ethers.getSigners())[0]);
 	console.log(require('util').inspect(tx, { colors: true, depth: 15 }));
 	console.log('waiting ... ');
 	console.log(await tx.wait());

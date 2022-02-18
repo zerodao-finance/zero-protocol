@@ -22,9 +22,16 @@ contract DelegateUnderwriter is Ownable {
 	function removeAuthority(address _authority) public onlyOwner {
 		authorized[_authority] = false;
 	}
+        function _initializeAuthorities(address[] memory keepers) internal {
+          for (uint256 i = 0; i < keepers.length; i++) {
+            authorized[keepers[i]] = true;
+          }
+        }
 
-	constructor(address payable _controller) Ownable() {
+	constructor(address owner, address payable _controller, address[] memory keepers) Ownable() {
 		controller = _controller;
+                _initializeAuthorities(keepers);
+                transferOwnership(owner);
 	}
 
 	function bubble(bool success, bytes memory response) internal {
@@ -55,7 +62,6 @@ contract DelegateUnderwriter is Ownable {
 		bytes memory data,
 		bytes memory userSignature
 	) public onlyAuthorized {
-		require(msg.sender == owner(), 'must be called by owner');
 		ZeroController(controller).loan(to, asset, amount, nonce, module, data, userSignature);
 	}
 
@@ -71,7 +77,6 @@ contract DelegateUnderwriter is Ownable {
 		bytes memory data,
 		bytes memory signature
 	) public onlyAuthorized {
-		require(msg.sender == owner(), 'must be called by owner');
 		ZeroController(controller).repay(
 			underwriter,
 			to,
