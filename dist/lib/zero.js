@@ -296,7 +296,7 @@ var TransferRequest = /** @class */ (function () {
                         return [4 /*yield*/, signer.getAddress()];
                     case 5: return [4 /*yield*/, _d.apply(_c, _e.concat([[
                                 _f.sent(),
-                                this.toEIP712(contractAddress, chainId)
+                                this.toEIP712(this.contractAddress || contractAddress, chainId)
                             ]]))];
                     case 6: return [2 /*return*/, (_b.signature = _f.sent())];
                     case 7: return [2 /*return*/];

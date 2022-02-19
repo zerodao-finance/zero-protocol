@@ -45,20 +45,29 @@ var keepers = [];
 exports.TEST_KEEPER_ADDRESS = '0xec5d65739c722a46cd79951e069753c2fc879b27';
 var keeperSigner;
 var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, void 0, function () {
-    var keeper;
+    var keeper, e_1;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 keeper = zero_1.createZeroKeeper({ on: function () { } });
                 provider = provider || new ethers_1.ethers.providers.JsonRpcProvider('http://localhost:8545');
                 keepers.push(keeper);
-                if (!!keeperSigner) return [3 /*break*/, 2];
-                return [4 /*yield*/, provider.send('hardhat_impersonateAccount', [exports.TEST_KEEPER_ADDRESS])];
+                if (!!keeperSigner) return [3 /*break*/, 5];
+                _a.label = 1;
             case 1:
-                _a.sent();
-                keeperSigner = provider.getSigner(exports.TEST_KEEPER_ADDRESS);
-                _a.label = 2;
+                _a.trys.push([1, 3, , 4]);
+                return [4 /*yield*/, provider.send('hardhat_impersonateAccount', [exports.TEST_KEEPER_ADDRESS])];
             case 2:
+                _a.sent();
+                return [3 /*break*/, 4];
+            case 3:
+                e_1 = _a.sent();
+                console.error('failed to impersonate');
+                return [3 /*break*/, 4];
+            case 4:
+                keeperSigner = provider.getSigner(exports.TEST_KEEPER_ADDRESS);
+                _a.label = 5;
+            case 5:
                 keeper.advertiseAsKeeper = function () { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
                     return [2 /*return*/];
                 }); }); };
