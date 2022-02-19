@@ -1,11 +1,16 @@
-const hre = require("hardhat")
-const { ethers, deployments, upgrades } = hre;
+import hre from "hardhat";
+import GatewayLogicV1 from "../artifacts/contracts/test/GatewayLogicV1.sol/GatewayLogicV1.json";
+import { Contract } from "ethers";
+import { useMerkleGenerator } from "../merkle/generate";
+
+const { ethers, deployments } = hre;
+const network = process.env.CHAIN || 'ETHEREUM';
+const deployParameters = require('../lib/fixtures');
 
 const deployFixedAddress = async (...args) => {
     console.log('Deploying ' + args[0]);
     console.log("Args Here: ", args);
     args[1].waitConfirmations = 1;
-    const [signer] = await ethers.getSigners();
     const result = await deployments.deploy(...args);
     console.log('Deployed to ' + result.address);
     if (args[0] === 'ZERO') {
@@ -15,11 +20,20 @@ const deployFixedAddress = async (...args) => {
     }
 };
 
-const deployProxyFixedAddress = async (...args) => {
-    console.log('Deploying proxy');
-    const result = await upgrades.deployProxy(...args);
-    return result;
-};
+const getFixtures = async () => {
+    const [signer, treasury, add1, add2, add3] = await ethers.getSigners();
+    return {
+        owner: signer,
+        treasury: treasury,
+        adrresses: [add1, add2, add3],
+        signerAddress: await signer.getAddress(),
+        zeroToken: await ethers.getContract('ZERO', signer),
+        zeroDistributor: await ethers.getContractFactory('ZeroDistributor', signer),
+        renBTC: new Contract(deployParameters[network]['renBTC'], GatewayLogicV1.abi, signer),
+        //@ts-ignore
+        gateway: new Contract(deployParameters[network]['btcGateway'], GatewayLogicV1.abi, signer)
+    }
+}
 
 const { JsonRpcProvider } = ethers.providers
 const { getSigner: _getSigner } = JsonRpcProvider.prototype;
@@ -43,41 +57,9 @@ module.exports = async ({
         })
     }
 
-    const merkleRoot = "0xe52564f93ddc09e2d60c8150e4a11c5be656f147bf1f8c64a492b6a34c11dc6a";
+    const { hexRoot, merkleTree, balanceTree } = useMerkleGenerator();
 
-    const { abi: erc20abi } = await deployments.getArtifact('BTCVault');
     const [testTreasury] = await ethers.getSigners();
-
-    const zeroUnderwriterLockBytecodeLib = await deployFixedAddress('ZeroUnderwriterLockBytecodeLib', {
-        contractName: 'ZeroUnderwriterLockBytecodeLib',
-        args: [],
-        from: deployer
-    });
-
-    const zeroControllerFactory = (await hre.ethers.getContractFactory("ZeroController", {
-        libraries: {
-            ZeroUnderwriterLockBytecodeLib: zeroUnderwriterLockBytecodeLib.address
-        }
-    }));
-
-    const zeroController = await deployProxyFixedAddress(zeroControllerFactory, ["0x0F4ee9631f4be0a63756515141281A3E2B293Bbe", deployParameters["ETHEREUM"].gatewayRegistry], {
-        unsafeAllowLinkedLibraries: true
-    });
-
-    const zeroControllerArtifact = await deployments.getArtifact('ZeroController');
-
-    await deployments.save('ZeroController', {
-        contractName: 'ZeroController',
-        address: zeroController.address,
-        bytecode: zeroControllerArtifact.bytecode,
-        abi: zeroControllerArtifact.abi
-    });
-
-    const BTCVault = await deployFixedAddress('BTCVault', {
-        contractName: 'BTCVault',
-        args: [deployParameters['ETHEREUM']['renBTC'], zeroController.address, "zeroBTC", "zBTC"],
-        from: deployer
-    });
 
     const zeroToken = await deployFixedAddress("ZERO", {
         contractName: "ZERO",
@@ -93,7 +75,7 @@ module.exports = async ({
         args: [
             testTreasury.address, // TODO change to multisig mainnet address
             zero.address,
-            merkleRoot,
+            hexRoot,
         ],
         from: deployer
     });
@@ -104,7 +86,6 @@ module.exports = async ({
     const RENBTC_HOLDER = "0x9804bbbc49cc2a309e5f2bf66d4ad97c3e0ebd2f";
     await hre.network.provider.request({ method: 'hardhat_impersonateAccount', params: [RENBTC_HOLDER] });
     const signer = await ethers.getSigner(RENBTC_HOLDER);
-    const renBTC = new ethers.Contract(deployParameters['ETHEREUM']['renBTC'], erc20abi, signer);
 
     zero.approve(testTreasury.address, ethers.constants.MaxInt256)
 

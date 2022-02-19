@@ -1,7 +1,6 @@
 import hre from 'hardhat';
 import { expect } from 'chai'
-import { override } from '../lib/test/inject-mock'
-import { Contract, utils } from 'ethers'
+import { Contract } from 'ethers'
 import GatewayLogicV1 from '../artifacts/contracts/test/GatewayLogicV1.sol/GatewayLogicV1.json';
 import MerkleTree from '../lib/merkle/merkle-tree'
 import { Buffer } from 'buffer'
@@ -12,7 +11,6 @@ const network = process.env.CHAIN || 'ETHEREUM'
 
 // @ts-expect-error
 const { ethers, deployments } = hre
-import { BigNumber } from 'ethers'
 
 // Step 1: validate deployment of all contracts
 // Step 2: mint zBTC and test balance of all contracts
@@ -37,29 +35,14 @@ const getContractFactory = async (...args: any[]) => {
     }
 };
 
-const getImplementation = async (proxyAddress: string) => {
-    const [{ provider }] = await ethers.getSigners();
-    return utils.getAddress(
-        (
-            await provider.getStorageAt(
-                proxyAddress,
-                '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc',
-            )
-        ).substr((await provider.getNetwork()).chainId === 1337 ? 0 : 26),
-    );
-};
-
 const getFixtures = async () => {
     const [signer, treasury, add1, add2, add3] = await ethers.getSigners();
-    const controller = await getContract('ZeroController', signer)
 
     return {
         owner: signer,
         treasury: treasury,
         adrresses: [add1, add2, add3],
         signerAddress: await signer.getAddress(),
-        controller: controller,
-        btcVault: await getContract('BTCVault', signer),
         zeroToken: await getContract('ZERO', signer),
         zeroDistributor: await getContractFactory('ZeroDistributor', signer),
         renBTC: new Contract(deployParameters[network]['renBTC'], GatewayLogicV1.abi, signer),
@@ -115,10 +98,6 @@ describe('ZERO', () => {
     before(async () => {
         await deployments.fixture();
         const { treasury, zeroDistributor, zeroToken } = await getFixtures()
-        const artifact = await deployments.getArtifact('MockGatewayLogicV1');
-        // @ts-ignore
-        const implementationAddress = await getImplementation(deployParameters[network]['btcGateway']);
-        override(implementationAddress, artifact.deployedBytecode);
 
         // Create Merkle
         const tree = new BalanceTree(balanceTreeFriendly(config.airdrop, config.decimals));
@@ -193,7 +172,7 @@ describe('ZERO', () => {
             let proof = tree.getProof(counter, key, ethers.utils.parseUnits(config.airdrop[key], config.decimals))
             console.log("\nProof", proof)
 
-            await distributor.claim(counter, key, ethers.utils.parseUnits(config.airdrop[key], config.decimals).toString(), proof, { gasPrice: 197283674 })
+            await distributor.claim(counter, key, ethers.utils.parseUnits(config.airdrop[key], config.decimals).toString(), proof)
 
             console.log("\nCheck if claimed, post-claim", await distributor.isClaimed(counter))
             console.log(`Post-Claim Balance:`, ethers.utils.formatUnits(await zeroToken.balanceOf(key), config.decimals))
