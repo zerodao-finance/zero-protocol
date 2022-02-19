@@ -36,6 +36,7 @@ export function useMerkleGenerator() {
     return {
         balanceTree,
         hexRoot,
-        merkleTree
+        merkleTree,
+        decimals: merkleConfig.decimals
     }
 }

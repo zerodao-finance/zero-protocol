@@ -1,11 +1,7 @@
 import hre from "hardhat";
-import GatewayLogicV1 from "../artifacts/contracts/test/GatewayLogicV1.sol/GatewayLogicV1.json";
-import { Contract } from "ethers";
 import { useMerkleGenerator } from "../merkle/generate";
 
 const { ethers, deployments } = hre;
-const network = process.env.CHAIN || 'ETHEREUM';
-const deployParameters = require('../lib/fixtures');
 
 const deployFixedAddress = async (...args) => {
     console.log('Deploying ' + args[0]);
@@ -19,26 +15,6 @@ const deployFixedAddress = async (...args) => {
         return await ethers.getContract(args[0]);
     }
 };
-
-const getFixtures = async () => {
-    const [signer, treasury, add1, add2, add3] = await ethers.getSigners();
-    return {
-        owner: signer,
-        treasury: treasury,
-        adrresses: [add1, add2, add3],
-        signerAddress: await signer.getAddress(),
-        zeroToken: await ethers.getContract('ZERO', signer),
-        zeroDistributor: await ethers.getContractFactory('ZeroDistributor', signer),
-        renBTC: new Contract(deployParameters[network]['renBTC'], GatewayLogicV1.abi, signer),
-        //@ts-ignore
-        gateway: new Contract(deployParameters[network]['btcGateway'], GatewayLogicV1.abi, signer)
-    }
-}
-
-const { JsonRpcProvider } = ethers.providers
-const { getSigner: _getSigner } = JsonRpcProvider.prototype;
-
-const deployParameters = require('../lib/fixtures');
 
 const SIGNER_ADDRESS = "0x0F4ee9631f4be0a63756515141281A3E2B293Bbe";
 
@@ -57,28 +33,31 @@ module.exports = async ({
         })
     }
 
-    const { hexRoot, merkleTree, balanceTree } = useMerkleGenerator();
+    const { hexRoot, decimals } = useMerkleGenerator();
 
     const [testTreasury] = await ethers.getSigners();
 
-    const zeroToken = await deployFixedAddress("ZERO", {
+    await deployFixedAddress("ZERO", {
         contractName: "ZERO",
         args: [],
         from: deployer
     });
 
     // TODO change to multisig signer instead of this hardhat one
-    const zero = await ethers.getContract('ZERO', testTreasury);
+    const zeroToken = await ethers.getContract('ZERO', testTreasury);
 
     const zeroDistributor = await deployFixedAddress("ZeroDistributor", {
         contractName: "ZeroDistributor",
         args: [
             testTreasury.address, // TODO change to multisig mainnet address
-            zero.address,
+            zeroToken.address,
             hexRoot,
         ],
         from: deployer
     });
+
+    await zeroToken.mint(testTreasury.address, ethers.utils.parseUnits('88000000', decimals));
+    await zeroToken.approve(zeroDistributor.address, await zeroToken.balanceOf(testTreasury.address));
 
     console.log(`Begin Testing\n`)
 
@@ -86,10 +65,6 @@ module.exports = async ({
     const RENBTC_HOLDER = "0x9804bbbc49cc2a309e5f2bf66d4ad97c3e0ebd2f";
     await hre.network.provider.request({ method: 'hardhat_impersonateAccount', params: [RENBTC_HOLDER] });
     const signer = await ethers.getSigner(RENBTC_HOLDER);
-
-    zero.approve(testTreasury.address, ethers.constants.MaxInt256)
-
-    await zero.mint(testTreasury.address, ethers.utils.parseUnits('88000000', 18))
 
 
     /* For staking after airdrop complete
