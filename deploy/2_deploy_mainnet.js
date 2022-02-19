@@ -64,7 +64,7 @@ module.exports = async ({
     console.log("\nAllowance:\n");
     console.log(ethers.utils.formatUnits(await zeroToken.allowance(testTreasury.address, zeroDistributor.address), decimals));
 
-    // RentBTC
+    // RentBTC - is this necessary? Probably not
     const RENBTC_HOLDER = "0x9804bbbc49cc2a309e5f2bf66d4ad97c3e0ebd2f";
     await hre.network.provider.request({ method: 'hardhat_impersonateAccount', params: [RENBTC_HOLDER] });
     const signer = await ethers.getSigner(RENBTC_HOLDER);
