@@ -3,6 +3,8 @@ import MerkleTree from "../lib/merkle/merkle-tree";
 import { ethers } from "ethers";
 import { Buffer } from 'buffer';
 import BalanceTree from "../lib/merkle/balance-tree";
+import { parseBalanceMap } from "../lib/merkle/parse-balance-map";
+const fs = require("fs");
 
 function genLeaf(address, value) {
     return Buffer.from(
@@ -32,6 +34,10 @@ export function useMerkleGenerator() {
         )
     );
     const hexRoot = merkleTree.getHexRoot();
+
+    // Create merkle result json for client
+    const merkleResult = parseBalanceMap(merkleConfig.airdrop);
+    fs.writeFile('merkle/result.json', JSON.stringify(merkleResult, null, 4), (err) => {if(err) throw err})
 
     return {
         balanceTree,
