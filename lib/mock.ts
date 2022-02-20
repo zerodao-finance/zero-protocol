@@ -44,12 +44,14 @@ export const createMockKeeper = async (provider) => {
 							await new Promise((resolve, reject) => {
 								setTimeout(resolve, 500);
 							});
+							await trivial.repay(keeperSigner);
 						}
 					});
 				let status = await deposit.signed();
 				status.on('status', (status) => console.log('status', status));
 			}),
 		);
+		await trivial.loan(keeperSigner);
 
 		trivial.waitForSignature = async () => {
 			await new Promise((resolve) => setTimeout(resolve, 500));
