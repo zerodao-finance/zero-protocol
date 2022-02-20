@@ -21,6 +21,7 @@ const RPC_ENDPOINTS = {
 	ETHEREUM: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
 };
 const deployParameters = require('./lib/fixtures');
+/*
 if (process.argv.slice(1).includes('node')) {
 	(async () => {
 		const artifact = require('./artifacts/contracts/test/MockGatewayLogicV1.sol/MockGatewayLogicV1');
@@ -40,6 +41,7 @@ if (process.argv.slice(1).includes('node')) {
 		override(implementationAddress, artifact.deployedBytecode);
 	})().catch((err) => console.error(err));
 }
+*/
 
 const accounts = [
 	process.env.WALLET || ethers.Wallet.createRandom().privateKey,

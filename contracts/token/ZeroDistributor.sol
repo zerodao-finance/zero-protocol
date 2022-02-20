@@ -42,7 +42,7 @@ contract ZeroDistributor is IMerkleDistributor {
 
         // Mark it claimed and send the token.
         _setClaimed(index);
-        require(IERC20(token).transfer(account, amount), 'MerkleDistributor: Transfer failed.');
+        require(IERC20(token).transferFrom(treasury, account, amount), 'MerkleDistributor: Transfer failed.');
 
         emit Claimed(index, account, amount);
     }
