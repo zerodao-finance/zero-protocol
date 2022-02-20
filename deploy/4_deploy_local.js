@@ -1,6 +1,7 @@
 const hre = require('hardhat');
 const { ethers, deployments } = hre;
 const deployParameters = require('../lib/fixtures');
+const { TEST_KEEPER_ADDRESS } = require('../lib/mock');
 
 const { fundWithGas, deployFixedAddress, getSigner, getContract } = require('./common');
 const network = process.env.CHAIN || 'MATIC';
@@ -73,7 +74,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 	// console.log(await btcGateway.balanceOf())
 	// console.log("Testing Keeper with", ethers.utils.formatUnits(await signer.getBalance(), 8))
 
-	const [ deployerSigner ] = await hre.ethers.getSigners();
+	const [deployerSigner] = await hre.ethers.getSigners();
 	const deployer = await deployerSigner.getAddress();
 	if (process.env.CHAIN === 'ARBITRUM') {
 		const controller = await getContract('ZeroController');
@@ -87,4 +88,6 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 		await fundWithGas(await governanceSigner.getAddress());
 		await controller.connect(governanceSigner).approveModule(quick.address, true);
 	}
+
+	const keeperSigner = await getSigner(TEST_KEEPER_ADDRESS);
 };

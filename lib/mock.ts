@@ -12,12 +12,6 @@ export const createMockKeeper = async (provider) => {
 	const keeper = (createZeroKeeper as any)({ on() { } });
 	provider = provider || new ethers.providers.JsonRpcProvider('http://localhost:8545');
 	keepers.push(keeper);
-	if (!keeperSigner) {
-		try {
- 	 		await provider.send('hardhat_impersonateAccount', [TEST_KEEPER_ADDRESS]);
-		} catch (e) { console.error('failed to impersonate') }
-		keeperSigner = provider.getSigner(TEST_KEEPER_ADDRESS);
-	}
 	keeper.advertiseAsKeeper = async () => { };
 	keeper.setTxDispatcher = async (fn) => {
 		(keeper as any)._txDispatcher = fn;
