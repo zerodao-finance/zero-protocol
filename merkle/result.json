@@ -1,28 +1,37 @@
 {
-    "merkleRoot": "0xe52564f93ddc09e2d60c8150e4a11c5be656f147bf1f8c64a492b6a34c11dc6a",
-    "tokenTotal": "0x0300",
+    "merkleRoot": "0x2499b9bd20d564fe351570f38d61a614d64f01d30bdad3d94f27d37b0ef0d43b",
+    "tokenTotal": "0x0400",
     "claims": {
         "0x7f78Da15E8298e7afe6404c54D93cb5269D97570": {
             "index": 0,
             "amount": "0x0100",
             "proof": [
-                "0x56ae380ed1131fbaff773d57c6da798e5c07dc4588582f3f5204120cf59bc6d1",
-                "0xede0a3452a42f320a44536beddc11217aaadf1b3555cee0cfec47d3866730acc"
+                "0xee0a53c4f314bfaf4b6c3e12833ac7b71f52a8634f5e92687b90dca53a9cdd50",
+                "0xc3fb48deebf1775b6eb55f6eb1fbc8d246e990ecc8417640d93018be927a1937"
             ]
         },
-        "0xdD2FD4581271e230360230F9337D5c0430Bf44C0": {
+        "0xFE7B639c04c205b7E758Ee999cb72C80344b3B0e": {
             "index": 1,
             "amount": "0x0100",
             "proof": [
-                "0xe0c7c4ee7d85c94719a0d9efd7c1bcfd3cff8011af859190f425fc2ba1110e37",
-                "0xede0a3452a42f320a44536beddc11217aaadf1b3555cee0cfec47d3866730acc"
+                "0xdddcac24d5bbe2c10391aeabfd129e4cb5d4f81778b271411536bde80f6ab687",
+                "0x9b6189d630c3a14287f98435c084106481fee6c64f470d7f22f2bf4be0f11911"
             ]
         },
-        "0xe32d9D1F1484f57F8b5198f90bcdaBC914de0B5A": {
+        "0xdD2FD4581271e230360230F9337D5c0430Bf44C0": {
             "index": 2,
             "amount": "0x0100",
             "proof": [
-                "0xf96e17d5484157c35239288aa2133775c2b198832ec291270cbd8168c663f544"
+                "0xe0c7c4ee7d85c94719a0d9efd7c1bcfd3cff8011af859190f425fc2ba1110e37",
+                "0xc3fb48deebf1775b6eb55f6eb1fbc8d246e990ecc8417640d93018be927a1937"
+            ]
+        },
+        "0xe32d9D1F1484f57F8b5198f90bcdaBC914de0B5A": {
+            "index": 3,
+            "amount": "0x0100",
+            "proof": [
+                "0xa671895c939f609377f0c56f853682784c93d86d7df1c811d257b382676fd0de",
+                "0x9b6189d630c3a14287f98435c084106481fee6c64f470d7f22f2bf4be0f11911"
             ]
         }
     }

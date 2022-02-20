@@ -26,7 +26,7 @@ module.exports = async ({
     const [ethersSigner] = await ethers.getSigners();
     const { provider } = ethersSigner;
     const { chainId } = await provider.getNetwork();
-    if (chainId === 1) {
+    if (process.env.FORKING) {
         await hre.network.provider.request({
             method: "hardhat_impersonateAccount",
             params: [SIGNER_ADDRESS]
@@ -66,9 +66,11 @@ module.exports = async ({
     console.log(ethers.utils.formatUnits(await zeroToken.allowance(testTreasury.address, zeroDistributor.address), decimals));
 
     // RentBTC - is this necessary? Probably not
+	/*
     const RENBTC_HOLDER = "0x9804bbbc49cc2a309e5f2bf66d4ad97c3e0ebd2f";
     await hre.network.provider.request({ method: 'hardhat_impersonateAccount', params: [RENBTC_HOLDER] });
     const signer = await ethers.getSigner(RENBTC_HOLDER);
+    */
 
 
     /* For staking after airdrop complete
