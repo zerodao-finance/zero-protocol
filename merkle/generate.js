@@ -33,7 +33,7 @@ export function useMerkleGenerator() {
             )
         )
     );
-    const hexRoot = merkleTree.getHexRoot();
+    const hexRoot = balanceTree.getHexRoot();
 
     // Create merkle result json for client
     const merkleResult = parseBalanceMap(merkleConfig.airdrop);

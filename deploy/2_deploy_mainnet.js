@@ -46,11 +46,12 @@ module.exports = async ({
     // TODO change to multisig signer instead of this hardhat one
     const zeroToken = await ethers.getContract('ZERO', testTreasury);
 
+    //TODO: if it still doesnt work uncomment this
     const zeroDistributor = await deployFixedAddress("ZeroDistributor", {
         contractName: "ZeroDistributor",
         args: [
-            testTreasury.address, // TODO change to multisig mainnet address
             zeroToken.address,
+            testTreasury.address, // TODO change to multisig mainnet address
             hexRoot,
         ],
         from: deployer
