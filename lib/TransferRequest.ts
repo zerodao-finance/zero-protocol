@@ -196,7 +196,9 @@ export class TransferRequest {
 
 export class UnderwriterTransferRequest extends TransferRequest {
 	async getController(signer) {
+		console.log('getting controller');
 		const underwriter = this.getUnderwriter(signer);
+		console.log('got underwriter');
 		return new Contract(
 			await underwriter.controller(),
 			[
@@ -249,6 +251,7 @@ export class UnderwriterTransferRequest extends TransferRequest {
 	}
 	async dry(signer, params = {}) {
 		const underwriter = this.getUnderwriter(signer);
+		console.log('about to callstatic');
 		return await underwriter.callStatic.loan(
 			this.destination(),
 			this.asset,

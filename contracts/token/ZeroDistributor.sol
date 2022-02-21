@@ -8,12 +8,14 @@ import {IMerkleDistributor} from "../interfaces/IMerkleDistributor.sol";
 contract ZeroDistributor is IMerkleDistributor {
     address public immutable override token;
     bytes32 public immutable override merkleRoot;
+    address public immutable treasury;
 
     // This is a packed array of booleans.
     mapping(uint256 => uint256) private claimedBitMap;
 
-    constructor(address token_, bytes32 merkleRoot_) {
+    constructor(address token_, address treasury_, bytes32 merkleRoot_) {
         token = token_;
+        treasury = treasury_;
         merkleRoot = merkleRoot_;
     }
 
@@ -40,7 +42,7 @@ contract ZeroDistributor is IMerkleDistributor {
 
         // Mark it claimed and send the token.
         _setClaimed(index);
-        require(IERC20(token).transfer(account, amount), 'MerkleDistributor: Transfer failed.');
+        require(IERC20(token).transferFrom(treasury, account, amount), 'MerkleDistributor: Transfer failed.');
 
         emit Claimed(index, account, amount);
     }
