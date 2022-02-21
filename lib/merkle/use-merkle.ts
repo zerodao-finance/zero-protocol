@@ -1,8 +1,9 @@
-import { merkleConfig } from "./config";
-import MerkleTree from "../lib/merkle/merkle-tree";
+import MerkleTree from "./merkle-tree";
 import { ethers } from "ethers";
 import { Buffer } from 'buffer';
-import BalanceTree from "../lib/merkle/balance-tree";
+import BalanceTree from "./balance-tree";
+import { parseBalanceMap } from "./parse-balance-map";
+const fs = require("fs-extra");
 
 function genLeaf(address, value) {
     return Buffer.from(
@@ -13,15 +14,15 @@ function genLeaf(address, value) {
     )
 }
 
-function balanceTreeFriendly(airdropList, decimals) {
+function balanceTreeFriendly(airdropList: any, decimals) {
     const list = [];
-    Object.entries(airdropList).map(([address, tokens]) => {
-        list.push({ account: address, amount: ethers.utils.parseUnits(tokens, decimals) })
+    Object.entries(airdropList).map((v: any) => {
+        list.push({ account: v[0], amount: ethers.utils.parseUnits(v[1], decimals) })
     })
     return list;
 }
 
-export function useMerkleGenerator() {
+export function useMerkleGenerator(merkleConfig: { decimals: number, airdrop: { [ key: string ]: string } }) {
     const balanceTree = new BalanceTree(balanceTreeFriendly(merkleConfig.airdrop, merkleConfig.decimals));
     const merkleTree = new MerkleTree(
         Object.entries(merkleConfig.airdrop).map(([address, tokens]) =>
@@ -31,12 +32,10 @@ export function useMerkleGenerator() {
             )
         )
     );
-    const hexRoot = merkleTree.getHexRoot();
+    const hexRoot = balanceTree.getHexRoot();
 
-    return {
-        balanceTree,
-        hexRoot,
-        merkleTree,
-        decimals: merkleConfig.decimals
-    }
+    // Create merkle result json for client
+    const merkleResult = parseBalanceMap(merkleConfig.airdrop);
+
+    return merkleResult;
 }

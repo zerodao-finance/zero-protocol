@@ -40,7 +40,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 exports.__esModule = true;
 var hardhat_1 = __importDefault(require("hardhat"));
-var generate_1 = require("../merkle/generate");
+var use_merkle_1 = require("../lib/merkle/use-merkle");
+var fs_1 = __importDefault(require("fs"));
+var path_1 = __importDefault(require("path"));
 var ethers = hardhat_1["default"].ethers, deployments = hardhat_1["default"].deployments;
 var deployFixedAddress = function () {
     var args = [];
@@ -71,73 +73,84 @@ var SIGNER_ADDRESS = "0x0F4ee9631f4be0a63756515141281A3E2B293Bbe";
 module.exports = function (_a) {
     var getNamedAccounts = _a.getNamedAccounts;
     return __awaiter(void 0, void 0, void 0, function () {
-        var deployer, ethersSigner, provider, chainId, _b, hexRoot, decimals, testTreasury, zeroToken, zeroDistributor, _c, _d, _e, RENBTC_HOLDER, signer;
-        return __generator(this, function (_f) {
-            switch (_f.label) {
+        var deployer, ethersSigner, provider, chainId, merkleDir, merkleInput, merkleTree, testTreasury, zeroToken, zeroDistributor, decimals, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+        return __generator(this, function (_o) {
+            switch (_o.label) {
                 case 0:
                     if (process.env.CHAIN !== "ETHEREUM")
                         return [2 /*return*/];
                     return [4 /*yield*/, getNamedAccounts()];
                 case 1:
-                    deployer = (_f.sent()).deployer;
+                    deployer = (_o.sent()).deployer;
                     return [4 /*yield*/, ethers.getSigners()];
                 case 2:
-                    ethersSigner = (_f.sent())[0];
+                    ethersSigner = (_o.sent())[0];
                     provider = ethersSigner.provider;
                     return [4 /*yield*/, provider.getNetwork()];
                 case 3:
-                    chainId = (_f.sent()).chainId;
-                    if (!(chainId === 1)) return [3 /*break*/, 5];
-                    return [4 /*yield*/, hardhat_1["default"].network.provider.request({
+                    chainId = (_o.sent()).chainId;
+                    if (process.env.FORKING) {
+                        /*
+                        await hre.network.provider.request({
                             method: "hardhat_impersonateAccount",
                             params: [SIGNER_ADDRESS]
-                        })];
+                        })
+                    */
+                    }
+                    merkleDir = path_1["default"].join(__dirname, '..', 'merkle', process.env.FORKING ? 'forknet' : 'mainnet');
+                    merkleInput = require(path_1["default"].join(merkleDir, 'input'));
+                    merkleTree = (0, use_merkle_1.useMerkleGenerator)(merkleInput);
+                    console.log(merkleTree);
+                    return [4 /*yield*/, fs_1["default"].writeFileSync(path_1["default"].join(merkleDir, 'airdrop.json'), JSON.stringify(merkleTree, null, 2))];
                 case 4:
-                    _f.sent();
-                    _f.label = 5;
-                case 5:
-                    _b = (0, generate_1.useMerkleGenerator)(), hexRoot = _b.hexRoot, decimals = _b.decimals;
+                    _o.sent();
+                    console.log('wrote merkle tree');
                     return [4 /*yield*/, ethers.getSigners()];
-                case 6:
-                    testTreasury = (_f.sent())[0];
+                case 5:
+                    testTreasury = (_o.sent())[0];
                     return [4 /*yield*/, deployFixedAddress("ZERO", {
                             contractName: "ZERO",
                             args: [],
                             from: deployer
                         })];
-                case 7:
-                    _f.sent();
+                case 6:
+                    _o.sent();
                     return [4 /*yield*/, ethers.getContract('ZERO', testTreasury)];
-                case 8:
-                    zeroToken = _f.sent();
+                case 7:
+                    zeroToken = _o.sent();
                     return [4 /*yield*/, deployFixedAddress("ZeroDistributor", {
                             contractName: "ZeroDistributor",
                             args: [
-                                testTreasury.address,
                                 zeroToken.address,
-                                hexRoot,
+                                testTreasury.address,
+                                merkleTree.merkleRoot,
                             ],
                             from: deployer
                         })];
-                case 9:
-                    zeroDistributor = _f.sent();
+                case 8:
+                    zeroDistributor = _o.sent();
+                    decimals = 18;
                     return [4 /*yield*/, zeroToken.mint(testTreasury.address, ethers.utils.parseUnits('88000000', decimals))];
-                case 10:
-                    _f.sent();
-                    _d = (_c = zeroToken).approve;
-                    _e = [zeroDistributor.address];
+                case 9:
+                    _o.sent();
+                    _c = (_b = zeroToken.connect(testTreasury)).approve;
+                    _d = [zeroDistributor.address];
                     return [4 /*yield*/, zeroToken.balanceOf(testTreasury.address)];
-                case 11: return [4 /*yield*/, _d.apply(_c, _e.concat([_f.sent()]))];
+                case 10: return [4 /*yield*/, _c.apply(_b, _d.concat([_o.sent()]))];
+                case 11:
+                    _o.sent();
+                    console.log("\nTreasury Balance:\n");
+                    _f = (_e = console).log;
+                    _h = (_g = ethers.utils).formatUnits;
+                    return [4 /*yield*/, zeroToken.balanceOf(testTreasury.address)];
                 case 12:
-                    _f.sent();
-                    console.log("Begin Testing\n");
-                    RENBTC_HOLDER = "0x9804bbbc49cc2a309e5f2bf66d4ad97c3e0ebd2f";
-                    return [4 /*yield*/, hardhat_1["default"].network.provider.request({ method: 'hardhat_impersonateAccount', params: [RENBTC_HOLDER] })];
+                    _f.apply(_e, [_h.apply(_g, [_o.sent(), decimals])]);
+                    console.log("\nAllowance:\n");
+                    _k = (_j = console).log;
+                    _m = (_l = ethers.utils).formatUnits;
+                    return [4 /*yield*/, zeroToken.allowance(testTreasury.address, zeroDistributor.address)];
                 case 13:
-                    _f.sent();
-                    return [4 /*yield*/, ethers.getSigner(RENBTC_HOLDER)];
-                case 14:
-                    signer = _f.sent();
+                    _k.apply(_j, [_m.apply(_l, [_o.sent(), decimals])]);
                     return [2 /*return*/];
             }
         });
