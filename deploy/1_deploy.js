@@ -14,25 +14,8 @@ let _sendTransaction;
 
 const walletMap = {};
 
-const deployFixedAddress = async (...args) => {
-  console.log('Deploying ' + args[0]);
-  args[1].waitConfirmations = 1;
-  const [signer] = await ethers.getSigners();
-  //  hijackSigner(signer);
-  const result = await deployments.deploy(...args);
-  //  restoreSigner(signer);
-  console.log('Deployed to ' + result.address);
-  return result;
-};
+const { deployFixedAddress, deployProxyFixedAddress } = require('./common');
 
-const deployProxyFixedAddress = async (...args) => {
-  console.log('Deploying proxy');
-  //const [signer] = await ethers.getSigners();
-  //hijackSigner(signer);
-  const result = await upgrades.deployProxy(...args);
-  //restoreSigner(signer);
-  return result;
-};
 
 const { JsonRpcProvider } = ethers.providers;
 const { getSigner: _getSigner } = JsonRpcProvider.prototype;
@@ -62,11 +45,11 @@ module.exports = async ({
   getUnnamedAccounts,
   getNamedAccounts,
 }) => {
-  if (!common.isSelectedDeployment(__filename) || process.env.CHAIN === 'ETHEREUM') return;
+  if (!common.isSelectedDeployment(__filename) || process.env.CHAIN === 'ETHEREUM' || process.env.FORKING === 'true') return;
   const { deployer } = await getNamedAccounts(); //used as governance address
   const [ethersSigner] = await ethers.getSigners();
   const { provider } = ethersSigner;
-  provider.getGasPrice = createGetGasPrice('standard')
+//  provider.getGasPrice = createGetGasPrice('standard')
   if (Number(ethers.utils.formatEther(await provider.getBalance(deployer))) === 0) await ethersSigner.sendTransaction({
     value: ethers.utils.parseEther('1'),
     to: deployer

@@ -1,3 +1,4 @@
+"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -34,205 +35,122 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var _this = this;
-var hre = require("hardhat");
-var ethers = hre.ethers, deployments = hre.deployments, upgrades = hre.upgrades;
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+exports.__esModule = true;
+var hardhat_1 = __importDefault(require("hardhat"));
+var use_merkle_1 = require("../lib/merkle/use-merkle");
+var fs_1 = __importDefault(require("fs"));
+var path_1 = __importDefault(require("path"));
+var ethers = hardhat_1["default"].ethers, deployments = hardhat_1["default"].deployments;
 var deployFixedAddress = function () {
     var args = [];
     for (var _i = 0; _i < arguments.length; _i++) {
         args[_i] = arguments[_i];
     }
-    return __awaiter(_this, void 0, void 0, function () {
-        var signer, result;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    console.log('Deploying ' + args[0]);
-<<<<<<< HEAD
-                    console.log("Args Here: ", args);
-=======
->>>>>>> c08de23bed960a1e9971489187b51d410f7d8c84
-                    args[1].waitConfirmations = 1;
-                    return [4 /*yield*/, ethers.getSigners()];
-                case 1:
-                    signer = (_a.sent())[0];
-                    return [4 /*yield*/, deployments.deploy.apply(deployments, args)];
-                case 2:
-                    result = _a.sent();
-<<<<<<< HEAD
-                    console.log('Deployed to ' + result.address);
-                    if (!(args[0] === 'ZERO')) return [3 /*break*/, 3];
-                    return [2 /*return*/];
-                case 3: return [4 /*yield*/, ethers.getContract(args[0])];
-                case 4: return [2 /*return*/, _a.sent()];
-            }
-        });
-    });
-};
-var deployProxyFixedAddress = function () {
-    var args = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        args[_i] = arguments[_i];
-    }
-    return __awaiter(_this, void 0, void 0, function () {
+    return __awaiter(void 0, void 0, void 0, function () {
         var result;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    console.log('Deploying proxy');
-                    return [4 /*yield*/, upgrades.deployProxy.apply(upgrades, args)];
+                    console.log('Deploying ' + args[0]);
+                    console.log("Args Here: ", args);
+                    args[1].waitConfirmations = 1;
+                    return [4 /*yield*/, deployments.deploy.apply(deployments, args)];
                 case 1:
                     result = _a.sent();
-=======
-                    //  restoreSigner(signer);
                     console.log('Deployed to ' + result.address);
->>>>>>> c08de23bed960a1e9971489187b51d410f7d8c84
-                    return [2 /*return*/, result];
+                    if (!(args[0] === 'ZERO')) return [3 /*break*/, 2];
+                    return [2 /*return*/];
+                case 2: return [4 /*yield*/, ethers.getContract(args[0])];
+                case 3: return [2 /*return*/, _a.sent()];
             }
         });
     });
 };
-var JsonRpcProvider = ethers.providers.JsonRpcProvider;
-var _getSigner = JsonRpcProvider.prototype.getSigner;
-var deployParameters = require('../lib/fixtures');
 var SIGNER_ADDRESS = "0x0F4ee9631f4be0a63756515141281A3E2B293Bbe";
 module.exports = function (_a) {
-<<<<<<< HEAD
     var getNamedAccounts = _a.getNamedAccounts;
-    return __awaiter(_this, void 0, void 0, function () {
-        var deployer, ethersSigner, provider, chainId, merkleRoot, erc20abi, testTreasury, zeroUnderwriterLockBytecodeLib, zeroControllerFactory, zeroController, zeroControllerArtifact, BTCVault, zeroToken, zero, zeroDistributor, RENBTC_HOLDER, signer, renBTC;
-=======
-    var getChainId = _a.getChainId, getUnnamedAccounts = _a.getUnnamedAccounts, getNamedAccounts = _a.getNamedAccounts;
-    return __awaiter(_this, void 0, void 0, function () {
-        var deployer, ethersSigner, provider, chainId;
->>>>>>> c08de23bed960a1e9971489187b51d410f7d8c84
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+    return __awaiter(void 0, void 0, void 0, function () {
+        var deployer, ethersSigner, provider, chainId, merkleDir, merkleInput, merkleTree, testTreasury, zeroToken, zeroDistributor, decimals, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+        return __generator(this, function (_o) {
+            switch (_o.label) {
                 case 0:
                     if (process.env.CHAIN !== "ETHEREUM")
                         return [2 /*return*/];
                     return [4 /*yield*/, getNamedAccounts()];
                 case 1:
-                    deployer = (_b.sent()).deployer;
+                    deployer = (_o.sent()).deployer;
                     return [4 /*yield*/, ethers.getSigners()];
                 case 2:
-                    ethersSigner = (_b.sent())[0];
+                    ethersSigner = (_o.sent())[0];
                     provider = ethersSigner.provider;
                     return [4 /*yield*/, provider.getNetwork()];
                 case 3:
-                    chainId = (_b.sent()).chainId;
-                    if (!(chainId === 1)) return [3 /*break*/, 5];
-                    return [4 /*yield*/, hre.network.provider.request({
+                    chainId = (_o.sent()).chainId;
+                    if (process.env.FORKING) {
+                        /*
+                        await hre.network.provider.request({
                             method: "hardhat_impersonateAccount",
                             params: [SIGNER_ADDRESS]
-                        })];
+                        })
+                    */
+                    }
+                    merkleDir = path_1["default"].join(__dirname, '..', 'merkle', process.env.FORKING ? 'forknet' : 'mainnet');
+                    merkleInput = require(path_1["default"].join(merkleDir, 'input'));
+                    merkleTree = (0, use_merkle_1.useMerkleGenerator)(merkleInput);
+                    console.log(merkleTree);
+                    return [4 /*yield*/, fs_1["default"].writeFileSync(path_1["default"].join(merkleDir, 'airdrop.json'), JSON.stringify(merkleTree, null, 2))];
                 case 4:
-                    _b.sent();
-                    _b.label = 5;
-                case 5:
-<<<<<<< HEAD
-                    merkleRoot = "0xe52564f93ddc09e2d60c8150e4a11c5be656f147bf1f8c64a492b6a34c11dc6a";
-                    return [4 /*yield*/, deployments.getArtifact('BTCVault')];
-                case 6:
-                    erc20abi = (_b.sent()).abi;
+                    _o.sent();
+                    console.log('wrote merkle tree');
                     return [4 /*yield*/, ethers.getSigners()];
-                case 7:
-                    testTreasury = (_b.sent())[0];
-                    return [4 /*yield*/, deployFixedAddress('ZeroUnderwriterLockBytecodeLib', {
-                            contractName: 'ZeroUnderwriterLockBytecodeLib',
-                            args: [],
-                            from: deployer
-                        })];
-                case 8:
-                    zeroUnderwriterLockBytecodeLib = _b.sent();
-                    return [4 /*yield*/, hre.ethers.getContractFactory("ZeroController", {
-                            libraries: {
-                                ZeroUnderwriterLockBytecodeLib: zeroUnderwriterLockBytecodeLib.address
-                            }
-                        })];
-                case 9:
-                    zeroControllerFactory = (_b.sent());
-                    return [4 /*yield*/, deployProxyFixedAddress(zeroControllerFactory, ["0x0F4ee9631f4be0a63756515141281A3E2B293Bbe", deployParameters["ETHEREUM"].gatewayRegistry], {
-                            unsafeAllowLinkedLibraries: true
-                        })];
-                case 10:
-                    zeroController = _b.sent();
-                    return [4 /*yield*/, deployments.getArtifact('ZeroController')];
-                case 11:
-                    zeroControllerArtifact = _b.sent();
-                    return [4 /*yield*/, deployments.save('ZeroController', {
-                            contractName: 'ZeroController',
-                            address: zeroController.address,
-                            bytecode: zeroControllerArtifact.bytecode,
-                            abi: zeroControllerArtifact.abi
-                        })];
-                case 12:
-                    _b.sent();
-                    return [4 /*yield*/, deployFixedAddress('BTCVault', {
-                            contractName: 'BTCVault',
-                            args: [deployParameters['ETHEREUM']['renBTC'], zeroController.address, "zeroBTC", "zBTC"],
-                            from: deployer
-                        })];
-                case 13:
-                    BTCVault = _b.sent();
+                case 5:
+                    testTreasury = (_o.sent())[0];
                     return [4 /*yield*/, deployFixedAddress("ZERO", {
                             contractName: "ZERO",
                             args: [],
                             from: deployer
                         })];
-                case 14:
-                    zeroToken = _b.sent();
+                case 6:
+                    _o.sent();
                     return [4 /*yield*/, ethers.getContract('ZERO', testTreasury)];
-                case 15:
-                    zero = _b.sent();
+                case 7:
+                    zeroToken = _o.sent();
                     return [4 /*yield*/, deployFixedAddress("ZeroDistributor", {
                             contractName: "ZeroDistributor",
                             args: [
+                                zeroToken.address,
                                 testTreasury.address,
-                                zero.address,
-                                merkleRoot,
+                                merkleTree.merkleRoot,
                             ],
                             from: deployer
                         })];
-                case 16:
-                    zeroDistributor = _b.sent();
-                    console.log("Begin Testing\n");
-                    RENBTC_HOLDER = "0x9804bbbc49cc2a309e5f2bf66d4ad97c3e0ebd2f";
-                    return [4 /*yield*/, hre.network.provider.request({ method: 'hardhat_impersonateAccount', params: [RENBTC_HOLDER] })];
-                case 17:
-                    _b.sent();
-                    return [4 /*yield*/, ethers.getSigner(RENBTC_HOLDER)];
-                case 18:
-                    signer = _b.sent();
-                    renBTC = new ethers.Contract(deployParameters['ETHEREUM']['renBTC'], erc20abi, signer);
-                    zero.approve(testTreasury.address, ethers.constants.MaxInt256);
-                    return [4 /*yield*/, zero.mint(testTreasury.address, ethers.utils.parseUnits('88000000', 18))
-                        /* For staking after airdrop complete
-                        const masterChef = await deployFixedAddress("MasterChef", {
-                            contractName: "MasterChef",
-                            args: [
-                                // ZERO _zero,
-                                // address _devaddr,
-                                // uint256 _zeroPerBlock,
-                                // uint256 _startBlock,
-                                // uint256 _bonusEndBlock
-                            ],
-                            from: deployer
-                        })
-                        */
-                    ];
-                case 19:
-                    _b.sent();
-=======
-                    // deployments.deploy("ZERO")
-                    console.log(deployer);
-                    console.log(provider, chainId);
-                    deployFixedAddress("MasterChef", {
-                        contractName: "MasterChef",
-                        args: [],
-                        from: deployer
-                    });
->>>>>>> c08de23bed960a1e9971489187b51d410f7d8c84
+                case 8:
+                    zeroDistributor = _o.sent();
+                    decimals = 18;
+                    return [4 /*yield*/, zeroToken.mint(testTreasury.address, ethers.utils.parseUnits('88000000', decimals))];
+                case 9:
+                    _o.sent();
+                    _c = (_b = zeroToken.connect(testTreasury)).approve;
+                    _d = [zeroDistributor.address];
+                    return [4 /*yield*/, zeroToken.balanceOf(testTreasury.address)];
+                case 10: return [4 /*yield*/, _c.apply(_b, _d.concat([_o.sent()]))];
+                case 11:
+                    _o.sent();
+                    console.log("\nTreasury Balance:\n");
+                    _f = (_e = console).log;
+                    _h = (_g = ethers.utils).formatUnits;
+                    return [4 /*yield*/, zeroToken.balanceOf(testTreasury.address)];
+                case 12:
+                    _f.apply(_e, [_h.apply(_g, [_o.sent(), decimals])]);
+                    console.log("\nAllowance:\n");
+                    _k = (_j = console).log;
+                    _m = (_l = ethers.utils).formatUnits;
+                    return [4 /*yield*/, zeroToken.allowance(testTreasury.address, zeroDistributor.address)];
+                case 13:
+                    _k.apply(_j, [_m.apply(_l, [_o.sent(), decimals])]);
                     return [2 /*return*/];
             }
         });

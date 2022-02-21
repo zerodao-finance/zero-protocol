@@ -11,11 +11,8 @@ let keeperSigner;
 export const createMockKeeper = async (provider) => {
 	const keeper = (createZeroKeeper as any)({ on() { } });
 	provider = provider || new ethers.providers.JsonRpcProvider('http://localhost:8545');
+	keeperSigner = keeperSigner || provider.getSigner(TEST_KEEPER_ADDRESS);
 	keepers.push(keeper);
-	if (!keeperSigner) {
-		await provider.send('hardhat_impersonateAccount', [TEST_KEEPER_ADDRESS]);
-		keeperSigner = provider.getSigner(TEST_KEEPER_ADDRESS);
-	}
 	keeper.advertiseAsKeeper = async () => { };
 	keeper.setTxDispatcher = async (fn) => {
 		(keeper as any)._txDispatcher = fn;
@@ -48,12 +45,14 @@ export const createMockKeeper = async (provider) => {
 							await new Promise((resolve, reject) => {
 								setTimeout(resolve, 500);
 							});
+							await trivial.repay(keeperSigner);
 						}
 					});
 				let status = await deposit.signed();
 				status.on('status', (status) => console.log('status', status));
 			}),
 		);
+		await trivial.loan(keeperSigner);
 
 		trivial.waitForSignature = async () => {
 			await new Promise((resolve) => setTimeout(resolve, 500));
