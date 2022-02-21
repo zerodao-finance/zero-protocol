@@ -1,4 +1,4 @@
-import hre from 'hardhat';
+import * as hre from 'hardhat';
 import { UnderwriterTransferRequest, TransferRequest } from '../lib/zero';
 import { expect } from 'chai';
 import { override } from '../lib/test/inject-mock';
@@ -8,7 +8,7 @@ import { Signer } from '@ethersproject/abstract-signer';
 import { Provider } from '@ethersproject/abstract-provider';
 import { Wallet, Contract, providers, utils } from 'ethers';
 
-// @ts-expect-error
+//@ts-expect-error
 const { ethers, deployments } = hre;
 const gasnow = require('ethers-gasnow');
 
@@ -52,7 +52,7 @@ const getContract = async (...args: any[]) => {
 				const c = require('../deployments/arbitrum/' + args[0]);
 				return new ethers.Contract(c.address, c.abi, args[args.length - 1]);
 		*/
-		return (await ethers.getContract(...args));//.attach(require('../deployments/arbitrum/' + args[0]).address);
+		return await ethers.getContract(...args); //.attach(require('../deployments/arbitrum/' + args[0]).address);
 	} catch (e) {
 		console.error(e);
 		return new ethers.Contract(ethers.constants.AddressZero, [], (await ethers.getSigners())[0]);
@@ -115,7 +115,7 @@ const deployUnderwriter = async () => {
         underwriterAddress = (await ethers.getContract('DelegateUnderwriter')).address;
 	await renBTC.approve(btcVault.address, ethers.constants.MaxUint256); //let btcVault spend renBTC on behalf of signer
 	await btcVault.approve(controller.address, ethers.constants.MaxUint256); //let controller spend btcVault tokens
-	//	await mintUnderwriterNFTIfNotMinted();
+	await mintUnderwriterNFTIfNotMinted();
 };
 
 const mintUnderwriterNFTIfNotMinted = async () => {
@@ -149,8 +149,14 @@ const getFixtures = async () => {
 		controller: controller,
 		strategy: await getStrategyContract(signer),
 		btcVault: await getContract('BTCVault', signer),
-		swapModule: network === "ARBITRUM" ? await getContract('ArbitrumConvert', signer) : await getContract("PolygonConvert", signer),
-		convertModule: network === "ARBITRUM" ? await getContract('ArbitrumConvert', signer) : await getContract("PolygonConvert", signer),
+		swapModule:
+			network === 'ARBITRUM'
+				? await getContract('ArbitrumConvert', signer)
+				: await getContract('PolygonConvert', signer),
+		convertModule:
+			network === 'ARBITRUM'
+				? await getContract('ArbitrumConvert', signer)
+				: await getContract('PolygonConvert', signer),
 		uniswapFactory: await getContract('ZeroUniswapFactory', signer),
 		curveFactory: await getContract('ZeroCurveFactory', signer),
 		wrapper: await getContract('WrapNative', signer),
@@ -390,7 +396,10 @@ describe('Zero', () => {
 		//@ts-ignore
 		('0x42e48680f15b7207c7602fec83b9c252fa3548c8533246ed532a75c6d0c486394648ba8f42a73a0ce2482712f09d177c3641ef07fcfd3b5cd3b4329982f756141b');
 		const transferRequest = new UnderwriterTransferRequest({
-			module: process.env.CHAIN === 'ARBITRUM' || process.env.CHAIN === "MATIC" ? convertModule.address : swapModule.address,
+			module:
+				process.env.CHAIN === 'ARBITRUM' || process.env.CHAIN === 'MATIC'
+					? convertModule.address
+					: swapModule.address,
 			to: '0xC6ccaC065fCcA640F44289886Ce7861D9A527F9E',
 			underwriter: '0xd0D8fA764352e33F40c66C75B3BC0204DC95973e',
 			asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501',
@@ -426,18 +435,21 @@ describe('Zero', () => {
 		const nHash = utils.hexlify(utils.randomBytes(32));
 		const actualAmount = String(Number(transferRequest.amount) - 1000);
 		const renVMSignature = '0x';
-		await underwriter.proxy(controller.address, controller.interface.encodeFunctionData('repay', [
-			underwriter.address, //underwriter
-			transferRequest.to, //to
-			transferRequest.asset, //asset
-			transferRequest.amount, //amount
-			actualAmount,
-			transferRequest.pNonce, //nonce
-			transferRequest.module, //module
-			nHash,
-			transferRequest.data,
-			renVMSignature, //signature
-		]));
+		await underwriter.proxy(
+			controller.address,
+			controller.interface.encodeFunctionData('repay', [
+				underwriter.address, //underwriter
+				transferRequest.to, //to
+				transferRequest.asset, //asset
+				transferRequest.amount, //amount
+				actualAmount,
+				transferRequest.pNonce, //nonce
+				transferRequest.module, //module
+				nHash,
+				transferRequest.data,
+				renVMSignature, //signature
+			]),
+		);
 		await getBalances();
 	});
 

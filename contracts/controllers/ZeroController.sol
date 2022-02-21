@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.7.0<0.8.0;
+pragma solidity >=0.7.0 <0.8.0;
 
 import {EIP712Upgradeable} from '@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol';
 import {IERC20} from 'oz410/token/ERC20/ERC20.sol';
 import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
+import {IZeroModuleMeta} from '../interfaces/IZeroModuleMeta.sol';
 import {IZeroModule} from '../interfaces/IZeroModule.sol';
 import {ZeroUnderwriterLock} from '../underwriter/ZeroUnderwriterLock.sol';
 import {ZeroLib} from '../libraries/ZeroLib.sol';
@@ -76,10 +77,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		result = _amount.mul(uint256(1 ether).sub(fee)).div(uint256(1 ether)).sub(baseFeeByAsset[_asset]);
 	}
 
-	function initialize(
-		address _rewards,
-		address _gatewayRegistry
-	) public {
+	function initialize(address _rewards, address _gatewayRegistry) public {
 		__Ownable_init_unchained();
 		__Controller_init_unchained(_rewards);
 		__EIP712_init_unchained('ZeroController', '1');
@@ -226,6 +224,35 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		return digest;
 	}
 
+	function toMetaTypedDataHash(ZeroLib.MetaParams memory params, address underwriter)
+		internal
+		view
+		returns (bytes32 result)
+	{
+		result = _hashTypedDataV4(
+			keccak256(
+				abi.encode(
+					keccak256('MetaRequest(address asset,address underwriter,address module,uint256 nonce,bytes data)'),
+					params.asset,
+					underwriter,
+					params.module,
+					params.nonce,
+					keccak256(params.data)
+				)
+			)
+		);
+	}
+
+	function convertGasUsedToRen(
+		uint256 _gasUsed,
+		address converter,
+		address asset
+	) internal view returns (uint256 gasUsedInRen) {
+		gasUsedInRen = IConverter(converter).estimate(_gasUsed); //convert txGas from ETH to wBTC
+		gasUsedInRen = IConverter(converters[IStrategy(strategies[asset]).vaultWant()][asset]).estimate(_gasUsed);
+		// ^convert txGas from wBTC to renBTC
+	}
+
 	function loan(
 		address to,
 		address asset,
@@ -256,9 +283,8 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		address converter = converters[IStrategy(strategies[params.asset]).nativeWrapper()][
 			IStrategy(strategies[params.asset]).vaultWant()
 		];
-		_txGas = IConverter(converter).estimate(_txGas); //convert txGas from ETH to wBTC
-		_txGas = IConverter(converters[IStrategy(strategies[params.asset]).vaultWant()][params.asset]).estimate(_txGas);
-		// ^convert txGas from wBTC to renBTC
+		_txGas = convertGasUsedToRen(_txGas, converter, params.asset);
+		// ^convert txGas from ETH to renBTC
 		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(
 			module,
 			deductFee(params.amount, params.asset).sub(_txGas)
@@ -267,7 +293,58 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		uint256 _gasRefund = Math.min(_gasBefore.sub(gasleft()), maxGasLoan).mul(maxGasPrice);
 		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, _gasRefund);
 	}
-/*
+
+	struct MetaLocals {
+		uint256 gasUsed;
+		uint256 gasUsedInRen;
+		bytes32 digest;
+		uint256 txGas;
+		uint256 gasAtStart;
+		uint256 gasRefund;
+		uint256 balanceBefore;
+		uint256 renBalanceDiff;
+	}
+
+	function meta(
+		address from,
+		address asset,
+		address module,
+		uint256 nonce,
+		bytes memory data,
+		bytes memory signature
+	) public onlyUnderwriter returns (uint256 gasValueAndFee) {
+		require(approvedModules[module], '!approved');
+		MetaLocals memory locals;
+		locals.gasAtStart = gasleft();
+		ZeroLib.MetaParams memory params = ZeroLib.MetaParams({
+			from: from,
+			asset: asset,
+			module: module,
+			nonce: nonce,
+			data: data
+		});
+
+		locals.digest = toMetaTypedDataHash(params, msg.sender);
+		require(ECDSA.recover(locals.digest, signature) == params.from, 'invalid signature');
+		IZeroModuleMeta(module).receiveMeta(from, asset, nonce, data);
+		address converter = converters[IStrategy(strategies[params.asset]).nativeWrapper()][
+			IStrategy(strategies[params.asset]).vaultWant()
+		];
+
+		//calculate gas used
+		locals.gasUsed = Math.min(locals.gasAtStart.sub(gasleft()), maxGasLoan);
+		locals.gasUsedInRen = convertGasUsedToRen(locals.gasUsed, converter, params.asset);
+		locals.gasRefund = locals.gasUsed.mul(maxGasPrice);
+		//loan out gas
+		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, locals.gasRefund);
+		// TODO: confirm if this is right
+		locals.balanceBefore = IERC20(params.asset).balanceOf(address(this));
+		IZeroModuleMeta(module).repayMeta(gasValueAndFee);
+		locals.renBalanceDiff = IERC20(params.asset).balanceOf(address(this)).sub(locals.balanceBefore);
+		require(locals.renBalanceDiff > locals.gasUsedInRen, 'not enough provided for gas');
+		depositAll(params.asset);
+	}
+	/*
 
 	function burn(
 		address to,
