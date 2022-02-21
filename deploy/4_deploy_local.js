@@ -33,11 +33,14 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 	console.log('sent eth');
 
 	// impersonate Curve Ren for network
+	/*
 	await hre.network.provider.request({
 		method: 'hardhat_impersonateAccount',
 		params: [deployParameters[network]['Curve_Ren']],
 	});
 	const signer = await getSigner(deployParameters[network]['Curve_Ren']);
+	*/
+	const signer = {};
 	console.log('signer is', signer.address);
 
 	//get zeroController contract
@@ -84,9 +87,11 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 			libraries: {},
 			from: deployer,
 		});
+		/*
 		const governanceSigner = await getSigner(await controller.governance());
 		await fundWithGas(await governanceSigner.getAddress());
 		await controller.connect(governanceSigner).approveModule(quick.address, true);
+		*/
 	}
 
 	const keeperSigner = await getSigner(TEST_KEEPER_ADDRESS);

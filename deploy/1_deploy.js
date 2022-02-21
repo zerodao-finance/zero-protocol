@@ -49,7 +49,7 @@ module.exports = async ({
   const { deployer } = await getNamedAccounts(); //used as governance address
   const [ethersSigner] = await ethers.getSigners();
   const { provider } = ethersSigner;
-  provider.getGasPrice = createGetGasPrice('standard')
+//  provider.getGasPrice = createGetGasPrice('standard')
   if (Number(ethers.utils.formatEther(await provider.getBalance(deployer))) === 0) await ethersSigner.sendTransaction({
     value: ethers.utils.parseEther('1'),
     to: deployer

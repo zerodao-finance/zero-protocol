@@ -318,7 +318,9 @@ var UnderwriterTransferRequest = /** @class */ (function (_super) {
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
+                        console.log('getting controller');
                         underwriter = this.getUnderwriter(signer);
+                        console.log('got underwriter');
                         _a = contracts_1.Contract.bind;
                         return [4 /*yield*/, underwriter.controller()];
                     case 1: return [2 /*return*/, new (_a.apply(contracts_1.Contract, [void 0, _b.sent(), ['function fallbackMint(address underwriter, address to, address asset, uint256 amount, uint256 actualAmount, uint256 nonce, address module, bytes32 nHash, bytes data, bytes signature)'], signer]))()];
@@ -370,6 +372,7 @@ var UnderwriterTransferRequest = /** @class */ (function (_super) {
                 switch (_a.label) {
                     case 0:
                         underwriter = this.getUnderwriter(signer);
+                        console.log('about to callstatic');
                         return [4 /*yield*/, underwriter.callStatic.loan(this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature, params)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }

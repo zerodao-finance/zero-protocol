@@ -88,7 +88,6 @@ module.exports = function (_a) {
                 case 2:
                     ethersSigner = (_p.sent())[0];
                     provider = ethersSigner.provider;
-                    provider.getGasPrice = createGetGasPrice('standard');
                     _b = Number;
                     _d = (_c = ethers.utils).formatEther;
                     return [4 /*yield*/, provider.getBalance(deployer)];
