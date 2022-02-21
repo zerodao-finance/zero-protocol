@@ -5,6 +5,7 @@ pragma solidity >=0.7.0 <0.8.0;
 import {EIP712Upgradeable} from '@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol';
 import {IERC20} from 'oz410/token/ERC20/ERC20.sol';
 import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
+import {IZeroModuleMeta} from '../interfaces/IZeroModuleMeta.sol';
 import {IZeroModule} from '../interfaces/IZeroModule.sol';
 import {ZeroUnderwriterLock} from '../underwriter/ZeroUnderwriterLock.sol';
 import {ZeroLib} from '../libraries/ZeroLib.sol';
@@ -242,11 +243,13 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		);
 	}
 
-	function convertGasUsedToRen(uint256 _gasUsed) internal view returns (uint256 gasUsedInRen) {
+	function convertGasUsedToRen(
+		uint256 _gasUsed,
+		address converter,
+		address asset
+	) internal view returns (uint256 gasUsedInRen) {
 		gasUsedInRen = IConverter(converter).estimate(_gasUsed); //convert txGas from ETH to wBTC
-		gasUsedInRen = IConverter(converters[IStrategy(strategies[params.asset]).vaultWant()][params.asset]).estimate(
-			_gasUsed
-		);
+		gasUsedInRen = IConverter(converters[IStrategy(strategies[asset]).vaultWant()][asset]).estimate(_gasUsed);
 		// ^convert txGas from wBTC to renBTC
 	}
 
@@ -280,7 +283,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		address converter = converters[IStrategy(strategies[params.asset]).nativeWrapper()][
 			IStrategy(strategies[params.asset]).vaultWant()
 		];
-		_txGas = convertGasUsedToRen(_txGas);
+		_txGas = convertGasUsedToRen(_txGas, converter, params.asset);
 		// ^convert txGas from ETH to renBTC
 		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(
 			module,
@@ -294,7 +297,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 	struct MetaLocals {
 		uint256 gasUsed;
 		uint256 gasUsedInRen;
-		uint256 digest;
+		bytes32 digest;
 		uint256 txGas;
 		uint256 gasAtStart;
 		uint256 gasRefund;
@@ -322,17 +325,21 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		});
 
 		locals.digest = toMetaTypedDataHash(params, msg.sender);
-		require(ECDSA.recover(digest, signature) == params.from, 'invalid signature');
-		IZeroModule(module).receiveMeta(from, asset, nonce, data);
+		require(ECDSA.recover(locals.digest, signature) == params.from, 'invalid signature');
+		IZeroModuleMeta(module).receiveMeta(from, asset, nonce, data);
+		address converter = converters[IStrategy(strategies[params.asset]).nativeWrapper()][
+			IStrategy(strategies[params.asset]).vaultWant()
+		];
+
 		//calculate gas used
 		locals.gasUsed = Math.min(locals.gasAtStart.sub(gasleft()), maxGasLoan);
-		locals.gasUsedInRen = convertGasUsedToRen(locals.gasUsed);
+		locals.gasUsedInRen = convertGasUsedToRen(locals.gasUsed, converter, params.asset);
 		locals.gasRefund = locals.gasUsed.mul(maxGasPrice);
 		//loan out gas
 		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, locals.gasRefund);
 		// TODO: confirm if this is right
 		locals.balanceBefore = IERC20(params.asset).balanceOf(address(this));
-		IZeroModule(module).repayMeta(gasValueAndFee);
+		IZeroModuleMeta(module).repayMeta(gasValueAndFee);
 		locals.renBalanceDiff = IERC20(params.asset).balanceOf(address(this)).sub(locals.balanceBefore);
 		require(locals.renBalanceDiff > locals.gasUsedInRen, 'not enough provided for gas');
 		depositAll(params.asset);

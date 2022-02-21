@@ -117,13 +117,4 @@ contract ArbitrumConvert is IZeroModule {
 	function computeReserveRequirement(uint256 _in) external view override returns (uint256) {
 		return _in.mul(uint256(1e17)).div(uint256(1 ether));
 	}
-
-	function receiveMeta(
-		address from,
-		address asset,
-		uint256 nonce,
-		bytes memory data
-	) public override onlyController {}
-
-	function repayMeta(uint256 value) public override onlyController {}
 }

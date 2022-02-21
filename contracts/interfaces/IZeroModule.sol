@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.7.0 <0.8.0;
+pragma solidity >=0.6.0;
 
 interface IZeroModule {
 	function repayLoan(
@@ -17,15 +17,6 @@ interface IZeroModule {
 		uint256 _nonce,
 		bytes memory _data
 	) external;
-
-	function receiveMeta(
-		address from,
-		address asset,
-		uint256 nonce,
-		bytes memory data
-	) external;
-
-	function repayMeta(uint256 value) external;
 
 	function computeReserveRequirement(uint256 _in) external view returns (uint256);
 
