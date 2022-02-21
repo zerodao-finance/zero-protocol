@@ -8,11 +8,11 @@ require('dotenv').config();
 require('./tasks/multisig');
 require('./tasks/init-multisig');
 
-const ethers = require('ethers')
+
+const ethers = require('ethers');
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'ARBITRUM') process.env.CHAIN_ID = '42161';
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'MATIC') process.env.CHAIN_ID = '137';
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'ETHEREUM') process.env.CHAIN_ID = '1';
-
 
 const RPC_ENDPOINTS = {
 	ARBITRUM: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
@@ -20,27 +20,19 @@ const RPC_ENDPOINTS = {
 	ETHEREUM: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
 };
 const deployParameters = require('./lib/fixtures');
-/*
-if (process.argv.slice(1).includes('node')) {
-	(async () => {
-		const artifact = require('./artifacts/contracts/test/MockGatewayLogicV1.sol/MockGatewayLogicV1');
-		const getImplementation = async (proxyAddress: string) => {
-			const provider = new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[process.env.CHAIN]);
-			return ethers.utils.getAddress(
-				(
-					await provider.getStorageAt(
-						proxyAddress,
-						'0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc',
-					)
-				).substr((await provider.getNetwork()).chainId === 1337 ? 0 : 26),
-			);
-		};
-		const network = process.env.CHAIN || 'ARBITRUM';
-		const implementationAddress = await getImplementation(deployParameters[network]['btcGateway']);
-		// override(implementationAddress, artifact.deployedBytecode);
-	})().catch((err) => console.error(err));
-}
-*/
+
+declare var extendEnvironment;
+extendEnvironment(async (hre) => {
+	if (process.argv.slice(1).includes('node')) {
+		(async () => {
+			const artifact = require('./artifacts/contracts/test/MockGatewayLogicV1.sol/MockGatewayLogicV1');
+			await hre.network.provider.send('hardhat_setCode', [
+				hre.ethers.utils.getAddress(deployParameters[process.env.CHAIN].btcGateway),
+				artifact.deployedBytecode,
+			]);
+		})().catch((err) => console.error(err));
+	}
+});
 
 const accounts = [
 	process.env.WALLET || ethers.Wallet.createRandom().privateKey,
@@ -78,7 +70,7 @@ module.exports = {
 		localhost: {
 			live: false,
 			saveDeployments: true,
-			tags: ["local"]
+			tags: ['local'],
 		},
 		hardhat: {
 			live: false,

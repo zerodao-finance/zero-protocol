@@ -22,14 +22,9 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 	// set an arbitrary amount of tokens to send
 	// get abi
 	let arbitraryTokens = ethers.utils.parseUnits('8', 8).toString();
-	const selfdestructSend = await hre.ethers.getContractFactory('SelfdestructSend');
 	const [hardhatSigner] = await hre.ethers.getSigners();
 	console.log('sending eth');
-	await hardhatSigner.sendTransaction(
-		selfdestructSend.getDeployTransaction(deployParameters[network].Curve_Ren, {
-			value: hre.ethers.utils.parseEther('0.5'),
-		}),
-	);
+	await hre.network.provider.send({ method: 'hardhat_setBalance', params: [ethers.utils.parseEther('1')]);
 	console.log('sent eth');
 
 	// impersonate Curve Ren for network
@@ -45,8 +40,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 
 	//get zeroController contract
 	const zeroController = await getContract('ZeroController');
-	/*
-	const zcntrl_address = await zeroController.lockFor(SIGNER_ADDRESS);
+		/*
 	console.log('zero controller address', zcntrl_address);
 
 	const vault = await getContract('BTCVault');
@@ -87,8 +81,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 			libraries: {},
 			from: deployer,
 		});
-		/*
-		const governanceSigner = await getSigner(await controller.governance());
+		/*const governanceSigner = await getSigner(await controller.governance());
 		await fundWithGas(await governanceSigner.getAddress());
 		await controller.connect(governanceSigner).approveModule(quick.address, true);
 		*/
