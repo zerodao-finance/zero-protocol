@@ -22,7 +22,8 @@
 		"build": "tsc -p ./tsconfig.json",
 		"node:arbitrum": "CHAIN=ARBITRUM FORKING=true hardhat node",
 		"node:polygon": "CHAIN=MATIC FORKING=true hardhat node --no-deploy",
-		"node:mainnet": "CHAIN=ETHEREUM FORKING=true hardhat node"
+		"node:mainnet": "CHAIN=ETHEREUM FORKING=true hardhat node",
+		"script:harvester": "hardhat run scripts/harvester.js"
 	},
 	"author": "zeroDAO",
 	"license": "MIT",
