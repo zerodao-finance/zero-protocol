@@ -273,8 +273,11 @@ describe('Zero', () => {
 		await deployUnderwriter();
 		const artifact = await deployments.getArtifact('MockGatewayLogicV1');
 		//@ts-ignore
-		const implementationAddress = await getImplementation(deployParameters[network]['btcGateway']);
-		override(implementationAddress, artifact.deployedBytecode);
+		await hre.network.provider.send('hardhat_setCode', [
+			//@ts-ignore
+			hre.ethers.utils.getAddress(deployParameters[process.env.CHAIN].btcGateway),
+			artifact.deployedBytecode,
+		]);
 		const { gateway } = await getFixtures();
 		await gateway.mint(utils.randomBytes(32), utils.parseUnits('50', 8), utils.randomBytes(32), '0x'); //mint renBTC to signer
 		const delegate = await ethers.getContract('DelegateUnderwriter');
