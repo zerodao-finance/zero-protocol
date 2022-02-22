@@ -24,37 +24,27 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 	let arbitraryTokens = ethers.utils.parseUnits('8', 8).toString();
 	const [hardhatSigner] = await hre.ethers.getSigners();
 	console.log('sending eth');
-	await hre.network.provider.send({ method: 'hardhat_setBalance', params: [ethers.utils.parseEther('1')]);
+	await hre.network.provider.send('hardhat_setBalance', [deployParameters[network]['Curve_Ren'], ethers.utils.hexStripZeros(ethers.utils.parseEther('10.0').toHexString())]);
 	console.log('sent eth');
-
-	// impersonate Curve Ren for network
-	/*
-	await hre.network.provider.request({
-		method: 'hardhat_impersonateAccount',
-		params: [deployParameters[network]['Curve_Ren']],
-	});
-	const signer = await getSigner(deployParameters[network]['Curve_Ren']);
-	*/
-	const signer = {};
-	console.log('signer is', signer.address);
 
 	//get zeroController contract
 	const zeroController = await getContract('ZeroController');
-		/*
-	console.log('zero controller address', zcntrl_address);
 
-	const vault = await getContract('BTCVault');
-	const renBTC = new ethers.Contract(deployParameters[network]['renBTC'], vault.interface, signer);
-	const connectedRenBTC = await renBTC.connect(signer); // attach curve_ren provider
+	/*
+console.log('zero controller address', zcntrl_address);
 
-	const balance = await renBTC.balanceOf(deployParameters[network]['Curve_Ren']);
-	console.log(ethers.utils.formatUnits(balance, 8));
-	console.log(ethers.utils.formatUnits(arbitraryTokens, 8));
-	console.log(await renBTC.balanceOf(zcntrl_address));
+const vault = await getContract('BTCVault');
+const renBTC = new ethers.Contract(deployParameters[network]['renBTC'], vault.interface, signer);
+const connectedRenBTC = await renBTC.connect(signer); // attach curve_ren provider
 
-	await connectedRenBTC.transfer(zcntrl_address, arbitraryTokens, { from: signer.address, value: '0' });
-	console.log('DONE');
-	*/
+const balance = await renBTC.balanceOf(deployParameters[network]['Curve_Ren']);
+console.log(ethers.utils.formatUnits(balance, 8));
+console.log(ethers.utils.formatUnits(arbitraryTokens, 8));
+console.log(await renBTC.balanceOf(zcntrl_address));
+
+await connectedRenBTC.transfer(zcntrl_address, arbitraryTokens, { from: signer.address, value: '0' });
+console.log('DONE');
+*/
 	// commented above out because it doesn't do anything. ZeroController.lockFor(signerAddress) will return a meaningless address. ZeroController.lockFor(delegateUnderwriter.address) will return the address for the lock contract for the Underwriter, this is the contract you have to fund with zeroBTC for the underwriter to be able to write loans
 
 	// // const signer = (await ethers.getSigner(deployParameters[network]["Curve_Ren"]))
