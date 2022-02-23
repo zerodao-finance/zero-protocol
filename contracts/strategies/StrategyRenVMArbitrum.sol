@@ -13,7 +13,7 @@ import {StrategyAPI} from '../interfaces/IStrategy.sol';
 import {IController} from '../interfaces/IController.sol';
 import {IUniswapV2Router02} from '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import {ICurvePool} from '../interfaces/ICurvePool.sol';
-import {IZeroModule} from '../interfaces/IZeroModule.sol';
+import {IZeroModuleWithWant} from '../interfaces/IZeroModuleWithWant.sol';
 
 contract StrategyRenVMArbitrum {
 	using SafeERC20 for IERC20;
@@ -151,7 +151,7 @@ contract StrategyRenVMArbitrum {
 
 	function permissionedSend(address _module, uint256 _amount) external virtual onlyController returns (uint256) {
 		uint256 _reserve = IERC20(want).balanceOf(address(this));
-		address _want = IZeroModule(_module).want();
+		address _want = IZeroModuleWithWant(_module).want();
 		if (_amount > _reserve || _want != want) {
 			_amount = _withdraw(_amount, _want);
 		}

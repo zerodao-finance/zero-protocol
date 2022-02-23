@@ -17,7 +17,7 @@ contract ArbitrumConvert is IZeroModule {
 	uint256 public blockTimeout;
 	address public constant weth = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
 	address public constant wbtc = 0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f;
-	address public constant override want = 0xDBf31dF14B66535aF65AaC99C32e9eA844e14501;
+	address public constant want = 0xDBf31dF14B66535aF65AaC99C32e9eA844e14501;
 	address public constant renCrvArbitrum = 0x3E01dD8a5E1fb3481F0F589056b428Fc308AF0Fb;
 	address public constant tricryptoArbitrum = 0x960ea3e3C7FB317332d990873d354E18d7645590;
 	modifier onlyController() {

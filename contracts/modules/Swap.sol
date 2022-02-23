@@ -18,7 +18,7 @@ contract Swap is IZeroModule {
 	uint256 public blockTimeout;
 	address public immutable fiat; //USDC
 	address public immutable wNative; //wETH
-	address public immutable override want; //wBTC
+	address public immutable want; //wBTC
 	address public immutable router; //Sushi V2
 	address public immutable controllerWant; // Controller want (renBTC)
 

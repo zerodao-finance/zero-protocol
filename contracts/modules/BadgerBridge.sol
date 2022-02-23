@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.7.0;
 
 import {SafeMath} from 'oz410/math/SafeMath.sol';
 import {IERC20} from 'oz410/token/ERC20/IERC20.sol';
@@ -9,14 +9,12 @@ import {ICurveETHUInt256} from '../interfaces/CurvePools/ICurveETHUInt256.sol';
 import {IRenCrvArbitrum} from '../interfaces/CurvePools/IRenCrvArbitrum.sol';
 import {IZeroModule} from '../interfaces/IZeroModule.sol';
 
-contract SwapV2 is IZeroModule, ReentrancyGuard {
+contract BadgerBridge is IZeroModule {
 	using SafeERC20 for IERC20;
 	using SafeMath for *;
-	mapping(uint256 => BadgerBridgeLib.ConvertRecord) public outstanding;
 	address public immutable controller;
 	address public immutable governance;
 	uint256 public blockTimeout;
-	address public constant override want = 0xDBf31dF14B66535aF65AaC99C32e9eA844e14501;
 	address public constant renCrvArbitrum = 0x3E01dD8a5E1fb3481F0F589056b428Fc308AF0Fb;
 	uint256 public feePercentage;
 
@@ -28,7 +26,6 @@ contract SwapV2 is IZeroModule, ReentrancyGuard {
 	constructor(address _controller) {
 		controller = _controller;
 		governance = IController(_controller).governance();
-		IERC20(want).safeApprove(renCrvArbitrum, ~uint256(0) >> 2);
 	}
 
 	function setFeePercentage(uint256 _ct) public {
@@ -52,7 +49,8 @@ contract SwapV2 is IZeroModule, ReentrancyGuard {
 		uint256 _nonce,
 		bytes memory _data
 	) public override onlyController {
-		IERC20(want).safeTransfer(_to, outstanding[_nonce].qty);
+		IERC20(_inToken).safeApprove(renCrvArbitrum, ~uint256(0) >> 2);
+		IERC20(_inToken).safeTransfer(_to, _amount);
 	}
 
 	function repayLoan(
@@ -65,15 +63,7 @@ contract SwapV2 is IZeroModule, ReentrancyGuard {
 		// no-op
 	}
 
-	function currentBalance(address _token) public view returns (uint256 balance) {
-		balance = IERC20(_token).balanceOf(address(this));
-	}
-
 	function computeReserveRequirement(uint256 _in) public pure override returns (uint256) {
-		return _in.mul(uint256(1.2 ether)).div(uint256(1 ether));
-	}
-
-	function want() external view override returns (address _ret) {
-		return _want;
+		return _in.mul(uint256(12 ether)).div(uint256(10 ether));
 	}
 }

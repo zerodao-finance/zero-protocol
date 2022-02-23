@@ -24,7 +24,7 @@ contract PolygonConvert is IZeroModule {
 	address public constant wMatic = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
 	address public constant weth = 0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619;
 	address public constant wbtc = 0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6;
-	address public constant override want = 0xDBf31dF14B66535aF65AaC99C32e9eA844e14501;
+	address public constant want = 0xDBf31dF14B66535aF65AaC99C32e9eA844e14501;
 	address public constant renCrvPolygon = 0xC2d95EEF97Ec6C17551d45e77B590dc1F9117C67;
 	address public constant tricryptoPolygon = 0x92215849c439E1f8612b6646060B4E3E5ef822cC;
 
