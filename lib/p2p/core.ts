@@ -1,5 +1,6 @@
 'use strict';
 import libp2p from 'libp2p/src/index'; // @ts-ignore
+import path from 'path';
 import createLogger, { Logger } from '../logger';
 //import { MockZeroConnection } from './mocks';
 import { fromJSONtoBuffer, fromBufferToJSON } from './util';
@@ -129,16 +130,18 @@ class ZeroUser extends EventEmitter {
 }
 
 class ZeroKeeper {
+	storage: PersistenceAdapter<any, any>;
 	conn: ConnectionTypes;
 	dispatches: any[];
 	log: Logger;
 	active: NodeJS.Timeout;
 
-	constructor(connection: ConnectionTypes) {
+	constructor(connection: ConnectionTypes, persistence?: PersistenceAdapter<any, any>) {
 		this.conn = connection;
 		this.conn.on('peer:discovery', () => console.log('discovered from keeper!'));
 		this.dispatches = [];
 		this.log = createLogger('zero.keeper');
+		this.storage = persistence ?? new InMemoryPersistenceAdapter();
 	}
 
 	async advertiseAsKeeper(address: string) {
@@ -173,7 +176,9 @@ class ZeroKeeper {
 				for await (const msg of rawData) {
 					string.push(msg.toString());
 				}
-				callback(JSON.parse(string.join('')));
+				const transferRequest = JSON.parse(string.join(''));
+				await (this.storage || { async set() { return 0 } }).set(transferRequest);
+				callback(transferRequest);
 			});
 		};
 		await this.conn.handle('/zero/keeper/dispatch', handler);

@@ -12,19 +12,19 @@ export class InMemoryPersistenceAdapter implements PersistenceAdapter<InMemoryBa
 	}
 
 	async set(transferRequest: any): Promise<InMemoryKeyType> {
-    const tr: any = {
-      amount: transferRequest.amount,
-      nonce: transferRequest.nonce,
-      pNonce: transferRequest.pNonce,
-      data: transferRequest.data,
-      module: transferRequest.module,
-      asset: transferRequest.assset,
-      chainId: transferRequest.chainId,
-      contractAddress: transferRequest.contractAddress,
-      underwriter: transferRequest.underwriter,
-      signature: transferRequest.signature,
-      to: transferRequest.to
-    };
+		const tr: any = {
+			amount: transferRequest.amount,
+			nonce: transferRequest.nonce,
+			pNonce: transferRequest.pNonce,
+			data: transferRequest.data,
+			module: transferRequest.module,
+			asset: transferRequest.assset,
+			chainId: transferRequest.chainId,
+			contractAddress: transferRequest.contractAddress,
+			underwriter: transferRequest.underwriter,
+			signature: transferRequest.signature,
+			to: transferRequest.to,
+		};
 		const key = hash(tr);
 		const status: any = { ...tr, status: 'pending' };
 		try {

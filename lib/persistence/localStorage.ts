@@ -15,7 +15,7 @@ export class LocalStoragePersistenceAdapter
 
 	async set(transferRequest: any): Promise<LocalStorageKeyType> {
 		const key = hash(transferRequest);
-		const status: any= { ...transferRequest, status: 'pending' };
+		const status: any = { ...transferRequest, status: 'pending' };
 		const serialized = JSON.stringify(status);
 		try {
 			await this.backend.setItem(`request:${key}`, serialized);

@@ -63,6 +63,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 exports.__esModule = true;
 exports.ZeroConnection = exports.ZeroUser = exports.ZeroKeeper = void 0;
 var index_1 = __importDefault(require("libp2p/src/index")); // @ts-ignore
+require("path");
 var logger_1 = __importDefault(require("../logger"));
 //import { MockZeroConnection } from './mocks';
 var util_1 = require("./util");
@@ -285,11 +286,12 @@ var ZeroUser = /** @class */ (function (_super) {
 }(events_1.EventEmitter));
 exports.ZeroUser = ZeroUser;
 var ZeroKeeper = /** @class */ (function () {
-    function ZeroKeeper(connection) {
+    function ZeroKeeper(connection, persistence) {
         this.conn = connection;
         this.conn.on('peer:discovery', function () { return console.log('discovered from keeper!'); });
         this.dispatches = [];
         this.log = (0, logger_1["default"])('zero.keeper');
+        this.storage = persistence !== null && persistence !== void 0 ? persistence : new persistence_1.InMemoryPersistenceAdapter();
     }
     ZeroKeeper.prototype.advertiseAsKeeper = function (address) {
         return __awaiter(this, void 0, void 0, function () {
@@ -336,7 +338,7 @@ var ZeroKeeper = /** @class */ (function () {
                             return __generator(this, function (_a) {
                                 stream = duplex.stream;
                                 (0, it_pipe_1["default"])(stream.source, it_length_prefixed_1["default"].decode(), function (rawData) { var rawData_2, rawData_2_1; return __awaiter(_this, void 0, void 0, function () {
-                                    var string, msg, e_6_1;
+                                    var string, msg, e_6_1, transferRequest;
                                     var e_6, _a;
                                     return __generator(this, function (_b) {
                                         switch (_b.label) {
@@ -372,7 +374,15 @@ var ZeroKeeper = /** @class */ (function () {
                                                 return [7 /*endfinally*/];
                                             case 11: return [7 /*endfinally*/];
                                             case 12:
-                                                callback(JSON.parse(string.join('')));
+                                                transferRequest = JSON.parse(string.join(''));
+                                                return [4 /*yield*/, (this.storage || { set: function () {
+                                                            return __awaiter(this, void 0, void 0, function () { return __generator(this, function (_a) {
+                                                                return [2 /*return*/, 0];
+                                                            }); });
+                                                        } }).set(transferRequest)];
+                                            case 13:
+                                                _b.sent();
+                                                callback(transferRequest);
                                                 return [2 /*return*/];
                                         }
                                     });

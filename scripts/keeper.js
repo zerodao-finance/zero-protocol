@@ -1,7 +1,9 @@
 import { Wallet } from 'ethers';
 const { ethers } = require('hardhat');
+const path = require('path');
 const { UnderwriterTransferRequest } = require('../lib/zero');
 const { createZeroConnection, createZeroKeeper } = require('../lib/zero');
+const { LevelDBPersistenceAdapter } = require('../lib/persistence/leveldb');
 const Underwriter = require('../deployments/arbitrum/DelegateUnderwriter');
 const trivial = new ethers.Contract(Underwriter.address, Underwriter.abi, new ethers.providers.InfuraProvider('mainnet'));
 
@@ -122,6 +124,8 @@ const run = async () => {
     const keeper = createZeroKeeper(
         await createZeroConnection(KEEPER_URL)
     )
+    if (!process.env.ZERO_PERSISTENCE_DB) process.env.ZERO_PERSISTENCE_DB = path.join(process.env.HOME, '.keeper.db');
+    keeper.setPersistence(new LevelDBPersistenceAdapter());
     await keeper.setTxDispatcher(handleTransferRequest);
     await keeper.conn.start();
     await keeper.advertiseAsKeeper();

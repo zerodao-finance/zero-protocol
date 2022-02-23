@@ -54,40 +54,33 @@ var SIGNER_ADDRESS = '0x0F4ee9631f4be0a63756515141281A3E2B293Bbe';
 module.exports = function (_a) {
     var getChainId = _a.getChainId, getUnnamedAccounts = _a.getUnnamedAccounts, getNamedAccounts = _a.getNamedAccounts;
     return __awaiter(_this, void 0, void 0, function () {
-        var arbitraryTokens, selfdestructSend, hardhatSigner, signer, zeroController, deployerSigner, deployer, controller, quick, keeperSigner;
+        var arbitraryTokens, hardhatSigner, zeroController, deployerSigner, deployer, controller, quick, keeperSigner;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
                     if (!process.env.FORKING || process.env.CHAIN === 'ETHEREUM')
                         return [2 /*return*/];
                     arbitraryTokens = ethers.utils.parseUnits('8', 8).toString();
-                    return [4 /*yield*/, hre.ethers.getContractFactory('SelfdestructSend')];
-                case 1:
-                    selfdestructSend = _b.sent();
                     return [4 /*yield*/, hre.ethers.getSigners()];
-                case 2:
+                case 1:
                     hardhatSigner = (_b.sent())[0];
                     console.log('sending eth');
-                    return [4 /*yield*/, hardhatSigner.sendTransaction(selfdestructSend.getDeployTransaction(deployParameters[network].Curve_Ren, {
-                            value: hre.ethers.utils.parseEther('0.5')
-                        }))];
-                case 3:
+                    return [4 /*yield*/, hre.network.provider.send('hardhat_setBalance', [deployParameters[network]['Curve_Ren'], ethers.utils.hexStripZeros(ethers.utils.parseEther('10.0').toHexString())])];
+                case 2:
                     _b.sent();
                     console.log('sent eth');
-                    signer = {};
-                    console.log('signer is', signer.address);
                     return [4 /*yield*/, getContract('ZeroController')];
-                case 4:
+                case 3:
                     zeroController = _b.sent();
                     return [4 /*yield*/, hre.ethers.getSigners()];
-                case 5:
+                case 4:
                     deployerSigner = (_b.sent())[0];
                     return [4 /*yield*/, deployerSigner.getAddress()];
-                case 6:
+                case 5:
                     deployer = _b.sent();
-                    if (!(process.env.CHAIN === 'ARBITRUM')) return [3 /*break*/, 9];
+                    if (!(process.env.CHAIN === 'ARBITRUM')) return [3 /*break*/, 8];
                     return [4 /*yield*/, getContract('ZeroController')];
-                case 7:
+                case 6:
                     controller = _b.sent();
                     return [4 /*yield*/, deployFixedAddress('ArbitrumConvertQuick', {
                             args: [controller.address, ethers.utils.parseUnits('15', 8), '100000'],
@@ -95,11 +88,11 @@ module.exports = function (_a) {
                             libraries: {},
                             from: deployer
                         })];
-                case 8:
+                case 7:
                     quick = _b.sent();
-                    _b.label = 9;
-                case 9: return [4 /*yield*/, getSigner(TEST_KEEPER_ADDRESS)];
-                case 10:
+                    _b.label = 8;
+                case 8: return [4 /*yield*/, getSigner(TEST_KEEPER_ADDRESS)];
+                case 9:
                     keeperSigner = _b.sent();
                     return [2 /*return*/];
             }
