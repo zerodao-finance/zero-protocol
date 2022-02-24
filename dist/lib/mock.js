@@ -66,6 +66,7 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
             return __generator(this, function (_e) {
                 switch (_e.label) {
                     case 0:
+                        console.log('got transferRequest');
                         trivial = new zero_1.UnderwriterTransferRequest(transferRequest);
                         _e.label = 1;
                     case 1:
@@ -204,7 +205,7 @@ var enableGlobalMockRuntime = function () {
             });
         });
     };
-    zero_1.UnderwriterTransferRequest.prototype.submitToRenVM = function (flag) {
+    zero_1.TransferRequest.prototype.submitToRenVM = function (flag) {
         return __awaiter(this, void 0, void 0, function () {
             var confirmed, gatewayAddress, _signed, target, timeout, txHash, mint, deposit;
             var _this = this;

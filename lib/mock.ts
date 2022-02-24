@@ -9,15 +9,16 @@ export const TEST_KEEPER_ADDRESS = '0xec5d65739c722a46cd79951e069753c2fc879b27';
 let keeperSigner;
 
 export const createMockKeeper = async (provider) => {
-	const keeper = (createZeroKeeper as any)({ on() { } });
+	const keeper = (createZeroKeeper as any)({ on() {} });
 	provider = provider || new ethers.providers.JsonRpcProvider('http://localhost:8545');
 	keeperSigner = keeperSigner || provider.getSigner(TEST_KEEPER_ADDRESS);
 	keepers.push(keeper);
-	keeper.advertiseAsKeeper = async () => { };
+	keeper.advertiseAsKeeper = async () => {};
 	keeper.setTxDispatcher = async (fn) => {
 		(keeper as any)._txDispatcher = fn;
 	};
 	keeper.setTxDispatcher(async (transferRequest) => {
+		console.log('got transferRequest');
 		const trivial = new UnderwriterTransferRequest(transferRequest);
 		try {
 			const loan_result = await trivial.dry(keeperSigner, { from: await keeperSigner.getAddress() });
@@ -67,7 +68,7 @@ export const createMockKeeper = async (provider) => {
 
 export const enableGlobalMockRuntime = () => {
 	ZeroUser.prototype.subscribeKeepers = async function () {
-		const me = this
+		const me = this;
 		if (!this.keepers.includes(TEST_KEEPER_ADDRESS)) {
 			setTimeout(function () {
 				me.keepers.push(TEST_KEEPER_ADDRESS);
@@ -88,7 +89,7 @@ export const enableGlobalMockRuntime = () => {
 			})();
 		}, 500);
 	};
-	UnderwriterTransferRequest.prototype.submitToRenVM = async function (flag) {
+	TransferRequest.prototype.submitToRenVM = async function (flag) {
 		const confirmed = new EventEmitter();
 		const gatewayAddress = '39WeCoGbNNk5gVNPx9j4mSrw3tvf1WfRz7';
 		let _signed;
