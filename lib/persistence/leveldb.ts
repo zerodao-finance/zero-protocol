@@ -3,18 +3,25 @@ import { TransferRequest } from '../types';
 import { ethers } from 'ethers';
 import { PersistenceAdapter, RequestStates, TransferRequestWithStatus } from './types';
 import path from 'path';
+import memdown from 'memdown';
 const level: any = require('level');
+const levelup: any = require('levelup');
 
 type LocalStorageKeyType = string;
 type LocalStorageBackendType = Storage;
 
 const getValue = async (level: any, key: string): Promise<string> =>
 	await new Promise((resolve, reject) =>
-		level.get(key, (err, result: string) => (err ? reject(err) : resolve(result))),
-	);
+		level.get(key, (err, result: string) => {
+	          if (err) {
+	            if (err.notFound) return resolve(null);
+		    else return reject(err);
+		  } else resolve(result);
+		}));
+	
 
 const setValue = async (level, key: string, value: string) =>
-	await new Promise<void>((resolve, reject) => level.set(key, value, (err) => (err ? reject(err) : resolve())));
+	await new Promise<void>((resolve, reject) => level.put(key, value, (err) => (err ? reject(err) : resolve())));
 const delValue = async (level, key: string) =>
 	await new Promise<void>((resolve, reject) => level.del(key, (err) => (err ? reject(err) : resolve())));
 
@@ -26,10 +33,11 @@ const transferRequestToKey = (transferRequest) =>
 	ethers.utils.solidityKeccak256(['bytes'], [transferRequest.signature]);
 
 const transferRequestToPlain = (transferRequest) => {
-	const { to, underwriter, contractAddress, nonce, pNonce, data, module, amount, asset, status, signature } =
+	const { to, underwriter, contractAddress, nonce, pNonce, data, module, amount, asset, status, signature, chainId } =
 		transferRequest;
 	return {
 		to,
+		chainId,
 		underwriter,
 		contractAddress,
 		nonce,
@@ -43,17 +51,17 @@ const transferRequestToPlain = (transferRequest) => {
 	};
 };
 
-class LevelDBPersistenceAdapter implements PersistenceAdapter<LocalStorageBackendType, LocalStorageKeyType> {
+export class LevelDBPersistenceAdapter implements PersistenceAdapter<LocalStorageBackendType, LocalStorageKeyType> {
 	backend: any;
 	constructor() {
-		this.backend = level(process.env.ZERO_PERSISTENCE_DB);
+		let db = process.env.ZERO_PERSISTENCE_DB;
+                if (db === '::memory') this.backend = levelup(memdown());
+		else this.backend = level(db);
 	}
 	async length() {
 		return Number((await getValue(this.backend, 'length')) || 0);
 	}
 	async get(key) {
-		const index = await getValue(this.backend, toKey(key));
-
 		return JSON.parse((await getValue(this.backend, toKey(key))) || '0') || null;
 	}
 	async getIndex(key) {

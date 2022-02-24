@@ -181,6 +181,7 @@ export class TransferRequest {
 	async sign(signer: Wallet & Signer, contractAddress?: string): Promise<string> {
 		const provider = signer.provider as ethers.providers.JsonRpcProvider;
 		const { chainId } = await signer.provider.getNetwork();
+		this.chainId = chainId;
 		try {
 			const payload = this.toEIP712(contractAddress, chainId);
 			delete payload.types.EIP712Domain;
