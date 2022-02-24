@@ -1,4 +1,4 @@
-import { UnderwriterTransferRequest, createZeroKeeper, TransferRequest } from './zero';
+import { UnderwriterTransferRequest, createZeroKeeper, MetaRequest } from './zero';
 import { ZeroUser } from './p2p/core';
 import { ethers } from 'ethers';
 import { EventEmitter } from 'events';
@@ -9,11 +9,11 @@ export const TEST_KEEPER_ADDRESS = '0xec5d65739c722a46cd79951e069753c2fc879b27';
 let keeperSigner;
 
 export const createMockKeeper = async (provider) => {
-	const keeper = (createZeroKeeper as any)({ on() { } });
+	const keeper = (createZeroKeeper as any)({ on() {} });
 	provider = provider || new ethers.providers.JsonRpcProvider('http://localhost:8545');
 	keeperSigner = keeperSigner || provider.getSigner(TEST_KEEPER_ADDRESS);
 	keepers.push(keeper);
-	keeper.advertiseAsKeeper = async () => { };
+	keeper.advertiseAsKeeper = async () => {};
 	keeper.setTxDispatcher = async (fn) => {
 		(keeper as any)._txDispatcher = fn;
 	};
@@ -63,11 +63,12 @@ export const createMockKeeper = async (provider) => {
 			};
 		};
 	});
+	MetaRequest.prototype.keeper = keeper;
 };
 
 export const enableGlobalMockRuntime = () => {
 	ZeroUser.prototype.subscribeKeepers = async function () {
-		const me = this
+		const me = this;
 		if (!this.keepers.includes(TEST_KEEPER_ADDRESS)) {
 			setTimeout(function () {
 				me.keepers.push(TEST_KEEPER_ADDRESS);

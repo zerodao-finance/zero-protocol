@@ -33,6 +33,7 @@ export class MetaRequest {
 	public _queryTxResult: any;
 	public provider: any;
 	public _mint: any;
+	public keeper: any;
 
 	constructor(params: {
 		module: string;
