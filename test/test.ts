@@ -1,8 +1,10 @@
 import * as hre from 'hardhat';
-import { UnderwriterTransferRequest, TransferRequest } from '../lib/zero';
+import { UnderwriterTransferRequest, TransferRequest, MetaRequest } from '../lib/zero';
 import { expect } from 'chai';
 import { override } from '../lib/test/inject-mock';
+//@ts-ignore
 import GatewayLogicV1 from '../artifacts/contracts/test/GatewayLogicV1.sol/GatewayLogicV1.json';
+//@ts-ignore
 import BTCVault from '../artifacts/contracts/vaults/BTCVault.sol/BTCVault.json';
 import { Signer } from '@ethersproject/abstract-signer';
 import { Provider } from '@ethersproject/abstract-provider';
@@ -610,9 +612,18 @@ describe('Zero', () => {
 		console.log(await tx.wait());
 	});
 	it('MetaRequest test: tests basic metarequest stuff', async () => {
-		const [signer] = await ethers.getSigners();
+		const { signer, controller, btcVault } = await getFixtures();
 		await createMockKeeper(signer.provider);
 		enableGlobalMockRuntime();
+		const metaRequest = new MetaRequest({
+			module: await ethers.getContract('ArbitrumConvertQuick'),
+			underwriter: await ethers.getContract('DelegateUnderwriter'),
+			asset: await btcVault.token(),
+			data: '0x',
+			contractAddress: controller.address,
+			addressFrom: await signer.getAddress(),
+		});
+		console.log(metaRequest.keeper);
 		// do stuff with metarequest here
 	});
 });
