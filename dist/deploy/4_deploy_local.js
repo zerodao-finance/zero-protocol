@@ -39,6 +39,7 @@ var hre = require('hardhat');
 var ethers = hre.ethers, deployments = hre.deployments;
 var deployParameters = require('../lib/fixtures');
 var TEST_KEEPER_ADDRESS = require('../lib/mock').TEST_KEEPER_ADDRESS;
+var linker = require('solc/linker');
 var _a = require('./common'), fundWithGas = _a.fundWithGas, deployFixedAddress = _a.deployFixedAddress, getSigner = _a.getSigner, getContract = _a.getContract;
 var network = process.env.CHAIN || 'MATIC';
 var SIGNER_ADDRESS = '0x0F4ee9631f4be0a63756515141281A3E2B293Bbe';
@@ -54,7 +55,7 @@ var SIGNER_ADDRESS = '0x0F4ee9631f4be0a63756515141281A3E2B293Bbe';
 module.exports = function (_a) {
     var getChainId = _a.getChainId, getUnnamedAccounts = _a.getUnnamedAccounts, getNamedAccounts = _a.getNamedAccounts;
     return __awaiter(_this, void 0, void 0, function () {
-        var arbitraryTokens, hardhatSigner, zeroController, deployerSigner, deployer, controller, quick, keeperSigner;
+        var arbitraryTokens, hardhatSigner, zeroController, deployerSigner, deployer, controller, quick, code, keeperSigner;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -78,7 +79,7 @@ module.exports = function (_a) {
                     return [4 /*yield*/, deployerSigner.getAddress()];
                 case 5:
                     deployer = _b.sent();
-                    if (!(process.env.CHAIN === 'ARBITRUM')) return [3 /*break*/, 8];
+                    if (!(process.env.CHAIN === 'ARBITRUM')) return [3 /*break*/, 12];
                     return [4 /*yield*/, getContract('ZeroController')];
                 case 6:
                     controller = _b.sent();
@@ -90,9 +91,22 @@ module.exports = function (_a) {
                         })];
                 case 7:
                     quick = _b.sent();
-                    _b.label = 8;
-                case 8: return [4 /*yield*/, getSigner(TEST_KEEPER_ADDRESS)];
+                    return [4 /*yield*/, deployerSigner.provider.getCode(controller.address)];
+                case 8:
+                    code = _b.sent();
+                    return [4 /*yield*/, hre.network.provider.send('hardhat_setCode', [controller.address, ((require('../artifacts/contracts/test/ZeroControllerTest.sol/ZeroControllerTest').deployedBytecode))])];
                 case 9:
+                    _b.sent();
+                    return [4 /*yield*/, controller.approveModule(quick.address, true)];
+                case 10:
+                    _b.sent();
+                    return [4 /*yield*/, hre.network.provider.send('hardhat_setCode', [controller.address, code])];
+                case 11:
+                    _b.sent();
+                    console.log('approved');
+                    _b.label = 12;
+                case 12: return [4 /*yield*/, getSigner(TEST_KEEPER_ADDRESS)];
+                case 13:
                     keeperSigner = _b.sent();
                     return [2 /*return*/];
             }

@@ -42,7 +42,8 @@ const network = process.env.CHAIN || 'MATIC';
 const common = require('./common');
 
 module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) => {
-	if (!common.isSelectedDeployment(__filename) || process.env.CHAIN === 'ETHEREUM' || process.env.FORKING === 'true')
+	
+	if (!process.argv.find((v) => v === 'test') && (!common.isSelectedDeployment(__filename) || process.env.CHAIN === 'ETHEREUM' || process.env.FORKING === 'true'))
 		return;
 	const { deployer } = await getNamedAccounts(); //used as governance address
 	const [ethersSigner] = await ethers.getSigners();

@@ -64,6 +64,7 @@ console.log('DONE');
 
 	const [deployerSigner] = await hre.ethers.getSigners();
 	const deployer = await deployerSigner.getAddress();
+	await deployments.deploy('ZeroDistributor', { contractName: 'ZeroDistributor', args: [ethers.constants.AddressZero, ethers.constants.AddressZero, ethers.utils.hexlify(ethers.utils.randomBytes(32)) ], libraries: {}, from: deployer });
 	if (process.env.CHAIN === 'ARBITRUM') {
 		const controller = await getContract('ZeroController');
 		const quick = await deployFixedAddress('ArbitrumConvertQuick', {
