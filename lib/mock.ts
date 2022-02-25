@@ -109,6 +109,16 @@ export const enableGlobalMockRuntime = () => {
 		const txHash = (ethers.utils.randomBytes(32).toString as any)('base64');
 		const mint = new EventEmitter();
 		const deposit = {
+			_state: {
+				queryTxResult: {
+					out: {
+						amount: ethers.BigNumber.from(this.amount).sub(ethers.utils.parseUnits('0.0015', 8)).toString(),
+						nhash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+						phash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+						signature: ethers.utils.hexlify(ethers.utils.randomBytes(65)),
+					},
+				},
+			},
 			async txHash() {
 				return txHash;
 			},

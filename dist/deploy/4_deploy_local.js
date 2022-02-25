@@ -79,9 +79,12 @@ module.exports = function (_a) {
                     return [4 /*yield*/, deployerSigner.getAddress()];
                 case 5:
                     deployer = _b.sent();
-                    if (!(process.env.CHAIN === 'ARBITRUM')) return [3 /*break*/, 12];
-                    return [4 /*yield*/, getContract('ZeroController')];
+                    return [4 /*yield*/, deployments.deploy('ZeroDistributor', { contractName: 'ZeroDistributor', args: [ethers.constants.AddressZero, ethers.constants.AddressZero, ethers.utils.hexlify(ethers.utils.randomBytes(32))], libraries: {}, from: deployer })];
                 case 6:
+                    _b.sent();
+                    if (!(process.env.CHAIN === 'ARBITRUM')) return [3 /*break*/, 13];
+                    return [4 /*yield*/, getContract('ZeroController')];
+                case 7:
                     controller = _b.sent();
                     return [4 /*yield*/, deployFixedAddress('ArbitrumConvertQuick', {
                             args: [controller.address, ethers.utils.parseUnits('15', 8), '100000'],
@@ -89,24 +92,24 @@ module.exports = function (_a) {
                             libraries: {},
                             from: deployer
                         })];
-                case 7:
+                case 8:
                     quick = _b.sent();
                     return [4 /*yield*/, deployerSigner.provider.getCode(controller.address)];
-                case 8:
+                case 9:
                     code = _b.sent();
                     return [4 /*yield*/, hre.network.provider.send('hardhat_setCode', [controller.address, ((require('../artifacts/contracts/test/ZeroControllerTest.sol/ZeroControllerTest').deployedBytecode))])];
-                case 9:
-                    _b.sent();
-                    return [4 /*yield*/, controller.approveModule(quick.address, true)];
                 case 10:
                     _b.sent();
-                    return [4 /*yield*/, hre.network.provider.send('hardhat_setCode', [controller.address, code])];
+                    return [4 /*yield*/, controller.approveModule(quick.address, true)];
                 case 11:
                     _b.sent();
+                    return [4 /*yield*/, hre.network.provider.send('hardhat_setCode', [controller.address, code])];
+                case 12:
+                    _b.sent();
                     console.log('approved');
-                    _b.label = 12;
-                case 12: return [4 /*yield*/, getSigner(TEST_KEEPER_ADDRESS)];
-                case 13:
+                    _b.label = 13;
+                case 13: return [4 /*yield*/, getSigner(TEST_KEEPER_ADDRESS)];
+                case 14:
                     keeperSigner = _b.sent();
                     return [2 /*return*/];
             }

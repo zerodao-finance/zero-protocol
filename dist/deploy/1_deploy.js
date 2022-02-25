@@ -80,7 +80,7 @@ module.exports = function (_a) {
         return __generator(this, function (_p) {
             switch (_p.label) {
                 case 0:
-                    if (!common.isSelectedDeployment(__filename) || process.env.CHAIN === 'ETHEREUM' || process.env.FORKING === 'true')
+                    if (!process.argv.find(function (v) { return v === 'test'; }) && (!common.isSelectedDeployment(__filename) || process.env.CHAIN === 'ETHEREUM' || process.env.FORKING === 'true'))
                         return [2 /*return*/];
                     return [4 /*yield*/, getNamedAccounts()];
                 case 1:

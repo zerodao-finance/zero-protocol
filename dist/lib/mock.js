@@ -244,6 +244,16 @@ var enableGlobalMockRuntime = function () {
                 txHash = ethers_1.ethers.utils.randomBytes(32).toString('base64');
                 mint = new events_1.EventEmitter();
                 deposit = {
+                    _state: {
+                        queryTxResult: {
+                            out: {
+                                amount: ethers_1.ethers.BigNumber.from(this.amount).sub(ethers_1.ethers.utils.parseUnits('0.0015', 8)).toString(),
+                                nhash: ethers_1.ethers.utils.hexlify(ethers_1.ethers.utils.randomBytes(32)),
+                                phash: ethers_1.ethers.utils.hexlify(ethers_1.ethers.utils.randomBytes(32)),
+                                signature: ethers_1.ethers.utils.hexlify(ethers_1.ethers.utils.randomBytes(65))
+                            }
+                        }
+                    },
                     txHash: function () {
                         return __awaiter(this, void 0, void 0, function () {
                             return __generator(this, function (_a) {
