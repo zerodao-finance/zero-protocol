@@ -588,7 +588,7 @@ describe('Zero', () => {
 		if (process.env.CHAIN !== 'ARBITRUM') return;
 		const { signer, controller, btcVault } = await getFixtures();
 		const renbtc = await btcVault.token();
-
+		await btcVault.deposit('400000');
 		await btcVault.earn();
 		console.log('called earn');
 		const module = await ethers.getContract('ArbitrumConvertQuick');

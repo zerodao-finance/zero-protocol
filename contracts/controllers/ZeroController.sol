@@ -5,7 +5,7 @@ pragma solidity >=0.7.0 <0.8.0;
 import {EIP712Upgradeable} from '@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol';
 import {IERC20} from 'oz410/token/ERC20/ERC20.sol';
 import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
-import {IZeroModuleMeta} from '../interfaces/IZeroModuleMeta.sol';
+import {IZeroMeta} from '../interfaces/IZeroMeta.sol';
 import {IZeroModule} from '../interfaces/IZeroModule.sol';
 import {ZeroUnderwriterLock} from '../underwriter/ZeroUnderwriterLock.sol';
 import {ZeroLib} from '../libraries/ZeroLib.sol';
@@ -249,7 +249,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		address asset
 	) internal view returns (uint256 gasUsedInRen) {
 		gasUsedInRen = IConverter(converter).estimate(_gasUsed); //convert txGas from ETH to wBTC
-		gasUsedInRen = IConverter(converters[IStrategy(strategies[asset]).vaultWant()][asset]).estimate(_gasUsed);
+		gasUsedInRen = IConverter(converters[IStrategy(strategies[asset]).vaultWant()][asset]).estimate(gasUsedInRen);
 		// ^convert txGas from wBTC to renBTC
 	}
 
@@ -326,7 +326,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 
 		locals.digest = toMetaTypedDataHash(params, msg.sender);
 		require(ECDSA.recover(locals.digest, signature) == params.from, 'invalid signature');
-		IZeroModuleMeta(module).receiveMeta(from, asset, nonce, data);
+		IZeroMeta(module).receiveMeta(from, asset, nonce, data);
 		address converter = converters[IStrategy(strategies[params.asset]).nativeWrapper()][
 			IStrategy(strategies[params.asset]).vaultWant()
 		];
@@ -339,7 +339,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, locals.gasRefund);
 		// TODO: confirm if this is right
 		locals.balanceBefore = IERC20(params.asset).balanceOf(address(this));
-		IZeroModuleMeta(module).repayMeta(gasValueAndFee);
+		IZeroMeta(module).repayMeta(gasValueAndFee);
 		locals.renBalanceDiff = IERC20(params.asset).balanceOf(address(this)).sub(locals.balanceBefore);
 		require(locals.renBalanceDiff > locals.gasUsedInRen, 'not enough provided for gas');
 		depositAll(params.asset);
