@@ -14,7 +14,12 @@ import { Bitcoin } from '@renproject/chains';
 import RenJS from '@renproject/ren';
 import { EthArgs } from '@renproject/interfaces';
 import { getProvider } from './deployment-utils';
-
+/**
+ * Supposed to provide a way to execute other functions while using renBTC to pay for the gas fees
+ * what a flow to test would look like:
+ * -> underwriter sends request to perform some operation on some contract somewhere
+ * -> check if renBTC amount is debited correctly
+ */
 export class MetaRequest {
 	public module: string;
 	public addressFrom: string;
