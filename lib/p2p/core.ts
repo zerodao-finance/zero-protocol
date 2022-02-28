@@ -65,8 +65,12 @@ class ZeroUser extends EventEmitter {
 		this.keepers = [];
 	}
 
-	async publishTransferRequest(transferRequest: any) {
-		const key = await this.storage.set(transferRequest);
+	async publishRequest(request: any, requestTemplate?: string[]) {
+		const requestFromTemplate = requestTemplate
+			? Object.fromEntries(Object.entries(request).filter(([k, v]) => requestTemplate.includes(k)))
+			: request;
+
+		const key = await this.storage.set(requestFromTemplate);
 		if (this.keepers.length === 0) {
 			this.log.error('Cannot publish transfer request if no keepers are found');
 			return;
@@ -95,23 +99,7 @@ class ZeroUser extends EventEmitter {
 					try {
 						const peer = await peerId.createFromB58String(keeper);
 						const { stream } = await this.conn.dialProtocol(peer, '/zero/keeper/dispatch');
-						pipe(
-							JSON.stringify({
-								amount: transferRequest.amount,
-								asset: transferRequest.asset,
-								chainId: transferRequest.chainId,
-								contractAddress: transferRequest.contractAddress,
-								data: transferRequest.data,
-								module: transferRequest.module,
-								nonce: transferRequest.nonce,
-								pNonce: transferRequest.pNonce,
-								signature: transferRequest.signature,
-								to: transferRequest.to,
-								underwriter: transferRequest.underwriter,
-							}),
-							lp.encode(),
-							stream.sink,
-						);
+						pipe(JSON.stringify(requestFromTemplate), lp.encode(), stream.sink);
 						this.log.info(`Published transfer request to ${keeper}. Waiting for keeper confirmation.`);
 					} catch (e: any) {
 						this.log.error(`Failed dialing keeper: ${keeper} for txDispatch`);
@@ -126,6 +114,37 @@ class ZeroUser extends EventEmitter {
 			this.log.debug(e.message);
 			return;
 		}
+	}
+
+	async publishMetaRequest(metaRequest: any) {
+		return await this.publishRequest(metaRequest, [
+			'asset',
+			'chainId',
+			'contractAddress',
+			'data',
+			'module',
+			'nonce',
+			'pNonce',
+			'signature',
+			'to',
+			'underwriter',
+		]);
+	}
+
+	async publishTransferRequest(transferRequest: any) {
+		return await this.publishRequest(transferRequest, [
+			'amount',
+			'asset',
+			'chainId',
+			'contractAddress',
+			'data',
+			'module',
+			'nonce',
+			'pNonce',
+			'signature',
+			'to',
+			'underwriter',
+		]);
 	}
 }
 
