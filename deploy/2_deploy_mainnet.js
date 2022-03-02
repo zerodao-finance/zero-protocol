@@ -17,8 +17,6 @@ const deployFixedAddress = async (...args) => {
     }
 };
 
-const SIGNER_ADDRESS = "0x0F4ee9631f4be0a63756515141281A3E2B293Bbe";
-
 module.exports = async ({
     getNamedAccounts
 }) => {
@@ -74,25 +72,17 @@ module.exports = async ({
     console.log("\nAllowance:\n");
     console.log(ethers.utils.formatUnits(await zeroToken.allowance(testTreasury.address, zeroDistributor.address), decimals));
 
-    // RentBTC - is this necessary? Probably not
-	/*
-    const RENBTC_HOLDER = "0x9804bbbc49cc2a309e5f2bf66d4ad97c3e0ebd2f";
-    await hre.network.provider.request({ method: 'hardhat_impersonateAccount', params: [RENBTC_HOLDER] });
-    const signer = await ethers.getSigner(RENBTC_HOLDER);
-    */
 
-
-    /* For staking after airdrop complete
+    // Staking
     const masterChef = await deployFixedAddress("MasterChef", {
         contractName: "MasterChef",
         args: [
-            // ZERO _zero,
-            // address _devaddr,
-            // uint256 _zeroPerBlock,
-            // uint256 _startBlock,
-            // uint256 _bonusEndBlock
+            zeroToken.address,
+            testTreasury.address,
+            ethers.utils.parseEther("1000"),
+            ethers.utils.parseEther("1000"),
+            ethers.utils.parseEther("1000")
         ],
         from: deployer
     }) 
-    */
 }
