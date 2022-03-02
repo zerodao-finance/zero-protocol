@@ -41,6 +41,7 @@ module.exports = async ({
     await fs.writeFileSync(path.join(merkleDir, 'airdrop.json'), JSON.stringify(merkleTree, null, 2));
     console.log('wrote merkle tree');
 
+    // Replace all "testTreasury" with mainnet multisigner 
     const [testTreasury] = await ethers.getSigners();
 
     await deployFixedAddress("ZERO", {
@@ -79,9 +80,9 @@ module.exports = async ({
         args: [
             zeroToken.address,
             testTreasury.address,
-            ethers.utils.parseEther("1000"),
-            ethers.utils.parseEther("1000"),
-            ethers.utils.parseEther("1000")
+            ethers.utils.parseEther("1000"), // Should be set by governance
+            ethers.utils.parseEther("1000"), // Should be set by governance
+            ethers.utils.parseEther("1000") // Should be set by governance
         ],
         from: deployer
     }) 
