@@ -1,7 +1,6 @@
 import { Wallet } from '@ethersproject/wallet';
 import { Signer } from '@ethersproject/abstract-signer';
 import { hexlify } from '@ethersproject/bytes';
-import { Contract } from '@ethersproject/contracts';
 import { randomBytes } from '@ethersproject/random';
 import { _TypedDataEncoder } from '@ethersproject/hash';
 import { GatewayAddressInput } from './types';
@@ -195,90 +194,3 @@ export class TransferRequest {
 	}
 }
 
-export class UnderwriterTransferRequest extends TransferRequest {
-	async getController(signer) {
-		console.log('getting controller');
-		const underwriter = this.getUnderwriter(signer);
-		console.log('got underwriter');
-		return new Contract(
-			await underwriter.controller(),
-			[
-				'function fallbackMint(address underwriter, address to, address asset, uint256 amount, uint256 actualAmount, uint256 nonce, address module, bytes32 nHash, bytes data, bytes signature)',
-			],
-			signer,
-		);
-	}
-	async fallbackMint(signer, params = {}) {
-		const controller = await this.getController(signer);
-		const queryTxResult = await this.waitForSignature();
-		console.log(this.destination());
-		return await controller.fallbackMint(
-			this.underwriter,
-			this.destination(),
-			this.asset,
-			this.amount,
-			queryTxResult.amount,
-			this.pNonce,
-			this.module,
-			queryTxResult.nHash,
-			this.data,
-			queryTxResult.signature,
-			params,
-		);
-	}
-	getUnderwriter(signer) {
-		return new Contract(
-			this.underwriter,
-			[
-				'function controller() view returns (address)',
-				'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)',
-				'function loan(address, address, uint256, uint256, address, bytes, bytes)',
-			],
-			signer,
-		);
-	}
-	async loan(signer, params = {}) {
-		const underwriter = this.getUnderwriter(signer);
-		return await underwriter.loan(
-			this.destination(),
-			this.asset,
-			this.amount,
-			this.pNonce,
-			this.module,
-			this.data,
-			this.signature,
-			params,
-		);
-	}
-	async dry(signer, params = {}) {
-		const underwriter = this.getUnderwriter(signer);
-		console.log('about to callstatic');
-		return await underwriter.callStatic.loan(
-			this.destination(),
-			this.asset,
-			this.amount,
-			this.pNonce,
-			this.module,
-			this.data,
-			this.signature,
-			params,
-		);
-	}
-	async repay(signer, params = {}) {
-		const underwriter = this.getUnderwriter(signer);
-		const { amount: actualAmount, nHash, signature } = await this.waitForSignature();
-		return await underwriter.repay(
-			this.underwriter,
-			this.destination(),
-			this.asset,
-			this.amount,
-			actualAmount,
-			this.pNonce,
-			this.module,
-			nHash,
-			this.data,
-			signature,
-			params,
-		);
-	}
-}
