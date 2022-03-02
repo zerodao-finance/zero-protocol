@@ -24,6 +24,34 @@ contract yVaultUpgradeable is ERC20Upgradeable {
 	address public governance;
 	address public controller;
 
+	mapping(address => bool) public whitelist;
+
+	modifier isWhitelisted() {
+		require(whitelist[msg.sender], '!whitelist');
+		_;
+	}
+
+	modifier onlyGovernance() {
+		require(msg.sender == governance);
+		_;
+	}
+
+	function addToWhitelist(address[] calldata entries) external onlyGovernance {
+		for (uint256 i = 0; i < entries.length; i++) {
+			address entry = entries[i];
+			require(entry != address(0));
+
+			whitelist[entry] = true;
+		}
+	}
+
+	function removeFromWhitelist(address[] calldata entries) external onlyGovernance {
+		for (uint256 i = 0; i < entries.length; i++) {
+			address entry = entries[i];
+			whitelist[entry] = false;
+		}
+	}
+
 	function __yVault_init_unchained(
 		address _token,
 		address _controller,
