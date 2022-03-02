@@ -2,7 +2,7 @@ pragma solidity >=0.6.0;
 
 interface IZeroMeta {
 	function receiveMeta(
-		address from,
+		address to,
 		address asset,
 		uint256 nonce,
 		bytes memory data

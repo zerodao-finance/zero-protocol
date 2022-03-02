@@ -335,9 +335,10 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		locals.gasUsed = Math.min(locals.gasAtStart.sub(gasleft()), maxGasLoan);
 		locals.gasUsedInRen = convertGasUsedToRen(locals.gasUsed, converter, params.asset);
 		locals.gasRefund = locals.gasUsed.mul(maxGasPrice);
+		//deduct fee on the gas amount
+		gasValueAndFee = deductFee(locals.gasUsedInRen, params.asset);
 		//loan out gas
 		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, locals.gasRefund);
-		// TODO: confirm if this is right
 		locals.balanceBefore = IERC20(params.asset).balanceOf(address(this));
 		IZeroMeta(module).repayMeta(gasValueAndFee);
 		locals.renBalanceDiff = IERC20(params.asset).balanceOf(address(this)).sub(locals.balanceBefore);

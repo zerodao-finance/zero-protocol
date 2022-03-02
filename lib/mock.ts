@@ -2,35 +2,15 @@ import { UnderwriterTransferRequest, createZeroKeeper, MetaRequest } from './zer
 import { ZeroUser } from './p2p/core';
 import { ethers } from 'ethers';
 import { EventEmitter } from 'events';
+import { UnderwriterMetaRequest } from './UnderwriterRequest';
 const keepers = [];
 
 export const TEST_KEEPER_ADDRESS = '0xec5d65739c722a46cd79951e069753c2fc879b27';
 
 let keeperSigner;
 
-export const createMockKeeper = async (provider) => {
-	const keeper = (createZeroKeeper as any)({ on() {} });
-	provider = provider || new ethers.providers.JsonRpcProvider('http://localhost:8545');
-	keeperSigner = keeperSigner || provider.getSigner(TEST_KEEPER_ADDRESS);
-	keepers.push(keeper);
-	keeper.advertiseAsKeeper = async () => {};
-	keeper.setTxDispatcher = async (fn) => {
-		(keeper as any)._txDispatcher = fn;
-	};
-	keeper.setTxDispatcher(async (request, requestType: 'META' | 'TRANSFER' = 'TRANSFER') => {
-		const trivial = new UnderwriterTransferRequest(request);
-		switch (requestType) {
-			case 'META':
-				break;
-			case 'TRANSFER':
-				try {
-					const loan_result = await trivial.dry(keeperSigner, { from: await keeperSigner.getAddress() });
-					console.log('Loan Result', loan_result);
-				} catch (err) {
-					console.log('ERROR', err);
-				}
-				const mint = await trivial.submitToRenVM(true);
-
+async function waitForMint(trivial: any) {
+	const mint = await trivial.submitToRenVM(true)
 				await new Promise((resolve, reject) =>
 					mint.on('deposit', async (deposit) => {
 						await resolve(deposit);
@@ -56,20 +36,52 @@ export const createMockKeeper = async (provider) => {
 						status.on('status', (status) => console.log('status', status));
 					}),
 				);
-				await trivial.loan(keeperSigner);
+	return mint
+}
+
+export const createMockKeeper = async (provider) => {
+	const keeper = (createZeroKeeper as any)({ on() {} });
+	provider = provider || new ethers.providers.JsonRpcProvider('http://localhost:8545');
+	keeperSigner = keeperSigner || provider.getSigner(TEST_KEEPER_ADDRESS);
+	keepers.push(keeper);
+	keeper.advertiseAsKeeper = async () => {};
+	keeper.setTxDispatcher = async (fn) => {
+		(keeper as any)._txDispatcher = fn;
+	};
+	keeper.setTxDispatcher(async (request, requestType: 'META' | 'TRANSFER' = 'TRANSFER') => {
+		const {trivial, func} = (() => {switch(requestType) {
+			case 'TRANSFER':
+			return {
+				trivial: new UnderwriterTransferRequest(request),
+				func: 'loan'
+			}
+			case 'META':
+			return {
+				trivial: new UnderwriterMetaRequest(request),
+				func: 'meta'
+			}
+		}})()
+				try {
+					const loan_result = await trivial.dry(keeperSigner, { from: await keeperSigner.getAddress() });
+					console.log('Loan Result', loan_result);
+				} catch (err) {
+					console.log('ERROR', err);
+				}
+				const mint = await waitForMint(trivial)
+
+				await trivial[func](keeperSigner);
 
 				trivial.waitForSignature = async () => {
 					await new Promise((resolve) => setTimeout(resolve, 500));
 					return {
-						amount: ethers.BigNumber.from(trivial.amount)
+						//@ts-expect-error
+						amount: requestType == 'TRANSFER' && ethers.BigNumber.from(trivial.amount)
 							.sub(ethers.utils.parseUnits('0.0015', 8))
 							.toString(),
 						nHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
 						signature: ethers.utils.hexlify(ethers.utils.randomBytes(65)),
 					};
 				};
-				break;
-		}
 	});
 };
 
