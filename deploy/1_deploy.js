@@ -3,7 +3,7 @@ const { createGetGasPrice } = require('ethers-polygongastracker');
 const { options } = require('libp2p/src/keychain');
 const validate = require('@openzeppelin/upgrades-core/dist/validate/index');
 Object.defineProperty(validate, 'assertUpgradeSafe', {
-	value: () => {},
+	value: () => { },
 });
 const { Logger } = require('@ethersproject/logger');
 const isLocalhost = !hre.network.config.live;
@@ -95,7 +95,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 
 	//	console.log('done!');
 
-	await deployFixedAddress('BTCVault', {
+	await deployProxyFixedAddress('BTCVault', {
 		contractName: 'BTCVault',
 		args: [deployParameters[network]['renBTC'], zeroController.address, 'zeroBTC', 'zBTC'],
 		from: deployer,
@@ -132,17 +132,17 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 	const module =
 		process.env.CHAIN === 'ARBITRUM'
 			? await deployFixedAddress('ArbitrumConvert', {
-					args: [zeroController.address],
-					contractName: 'ArbitrumConvert',
-					from: deployer,
-			  })
+				args: [zeroController.address],
+				contractName: 'ArbitrumConvert',
+				from: deployer,
+			})
 			: process.env.CHAIN === 'MATIC'
-			? await deployFixedAddress('PolygonConvert', {
+				? await deployFixedAddress('PolygonConvert', {
 					args: [zeroController.address],
 					contractName: 'PolygonConvert',
 					from: deployer,
-			  })
-			: { address: ethers.constants.AddressZero };
+				})
+				: { address: ethers.constants.AddressZero };
 	await controller.approveModule(module.address, true);
 	if (network === 'ARBITRUM') {
 		const quick = await deployFixedAddress('ArbitrumConvertQuick', {
@@ -207,8 +207,8 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 	};
 	/*
   let getWrapperAddress = async () => {
-    getWrapperAddress = _getWrapperAddress;
-    return '0x400779D2e22d4dec04f6043114E88820E115903A';
+	getWrapperAddress = _getWrapperAddress;
+	return '0x400779D2e22d4dec04f6043114E88820E115903A';
   };
   */
 	console.log('CONVERTERS');
