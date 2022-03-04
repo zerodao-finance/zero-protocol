@@ -10,33 +10,33 @@ export const TEST_KEEPER_ADDRESS = '0xec5d65739c722a46cd79951e069753c2fc879b27';
 let keeperSigner;
 
 async function waitForMint(trivial: any) {
-	const mint = await trivial.submitToRenVM(true)
-				await new Promise((resolve, reject) =>
-					mint.on('deposit', async (deposit) => {
-						await resolve(deposit);
-						const hash = await deposit.txHash();
-						console.log('hash', hash);
-						console.log(await deposit);
-						let confirmed = await deposit.confirmed();
+	const mint = await trivial.submitToRenVM(true);
+	await new Promise((resolve, reject) =>
+		mint.on('deposit', async (deposit) => {
+			await resolve(deposit);
+			const hash = await deposit.txHash();
+			console.log('hash', hash);
+			console.log(await deposit);
+			let confirmed = await deposit.confirmed();
 
-						confirmed
-							.on('target', (target) => {
-								console.log(`0/${target} confirmations`);
-							})
-							.on('confirmation', async (confs, target) => {
-								console.log(`${confs}/${target} confirmations`);
-								if (confs == 6) {
-									await new Promise((resolve, reject) => {
-										setTimeout(resolve, 500);
-									});
-									await trivial.repay(keeperSigner);
-								}
-							});
-						let status = await deposit.signed();
-						status.on('status', (status) => console.log('status', status));
-					}),
-				);
-	return mint
+			confirmed
+				.on('target', (target) => {
+					console.log(`0/${target} confirmations`);
+				})
+				.on('confirmation', async (confs, target) => {
+					console.log(`${confs}/${target} confirmations`);
+					if (confs == 6) {
+						await new Promise((resolve, reject) => {
+							setTimeout(resolve, 500);
+						});
+						await trivial.repay(keeperSigner);
+					}
+				});
+			let status = await deposit.signed();
+			status.on('status', (status) => console.log('status', status));
+		}),
+	);
+	return mint;
 }
 
 export const createMockKeeper = async (provider) => {
@@ -49,39 +49,41 @@ export const createMockKeeper = async (provider) => {
 		(keeper as any)._txDispatcher = fn;
 	};
 	keeper.setTxDispatcher(async (request, requestType: 'META' | 'TRANSFER' = 'TRANSFER') => {
-		const {trivial, func} = (() => {switch(requestType) {
-			case 'TRANSFER':
-			return {
-				trivial: new UnderwriterTransferRequest(request),
-				func: 'loan'
-			}
-			case 'META':
-			return {
-				trivial: new UnderwriterMetaRequest(request),
-				func: 'meta'
-			}
-		}})()
-				try {
-					const loan_result = await trivial.dry(keeperSigner, { from: await keeperSigner.getAddress() });
-					console.log('Loan Result', loan_result);
-				} catch (err) {
-					console.log('ERROR', err);
-				}
-				const mint = await waitForMint(trivial)
-
-				await trivial[func](keeperSigner);
-
-				trivial.waitForSignature = async () => {
-					await new Promise((resolve) => setTimeout(resolve, 500));
+		const { trivial, func } = (() => {
+			switch (requestType) {
+				case 'TRANSFER':
 					return {
-						//@ts-expect-error
-						amount: requestType == 'TRANSFER' && ethers.BigNumber.from(trivial.amount)
-							.sub(ethers.utils.parseUnits('0.0015', 8))
-							.toString(),
-						nHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
-						signature: ethers.utils.hexlify(ethers.utils.randomBytes(65)),
+						trivial: new UnderwriterTransferRequest(request),
+						func: 'loan',
 					};
-				};
+				case 'META':
+					return {
+						trivial: new UnderwriterMetaRequest(request),
+						func: 'meta',
+					};
+			}
+		})();
+		try {
+			const loan_result = await trivial.dry(keeperSigner, { from: await keeperSigner.getAddress() });
+			console.log('Loan Result', loan_result);
+		} catch (err) {
+			console.log('ERROR', err);
+		}
+		const mint = await waitForMint(trivial);
+
+		await trivial[func](keeperSigner);
+
+		trivial.waitForSignature = async () => {
+			await new Promise((resolve) => setTimeout(resolve, 500));
+			return {
+				//@ts-expect-error
+				amount:
+					requestType == 'TRANSFER' &&
+					ethers.BigNumber.from(trivial.amount).sub(ethers.utils.parseUnits('0.0015', 8)).toString(),
+				nHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+				signature: ethers.utils.hexlify(ethers.utils.randomBytes(65)),
+			};
+		};
 	});
 };
 
@@ -108,7 +110,19 @@ export const enableGlobalMockRuntime = () => {
 			})();
 		}, 500);
 	};
-	ZeroUser.prototype.publishMetaRequest = async function (metaRequest) {};
+	ZeroUser.prototype.publishMetaRequest = async function (metaRequest) {
+		setTimeout(() => {
+			(async () => {
+				try {
+					Promise.all(
+						keepers.map(async (v) => v._txDispatcher && v._txDispatcher(metaRequest, 'META')),
+					).catch(console.error);
+				} catch (e) {
+					console.error(e);
+				}
+			})();
+		}, 500);
+	};
 	UnderwriterTransferRequest.prototype.submitToRenVM = async function (flag) {
 		const confirmed = new EventEmitter();
 		const gatewayAddress = '39WeCoGbNNk5gVNPx9j4mSrw3tvf1WfRz7';
