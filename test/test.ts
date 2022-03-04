@@ -614,7 +614,7 @@ describe('Zero', () => {
 		await createMockKeeper(signer.provider);
 		enableGlobalMockRuntime();
 		const metaRequest = new MetaRequest({
-			module: await ethers.getContract('ArbitrumConvertQuick'),
+			module: await ethers.getContract('MetaRequest'),
 			underwriter: await ethers.getContract('DelegateUnderwriter'),
 			asset: await btcVault.token(),
 			data: '0x',

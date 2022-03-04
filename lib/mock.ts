@@ -135,6 +135,90 @@ export const enableGlobalMockRuntime = () => {
 		(mint as any).gatewayAddress = gatewayAddress;
 		return mint;
 	};
+	// TODO: work all this out
+  // @ts-expect-error
+	  MetaRequest.prototype.submitMetaRequest = async function (flag) {
+		  // TODO implement confirmed event listener
+		  const _confirm = new EventEmitter();
+		  const target = 6
+		  const timeout = (n) => new Promise((resolve) => setTimeout(resolve, n))
+		  const txHash = (ethers.utils.randomBytes(32).toString as any)('base64');
+
+		  setTimeout(async () => {
+			  _confirm.emit("target", target)
+			  _confirm.emit("confirmation", 0)
+			  _confirm.emit("transactionHash", txHash)
+
+			  for (let i = 1; 1 <= target; i++) {
+				  await timeout(500);
+				  _confirm.emit('confirmation', i, target);
+			  }
+		  }, 3000)
+
+		  const _submitAndRelease = {
+			  async burn(){
+				  return _confirm
+			  },
+
+			  async release(){
+				  const _release = new EventEmitter();
+				  _confirm.on("confirmation", (confs, target) => {
+					  setTimeout(async () => {
+						  const result = await new Promise((resolve) => {
+							  if (confs === target) resolve("done")
+							  if (confs > 0) resolve("confirming")
+							  else resolve("pending")
+						  })
+						  _release.emit("status", result)
+					  }, 100)
+				  })
+				  _confirm.on("transactionHash", (txHash) => {
+					  setTimeout(async () => {
+						  _release.emit("txHash", txHash)
+					  }, 100)
+				  })
+				  return _release
+			  }
+		  }
+
+		  return _submitAndRelease
+	  }
+
+	  MetaRequest.prototype.sign = async function () {
+		  this.signature = ethers.utils.hexlify(ethers.utils.randomBytes(65))
+		  return this.signature
+	  }
+
+
+	//@ts-expect-error
+	  ZeroUser.prototype.publishMetaRequest = async function (_metaRequest) {
+		  setTimeout(() => {
+			  (async () => {
+				  try {
+					  Promise.all(keepers.map(async (v) => v._txDispatch && v._txDispatcher(_metaRequest))).catch(
+						  console.error
+					  )
+				  } catch (e) {
+					  console.error(e)
+				  }
+			  })();
+		  }, 500)
+	  }
+
+
+	  ZeroUser.prototype.publishTransferRequest = async function (transferRequest) {
+		  setTimeout(() => {
+			  (async () => {
+				  try {
+					  Promise.all(keepers.map(async (v) => v._txDispatcher && v._txDispatcher(transferRequest))).catch(
+						  console.error,
+					  );
+				  } catch (e) {
+					  console.error(e);
+				  }
+			  })();
+		  }, 3000);
+	  };
 	/*
 	  (ReleaseRequest as any).prototype.submitReleaseRequest = async function (flag) {
 		  // TODO implement confirmed event listener

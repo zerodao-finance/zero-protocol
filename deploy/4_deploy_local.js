@@ -24,7 +24,10 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 	let arbitraryTokens = ethers.utils.parseUnits('8', 8).toString();
 	const [hardhatSigner] = await hre.ethers.getSigners();
 	console.log('sending eth');
-	await hre.network.provider.send('hardhat_setBalance', [deployParameters[network]['Curve_Ren'], ethers.utils.hexStripZeros(ethers.utils.parseEther('10.0').toHexString())]);
+	await hre.network.provider.send('hardhat_setBalance', [
+		deployParameters[network]['Curve_Ren'],
+		ethers.utils.hexStripZeros(ethers.utils.parseEther('10.0').toHexString()),
+	]);
 	console.log('sent eth');
 
 	//get zeroController contract
@@ -71,7 +74,14 @@ console.log('DONE');
 			libraries: {},
 			from: deployer,
 		});
-		/*const governanceSigner = await getSigner(await controller.governance());
+		const meta = await deployFixedAddress('MetaRequest', {
+			args: [controller.address, ethers.utils.parseUnits('15', 8), '100000'],
+			contractName: 'MetaRequest',
+			libraries: {},
+			from: deployer,
+		});
+		/*
+		const governanceSigner = await getSigner(await controller.governance());
 		await fundWithGas(await governanceSigner.getAddress());
 		await controller.connect(governanceSigner).approveModule(quick.address, true);
 		*/
