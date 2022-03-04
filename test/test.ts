@@ -7,7 +7,7 @@ import BTCVault from '../artifacts/contracts/vaults/BTCVault.sol/BTCVault.json';
 import { Signer } from '@ethersproject/abstract-signer';
 import { Provider } from '@ethersproject/abstract-provider';
 import { Wallet, Contract, providers, utils } from 'ethers';
-
+import { createMockKeeper, enableGlobalMockRuntime } from '../lib/mock';
 //@ts-expect-error
 const { ethers, deployments } = hre;
 const gasnow = require('ethers-gasnow');
@@ -112,10 +112,10 @@ const deployUnderwriter = async () => {
 	const underwriterFactory = await getContractFactory('DelegateUnderwriter', signer);
 	underwriterAddress = (await underwriterFactory.deploy(controller.address)).address;
        */
-        underwriterAddress = (await ethers.getContract('DelegateUnderwriter')).address;
+	underwriterAddress = (await ethers.getContract('DelegateUnderwriter')).address;
 	await renBTC.approve(btcVault.address, ethers.constants.MaxUint256); //let btcVault spend renBTC on behalf of signer
 	await btcVault.approve(controller.address, ethers.constants.MaxUint256); //let controller spend btcVault tokens
-	await mintUnderwriterNFTIfNotMinted();
+	//await mintUnderwriterNFTIfNotMinted();
 };
 
 const mintUnderwriterNFTIfNotMinted = async () => {
@@ -280,12 +280,15 @@ describe('Zero', () => {
 		]);
 		const { gateway } = await getFixtures();
 		await gateway.mint(utils.randomBytes(32), utils.parseUnits('50', 8), utils.randomBytes(32), '0x'); //mint renBTC to signer
+		console.log('minted renBTC to signer');
 		const delegate = await ethers.getContract('DelegateUnderwriter');
 		const controller = await ethers.getContract('ZeroController');
 		const lock = await controller.lockFor(delegate.address);
+		console.log('got lock for delegateUnderwriter');
 		const btcVault = await ethers.getContract('BTCVault');
 		const renbtc = new ethers.Contract(deployParameters[network].renBTC, btcVault.interface, btcVault.signer);
-                await renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
+		console.log('depositing on btcVault');
+		await renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
 		await btcVault.deposit(ethers.utils.parseUnits('10', 8));
 		await btcVault.transfer(lock, btcVault.balanceOf(btcVault.signer.getAddress()));
 	});
@@ -580,28 +583,34 @@ describe('Zero', () => {
 		await getBalances();
 	});
 	it('ArbitrumConvertQuick.sol', async () => {
-          if (process.env.CHAIN !== 'ARBITRUM') return;
-	  const { signer, controller, btcVault } = await getFixtures();
-	  const renbtc = await btcVault.token();
-	  
-	  await btcVault.earn();
-	  console.log('called earn');
-	  const module = await ethers.getContract('ArbitrumConvertQuick');
-	  const underwriter = await ethers.getContract('DelegateUnderwriter');
-	  await underwriterDeposit(utils.parseUnits('0.5', 8).toString());
-	  const transferRequest = new UnderwriterTransferRequest({
-            contractAddress: controller.address,
-	    underwriter: underwriter.address,
-	    module: module.address,
-	    data: ethers.utils.defaultAbiCoder.encode(['uint256'], [ethers.utils.parseEther('1')]),
-	    pNonce: utils.hexlify(utils.randomBytes(32)),
-	    nonce: utils.hexlify(utils.randomBytes(32)),
-	    to: await signer.getAddress(),
-	    asset: renbtc,
-	    amount: utils.parseUnits('0.05', 8)
-	  });
-	  await transferRequest.sign(signer);
-	  const tx = await transferRequest.loan(signer);
-	  console.log(await tx.wait());
+		if (process.env.CHAIN !== 'ARBITRUM') return;
+		const { signer, controller, btcVault } = await getFixtures();
+		const renbtc = await btcVault.token();
+
+		await btcVault.earn();
+		console.log('called earn');
+		const module = await ethers.getContract('ArbitrumConvertQuick');
+		const underwriter = await ethers.getContract('DelegateUnderwriter');
+		await underwriterDeposit(utils.parseUnits('0.5', 8).toString());
+		const transferRequest = new UnderwriterTransferRequest({
+			contractAddress: controller.address,
+			underwriter: underwriter.address,
+			module: module.address,
+			data: ethers.utils.defaultAbiCoder.encode(['uint256'], [ethers.utils.parseEther('1')]),
+			pNonce: utils.hexlify(utils.randomBytes(32)),
+			nonce: utils.hexlify(utils.randomBytes(32)),
+			to: await signer.getAddress(),
+			asset: renbtc,
+			amount: utils.parseUnits('0.05', 8),
+		});
+		await transferRequest.sign(signer);
+		const tx = await transferRequest.loan(signer);
+		console.log(await tx.wait());
+	});
+	it('MetaRequest test: tests basic metarequest stuff', async () => {
+		const [signer] = await ethers.getSigners();
+		await createMockKeeper(signer.provider);
+		enableGlobalMockRuntime();
+		// do stuff with metarequest here
 	});
 });
