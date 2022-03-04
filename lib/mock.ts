@@ -76,9 +76,9 @@ export const createMockKeeper = async (provider) => {
 		trivial.waitForSignature = async () => {
 			await new Promise((resolve) => setTimeout(resolve, 500));
 			return {
-				//@ts-expect-error
 				amount:
 					requestType == 'TRANSFER' &&
+				//@ts-ignore
 					ethers.BigNumber.from(trivial.amount).sub(ethers.utils.parseUnits('0.0015', 8)).toString(),
 				nHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
 				signature: ethers.utils.hexlify(ethers.utils.randomBytes(65)),
@@ -223,7 +223,7 @@ export const enableGlobalMockRuntime = () => {
 		return this.signature;
 	};
 
-	//@ts-expect-error
+	//@ts-ignore
 	ZeroUser.prototype.publishMetaRequest = async function (_metaRequest) {
 		setTimeout(() => {
 			(async () => {

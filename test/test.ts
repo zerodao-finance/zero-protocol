@@ -612,6 +612,7 @@ describe('Zero', () => {
 	it('MetaRequest test: tests basic metarequest stuff', async () => {
 		const { signer, controller, btcVault } = await getFixtures();
 		enableGlobalMockRuntime();
+		createMockKeeper(signer.provider)
 		const metaRequest = new MetaRequest({
 			module: await ethers.getContract('MetaRequest'),
 			underwriter: await ethers.getContract('DelegateUnderwriter'),
@@ -620,6 +621,8 @@ describe('Zero', () => {
 			contractAddress: controller.address,
 			addressFrom: await signer.getAddress(),
 		});
+		//@ts-ignore
+		console.log(metaRequest.publishMeta.toString())
 		// do stuff with metarequest here
 	});
 });
