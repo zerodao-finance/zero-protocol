@@ -74,17 +74,16 @@ console.log('DONE');
 			libraries: {},
 			from: deployer,
 		});
-		const meta = await deployFixedAddress('MetaRequest', {
+		const meta = await deployFixedAddress('MetaExecutor', {
 			args: [controller.address, ethers.utils.parseUnits('15', 8), '100000'],
-			contractName: 'MetaRequest',
+			contractName: 'MetaExecutor',
 			libraries: {},
 			from: deployer,
 		});
-		/*
+
 		const governanceSigner = await getSigner(await controller.governance());
 		await fundWithGas(await governanceSigner.getAddress());
-		await controller.connect(governanceSigner).approveModule(quick.address, true);
-		*/
+		await controller.connect(governanceSigner).approveModule(meta.address, true);
 	}
 
 	const keeperSigner = await getSigner(TEST_KEEPER_ADDRESS);

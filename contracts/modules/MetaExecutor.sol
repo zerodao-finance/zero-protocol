@@ -8,7 +8,7 @@ import {IController} from '../interfaces/IController.sol';
 import {ICurveETHUInt256} from '../interfaces/CurvePools/ICurveETHUInt256.sol';
 import {IRenCrvArbitrum} from '../interfaces/CurvePools/IRenCrvArbitrum.sol';
 
-contract MetaExecutor is IZeroModule {
+contract MetaExecutor is IZeroMeta {
 	using SafeERC20 for *;
 	using SafeMath for *;
 	mapping(uint256 => ArbitrumConvertLib.ConvertRecord) public outstanding;
