@@ -3,7 +3,7 @@ const { createGetGasPrice } = require('ethers-polygongastracker');
 const { options } = require('libp2p/src/keychain');
 const validate = require('@openzeppelin/upgrades-core/dist/validate/index');
 Object.defineProperty(validate, 'assertUpgradeSafe', {
-	value: () => { },
+	value: () => {},
 });
 const { Logger } = require('@ethersproject/logger');
 const isLocalhost = !hre.network.config.live;
@@ -94,11 +94,19 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 	await zeroController.deployTransaction.wait();
 
 	//	console.log('done!');
-
-	await deployProxyFixedAddress('BTCVault', {
+	const btcVaultFactory = await ethers.getContractFactory('BTCVault');
+	const btcVaultArtifact = await hre.artifacts.readArtifact('BTCVault');
+	const btcVault = await deployProxyFixedAddress(btcVaultFactory, [
+		deployParameters[network]['renBTC'],
+		zeroController.address,
+		'zeroBTC',
+		'zBTC',
+	]);
+	await deployments.save('BTCVault', {
 		contractName: 'BTCVault',
-		args: [deployParameters[network]['renBTC'], zeroController.address, 'zeroBTC', 'zBTC'],
-		from: deployer,
+		address: btcVault.address,
+		bytecode: btcVaultArtifact.bytecode,
+		abi: btcVaultArtifact.abi,
 	});
 	const v = await ethers.getContract('BTCVault');
 	await v.attach(deployParameters[network]['renBTC']);
@@ -132,17 +140,17 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 	const module =
 		process.env.CHAIN === 'ARBITRUM'
 			? await deployFixedAddress('ArbitrumConvert', {
-				args: [zeroController.address],
-				contractName: 'ArbitrumConvert',
-				from: deployer,
-			})
+					args: [zeroController.address],
+					contractName: 'ArbitrumConvert',
+					from: deployer,
+			  })
 			: process.env.CHAIN === 'MATIC'
-				? await deployFixedAddress('PolygonConvert', {
+			? await deployFixedAddress('PolygonConvert', {
 					args: [zeroController.address],
 					contractName: 'PolygonConvert',
 					from: deployer,
-				})
-				: { address: ethers.constants.AddressZero };
+			  })
+			: { address: ethers.constants.AddressZero };
 	await controller.approveModule(module.address, true);
 	if (network === 'ARBITRUM') {
 		const quick = await deployFixedAddress('ArbitrumConvertQuick', {
