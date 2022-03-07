@@ -134,6 +134,15 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 	});
 
 	const controller = await ethers.getContract('ZeroController');
+	if (isLocalhost) {
+		const meta = await deployFixedAddress('MetaExecutor', {
+			args: [controller.address, ethers.utils.parseUnits('15', 8), '100000'],
+			contractName: 'MetaExecutor',
+			libraries: {},
+			from: deployer,
+		});
+		await controller.approveModule(meta.address, true);
+	}
 	await controller.mint(delegate.address, deployParameters[network].renBTC);
 	console.log('GOT CONTROLLER');
 

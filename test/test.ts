@@ -616,15 +616,16 @@ describe('Zero', () => {
 		enableGlobalMockRuntime();
 		createMockKeeper(signer.provider)
 		const metaRequest = new MetaRequest({
-			module: await ethers.getContract('MetaRequest'),
-			underwriter: await ethers.getContract('DelegateUnderwriter'),
+			module: (await getContract('MetaExecutor')).address,
+			underwriter: (await ethers.getContract('DelegateUnderwriter')).address,
 			asset: await btcVault.token(),
 			data: '0x',
 			contractAddress: controller.address,
 			addressFrom: await signer.getAddress(),
 		});
+		await metaRequest.dry()
 		//@ts-ignore
-		console.log(metaRequest.publishMeta.toString())
+		// console.log(metaRequest.submitMetaRequest.toString())
 		// do stuff with metarequest here
 	});
 });
