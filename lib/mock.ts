@@ -170,7 +170,7 @@ export const enableGlobalMockRuntime = () => {
 		return mint;
 	};
 	// TODO: work all this out
-	// @ts-expect-error
+	// @ts-ignore
 	MetaRequest.prototype.submitMetaRequest = async function (flag) {
 		// TODO implement confirmed event listener
 		const _confirm = new EventEmitter();
