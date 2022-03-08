@@ -1,5 +1,6 @@
 import * as hre from 'hardhat';
 import { UnderwriterTransferRequest, TransferRequest, MetaRequest } from '../lib/zero';
+import {ZeroUser} from '../lib/p2p/core'
 import { expect } from 'chai';
 import { override } from '../lib/test/inject-mock';
 //@ts-ignore
@@ -623,6 +624,9 @@ describe('Zero', () => {
 			contractAddress: controller.address,
 			addressFrom: await signer.getAddress(),
 		});
+		//@ts-ignore
+		console.log(ZeroUser.prototype)
+		//TODO: write out dryMeta function which staticcalls meta directly
 		//@ts-ignore
 		//await metaRequest.dryMeta();
 		//@ts-ignore
