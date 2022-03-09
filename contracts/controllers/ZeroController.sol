@@ -23,6 +23,7 @@ import {LockForImplLib} from '../libraries/LockForImplLib.sol';
 import {IERC2612Permit} from '../interfaces/IERC2612Permit.sol';
 import '../interfaces/IConverter.sol';
 import '@openzeppelin/contracts/math/Math.sol';
+import 'hardhat/console.sol';
 
 /**
 @title upgradeable contract which determines the authority of a given address to sign off on loans
@@ -232,10 +233,10 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		result = _hashTypedDataV4(
 			keccak256(
 				abi.encode(
-					keccak256('MetaRequest(address asset,address underwriter,address module,uint256 nonce,bytes data)'),
+					keccak256('MetaRequest(address asset,address module,address underwriter,uint256 nonce,bytes data)'),
 					params.asset,
-					underwriter,
 					params.module,
+					underwriter,
 					params.nonce,
 					keccak256(params.data)
 				)
@@ -325,7 +326,12 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		});
 
 		locals.digest = toMetaTypedDataHash(params, msg.sender);
-		require(ECDSA.recover(locals.digest, signature) == params.from, 'invalid signature');
+		address recovered = ECDSA.recover(locals.digest, signature);
+		console.log(msg.sender, asset, module);
+		console.logBytes(data);
+		console.log(nonce);
+		console.log(recovered);
+		require(recovered == params.from, 'invalid signature');
 		IZeroMeta(module).receiveMeta(from, asset, nonce, data);
 		address converter = converters[IStrategy(strategies[params.asset]).nativeWrapper()][
 			IStrategy(strategies[params.asset]).vaultWant()

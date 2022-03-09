@@ -22,16 +22,21 @@ contract DelegateUnderwriter is Ownable {
 	function removeAuthority(address _authority) public onlyOwner {
 		authorized[_authority] = false;
 	}
-        function _initializeAuthorities(address[] memory keepers) internal {
-          for (uint256 i = 0; i < keepers.length; i++) {
-            authorized[keepers[i]] = true;
-          }
-        }
 
-	constructor(address owner, address payable _controller, address[] memory keepers) Ownable() {
+	function _initializeAuthorities(address[] memory keepers) internal {
+		for (uint256 i = 0; i < keepers.length; i++) {
+			authorized[keepers[i]] = true;
+		}
+	}
+
+	constructor(
+		address owner,
+		address payable _controller,
+		address[] memory keepers
+	) Ownable() {
 		controller = _controller;
-                _initializeAuthorities(keepers);
-                transferOwnership(owner);
+		_initializeAuthorities(keepers);
+		transferOwnership(owner);
 	}
 
 	function bubble(bool success, bytes memory response) internal {
@@ -89,6 +94,17 @@ contract DelegateUnderwriter is Ownable {
 			data,
 			signature
 		);
+	}
+
+	function meta(
+		address from,
+		address asset,
+		address module,
+		uint256 nonce,
+		bytes memory data,
+		bytes memory userSignature
+	) public onlyAuthorized {
+		ZeroController(controller).meta(from, asset, module, nonce, data, userSignature);
 	}
 
 	/**

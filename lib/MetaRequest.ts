@@ -149,6 +149,7 @@ export class MetaRequest {
 	toEIP712(contractAddress: string, chainId?: number): EIP712TypedData {
 		this.contractAddress = contractAddress || this.contractAddress;
 		this.chainId = chainId || this.chainId;
+		console.log(this.underwriter);
 		return {
 			types: EIP712_TYPES,
 			domain: {
@@ -158,11 +159,11 @@ export class MetaRequest {
 				verifyingContract: this.contractAddress || ethers.constants.AddressZero,
 			},
 			message: {
-				module: this.module,
 				asset: this.asset,
-				data: this.data,
+				module: this.module,
 				underwriter: this.underwriter,
 				nonce: this.pNonce,
+				data: this.data,
 			},
 			primaryType: 'MetaRequest',
 		};
@@ -176,6 +177,7 @@ export class MetaRequest {
 		const { chainId } = await signer.provider.getNetwork();
 		try {
 			const payload = this.toEIP712(contractAddress, chainId);
+			console.log(payload);
 			delete payload.types.EIP712Domain;
 			return (this.signature = await signer._signTypedData(payload.domain, payload.types, payload.message));
 		} catch (e) {
@@ -186,4 +188,3 @@ export class MetaRequest {
 		}
 	}
 }
-
