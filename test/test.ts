@@ -624,7 +624,7 @@ describe('Zero', () => {
 			contractAddress: controller.address,
 			addressFrom: await signer.getAddress(),
 		});
-		await metaRequest.sign(signer);
+		await metaRequest.sign(signer, controller.address);
 		await metaRequest.dry(signer, {}, 'meta');
 		//@ts-ignore
 		//TODO: write out dryMeta function which staticcalls meta directly

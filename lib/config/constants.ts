@@ -47,26 +47,4 @@ export const EIP712_TYPES = {
 			type: 'bytes',
 		},
 	],
-	MetaRequest: [
-		{
-			name: 'asset',
-			type: 'address',
-		},
-		{
-			name: 'underwriter',
-			type: 'address',
-		},
-		{
-			name: 'module',
-			type: 'address',
-		},
-		{
-			name: 'nonce',
-			type: 'uint256',
-		},
-		{
-			name: 'data',
-			type: 'bytes',
-		},
-	],
 };
