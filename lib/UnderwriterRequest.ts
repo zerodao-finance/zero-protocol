@@ -1,5 +1,5 @@
 import { TransferRequest } from './TransferRequest';
-import {MetaRequest} from './MetaRequest'
+import { MetaRequest } from './MetaRequest';
 import { Contract } from '@ethersproject/contracts';
 
 export class UnderwriterTransferRequest extends TransferRequest {
@@ -62,13 +62,14 @@ export class UnderwriterTransferRequest extends TransferRequest {
 					this.signature,
 				];
 			case 'meta':
-                //@ts-expect-error
+				//@ts-expect-error
 				return [this.addressFrom, this.asset, this.module, this.pNonce, this.data, this.signature];
 		}
 	}
 	async dry(signer, params = {}, func: 'loan' | 'meta' = 'loan') {
 		const underwriter = this.getUnderwriter(signer);
 		console.log('about to callstatic');
+		console.log(this.getFuncParams(func));
 		return await underwriter.callStatic[func](...this.getFuncParams(func), params);
 	}
 	async repay(signer, params = {}) {
@@ -90,17 +91,17 @@ export class UnderwriterTransferRequest extends TransferRequest {
 	}
 }
 
-export class  UnderwriterMetaRequest extends MetaRequest {
-    getFuncParams(...params: any) {
-        return UnderwriterTransferRequest.prototype.getFuncParams.call(this, ...params)
-    }
-    dry(...params: any) {
-        return UnderwriterTransferRequest.prototype.dry.call(this, ...params)
-    }
-    getController(...params: any) {
-        return UnderwriterTransferRequest.prototype.getController.call(this, ...params)
-    }
-    getUnderwriter(...params: any) {
-        return UnderwriterTransferRequest.prototype.getUnderwriter.call(this, ...params)
-    }
+export class UnderwriterMetaRequest extends MetaRequest {
+	getFuncParams(...params: any) {
+		return UnderwriterTransferRequest.prototype.getFuncParams.call(this, ...params);
+	}
+	dry(...params: any) {
+		return UnderwriterTransferRequest.prototype.dry.call(this, ...params);
+	}
+	getController(...params: any) {
+		return UnderwriterTransferRequest.prototype.getController.call(this, ...params);
+	}
+	getUnderwriter(...params: any) {
+		return UnderwriterTransferRequest.prototype.getUnderwriter.call(this, ...params);
+	}
 }

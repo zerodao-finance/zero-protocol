@@ -1,6 +1,6 @@
 import * as hre from 'hardhat';
-import { UnderwriterTransferRequest, TransferRequest, MetaRequest } from '../lib/zero';
-import {ZeroUser} from '../lib/p2p/core'
+import { UnderwriterTransferRequest, TransferRequest, MetaRequest, UnderwriterMetaRequest } from '../lib/zero';
+import { ZeroUser } from '../lib/p2p/core';
 import { expect } from 'chai';
 import { override } from '../lib/test/inject-mock';
 //@ts-ignore
@@ -612,11 +612,11 @@ describe('Zero', () => {
 		const tx = await transferRequest.loan(signer);
 		console.log(await tx.wait());
 	});
-	it('MetaRequest test: tests basic metarequest stuff', async () => {
+	it('MetaRequest test: tests basic metarequest stuff without keepers', async () => {
 		const { signer, controller, btcVault } = await getFixtures();
-		enableGlobalMockRuntime();
-		createMockKeeper(signer.provider);
-		const metaRequest = new MetaRequest({
+		// enableGlobalMockRuntime();
+		// createMockKeeper(signer.provider);
+		const metaRequest = new UnderwriterMetaRequest({
 			module: (await getContract('MetaExecutor')).address,
 			underwriter: (await ethers.getContract('DelegateUnderwriter')).address,
 			asset: await btcVault.token(),
@@ -624,8 +624,9 @@ describe('Zero', () => {
 			contractAddress: controller.address,
 			addressFrom: await signer.getAddress(),
 		});
+		await metaRequest.sign(signer);
+		await metaRequest.dry(signer, {}, 'meta');
 		//@ts-ignore
-		console.log(ZeroUser.prototype)
 		//TODO: write out dryMeta function which staticcalls meta directly
 		//@ts-ignore
 		//await metaRequest.dryMeta();
