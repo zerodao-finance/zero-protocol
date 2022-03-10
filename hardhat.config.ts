@@ -81,6 +81,7 @@ module.exports = {
 				enabled: process.env.FORKING === 'true',
 				url: RPC_ENDPOINTS[process.env.CHAIN || 'ETHEREUM'],
 			},
+			timeout: 160000
 		},
 		avalanche: {
 			url: 'https://api.avax.network/ext/bc/C/rpc',
