@@ -86,7 +86,7 @@ export const enableGlobalMockRuntime = () => {
 					console.error(e);
 				}
 			})();
-		}, 500);
+		}, 10000);
 	};
 	UnderwriterTransferRequest.prototype.submitToRenVM = async function (flag) {
 		const confirmed = new EventEmitter();
@@ -101,7 +101,7 @@ export const enableGlobalMockRuntime = () => {
 			confirmed.emit('target', target);
 			confirmed.emit('confirmation', 0);
 			for (let i = 1; i <= 6; i++) {
-				await timeout(2000);
+				await timeout(3000);
 				confirmed.emit('confirmation', i, target);
 			}
 		}, 100);
@@ -130,7 +130,7 @@ export const enableGlobalMockRuntime = () => {
 		};
 		setTimeout(() => {
 			mint.emit('deposit', deposit);
-		}, 5000);
+		}, 10000);
 		(mint as any).gatewayAddress = gatewayAddress;
 		return mint;
 	};
