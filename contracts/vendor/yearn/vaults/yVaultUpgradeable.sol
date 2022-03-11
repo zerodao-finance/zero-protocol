@@ -58,7 +58,7 @@ contract yVaultUpgradeable is ERC20Upgradeable {
 		string memory _name,
 		string memory _symbol
 	) public initializer {
-		__ERC20_init_unchained(_name, _symbol);
+		__ERC20_init(_name, _symbol);
 		token = IERC20(_token);
 		governance = msg.sender;
 		controller = _controller;
