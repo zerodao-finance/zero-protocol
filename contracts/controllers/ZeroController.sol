@@ -23,6 +23,7 @@ import {LockForImplLib} from '../libraries/LockForImplLib.sol';
 import {IERC2612Permit} from '../interfaces/IERC2612Permit.sol';
 import '../interfaces/IConverter.sol';
 import '@openzeppelin/contracts/math/Math.sol';
+import 'hardhat/console.sol';
 
 /**
 @title upgradeable contract which determines the authority of a given address to sign off on loans
@@ -249,7 +250,9 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		address asset
 	) internal view returns (uint256 gasUsedInRen) {
 		gasUsedInRen = IConverter(converter).estimate(_gasUsed); //convert txGas from ETH to wBTC
+		console.log(_gasUsed, gasUsedInRen);
 		gasUsedInRen = IConverter(converters[IStrategy(strategies[asset]).vaultWant()][asset]).estimate(gasUsedInRen);
+		console.log(gasUsedInRen);
 		// ^convert txGas from wBTC to renBTC
 	}
 
@@ -343,7 +346,8 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		locals.balanceBefore = IERC20(params.asset).balanceOf(address(this));
 		IZeroMeta(module).repayMeta(gasValueAndFee);
 		locals.renBalanceDiff = IERC20(params.asset).balanceOf(address(this)).sub(locals.balanceBefore);
-		require(locals.renBalanceDiff > locals.gasUsedInRen, 'not enough provided for gas');
+		console.log(locals.renBalanceDiff, locals.gasUsedInRen);
+		require(locals.renBalanceDiff >= locals.gasUsedInRen, 'not enough provided for gas');
 		depositAll(params.asset);
 	}
 	/*
