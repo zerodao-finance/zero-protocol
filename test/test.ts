@@ -19,6 +19,8 @@ const deployParameters = require('../lib/fixtures');
 
 const network = process.env.CHAIN || 'MATIC';
 
+//@ts-ignore
+hre.ethers.providers.BaseProvider.prototype.getGasPrice = async () => ethers.utils.parseUnits('100', 9);
 //ethers.providers.BaseProvider.prototype.getGasPrice = gasnow.createGetGasPrice('rapid');
 const USDC_MAINNET_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 
@@ -627,6 +629,21 @@ describe('Zero', () => {
 		});
 		await metaRequest.sign(signer, controller.address);
 		await metaRequest.dry(signer, {}, 'meta');
+	});
+	it('should test metarequest using keepers', async () => {
+		const { signer, controller, btcVault } = await getFixtures();
+		await btcVault.earn();
+		enableGlobalMockRuntime();
+		createMockKeeper(signer.provider);
+		const metaRequest = new UnderwriterMetaRequest({
+			module: (await getContract('MetaExecutor')).address,
+			underwriter: (await ethers.getContract('DelegateUnderwriter')).address,
+			asset: await btcVault.token(),
+			data: '0x',
+			contractAddress: controller.address,
+			addressFrom: await signer.getAddress(),
+		});
+		await metaRequest.sign(signer, controller.address);
 		//@ts-ignore
 		//TODO: write out dryMeta function which staticcalls meta directly
 		//@ts-ignore
