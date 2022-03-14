@@ -1,7 +1,6 @@
 pragma solidity >=0.6.0;
-import './IZeroModule.sol';
 
-interface IZeroModuleMeta is IZeroModule {
+interface IZeroMeta {
 	function receiveMeta(
 		address from,
 		address asset,
