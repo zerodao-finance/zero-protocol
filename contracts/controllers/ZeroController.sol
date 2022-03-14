@@ -249,7 +249,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		address asset
 	) internal view returns (uint256 gasUsedInRen) {
 		gasUsedInRen = IConverter(converter).estimate(_gasUsed); //convert txGas from ETH to wBTC
-		gasUsedInRen = IConverter(converters[IStrategy(strategies[asset]).vaultWant()][asset]).estimate(_gasUsed);
+		gasUsedInRen = IConverter(converters[IStrategy(strategies[asset]).vaultWant()][asset]).estimate(gasUsedInRen);
 		// ^convert txGas from wBTC to renBTC
 	}
 
