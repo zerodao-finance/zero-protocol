@@ -7,7 +7,7 @@ import BTCVault from '../artifacts/contracts/vaults/BTCVault.sol/BTCVault.json';
 import { Signer } from '@ethersproject/abstract-signer';
 import { Provider } from '@ethersproject/abstract-provider';
 import { Wallet, Contract, providers, utils } from 'ethers';
-
+import { createMockKeeper, enableGlobalMockRuntime } from '../lib/mock';
 //@ts-expect-error
 const { ethers, deployments } = hre;
 const gasnow = require('ethers-gasnow');
@@ -115,7 +115,7 @@ const deployUnderwriter = async () => {
 	underwriterAddress = (await ethers.getContract('DelegateUnderwriter')).address;
 	await renBTC.approve(btcVault.address, ethers.constants.MaxUint256); //let btcVault spend renBTC on behalf of signer
 	await btcVault.approve(controller.address, ethers.constants.MaxUint256); //let controller spend btcVault tokens
-	await mintUnderwriterNFTIfNotMinted();
+	//await mintUnderwriterNFTIfNotMinted();
 };
 
 const mintUnderwriterNFTIfNotMinted = async () => {
@@ -280,13 +280,16 @@ describe('Zero', () => {
 		]);
 		const { gateway } = await getFixtures();
 		await gateway.mint(utils.randomBytes(32), utils.parseUnits('50', 8), utils.randomBytes(32), '0x'); //mint renBTC to signer
+		console.log('minted renBTC to signer');
 		const delegate = await ethers.getContract('DelegateUnderwriter');
 		const controller = await ethers.getContract('ZeroController');
 		const lock = await controller.lockFor(delegate.address);
+		console.log('got lock for delegateUnderwriter');
 		const btcVault = await ethers.getContract('BTCVault');
 		const renbtc = new ethers.Contract(deployParameters[network].renBTC, btcVault.interface, btcVault.signer);
 		await renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
 		await btcVault.setMin(25);
+		console.log('depositing on btcVault');
 		await btcVault.deposit(ethers.utils.parseUnits('10', 8));
 		await btcVault.transfer(lock, btcVault.balanceOf(btcVault.signer.getAddress()));
 	});
@@ -605,5 +608,11 @@ describe('Zero', () => {
 		await transferRequest.sign(signer);
 		const tx = await transferRequest.loan(signer);
 		console.log(await tx.wait());
+	});
+	it('MetaRequest test: tests basic metarequest stuff', async () => {
+		const [signer] = await ethers.getSigners();
+		await createMockKeeper(signer.provider);
+		enableGlobalMockRuntime();
+		// do stuff with metarequest here
 	});
 });
