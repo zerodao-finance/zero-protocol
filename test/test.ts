@@ -614,6 +614,7 @@ describe('Zero', () => {
 	});
 	it('MetaRequest test: tests basic metarequest stuff without keepers', async () => {
 		const { signer, controller, btcVault } = await getFixtures();
+		await btcVault.earn();
 		// enableGlobalMockRuntime();
 		// createMockKeeper(signer.provider);
 		const metaRequest = new UnderwriterMetaRequest({
