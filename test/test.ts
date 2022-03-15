@@ -621,6 +621,7 @@ describe('Zero', () => {
 		// createMockKeeper(signer.provider);
 		const metaRequest = new UnderwriterMetaRequest({
 			module: (await getContract('MetaExecutor')).address,
+			to: await signer.getAddress(),
 			underwriter: (await ethers.getContract('DelegateUnderwriter')).address,
 			asset: await btcVault.token(),
 			data: '0x',
@@ -639,6 +640,7 @@ describe('Zero', () => {
 			module: (await getContract('MetaExecutor')).address,
 			underwriter: (await ethers.getContract('DelegateUnderwriter')).address,
 			asset: await btcVault.token(),
+			to: await signer.getAddress(),
 			data: '0x',
 			contractAddress: controller.address,
 			addressFrom: await signer.getAddress(),

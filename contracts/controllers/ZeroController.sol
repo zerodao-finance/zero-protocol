@@ -233,10 +233,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		result = _hashTypedDataV4(
 			keccak256(
 				abi.encode(
-					keccak256(
-						'MetaRequest(address from, address asset,address underwriter,address module,uint256 nonce,bytes data)'
-					),
-					params.from,
+					keccak256('MetaRequest(address asset,address underwriter,address module,uint256 nonce,bytes data)'),
 					params.asset,
 					underwriter,
 					params.module,
@@ -350,7 +347,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		console.log(gasValueAndFee);
 		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, locals.gasRefund);
 		locals.balanceBefore = IERC20(params.asset).balanceOf(address(this));
-		IZeroMeta(module).repayMeta(gasValueAndFee);
+		IZeroMeta(module).repayMeta(address(lockFor(msg.sender)), gasValueAndFee);
 		locals.renBalanceDiff = IERC20(params.asset).balanceOf(address(this)).sub(locals.balanceBefore);
 		console.log(locals.renBalanceDiff, locals.gasUsedInRen);
 		require(locals.renBalanceDiff >= locals.gasUsedInRen, 'not enough provided for gas');

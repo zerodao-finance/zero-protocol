@@ -9,5 +9,5 @@ interface IZeroMeta {
 		bytes memory data
 	) external;
 
-	function repayMeta(uint256 value) external;
+	function repayMeta(address underwriter, uint256 value) external;
 }
