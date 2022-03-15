@@ -644,6 +644,8 @@ describe('Zero', () => {
 			addressFrom: await signer.getAddress(),
 		});
 		await metaRequest.sign(signer, controller.address);
+		const zeroUser = new ZeroUser(undefined);
+		await zeroUser.publishMetaRequest(metaRequest);
 		//@ts-ignore
 		//TODO: write out dryMeta function which staticcalls meta directly
 		//@ts-ignore
