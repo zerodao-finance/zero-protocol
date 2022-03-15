@@ -40,7 +40,7 @@ export class UnderwriterTransferRequest extends TransferRequest {
 				'function controller() view returns (address)',
 				'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)',
 				'function loan(address, address, uint256, uint256, address, bytes, bytes)',
-				'function meta(address, address, address, uint256, bytes, bytes)',
+				'function meta(address, address, address, address, uint256, bytes, bytes)',
 			],
 			signer,
 		);
@@ -63,7 +63,7 @@ export class UnderwriterTransferRequest extends TransferRequest {
 				];
 			case 'meta':
 				//@ts-expect-error
-				return [this.addressFrom, this.asset, this.module, this.pNonce, this.data, this.signature];
+				return [this.to, this.addressFrom, this.asset, this.module, this.pNonce, this.data, this.signature];
 		}
 	}
 	async dry(signer, params = {}, func: 'loan' | 'meta' = 'loan') {

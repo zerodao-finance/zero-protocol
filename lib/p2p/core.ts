@@ -128,6 +128,7 @@ class ZeroUser extends EventEmitter {
 			'signature',
 			'to',
 			'underwriter',
+			'addressFrom',
 		]);
 	}
 
@@ -196,7 +197,13 @@ class ZeroKeeper {
 					string.push(msg.toString());
 				}
 				const transferRequest = JSON.parse(string.join(''));
-				await (this.storage || { async set() { return 0 } }).set(transferRequest);
+				await (
+					this.storage || {
+						async set() {
+							return 0;
+						},
+					}
+				).set(transferRequest);
 				callback(transferRequest);
 			});
 		};

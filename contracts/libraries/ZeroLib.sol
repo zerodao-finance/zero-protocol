@@ -20,6 +20,7 @@ library ZeroLib {
 		bytes data;
 	}
 	struct MetaParams {
+		address to;
 		address from;
 		uint256 nonce;
 		bytes data;

@@ -29,6 +29,7 @@ export class MetaRequest {
 	public pNonce: string;
 	public data: string;
 	public contractAddress: string;
+	public to: string;
 	public chainId: number | string;
 	public signature: string;
 	private _destination: string;
@@ -46,6 +47,7 @@ export class MetaRequest {
 		underwriter: string;
 		asset: string;
 		data: string;
+		to: string;
 		nonce?: BigNumberish;
 		pNonce?: BigNumberish;
 		contractAddress?: string;
@@ -63,6 +65,7 @@ export class MetaRequest {
 		this.chainId = params.chainId;
 		this.contractAddress = params.contractAddress;
 		this.signature = params.signature;
+		this.to = params.to;
 		//this._config =
 		this._ren = new (RenJS as any)('mainnet', { loadCompletedDeposits: true });
 		this._contractFn = 'zeroCall';

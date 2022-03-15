@@ -233,7 +233,10 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		result = _hashTypedDataV4(
 			keccak256(
 				abi.encode(
-					keccak256('MetaRequest(address asset,address underwriter,address module,uint256 nonce,bytes data)'),
+					keccak256(
+						'MetaRequest(address from, address asset,address underwriter,address module,uint256 nonce,bytes data)'
+					),
+					params.from,
 					params.asset,
 					underwriter,
 					params.module,
@@ -309,6 +312,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 	}
 
 	function meta(
+		address to,
 		address from,
 		address asset,
 		address module,
@@ -320,6 +324,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		MetaLocals memory locals;
 		locals.gasAtStart = gasleft();
 		ZeroLib.MetaParams memory params = ZeroLib.MetaParams({
+			to: to,
 			from: from,
 			asset: asset,
 			module: module,
@@ -330,7 +335,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		locals.digest = toMetaTypedDataHash(params, msg.sender);
 		address recovered = ECDSA.recover(locals.digest, signature);
 		require(recovered == params.from, 'invalid signature');
-		IZeroMeta(module).receiveMeta(from, asset, nonce, data);
+		IZeroMeta(module).receiveMeta(to, from, asset, nonce, data);
 		address converter = converters[IStrategy(strategies[params.asset]).nativeWrapper()][
 			IStrategy(strategies[params.asset]).vaultWant()
 		];
