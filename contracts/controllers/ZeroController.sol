@@ -309,7 +309,6 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 	}
 
 	function meta(
-		address to,
 		address from,
 		address asset,
 		address module,
@@ -321,7 +320,6 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		MetaLocals memory locals;
 		locals.gasAtStart = gasleft();
 		ZeroLib.MetaParams memory params = ZeroLib.MetaParams({
-			to: to,
 			from: from,
 			asset: asset,
 			module: module,
@@ -332,7 +330,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		locals.digest = toMetaTypedDataHash(params, msg.sender);
 		address recovered = ECDSA.recover(locals.digest, signature);
 		require(recovered == params.from, 'invalid signature');
-		IZeroMeta(module).receiveMeta(to, from, asset, nonce, data);
+		IZeroMeta(module).receiveMeta(from, asset, nonce, data);
 		address converter = converters[IStrategy(strategies[params.asset]).nativeWrapper()][
 			IStrategy(strategies[params.asset]).vaultWant()
 		];
@@ -347,7 +345,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		console.log(gasValueAndFee);
 		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, locals.gasRefund);
 		locals.balanceBefore = IERC20(params.asset).balanceOf(address(this));
-		IZeroMeta(module).repayMeta(address(lockFor(msg.sender)), gasValueAndFee);
+		IZeroMeta(module).repayMeta(gasValueAndFee);
 		locals.renBalanceDiff = IERC20(params.asset).balanceOf(address(this)).sub(locals.balanceBefore);
 		console.log(locals.renBalanceDiff, locals.gasUsedInRen);
 		require(locals.renBalanceDiff >= locals.gasUsedInRen, 'not enough provided for gas');

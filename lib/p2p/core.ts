@@ -126,7 +126,6 @@ class ZeroUser extends EventEmitter {
 			'nonce',
 			'pNonce',
 			'signature',
-			'to',
 			'underwriter',
 			'addressFrom',
 		]);

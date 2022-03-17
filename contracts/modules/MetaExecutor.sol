@@ -57,7 +57,6 @@ contract MetaExecutor is IZeroMeta {
 
 	function receiveMeta(
 		address from,
-		address to,
 		address asset,
 		uint256 nonce,
 		bytes memory data
@@ -65,7 +64,7 @@ contract MetaExecutor is IZeroMeta {
 		// stuff here
 	}
 
-	function repayMeta(address underwriter, uint256 value) public override onlyController {
+	function repayMeta(uint256 value) public override onlyController {
 		// stuff here
 		IERC20(want).safeTransferFrom(underwriter, controller, value);
 	}
