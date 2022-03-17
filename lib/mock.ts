@@ -39,10 +39,11 @@ async function waitForMint(trivial: any) {
 	return mint;
 }
 
-export const createMockKeeper = async (provider) => {
+export const createMockKeeper = async (provider?: any) => {
 	const keeper = (createZeroKeeper as any)({ on() {} });
 	provider = provider || new ethers.providers.JsonRpcProvider('http://localhost:8545');
 	keeperSigner = keeperSigner || provider.getSigner(TEST_KEEPER_ADDRESS);
+	console.log(await keeperSigner.getAddress());
 	keepers.push(keeper);
 	keeper.advertiseAsKeeper = async () => {};
 	keeper.setTxDispatcher = async (fn) => {
@@ -64,7 +65,11 @@ export const createMockKeeper = async (provider) => {
 			}
 		})();
 		try {
-			const loan_result = await trivial.dry(keeperSigner, { from: await keeperSigner.getAddress() });
+			const loan_result = await trivial.dry(
+				keeperSigner,
+				{ from: await keeperSigner.getAddress() },
+				requestType == 'META' ? 'meta' : 'loan',
+			);
 			console.log('Loan Result', loan_result);
 		} catch (err) {
 			console.log('ERROR', err);
@@ -78,7 +83,7 @@ export const createMockKeeper = async (provider) => {
 			return {
 				amount:
 					requestType == 'TRANSFER' &&
-				//@ts-ignore
+					//@ts-ignore
 					ethers.BigNumber.from(trivial.amount).sub(ethers.utils.parseUnits('0.0015', 8)).toString(),
 				nHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
 				signature: ethers.utils.hexlify(ethers.utils.randomBytes(65)),
@@ -111,17 +116,15 @@ export const enableGlobalMockRuntime = () => {
 		}, 500);
 	};
 	ZeroUser.prototype.publishMetaRequest = async function (metaRequest) {
-		setTimeout(() => {
-			(async () => {
-				try {
-					Promise.all(
-						keepers.map(async (v) => v._txDispatcher && v._txDispatcher(metaRequest, 'META')),
-					).catch(console.error);
-				} catch (e) {
-					console.error(e);
-				}
-			})();
-		}, 500);
+		try {
+			await Promise.all(
+				keepers.map(async (v) => {
+					if (v._txDispatcher) return await v._txDispatcher(metaRequest, 'META');
+				}),
+			).catch(console.error);
+		} catch (e) {
+			console.error(e);
+		}
 	};
 	UnderwriterTransferRequest.prototype.submitToRenVM = async function (flag) {
 		const confirmed = new EventEmitter();

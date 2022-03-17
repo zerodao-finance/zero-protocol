@@ -69,6 +69,7 @@ export class UnderwriterTransferRequest extends TransferRequest {
 	async dry(signer, params = {}, func: 'loan' | 'meta' = 'loan') {
 		const underwriter = this.getUnderwriter(signer);
 		console.log('about to callstatic');
+		console.log(func);
 		return await underwriter.callStatic[func](...this.getFuncParams(func), params);
 	}
 	async repay(signer, params = {}) {

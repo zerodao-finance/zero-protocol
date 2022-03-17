@@ -6,7 +6,4 @@ library ArbitrumConvertLib {
 		uint256 qtyETH;
 		uint256 qty;
 	}
-	struct MetaRecord {
-		;
-	}
 }

@@ -1,8 +1,9 @@
 import * as hre from 'hardhat';
 import { UnderwriterTransferRequest, TransferRequest, MetaRequest, UnderwriterMetaRequest } from '../lib/zero';
-import { ZeroUser } from '../lib/p2p/core';
+import { createZeroConnection, createZeroUser } from '../lib/zero';
 import { expect } from 'chai';
 import { override } from '../lib/test/inject-mock';
+import { EventEmitter } from 'events';
 //@ts-ignore
 import GatewayLogicV1 from '../artifacts/contracts/test/GatewayLogicV1.sol/GatewayLogicV1.json';
 //@ts-ignore
@@ -10,7 +11,7 @@ import BTCVault from '../artifacts/contracts/vaults/BTCVault.sol/BTCVault.json';
 import { Signer } from '@ethersproject/abstract-signer';
 import { Provider } from '@ethersproject/abstract-provider';
 import { Wallet, Contract, providers, utils } from 'ethers';
-import { createMockKeeper, enableGlobalMockRuntime } from '../lib/mock';
+import { createMockKeeper, enableGlobalMockRuntime, TEST_KEEPER_ADDRESS } from '../lib/mock';
 //@ts-expect-error
 const { ethers, deployments } = hre;
 const gasnow = require('ethers-gasnow');
@@ -621,7 +622,6 @@ describe('Zero', () => {
 		// createMockKeeper(signer.provider);
 		const metaRequest = new UnderwriterMetaRequest({
 			module: (await getContract('MetaExecutor')).address,
-			to: await signer.getAddress(),
 			underwriter: (await ethers.getContract('DelegateUnderwriter')).address,
 			asset: await btcVault.token(),
 			data: '0x',
@@ -635,18 +635,26 @@ describe('Zero', () => {
 		const { signer, controller, btcVault } = await getFixtures();
 		await btcVault.earn();
 		enableGlobalMockRuntime();
-		createMockKeeper(signer.provider);
+		//@ts-ignore
+		createMockKeeper();
+		const zeroUser = createZeroUser(
+			await createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'),
+		);
+		const underwriter = await ethers.getContract('DelegateUnderwriter');
+		await underwriter.addAuthority(TEST_KEEPER_ADDRESS);
+		//@ts-ignore
+		await zeroUser.conn.start();
+		await zeroUser.subscribeKeepers();
 		const metaRequest = new UnderwriterMetaRequest({
 			module: (await getContract('MetaExecutor')).address,
-			underwriter: (await ethers.getContract('DelegateUnderwriter')).address,
+			underwriter: underwriter.address,
+			//@ts-ignore
 			asset: await btcVault.token(),
-			to: await signer.getAddress(),
 			data: '0x',
 			contractAddress: controller.address,
 			addressFrom: await signer.getAddress(),
 		});
 		await metaRequest.sign(signer, controller.address);
-		const zeroUser = new ZeroUser(undefined);
 		await zeroUser.publishMetaRequest(metaRequest);
 		//@ts-ignore
 		//TODO: write out dryMeta function which staticcalls meta directly

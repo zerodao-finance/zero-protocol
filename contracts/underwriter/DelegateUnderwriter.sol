@@ -97,7 +97,6 @@ contract DelegateUnderwriter is Ownable {
 	}
 
 	function meta(
-		address to,
 		address from,
 		address asset,
 		address module,
@@ -105,7 +104,7 @@ contract DelegateUnderwriter is Ownable {
 		bytes memory data,
 		bytes memory userSignature
 	) public onlyAuthorized {
-		ZeroController(controller).meta(to, from, asset, module, nonce, data, userSignature);
+		ZeroController(controller).meta(from, asset, module, nonce, data, userSignature);
 	}
 
 	/**
