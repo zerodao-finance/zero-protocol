@@ -173,11 +173,6 @@ export const enableGlobalMockRuntime = () => {
 		return mint;
 	};
 
-	MetaRequest.prototype.sign = async function () {
-		this.signature = ethers.utils.hexlify(ethers.utils.randomBytes(65));
-		return this.signature;
-	};
-
 	/*
 	  (ReleaseRequest as any).prototype.submitReleaseRequest = async function (flag) {
 		  // TODO implement confirmed event listener
