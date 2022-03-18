@@ -66,7 +66,7 @@ contract MetaExecutor is IZeroMeta {
 
 	function repayMeta(uint256 value) public override onlyController {
 		// stuff here
-		// IERC20(want).safeTransferFrom(underwriter, controller, value);
+		IERC20(want).safeTransfer(controller, value);
 	}
 
 	function computeReserveRequirement(uint256 _in) external view returns (uint256) {

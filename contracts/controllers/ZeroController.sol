@@ -327,6 +327,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 			data: data
 		});
 
+		ZeroUnderwriterLock lock = ZeroUnderwriterLock(lockFor(msg.sender));
 		locals.digest = toMetaTypedDataHash(params, msg.sender);
 		address recovered = ECDSA.recover(locals.digest, signature);
 		require(recovered == params.from, 'invalid signature');
@@ -345,6 +346,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		console.log(gasValueAndFee);
 		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, locals.gasRefund);
 		locals.balanceBefore = IERC20(params.asset).balanceOf(address(this));
+		lock.trackIn(gasValueAndFee);
 		IZeroMeta(module).repayMeta(gasValueAndFee);
 		locals.renBalanceDiff = IERC20(params.asset).balanceOf(address(this)).sub(locals.balanceBefore);
 		console.log(locals.renBalanceDiff, locals.gasUsedInRen);
