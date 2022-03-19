@@ -35,4 +35,20 @@ library ZeroLib {
 		uint128 required;
 		uint256 repaid;
 	}
+
+	function splitSignature(bytes memory sign)
+		internal
+		pure
+		returns (
+			bytes32 r,
+			bytes32 s,
+			uint8 v
+		)
+	{
+		assembly {
+			r := mload(add(sign, 0x20))
+			s := mload(add(sign, 0x40))
+			v := byte(0, mload(add(sign, 0x60)))
+		}
+	}
 }

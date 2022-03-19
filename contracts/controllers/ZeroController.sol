@@ -353,25 +353,21 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		require(locals.renBalanceDiff >= locals.gasUsedInRen, 'not enough provided for gas');
 		depositAll(params.asset);
 	}
-	/*
 
 	function burn(
 		address to,
 		address asset,
 		uint256 amount,
 		bytes memory userSignature,
-		uint256 timestamp,
-		uint8 v,
-		bytes32 r,
-		bytes32 s
+		uint256 timestamp
 	) public onlyUnderwriter {
+		(bytes32 r, bytes32 s, uint8 v) = ZeroLib.splitSignature(userSignature);
 		IERC2612Permit(asset).permit(msg.sender, address(this), amount, timestamp, v, r, s);
 		IERC20(asset).transferFrom(msg.sender, address(this));
 
 		uint256 actualAmount = amount.sub(amount.mul(uint256(25e15)).div(1e18)); // DEV check fees
 		address gateway = IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset);
-		require(IERC20(asset).approve( gateway, actualAmount ), "!approve");
+		require(IERC20(asset).approve(gateway, actualAmount), '!approve');
 		IGateway(gateway).burn(to, actualAmount);
 	}
-*/
 }
