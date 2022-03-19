@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.6.0<0.8.0;
+pragma solidity >=0.6.0 <0.8.0;
 
 interface IMintGateway {
 	function mint(
@@ -13,7 +13,7 @@ interface IMintGateway {
 }
 
 interface IBurnGateway {
-	function burn(bytes calldata _to, uint256 _amountScaled) external returns (uint256);
+	function burn(address _to, uint256 _amountScaled) external returns (uint256);
 
 	function burnFee() external view returns (uint256);
 }

@@ -36,6 +36,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 	uint256 internal maxGasPrice = 100e9;
 	uint256 internal maxGasRepay = 250000;
 	uint256 internal maxGasLoan = 500000;
+	uint256 internal maxGasBurn = 500000;
 	string internal constant UNDERWRITER_LOCK_IMPLEMENTATION_ID = 'zero.underwriter.lock-implementation';
 	address internal underwriterLockImpl;
 	mapping(bytes32 => ZeroLib.LoanStatus) public loanStatus;
@@ -244,11 +245,10 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		);
 	}
 
-	function convertGasUsedToRen(
-		uint256 _gasUsed,
-		address converter,
-		address asset
-	) internal view returns (uint256 gasUsedInRen) {
+	function convertGasUsedToRen(uint256 _gasUsed, address asset) internal view returns (uint256 gasUsedInRen) {
+		address converter = converters[IStrategy(strategies[asset]).nativeWrapper()][
+			IStrategy(strategies[asset]).vaultWant()
+		];
 		gasUsedInRen = IConverter(converter).estimate(_gasUsed); //convert txGas from ETH to wBTC
 		console.log(_gasUsed, gasUsedInRen);
 		gasUsedInRen = IConverter(converters[IStrategy(strategies[asset]).vaultWant()][asset]).estimate(gasUsedInRen);
@@ -283,10 +283,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 
 		ZeroUnderwriterLock(lockFor(msg.sender)).trackOut(params.module, actual);
 		uint256 _txGas = maxGasPrice.mul(maxGasRepay.add(maxGasLoan));
-		address converter = converters[IStrategy(strategies[params.asset]).nativeWrapper()][
-			IStrategy(strategies[params.asset]).vaultWant()
-		];
-		_txGas = convertGasUsedToRen(_txGas, converter, params.asset);
+		_txGas = convertGasUsedToRen(_txGas, params.asset);
 		// ^convert txGas from ETH to renBTC
 		uint256 _amountSent = IStrategy(strategies[params.asset]).permissionedSend(
 			module,
@@ -339,7 +336,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		//calculate gas used
 		locals.gasUsed = Math.min(locals.gasAtStart.sub(gasleft()), maxGasLoan);
 		locals.gasRefund = locals.gasUsed.mul(maxGasPrice);
-		locals.gasUsedInRen = convertGasUsedToRen(locals.gasRefund, converter, params.asset);
+		locals.gasUsedInRen = convertGasUsedToRen(locals.gasRefund, params.asset);
 		//deduct fee on the gas amount
 		gasValueAndFee = deductFee(locals.gasUsedInRen, params.asset);
 		//loan out gas
@@ -363,11 +360,14 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 	) public onlyUnderwriter {
 		(bytes32 r, bytes32 s, uint8 v) = ZeroLib.splitSignature(userSignature);
 		IERC2612Permit(asset).permit(msg.sender, address(this), amount, timestamp, v, r, s);
-		IERC20(asset).transferFrom(msg.sender, address(this));
-
-		uint256 actualAmount = amount.sub(amount.mul(uint256(25e15)).div(1e18)); // DEV check fees
-		address gateway = IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset);
-		require(IERC20(asset).approve(gateway, actualAmount), '!approve');
-		IGateway(gateway).burn(to, actualAmount);
+		IERC20(asset).transferFrom(msg.sender, address(this), amount);
+		uint256 gasUsed = maxGasPrice.mul(maxGasRepay.add(maxGasBurn));
+		IStrategy(strategies[asset]).permissionedEther(tx.origin, gasUsed);
+		uint256 gasInRen = convertGasUsedToRen(gasUsed, asset);
+		uint256 actualAmount = deductFee(amount.sub(gasInRen), asset);
+		IGateway gateway = IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset);
+		require(IERC20(asset).approve(address(gateway), actualAmount), '!approve');
+		gateway.burn(to, actualAmount);
+		depositAll(asset);
 	}
 }
