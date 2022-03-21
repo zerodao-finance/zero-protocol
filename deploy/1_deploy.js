@@ -42,7 +42,7 @@ const network = process.env.CHAIN || 'MATIC';
 const common = require('./common');
 
 module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) => {
-	if (!common.isSelectedDeployment(__filename) || process.env.CHAIN === 'ETHEREUM' || process.env.FORKING === 'true')
+	if (!common.isSelectedDeployment(__filename) || process.env.CHAIN === 'ETHEREUM')// || process.env.FORKING === 'true')
 		return;
 	const { deployer } = await getNamedAccounts(); //used as governance address
 	const [ethersSigner] = await ethers.getSigners();
@@ -89,6 +89,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 		bytecode: zeroControllerArtifact.bytecode,
 		abi: zeroControllerArtifact.abi,
 	});
+	const { address: zeroControllerAddress } = zeroController;
 
 	console.log('waiting on proxy deploy to mine ...');
 	await zeroController.deployTransaction.wait();
@@ -154,12 +155,13 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 	await controller.approveModule(module.address, true);
 	if (network === 'ARBITRUM') {
 		const quick = await deployFixedAddress('ArbitrumConvertQuick', {
-			args: [controller.address, ethers.utils.parseUnits('15', 8), '100000'],
+			args: [zeroControllerAddress, ethers.utils.parseUnits('15', 8), '100000'],
 			contractName: 'ArbitrumConvertQuick',
 			libraries: {},
 			from: deployer,
 		});
 		await controller.approveModule(quick.address, true);
+		console.log('ArbitrumConvertQuick.sol: approved');
 	}
 	// await controller.approveModule(module.address, true);
 	const strategyRenVM = await deployments.deploy(network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : 'StrategyRenVM', {

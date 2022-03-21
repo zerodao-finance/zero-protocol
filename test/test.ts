@@ -590,6 +590,7 @@ describe('Zero', () => {
 		console.log('called earn');
 		const module = await ethers.getContract('ArbitrumConvertQuick');
 		const underwriter = await ethers.getContract('DelegateUnderwriter');
+		await controller.approveModule(module.address, true);
 		await underwriterDeposit(utils.parseUnits('0.5', 8).toString());
 		const transferRequest = new UnderwriterTransferRequest({
 			contractAddress: controller.address,

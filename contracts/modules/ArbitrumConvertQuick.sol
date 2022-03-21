@@ -19,6 +19,7 @@ contract ArbitrumConvertQuick {
 	address public constant renCrvArbitrum = 0x3E01dD8a5E1fb3481F0F589056b428Fc308AF0Fb;
 	address public constant tricryptoArbitrum = 0x960ea3e3C7FB317332d990873d354E18d7645590;
         uint256 public capacity;
+        uint256 public underwriterFee;
         struct ConvertRecord {
           uint128 volume;
           uint128 when;
@@ -36,11 +37,16 @@ contract ArbitrumConvertQuick {
           require(msg.sender == governance(), "!governance");
           blockTimeout = _amount;
         }
+        function setFee(uint256 _underwriterFee) public {
+          require(msg.sender == IController(controller).governance(), "!governance");
+          underwriterFee = _underwriterFee;
+        }
 
 	constructor(address _controller, uint256 _capacity, uint256 _blockTimeout) {
 		controller = _controller;
                 capacity = _capacity;
                 blockTimeout = _blockTimeout;
+                underwriterFee = uint256(1e15);
 		IERC20(want).safeApprove(renCrvArbitrum, ~uint256(0) >> 2);
 		IERC20(wbtc).safeApprove(tricryptoArbitrum, ~uint256(0) >> 2);
 	}
@@ -52,8 +58,11 @@ contract ArbitrumConvertQuick {
 		uint256 _nonce,
 		bytes memory _data
 	) public onlyController {
+                uint256 _fee = underwriterFee.mul(_actual).div(uint256(1 ether));
 		uint256 ratio = abi.decode(_data, (uint256));
-		(uint256 amountSwappedETH, uint256 amountSwappedBTC) = swapTokens(_actual, ratio);
+		(uint256 amountSwappedETH, uint256 amountSwappedBTC) = swapTokens(_actual.sub(_fee), ratio);
+                
+                IERC20(want).safeTransfer(msg.sender, _fee);
 		IERC20(want).safeTransfer(_to, amountSwappedBTC);
 		address payable to = address(uint160(_to));
 		to.transfer(amountSwappedETH);
