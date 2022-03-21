@@ -50,13 +50,15 @@ export const createMockKeeper = async (provider?: any) => {
 		(keeper as any)._txDispatcher = fn;
 	};
 	keeper.setTxDispatcher(async (request, requestType: 'META' | 'TRANSFER' | 'BURN' = 'TRANSFER') => {
-		const { trivial, func } = (() => {
+		//@ts-ignore
+		const {
+			trivial,
+			func,
+		}: {
+			trivial: UnderwriterTransferRequest | UnderwriterMetaRequest | UnderwriterBurnRequest;
+			func: 'meta' | 'burn' | 'loan';
+		} = (() => {
 			switch (requestType) {
-				case 'TRANSFER':
-					return {
-						trivial: new UnderwriterTransferRequest(request),
-						func: 'loan',
-					};
 				case 'META':
 					return {
 						trivial: new UnderwriterMetaRequest(request),
@@ -67,20 +69,21 @@ export const createMockKeeper = async (provider?: any) => {
 						trivial: new UnderwriterBurnRequest(request),
 						func: 'burn',
 					};
+				default:
+					return {
+						trivial: new UnderwriterTransferRequest(request),
+						func: 'loan',
+					};
 			}
 		})();
 		try {
-			const loan_result = await trivial.dry(
-				keeperSigner,
-				{ from: await keeperSigner.getAddress() },
-				requestType == 'META' ? 'meta' : 'loan',
-			);
+			const loan_result = await trivial.dry(keeperSigner, { from: await keeperSigner.getAddress() }, func);
 			console.log('Loan Result', loan_result);
 		} catch (err) {
 			console.log('ERROR', err);
 		}
-		const mint = await waitForMint(trivial);
-
+		if (requestType == 'TRANSFER') await waitForMint(trivial);
+		console.log(trivial[func], trivial, func);
 		await trivial[func](keeperSigner);
 
 		trivial.waitForSignature = async () => {

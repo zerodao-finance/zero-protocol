@@ -109,6 +109,10 @@ export class UnderwriterMetaRequest extends MetaRequest {
 	getUnderwriter(...params: any) {
 		return UnderwriterTransferRequest.prototype.getUnderwriter.call(this, ...params);
 	}
+	async meta(signer, params = {}) {
+		const underwriter = this.getUnderwriter(signer);
+		return await underwriter.meta(...this.getFuncParams('meta'), params);
+	}
 }
 
 export class UnderwriterBurnRequest extends BurnRequest {
@@ -123,5 +127,9 @@ export class UnderwriterBurnRequest extends BurnRequest {
 	}
 	getUnderwriter(...params: any) {
 		return UnderwriterTransferRequest.prototype.getUnderwriter.call(this, ...params);
+	}
+	async burn(signer, params = {}) {
+		const underwriter = this.getUnderwriter(signer);
+		return await underwriter.burn(...this.getFuncParams('burn'), params);
 	}
 }

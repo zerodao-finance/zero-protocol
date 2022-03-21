@@ -23,9 +23,25 @@ export const RENVM_PROVIDERS = {
 	Ethereum,
 };
 
+// very band-aid solution - needs to be changed later
+export function getChainKey(chain) {
+	switch (chain) {
+		case 'MATIC':
+			return 'Polygon';
+		case 'MAINNET':
+			return 'Ethereum';
+		case 'ARBITRUM':
+			return 'Arbitrum';
+	}
+}
+
 export const getProvider = (transferRequest) => {
-	const chain = Object.entries(CONTROLLER_DEPLOYMENTS).find(([k, v]) => transferRequest.contractAddress === v);
-	const chain_key = chain[0];
+	const chain = process.env.CHAIN
+		? Object.entries(CONTROLLER_DEPLOYMENTS).find(([k, v]) => {
+				return transferRequest.contractAddress.toLowerCase() === v.toLowerCase();
+		  })
+		: 'none';
+	const chain_key = process.env.CHAIN ? getChainKey(process.env.CHAIN) : chain[0];
 	return RENVM_PROVIDERS[chain_key](new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]), 'mainnet');
 };
 

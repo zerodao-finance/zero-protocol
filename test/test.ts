@@ -633,11 +633,12 @@ describe('Zero', () => {
 		await metaRequest.dry(signer, {}, 'meta');
 	});
 	it('should test metarequest using keepers', async () => {
-		const { signer, controller, btcVault } = await getFixtures();
+		const { signer, controller, btcVault, renBTC } = await getFixtures();
 		await btcVault.earn();
 		enableGlobalMockRuntime();
 		//@ts-ignore
 		createMockKeeper();
+		await renBTC.transfer((await getContract('MetaExecutor')).address, '10000');
 		const zeroUser = createZeroUser(
 			await createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'),
 		);
