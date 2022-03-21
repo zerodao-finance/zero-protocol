@@ -7,6 +7,7 @@ import {SafeERC20} from 'oz410/token/ERC20/SafeERC20.sol';
 import {IController} from '../interfaces/IController.sol';
 import {ICurveETHUInt256} from '../interfaces/CurvePools/ICurveETHUInt256.sol';
 import {IRenCrvArbitrum} from '../interfaces/CurvePools/IRenCrvArbitrum.sol';
+import 'hardhat/console.sol';
 
 contract MetaExecutor is IZeroMeta {
 	using SafeERC20 for *;
@@ -66,7 +67,9 @@ contract MetaExecutor is IZeroMeta {
 
 	function repayMeta(uint256 value) public override onlyController {
 		// stuff here
+		console.log(IERC20(want).balanceOf(address(this)));
 		IERC20(want).safeTransfer(controller, value);
+		console.log(want, value);
 	}
 
 	function computeReserveRequirement(uint256 _in) external view returns (uint256) {

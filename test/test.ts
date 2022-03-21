@@ -616,7 +616,8 @@ describe('Zero', () => {
 		console.log(await tx.wait());
 	});
 	it('MetaRequest test: tests basic metarequest stuff without keepers', async () => {
-		const { signer, controller, btcVault } = await getFixtures();
+		const { signer, controller, btcVault, renBTC } = await getFixtures();
+		await renBTC.transfer((await getContract('MetaExecutor')).address, '10000');
 		await btcVault.earn();
 		// enableGlobalMockRuntime();
 		// createMockKeeper(signer.provider);

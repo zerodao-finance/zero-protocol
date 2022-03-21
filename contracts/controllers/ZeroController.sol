@@ -79,6 +79,10 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		result = _amount.mul(uint256(1 ether).sub(fee)).div(uint256(1 ether)).sub(baseFeeByAsset[_asset]);
 	}
 
+	function addFee(uint256 _amount, address _asset) internal view returns (uint256 result) {
+		result = _amount.mul(uint256(1 ether).add(fee)).div(uint256(1 ether)).add(baseFeeByAsset[_asset]);
+	}
+
 	function initialize(address _rewards, address _gatewayRegistry) public {
 		__Ownable_init_unchained();
 		__Controller_init_unchained(_rewards);
@@ -250,9 +254,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 			IStrategy(strategies[asset]).vaultWant()
 		];
 		gasUsedInRen = IConverter(converter).estimate(_gasUsed); //convert txGas from ETH to wBTC
-		console.log(_gasUsed, gasUsedInRen);
 		gasUsedInRen = IConverter(converters[IStrategy(strategies[asset]).vaultWant()][asset]).estimate(gasUsedInRen);
-		console.log(gasUsedInRen);
 		// ^convert txGas from wBTC to renBTC
 	}
 
@@ -338,15 +340,16 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		locals.gasRefund = locals.gasUsed.mul(maxGasPrice);
 		locals.gasUsedInRen = convertGasUsedToRen(locals.gasRefund, params.asset);
 		//deduct fee on the gas amount
-		gasValueAndFee = deductFee(locals.gasUsedInRen, params.asset);
+		gasValueAndFee = addFee(locals.gasUsedInRen, params.asset);
 		//loan out gas
-		console.log(gasValueAndFee);
+		console.log(asset);
 		IStrategy(strategies[params.asset]).permissionedEther(tx.origin, locals.gasRefund);
 		locals.balanceBefore = IERC20(params.asset).balanceOf(address(this));
+		console.log(locals.balanceBefore);
 		lock.trackIn(gasValueAndFee);
 		IZeroMeta(module).repayMeta(gasValueAndFee);
 		locals.renBalanceDiff = IERC20(params.asset).balanceOf(address(this)).sub(locals.balanceBefore);
-		console.log(locals.renBalanceDiff, locals.gasUsedInRen);
+		console.log(IERC20(params.asset).balanceOf(address(this)));
 		require(locals.renBalanceDiff >= locals.gasUsedInRen, 'not enough provided for gas');
 		depositAll(params.asset);
 	}
