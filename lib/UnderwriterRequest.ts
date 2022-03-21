@@ -1,4 +1,5 @@
 import { TransferRequest } from './TransferRequest';
+import { BurnRequest } from './BurnRequest';
 import { MetaRequest } from './MetaRequest';
 import { Contract } from '@ethersproject/contracts';
 
@@ -41,6 +42,7 @@ export class UnderwriterTransferRequest extends TransferRequest {
 				'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)',
 				'function loan(address, address, uint256, uint256, address, bytes, bytes)',
 				'function meta(address, address, address, uint256, bytes, bytes)',
+				'function burn(address, address, uint256, bytes, uint256)',
 			],
 			signer,
 		);
@@ -49,7 +51,7 @@ export class UnderwriterTransferRequest extends TransferRequest {
 		const underwriter = this.getUnderwriter(signer);
 		return await underwriter.loan(...this.getFuncParams('loan'), params);
 	}
-	getFuncParams(func: 'loan' | 'meta') {
+	getFuncParams(func: 'loan' | 'meta' | 'burn') {
 		switch (func) {
 			case 'loan':
 				return [
@@ -62,11 +64,14 @@ export class UnderwriterTransferRequest extends TransferRequest {
 					this.signature,
 				];
 			case 'meta':
-				//@ts-expect-error
+				//@ts-ignore
 				return [this.addressFrom, this.asset, this.module, this.pNonce, this.data, this.signature];
+			case 'burn':
+				//@ts-ignore
+				return [this.owner, this.asset, this.amount, this.signature, this.deadline];
 		}
 	}
-	async dry(signer, params = {}, func: 'loan' | 'meta' = 'loan') {
+	async dry(signer, params = {}, func: 'loan' | 'meta' | 'burn' = 'loan') {
 		const underwriter = this.getUnderwriter(signer);
 		console.log('about to callstatic');
 		console.log(this.getFuncParams(func));
@@ -92,6 +97,21 @@ export class UnderwriterTransferRequest extends TransferRequest {
 }
 
 export class UnderwriterMetaRequest extends MetaRequest {
+	getFuncParams(...params: any) {
+		return UnderwriterTransferRequest.prototype.getFuncParams.call(this, ...params);
+	}
+	dry(...params: any) {
+		return UnderwriterTransferRequest.prototype.dry.call(this, ...params);
+	}
+	getController(...params: any) {
+		return UnderwriterTransferRequest.prototype.getController.call(this, ...params);
+	}
+	getUnderwriter(...params: any) {
+		return UnderwriterTransferRequest.prototype.getUnderwriter.call(this, ...params);
+	}
+}
+
+export class UnderwriterBurnRequest extends BurnRequest {
 	getFuncParams(...params: any) {
 		return UnderwriterTransferRequest.prototype.getFuncParams.call(this, ...params);
 	}

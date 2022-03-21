@@ -2,7 +2,7 @@ import { UnderwriterTransferRequest, createZeroKeeper, MetaRequest } from './zer
 import { ZeroUser } from './p2p/core';
 import { ethers } from 'ethers';
 import { EventEmitter } from 'events';
-import { UnderwriterMetaRequest } from './UnderwriterRequest';
+import { UnderwriterMetaRequest, UnderwriterBurnRequest } from './UnderwriterRequest';
 const keepers = [];
 
 export const TEST_KEEPER_ADDRESS = '0xec5d65739c722a46cd79951e069753c2fc879b27';
@@ -49,7 +49,7 @@ export const createMockKeeper = async (provider?: any) => {
 	keeper.setTxDispatcher = async (fn) => {
 		(keeper as any)._txDispatcher = fn;
 	};
-	keeper.setTxDispatcher(async (request, requestType: 'META' | 'TRANSFER' = 'TRANSFER') => {
+	keeper.setTxDispatcher(async (request, requestType: 'META' | 'TRANSFER' | 'BURN' = 'TRANSFER') => {
 		const { trivial, func } = (() => {
 			switch (requestType) {
 				case 'TRANSFER':
@@ -61,6 +61,11 @@ export const createMockKeeper = async (provider?: any) => {
 					return {
 						trivial: new UnderwriterMetaRequest(request),
 						func: 'meta',
+					};
+				case 'BURN':
+					return {
+						trivial: new UnderwriterBurnRequest(request),
+						func: 'burn',
 					};
 			}
 		})();
@@ -120,6 +125,17 @@ export const enableGlobalMockRuntime = () => {
 			await Promise.all(
 				keepers.map(async (v) => {
 					if (v._txDispatcher) return await v._txDispatcher(metaRequest, 'META');
+				}),
+			).catch(console.error);
+		} catch (e) {
+			console.error(e);
+		}
+	};
+	ZeroUser.prototype.publishBurnRequest = async function (burnRequest) {
+		try {
+			await Promise.all(
+				keepers.map(async (v) => {
+					if (v._txDispatcher) return await v._txDispatcher(burnRequest, 'BURN');
 				}),
 			).catch(console.error);
 		} catch (e) {

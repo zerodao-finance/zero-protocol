@@ -65,14 +65,14 @@ class ZeroUser extends EventEmitter {
 		this.keepers = [];
 	}
 
-	async publishRequest(request: any, requestTemplate?: string[]) {
+	async publishRequest(request: any, requestTemplate?: string[], requestType: string = 'transfer') {
 		const requestFromTemplate = requestTemplate
 			? Object.fromEntries(Object.entries(request).filter(([k, v]) => requestTemplate.includes(k)))
 			: request;
 
 		const key = await this.storage.set(requestFromTemplate);
 		if (this.keepers.length === 0) {
-			this.log.error('Cannot publish transfer request if no keepers are found');
+			this.log.error(`Cannot publish ${requestType} request if no keepers are found`);
 			return;
 		}
 		try {
@@ -116,19 +116,43 @@ class ZeroUser extends EventEmitter {
 		}
 	}
 
+	async publishBurnRequest(burnRequest: any) {
+		return await this.publishRequest(
+			burnRequest,
+			[
+				'asset',
+				'chainId',
+				'contractAddress',
+				'data',
+				'module',
+				'nonce',
+				'pNonce',
+				'signature',
+				'underwriter',
+				'owner',
+				'amount',
+				'deadline',
+			],
+			'burn',
+		);
+	}
 	async publishMetaRequest(metaRequest: any) {
-		return await this.publishRequest(metaRequest, [
-			'asset',
-			'chainId',
-			'contractAddress',
-			'data',
-			'module',
-			'nonce',
-			'pNonce',
-			'signature',
-			'underwriter',
-			'addressFrom',
-		]);
+		return await this.publishRequest(
+			metaRequest,
+			[
+				'asset',
+				'chainId',
+				'contractAddress',
+				'data',
+				'module',
+				'nonce',
+				'pNonce',
+				'signature',
+				'underwriter',
+				'addressFrom',
+			],
+			'meta',
+		);
 	}
 
 	async publishTransferRequest(transferRequest: any) {
