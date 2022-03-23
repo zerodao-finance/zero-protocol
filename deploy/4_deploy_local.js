@@ -18,7 +18,7 @@ const SIGNER_ADDRESS = '0x0F4ee9631f4be0a63756515141281A3E2B293Bbe';
 //
 
 module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) => {
-	if (!process.env.FORKING || process.env.CHAIN === 'ETHEREUM') return;
+	if (!process.env.FORKING || process.env.CHAIN === 'ETHEREUM' ||  process.env.DEPLOYARBITRUMQUICKCONVERT) return;
 
 	// set an arbitrary amount of tokens to send
 	// get abi
