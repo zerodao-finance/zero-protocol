@@ -1,5 +1,10 @@
 import * as hre from 'hardhat';
-import { UnderwriterTransferRequest, TransferRequest, MetaRequest, UnderwriterMetaRequest } from '../lib/zero';
+import {
+	UnderwriterTransferRequest,
+	TransferRequest,
+	UnderwriterBurnRequest,
+	UnderwriterMetaRequest,
+} from '../lib/zero';
 import { createZeroConnection, createZeroUser } from '../lib/zero';
 import { expect } from 'chai';
 import { override } from '../lib/test/inject-mock';
@@ -659,5 +664,22 @@ describe('Zero', () => {
 		await metaRequest.sign(signer, controller.address);
 		await zeroUser.publishMetaRequest(metaRequest);
 	});
-	it('should test burn request', async () => {});
+	it('should test burn request', async () => {
+		const { signer, controller, btcVault, renBTC, zeroUser } = await getFixtures();
+
+		await btcVault.earn();
+		const underwriter = await ethers.getContract('DelegateUnderwriter');
+		await underwriter.addAuthority(TEST_KEEPER_ADDRESS);
+		//@ts-ignore
+		await zeroUser.conn.start();
+		await zeroUser.subscribeKeepers();
+		const burnRequest = new UnderwriterBurnRequest({
+			amount: '0',
+			asset: await btcVault.token(),
+			deadline: +new Date() + 10000,
+			owner: await signer.getAddress(),
+			underwriter: underwriter.address,
+			contractAddress: controller.address,
+		});
+	});
 });

@@ -20,7 +20,6 @@ import { getProvider } from './deployment-utils';
  * -> check if renBTC amount is debited correctly
  */
 export class BurnRequest {
-	public module: string;
 	public owner: string;
 	public amount: string;
 	public underwriter: string;
@@ -43,12 +42,10 @@ export class BurnRequest {
 	public assetName: string;
 
 	constructor(params: {
-		module: string;
 		owner: string;
 		underwriter: string;
 		asset: string;
 		amount: string;
-		data: string;
 		deadline: number;
 		nonce?: BigNumberish;
 		pNonce?: BigNumberish;
@@ -56,7 +53,6 @@ export class BurnRequest {
 		chainId?: number;
 		signature?: string;
 	}) {
-		this.module = params.module;
 		this.owner = params.owner;
 		this.underwriter = params.underwriter;
 		this.asset = params.asset;
@@ -68,7 +64,6 @@ export class BurnRequest {
 		this.deadline = params.deadline;
 		this.contractAddress = params.contractAddress;
 		this.signature = params.signature;
-		this.data = params.data;
 		//this._config =
 		//
 		this._ren = new (RenJS as any)('mainnet', { loadCompletedDeposits: true });
@@ -87,12 +82,12 @@ export class BurnRequest {
 			{
 				name: 'module',
 				type: 'address',
-				value: this.module,
+				value: ethers.constants.AddressZero,
 			},
 			{
 				name: 'data',
 				type: 'bytes',
-				value: this.data,
+				value: '0x',
 			},
 		];
 	}
