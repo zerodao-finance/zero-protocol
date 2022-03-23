@@ -681,5 +681,7 @@ describe('Zero', () => {
 			underwriter: underwriter.address,
 			contractAddress: controller.address,
 		});
+		await burnRequest.sign(signer, controller.address);
+		await zeroUser.publishBurnRequest(burnRequest);
 	});
 });

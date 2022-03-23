@@ -42,7 +42,7 @@ export class UnderwriterTransferRequest extends TransferRequest {
 				'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)',
 				'function loan(address, address, uint256, uint256, address, bytes, bytes)',
 				'function meta(address, address, address, uint256, bytes, bytes)',
-				'function burn(address, address, uint256, bytes, uint256)',
+				'function burn(address, address, uint256, uint256, bytes, uint256)',
 			],
 			signer,
 		);
@@ -68,7 +68,7 @@ export class UnderwriterTransferRequest extends TransferRequest {
 				return [this.addressFrom, this.asset, this.module, this.pNonce, this.data, this.signature];
 			case 'burn':
 				//@ts-ignore
-				return [this.owner, this.asset, this.amount, this.signature, this.deadline];
+				return [this.owner, this.asset, this.amount, this.pNonce, this.signature, this.deadline];
 		}
 	}
 	async dry(signer, params = {}, func: 'loan' | 'meta' | 'burn' = 'loan') {

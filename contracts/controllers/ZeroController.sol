@@ -358,6 +358,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		address to,
 		address asset,
 		uint256 amount,
+		uint256 nonce,
 		bytes memory userSignature,
 		uint256 timestamp
 	) public onlyUnderwriter {

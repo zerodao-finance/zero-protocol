@@ -70,6 +70,17 @@ contract DelegateUnderwriter is Ownable {
 		ZeroController(controller).loan(to, asset, amount, nonce, module, data, userSignature);
 	}
 
+	function burn(
+		address to,
+		address asset,
+		uint256 amount,
+		uint256 nonce,
+		bytes memory userSignature,
+		uint256 timestamp
+	) public onlyAuthorized {
+		ZeroController(controller).burn(to, asset, amount, nonce, userSignature, timestamp);
+	}
+
 	function repay(
 		address underwriter,
 		address to,
