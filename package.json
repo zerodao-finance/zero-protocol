@@ -95,7 +95,7 @@
 		"bitcore-lib": "^8.25.10",
 		"bluebird": "^3.7.2",
 		"eip712-helpers": "^1.0.2",
-		"ethers": "^5.4.7",
+		"ethers": "^5.6.1",
 		"gun": "^0.2020.1232",
 		"hardhat-deploy-ethers": "^0.3.0-beta.13",
 		"is-browser": "^2.1.0",
