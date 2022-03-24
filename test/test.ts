@@ -154,9 +154,6 @@ const getFixtures = async () => {
 	const { abi: erc20abi } = await deployments.getArtifact('BTCVault');
 	const { chainId } = await controller.provider.getNetwork();
 
-	enableGlobalMockRuntime();
-	//@ts-ignore
-	createMockKeeper();
 	return {
 		signer: signer,
 		signerAddress: await signer.getAddress(),
@@ -186,9 +183,6 @@ const getFixtures = async () => {
 		//@ts-ignore
 		wBTC: new Contract(deployParameters[network]['wBTC'], erc20abi, signer),
 		yvWBTC: await getContract('DummyVault', signer),
-		zeroUser: createZeroUser(
-			await createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'),
-		),
 	};
 };
 
@@ -644,7 +638,14 @@ describe('Zero', () => {
 		await metaRequest.dry(signer, {}, 'meta');
 	});
 	it('MetaKeepers: should test metarequest using keepers', async () => {
-		const { signer, controller, btcVault, renBTC, zeroUser } = await getFixtures();
+		const { signer, controller, btcVault, renBTC } = await getFixtures();
+		enableGlobalMockRuntime();
+		//@ts-ignore
+		createMockKeeper();
+		const zeroUser = createZeroUser(
+			await createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'),
+		);
+
 		await btcVault.earn();
 		await renBTC.transfer((await getContract('MetaExecutor')).address, '10000');
 		const underwriter = await ethers.getContract('DelegateUnderwriter');
@@ -665,8 +666,14 @@ describe('Zero', () => {
 		await zeroUser.publishMetaRequest(metaRequest);
 	});
 	it('should test burn request', async () => {
-		const { signer, controller, btcVault, renBTC, zeroUser } = await getFixtures();
+		const { signer, controller, btcVault, renBTC } = await getFixtures();
 
+		enableGlobalMockRuntime();
+		//@ts-ignore
+		createMockKeeper();
+		const zeroUser = createZeroUser(
+			await createZeroConnection('/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/'),
+		);
 		await btcVault.earn();
 		const underwriter = await ethers.getContract('DelegateUnderwriter');
 		await underwriter.addAuthority(TEST_KEEPER_ADDRESS);

@@ -178,7 +178,6 @@ export class BurnRequest {
 						type: 'uint256',
 					},
 				],
-				EIP712Domain: EIP712_TYPES.EIP712Domain,
 			},
 			domain: {
 				name: this.assetName,

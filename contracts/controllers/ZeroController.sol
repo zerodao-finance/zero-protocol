@@ -364,10 +364,9 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		uint8 v,
 		uint256 timestamp
 	) public onlyUnderwriter {
-		console.log(block.timestamp <= timestamp);
-		IERC2612Permit(asset).permit(msg.sender, address(this), amount, timestamp, v, r, s);
+		IERC2612Permit(asset).permit(to, address(this), amount, timestamp, v, r, s);
 		console.log('permitted');
-		IERC20(asset).transferFrom(msg.sender, address(this), amount);
+		IERC20(asset).transferFrom(to, address(this), amount);
 		uint256 gasUsed = maxGasPrice.mul(maxGasRepay.add(maxGasBurn));
 		IStrategy(strategies[asset]).permissionedEther(tx.origin, gasUsed);
 		uint256 gasInRen = convertGasUsedToRen(gasUsed, asset);
