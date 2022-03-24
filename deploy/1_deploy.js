@@ -42,12 +42,14 @@ const network = process.env.CHAIN || 'MATIC';
 const common = require('./common');
 
 module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) => {
-	
-	if (!process.argv.find((v) => v === 'test') && (!common.isSelectedDeployment(__filename) || process.env.CHAIN === 'ETHEREUM' || process.env.FORKING === 'true'))
+	if (!process.argv.find((v) => v === 'test') && (!common.isSelectedDeployment(__filename) || 
+		process.env.CHAIN === 'ETHEREUM' || process.env.FORKING === 'true') || process.env.DEPLOYARBITRUMQUICKCONVERT)
 		return;
+
 	const { deployer } = await getNamedAccounts(); //used as governance address
 	const [ethersSigner] = await ethers.getSigners();
 	const { provider } = ethersSigner;
+
 	//  provider.getGasPrice = createGetGasPrice('standard')
 	if (Number(ethers.utils.formatEther(await provider.getBalance(deployer))) === 0)
 		await ethersSigner.sendTransaction({
