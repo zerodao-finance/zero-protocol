@@ -37,7 +37,7 @@ exports.getSigner = async (address) => {
 exports.fundWithGas = async (address) => {
 	if (!process.env.FORKING || hre.network.name !== 'hardhat') return;
 	const [signer] = await hre.ethers.getSigners();
-	const balance = Number(hre.ethers.utils.formatEther(await signer.provider.getBalance(await signer.getAddress())));
+	const balance = Number(hre.ethers.utils.formatEther(await signer.provider.getBalance(address)));
 	if (balance < 0.1) {
 		await signer.sendTransaction({
 			to: address,

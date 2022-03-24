@@ -13,6 +13,7 @@ import { Bitcoin } from '@renproject/chains';
 import RenJS from '@renproject/ren';
 import { EthArgs } from '@renproject/interfaces';
 import { getProvider } from './deployment-utils';
+import { EIP712_TYPES } from './config/constants';
 /**
  * Supposed to provide a way to execute other functions while using renBTC to pay for the gas fees
  * what a flow to test would look like:
@@ -40,6 +41,7 @@ export class BurnRequest {
 	public _mint: any;
 	public keeper: any;
 	public assetName: string;
+	public tokenNonce: string;
 
 	constructor(params: {
 		owner: string;
@@ -176,6 +178,7 @@ export class BurnRequest {
 						type: 'uint256',
 					},
 				],
+				EIP712Domain: EIP712_TYPES.EIP712Domain,
 			},
 			domain: {
 				name: this.assetName,
@@ -185,9 +188,9 @@ export class BurnRequest {
 			},
 			message: {
 				owner: this.owner,
-				spender: this.underwriter,
+				spender: contractAddress,
 				value: this.amount,
-				nonce: this.pNonce,
+				nonce: this.tokenNonce,
 				deadline: this.deadline,
 			},
 			primaryType: 'Permit',
@@ -200,12 +203,13 @@ export class BurnRequest {
 	async sign(signer: Wallet & Signer, contractAddress?: string): Promise<string> {
 		const provider = signer.provider as ethers.providers.JsonRpcProvider;
 		const { chainId } = await signer.provider.getNetwork();
-
-		this.assetName = await new ethers.Contract(
+		const token = new ethers.Contract(
 			this.asset,
-			['function name() view returns (string)'],
+			['function name() view returns (string)', 'function nonces(address) view returns (uint256)'],
 			signer.provider,
-		).name();
+		);
+		this.assetName = await token.name();
+		this.tokenNonce = (await token.nonces(await signer.getAddress())).toString();
 		try {
 			const payload = this.toEIP712(contractAddress, chainId);
 			console.log(payload);
