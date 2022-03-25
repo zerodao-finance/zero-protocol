@@ -682,7 +682,7 @@ describe('Zero', () => {
 			owner: await signer.getAddress(),
 			amount: '10000000',
 			asset: await btcVault.token(),
-			deadline: Math.floor((+new Date() + 10000) / 1000),
+			deadline: Math.floor(+new Date() / 1000) + 60*10,
 			underwriter: underwriter.address,
 			contractAddress: controller.address,
 			destination: ethers.utils.hexlify(ethers.utils.randomBytes(32))

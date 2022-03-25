@@ -58,6 +58,7 @@ export const createMockKeeper = async (provider?: any) => {
 			trivial: UnderwriterTransferRequest | UnderwriterMetaRequest | UnderwriterBurnRequest;
 			func: 'meta' | 'burn' | 'loan';
 		} = (() => {
+			console.log('requestType', requestType);
 			switch (requestType) {
 				case 'META':
 					return {
@@ -77,6 +78,7 @@ export const createMockKeeper = async (provider?: any) => {
 			}
 		})();
 		try {
+			console.log('dry');
 			const loan_result = await trivial.dry(keeperSigner, { from: await keeperSigner.getAddress() }, func);
 			console.log('Loan Result', loan_result);
 		} catch (err) {

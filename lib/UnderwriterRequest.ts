@@ -43,7 +43,7 @@ export class UnderwriterTransferRequest extends TransferRequest {
 				'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)',
 				'function loan(address, address, uint256, uint256, address, bytes, bytes)',
 				'function meta(address, address, address, uint256, bytes, bytes)',
-				'function burn(address, address, uint256, uint256, bytes32, bytes32, uint8, uint256, bytes)',
+				'function burn(address, address, uint256, uint256, bytes, bytes)'
 			],
 			signer,
 		);
