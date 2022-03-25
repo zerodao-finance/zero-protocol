@@ -52,7 +52,7 @@ if (!process.env.CHAIN_ID && process.env.CHAIN === 'MATIC')
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'ETHEREUM')
     process.env.CHAIN_ID = '1';
 var RPC_ENDPOINTS = {
-    ARBITRUM: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+    ARBITRUM: 'https://arb1.arbitrum.io/rpc',
     MATIC: 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
     ETHEREUM: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2'
 };

@@ -2,6 +2,7 @@ const hre = require('hardhat');
 const { ethers, deployments } = hre;
 const deployParameters = require('../lib/fixtures');
 const { TEST_KEEPER_ADDRESS } = require('../lib/mock');
+const linker = require('solc/linker')
 
 const { fundWithGas, deployFixedAddress, getSigner, getContract } = require('./common');
 const network = process.env.CHAIN || 'MATIC';
@@ -17,7 +18,7 @@ const SIGNER_ADDRESS = '0x0F4ee9631f4be0a63756515141281A3E2B293Bbe';
 //
 
 module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) => {
-	if (!process.env.FORKING || process.env.CHAIN === 'ETHEREUM') return;
+	if (!process.env.FORKING || process.env.CHAIN === 'ETHEREUM' ||  process.env.DEPLOYARBITRUMQUICKCONVERT) return;
 
 	// set an arbitrary amount of tokens to send
 	// get abi
@@ -63,6 +64,7 @@ console.log('DONE');
 
 	const [deployerSigner] = await hre.ethers.getSigners();
 	const deployer = await deployerSigner.getAddress();
+	await deployments.deploy('ZeroDistributor', { contractName: 'ZeroDistributor', args: [ethers.constants.AddressZero, ethers.constants.AddressZero, ethers.utils.hexlify(ethers.utils.randomBytes(32)) ], libraries: {}, from: deployer });
 	if (process.env.CHAIN === 'ARBITRUM') {
 		const controller = await getContract('ZeroController');
 		const quick = await deployFixedAddress('ArbitrumConvertQuick', {
@@ -71,10 +73,11 @@ console.log('DONE');
 			libraries: {},
 			from: deployer,
 		});
-		/*const governanceSigner = await getSigner(await controller.governance());
-		await fundWithGas(await governanceSigner.getAddress());
-		await controller.connect(governanceSigner).approveModule(quick.address, true);
-		*/
+		const code = await deployerSigner.provider.getCode(controller.address);
+		await hre.network.provider.send('hardhat_setCode', [controller.address, ((require('../artifacts/contracts/test/ZeroControllerTest.sol/ZeroControllerTest').deployedBytecode)) ])
+		await controller.approveModule(quick.address, true);
+		await hre.network.provider.send('hardhat_setCode', [controller.address, code]);
+		console.log('approved');
 	}
 
 	const keeperSigner = await getSigner(TEST_KEEPER_ADDRESS);
