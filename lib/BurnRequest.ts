@@ -30,6 +30,7 @@ export class BurnRequest {
 	public pNonce: string;
 	public data: string;
 	public contractAddress: string;
+	public btcTo: string;
 	public chainId: number | string;
 	public signature: string;
 	private _destination: string;
@@ -49,6 +50,7 @@ export class BurnRequest {
 		asset: string;
 		amount: string;
 		deadline: number;
+		btcTo: string;
 		nonce?: BigNumberish;
 		pNonce?: BigNumberish;
 		contractAddress?: string;
@@ -66,6 +68,7 @@ export class BurnRequest {
 		this.deadline = params.deadline;
 		this.contractAddress = params.contractAddress;
 		this.signature = params.signature;
+		this.btcTo = params.btcTo
 		//this._config =
 		//
 		this._ren = new (RenJS as any)('mainnet', { loadCompletedDeposits: true });
@@ -158,7 +161,7 @@ export class BurnRequest {
 			types: {
 				Permit: [
 					{
-						name: 'owner',
+						name: 'holder',
 						type: 'address',
 					},
 					{
@@ -166,16 +169,16 @@ export class BurnRequest {
 						type: 'address',
 					},
 					{
-						name: 'value',
-						type: 'uint256',
-					},
-					{
 						name: 'nonce',
 						type: 'uint256',
 					},
 					{
-						name: 'deadline',
+						name: 'expiry',
 						type: 'uint256',
+					},
+					{
+						name: 'allowed',
+						type: 'bool',
 					},
 				],
 			},
@@ -186,11 +189,11 @@ export class BurnRequest {
 				verifyingContract: this.asset || ethers.constants.AddressZero,
 			},
 			message: {
-				owner: this.owner,
+				holder: this.owner,
 				spender: contractAddress,
-				value: this.amount,
+				expiry: this.deadline,
 				nonce: this.tokenNonce,
-				deadline: this.deadline,
+				allowed: 'true'
 			},
 			primaryType: 'Permit',
 		};

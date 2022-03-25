@@ -22,10 +22,11 @@ interface IERC2612Permit {
 	 * section].
 	 */
 	function permit(
-		address owner,
+		address holder,
 		address spender,
-		uint256 amount,
-		uint256 deadline,
+		uint256 nonce,
+		uint256 expiry,
+		bool allowed,
 		uint8 v,
 		bytes32 r,
 		bytes32 s

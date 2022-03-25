@@ -43,7 +43,7 @@ export class UnderwriterTransferRequest extends TransferRequest {
 				'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)',
 				'function loan(address, address, uint256, uint256, address, bytes, bytes)',
 				'function meta(address, address, address, uint256, bytes, bytes)',
-				'function burn(address, address, uint256, uint256, bytes32, bytes32, uint8, uint256)',
+				'function burn(address, address, uint256, uint256, bytes32, bytes32, uint8, uint256, bytes)',
 			],
 			signer,
 		);
@@ -70,13 +70,12 @@ export class UnderwriterTransferRequest extends TransferRequest {
 			case 'burn':
 				const sign = splitSignature(this.signature)
 				//@ts-ignore
-				return [this.owner, this.asset, this.amount, this.pNonce, sign.r, sign.s, sign.v, this.deadline];
+				return [this.owner, this.asset, this.amount, this.pNonce, sign.r, sign.s, sign.v, this.deadline, this.btcTo];
 		}
 	}
 	async dry(signer, params = {}, func: 'loan' | 'meta' | 'burn' = 'loan') {
 		const underwriter = this.getUnderwriter(signer);
 		console.log('about to callstatic');
-		console.log(this.getFuncParams(func));
 		return await underwriter.callStatic[func](...this.getFuncParams(func), params);
 	}
 	async repay(signer, params = {}) {

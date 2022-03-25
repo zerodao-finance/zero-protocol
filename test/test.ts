@@ -651,7 +651,6 @@ describe('Zero', () => {
 		const underwriter = await ethers.getContract('DelegateUnderwriter');
 		await underwriter.addAuthority(TEST_KEEPER_ADDRESS);
 		//@ts-ignore
-		await zeroUser.conn.start();
 		await zeroUser.subscribeKeepers();
 		const metaRequest = new UnderwriterMetaRequest({
 			module: (await getContract('MetaExecutor')).address,
@@ -678,15 +677,15 @@ describe('Zero', () => {
 		const underwriter = await ethers.getContract('DelegateUnderwriter');
 		await underwriter.addAuthority(TEST_KEEPER_ADDRESS);
 		//@ts-ignore
-		await zeroUser.conn.start();
 		await zeroUser.subscribeKeepers();
 		const burnRequest = new UnderwriterBurnRequest({
-			amount: '100',
+			amount: '10000000',
 			asset: await btcVault.token(),
 			deadline: Math.floor((+new Date() + 10000) / 1000),
 			owner: await signer.getAddress(),
 			underwriter: underwriter.address,
 			contractAddress: controller.address,
+			btcTo: ethers.utils.hexlify(ethers.utils.randomBytes(32))
 		});
 		await burnRequest.sign(signer, controller.address);
 		await zeroUser.publishBurnRequest(burnRequest);

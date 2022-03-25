@@ -358,18 +358,6 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		depositAll(params.asset);
 	}
 
-	struct BurnLocals {
-		bytes32 typeHash;
-		bytes32 name;
-		bytes32 version;
-		bytes32 signatureHash;
-		bytes32 domainSeparator;
-		bytes32 structHash;
-		bytes32 permitHash;
-		bytes32 hash;
-		address signer;
-	}
-
 	function burn(
 		address to,
 		address asset,
@@ -378,24 +366,13 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		bytes32 r,
 		bytes32 s,
 		uint8 v,
-		uint256 timestamp
+		uint256 timestamp,
+		bytes memory _to
 	) public onlyUnderwriter {
-		BurnLocals memory locals;
-		locals.typeHash = keccak256(
-			'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
-		);
-		locals.name = keccak256(bytes('renBTC'));
-		locals.version = keccak256(bytes('1'));
-		locals.domainSeparator = keccak256(abi.encode(locals.typeHash, locals.name, locals.version, 42161, asset));
-		locals.permitHash = keccak256(
-			'Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)'
-		);
-		locals.structHash = keccak256(abi.encode(locals.permitHash, to, address(this), amount, 0, timestamp));
-		locals.hash = _typedDataHash(locals.domainSeparator, locals.structHash);
-		locals.signer = ECDSA.recover(locals.hash, v, r, s);
-		console.log(locals.signer);
-		IERC2612Permit(asset).permit(to, address(this), amount, timestamp, v, r, s);
-		console.log('permitted');
+		uint256 allowance = IERC20(asset).allowance(to, address(this));
+		if (allowance < amount) {
+			IERC2612Permit(asset).permit(to, address(this), IERC2612Permit(asset).nonces(to), timestamp, true, v, r, s);
+		}
 		IERC20(asset).transferFrom(to, address(this), amount);
 		uint256 gasUsed = maxGasPrice.mul(maxGasRepay.add(maxGasBurn));
 		IStrategy(strategies[asset]).permissionedEther(tx.origin, gasUsed);
@@ -403,7 +380,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		uint256 actualAmount = deductFee(amount.sub(gasInRen), asset);
 		IGateway gateway = IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset);
 		require(IERC20(asset).approve(address(gateway), actualAmount), '!approve');
-		gateway.burn(to, actualAmount);
+		gateway.burn(_to, actualAmount);
 		depositAll(asset);
 	}
 }

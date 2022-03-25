@@ -13,7 +13,7 @@ interface IMintGateway {
 }
 
 interface IBurnGateway {
-	function burn(address _to, uint256 _amountScaled) external returns (uint256);
+	function burn(bytes memory _to, uint256 _amountScaled) external returns (uint256);
 
 	function burnFee() external view returns (uint256);
 }
