@@ -74,14 +74,11 @@ contract DelegateUnderwriter is Ownable {
 		address to,
 		address asset,
 		uint256 amount,
-		uint256 nonce,
-		bytes32 r,
-		bytes32 s,
-		uint8 v,
-		uint256 timestamp,
-		bytes memory btcTo
+		uint256 deadline,
+		bytes memory destination,
+		bytes memory signature
 	) public onlyAuthorized {
-		ZeroController(controller).burn(to, asset, amount, nonce, r, s, v, timestamp, btcTo);
+		ZeroController(controller).burn(to, asset, amount, deadline, destination, signature);
 	}
 
 	function repay(

@@ -102,7 +102,7 @@ export class UnderwriterMetaRequest extends MetaRequest {
 		return UnderwriterTransferRequest.prototype.getFuncParams.call(this, ...params);
 	}
 	dry(...params: any) {
-		return UnderwriterTransferRequest.prototype.dry.call(this, ...params);
+return [];//		return UnderwriterTransferRequest.prototype.dry.call(this, ...params);
 	}
 	getController(...params: any) {
 		return UnderwriterTransferRequest.prototype.getController.call(this, ...params);
@@ -118,10 +118,10 @@ export class UnderwriterMetaRequest extends MetaRequest {
 
 export class UnderwriterBurnRequest extends BurnRequest {
 	getFuncParams(...params: any) {
-		return UnderwriterTransferRequest.prototype.getFuncParams.call(this, ...params);
+		return [ this.owner, this.asset, this.amount, this.deadline, this.destination, this.signature ];
 	}
 	dry(...params: any) {
-		return UnderwriterTransferRequest.prototype.dry.call(this, ...params);
+		return []; //return UnderwriterTransferRequest.prototype.dry.call(this, ...params);
 	}
 	getController(...params: any) {
 		return UnderwriterTransferRequest.prototype.getController.call(this, ...params);
@@ -131,6 +131,6 @@ export class UnderwriterBurnRequest extends BurnRequest {
 	}
 	async burn(signer, params = {}) {
 		const underwriter = this.getUnderwriter(signer);
-		return await underwriter.burn(...this.getFuncParams('burn'), params);
+		return await underwriter.burn(this.owner, this.asset, this.amount, this.deadline, this.destination, this.signature, params);
 	}
 }

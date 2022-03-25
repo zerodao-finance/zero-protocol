@@ -14,6 +14,7 @@ import {ControllerUpgradeable} from './ControllerUpgradeable.sol';
 import {EIP712} from 'oz410/drafts/EIP712.sol';
 import {ECDSA} from 'oz410/cryptography/ECDSA.sol';
 import {FactoryLib} from '../libraries/factory/FactoryLib.sol';
+import { SplitSignatureLib } from "../libraries/SplitSignatureLib.sol";
 import {ZeroUnderwriterLockBytecodeLib} from '../libraries/bytecode/ZeroUnderwriterLockBytecodeLib.sol';
 import {IGateway} from '../interfaces/IGateway.sol';
 import {IGatewayRegistry} from '../interfaces/IGatewayRegistry.sol';
@@ -47,6 +48,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		keccak256('RenVMBorrowMessage(address module,uint256 amount,address underwriter,uint256 pNonce,bytes pData)');
 	bytes32 internal constant TYPE_HASH = keccak256('TransferRequest(address asset,uint256 amount)');
 	bytes32 internal ZERO_DOMAIN_SEPARATOR;
+        bytes32 internal constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
 	mapping(uint256 => address) public ownerOf;
 
 	uint256 public fee;
@@ -357,21 +359,28 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		require(locals.renBalanceDiff >= locals.gasUsedInRen, 'not enough provided for gas');
 		depositAll(params.asset);
 	}
-
+	function toERC20PermitDigest(address token, address owner, address spender, uint256 value, uint256 deadline) internal view returns (bytes32 result) {
+          result = keccak256(abi.encodePacked("\x19\x01", IERC2612Permit(token).DOMAIN_SEPARATOR(), keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, IERC2612Permit(token).nonces(owner), deadline))));
+        }
+        function computeBurnNonce(address asset, uint256 amount, uint256 deadline, uint256 nonce, bytes memory destination) public view returns (uint256 result) {
+          result = uint256(keccak256(abi.encodePacked(asset, amount, deadline, nonce, destination)));
+          while (result < block.timestamp) { // negligible probability of this
+            result = uint256(keccak256(abi.encodePacked(result)));
+          }
+        }
 	function burn(
 		address to,
 		address asset,
 		uint256 amount,
-		uint256 nonce,
-		bytes32 r,
-		bytes32 s,
-		uint8 v,
-		uint256 timestamp,
-		bytes memory _to
+		uint256 deadline,
+		bytes memory destination,
+		bytes memory signature
 	) public onlyUnderwriter {
-		uint256 allowance = IERC20(asset).allowance(to, address(this));
-		if (allowance < amount) {
-			IERC2612Permit(asset).permit(to, address(this), IERC2612Permit(asset).nonces(to), timestamp, true, v, r, s);
+		require(block.timestamp < deadline, "!deadline");
+		{
+                        (uint8 v, bytes32 r, bytes32 s) = SplitSignatureLib.splitSignature(signature);
+			uint256 nonce = IERC2612Permit(asset).nonces(to);
+ 			IERC2612Permit(asset).permit(to, address(this), nonce, computeBurnNonce(asset, amount, deadline, nonce, destination), true, v, r, s);
 		}
 		IERC20(asset).transferFrom(to, address(this), amount);
 		uint256 gasUsed = maxGasPrice.mul(maxGasRepay.add(maxGasBurn));
@@ -380,7 +389,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		uint256 actualAmount = deductFee(amount.sub(gasInRen), asset);
 		IGateway gateway = IGatewayRegistry(gatewayRegistry).getGatewayByToken(asset);
 		require(IERC20(asset).approve(address(gateway), actualAmount), '!approve');
-		gateway.burn(_to, actualAmount);
+		gateway.burn(destination, actualAmount);
 		depositAll(asset);
 	}
 }

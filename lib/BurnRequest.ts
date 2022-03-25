@@ -21,7 +21,6 @@ import { EIP712_TYPES } from './config/constants';
  * -> check if renBTC amount is debited correctly
  */
 export class BurnRequest {
-	public owner: string;
 	public amount: string;
 	public underwriter: string;
 	public deadline: number;
@@ -40,9 +39,11 @@ export class BurnRequest {
 	public _queryTxResult: any;
 	public provider: any;
 	public _mint: any;
+	public owner: string;
 	public keeper: any;
 	public assetName: string;
 	public tokenNonce: string;
+	public destination: string;
 
 	constructor(params: {
 		owner: string;
@@ -50,13 +51,14 @@ export class BurnRequest {
 		asset: string;
 		amount: string;
 		deadline: number;
-		btcTo: string;
+		destination: string;
 		nonce?: BigNumberish;
 		pNonce?: BigNumberish;
 		contractAddress?: string;
 		chainId?: number;
 		signature?: string;
 	}) {
+		this.destination = params.destination;
 		this.owner = params.owner;
 		this.underwriter = params.underwriter;
 		this.asset = params.asset;
@@ -68,7 +70,6 @@ export class BurnRequest {
 		this.deadline = params.deadline;
 		this.contractAddress = params.contractAddress;
 		this.signature = params.signature;
-		this.btcTo = params.btcTo
 		//this._config =
 		//
 		this._ren = new (RenJS as any)('mainnet', { loadCompletedDeposits: true });
@@ -97,13 +98,6 @@ export class BurnRequest {
 		];
 	}
 
-	destination(contractAddress?: string, chainId?: number | string, signature?: string) {
-		if (this._destination) return this._destination;
-		const payload = this.toEIP712(contractAddress || this.contractAddress, Number(chainId || this.chainId));
-		delete payload.types.EIP712Domain;
-		const digest = _TypedDataEncoder.hash(payload.domain, payload.types, payload.message);
-		return (this._destination = recoverAddress(digest, signature || this.signature));
-	}
 	setProvider(provider) {
 		this.provider = provider;
 		return this;
@@ -152,11 +146,13 @@ export class BurnRequest {
 			this.toEIP712(contractAddress || this.contractAddress, Number(chainId || this.chainId)),
 		);
 	}
-
+	getExpiry(nonce?: string | number) {
+          nonce = nonce || this.tokenNonce;
+	  return ethers.utils.solidityKeccak256(['address', 'uint256', 'uint256', 'uint256', 'bytes'], [ this.asset, this.amount, this.deadline, nonce, this.destination ]);
+	}
 	toEIP712(contractAddress: string, chainId?: number): EIP712TypedData {
 		this.contractAddress = contractAddress || this.contractAddress;
 		this.chainId = chainId || this.chainId;
-		console.log(this.underwriter);
 		return {
 			types: {
 				Permit: [
@@ -191,8 +187,8 @@ export class BurnRequest {
 			message: {
 				holder: this.owner,
 				spender: contractAddress,
-				expiry: this.deadline,
 				nonce: this.tokenNonce,
+				expiry: this.getExpiry(),
 				allowed: 'true'
 			},
 			primaryType: 'Permit',
@@ -212,7 +208,6 @@ export class BurnRequest {
 		);
 		this.assetName = await token.name();
 		this.tokenNonce = (await token.nonces(await signer.getAddress())).toString();
-		this.owner = await signer.getAddress()
 		console.log(this.assetName, this.tokenNonce)
 		try {
 			const payload = this.toEIP712(contractAddress, chainId);

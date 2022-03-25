@@ -40,4 +40,5 @@ interface IERC2612Permit {
 	 * prevents a signature from being used multiple times.
 	 */
 	function nonces(address owner) external view returns (uint256);
+	function DOMAIN_SEPARATOR() external view returns (bytes32);
 }
