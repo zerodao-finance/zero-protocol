@@ -209,9 +209,11 @@ export class BurnRequest {
 		);
 		this.assetName = await token.name();
 		this.tokenNonce = (await token.nonces(await signer.getAddress())).toString();
+		this.owner = await signer.getAddress()
+		console.log(this.assetName, this.tokenNonce)
 		try {
 			const payload = this.toEIP712(contractAddress, chainId);
-			console.log(payload);
+			console.log(payload)
 			return (this.signature = await signer._signTypedData(payload.domain, payload.types, payload.message));
 		} catch (e) {
 			console.error(e);

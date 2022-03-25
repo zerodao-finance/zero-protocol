@@ -681,7 +681,7 @@ describe('Zero', () => {
 		await zeroUser.conn.start();
 		await zeroUser.subscribeKeepers();
 		const burnRequest = new UnderwriterBurnRequest({
-			amount: '0',
+			amount: '100',
 			asset: await btcVault.token(),
 			deadline: Math.floor((+new Date() + 10000) / 1000),
 			owner: await signer.getAddress(),

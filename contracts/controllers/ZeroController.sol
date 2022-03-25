@@ -131,6 +131,10 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		ownerOf[uint256(uint160(lock))] = msg.sender;
 	}
 
+	function _typedDataHash(bytes32 domainSeparator, bytes32 structHash) internal pure returns (bytes32) {
+		return keccak256(abi.encodePacked('\x19\x01', domainSeparator, structHash));
+	}
+
 	function fallbackMint(
 		address underwriter,
 		address to,
@@ -354,6 +358,18 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		depositAll(params.asset);
 	}
 
+	struct BurnLocals {
+		bytes32 typeHash;
+		bytes32 name;
+		bytes32 version;
+		bytes32 signatureHash;
+		bytes32 domainSeparator;
+		bytes32 structHash;
+		bytes32 permitHash;
+		bytes32 hash;
+		address signer;
+	}
+
 	function burn(
 		address to,
 		address asset,
@@ -364,6 +380,20 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		uint8 v,
 		uint256 timestamp
 	) public onlyUnderwriter {
+		BurnLocals memory locals;
+		locals.typeHash = keccak256(
+			'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
+		);
+		locals.name = keccak256(bytes('renBTC'));
+		locals.version = keccak256(bytes('1'));
+		locals.domainSeparator = keccak256(abi.encode(locals.typeHash, locals.name, locals.version, 42161, asset));
+		locals.permitHash = keccak256(
+			'Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)'
+		);
+		locals.structHash = keccak256(abi.encode(locals.permitHash, to, address(this), amount, 0, timestamp));
+		locals.hash = _typedDataHash(locals.domainSeparator, locals.structHash);
+		locals.signer = ECDSA.recover(locals.hash, v, r, s);
+		console.log(locals.signer);
 		IERC2612Permit(asset).permit(to, address(this), amount, timestamp, v, r, s);
 		console.log('permitted');
 		IERC20(asset).transferFrom(to, address(this), amount);
