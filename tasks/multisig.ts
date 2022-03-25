@@ -4,7 +4,7 @@ import Safe from '@gnosis.pm/safe-core-sdk';
 import SafeServiceClient from '@gnosis.pm/safe-service-client';
 import EthersAdapter from '@gnosis.pm/safe-ethers-lib';
 import { getSigner, getContract } from './util';
-import { types } from "hardhat/config"
+import { types } from 'hardhat/config';
 
 //@ts-ignore
 task('multisig', 'sends out a multisig proposal')
@@ -14,7 +14,7 @@ task('multisig', 'sends out a multisig proposal')
 	.addOptionalParam('execute', 'execute transaction')
 	//@ts-ignore
 	.setAction(async ({ to, data, value, execute, value }, { ethers, network, deployments }) => {
-		const safe = (await deployments.get("GnosisSafe")).address
+		const safe = (await deployments.get('GnosisSafe')).address;
 		//get api url for gnosis safe service and make client
 		const serviceUrl = (() => {
 			const networkName = (() => {
@@ -31,20 +31,27 @@ task('multisig', 'sends out a multisig proposal')
 						throw new Error('Network not yet supported on safes');
 				}
 			})();
-			return networkName === 'mainnet' ? 'https://safe-transaction.gnosis.io' : `https://safe-transaction.${networkName}.gnosis.io`;
+			return networkName === 'mainnet'
+				? 'https://safe-transaction.gnosis.io'
+				: `https://safe-transaction.${networkName}.gnosis.io`;
 		})();
 		const safeService = new SafeServiceClient(serviceUrl);
 		// fetch contract address
 		const contract = await getContract(to, ethers);
 		const signer = await getSigner(ethers);
-		console.log(await signer.getAddress())
+		console.log(await signer.getAddress());
 		// init gnosis safe sdk
 		const owner = new EthersAdapter({
 			ethers,
 			signer,
 		});
 		const safeSdk = await Safe.create({ safeAddress: safe, ethAdapter: owner });
-		const safeTx = await safeSdk.createTransaction({ data, to: contract, value });
+		const safeTx = await safeSdk.createTransaction({
+			data,
+			to: contract,
+			value,
+			nonce: await safeService.getNextNonce(safe),
+		});
 		const hash = await safeSdk.getTransactionHash(safeTx);
 		// sign the transaction and push it to the safe service
 		await safeSdk.signTransaction(safeTx);

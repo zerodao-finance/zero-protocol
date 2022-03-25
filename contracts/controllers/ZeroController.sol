@@ -23,6 +23,7 @@ import {SafeMath} from 'oz410/math/SafeMath.sol';
 import {LockForImplLib} from '../libraries/LockForImplLib.sol';
 import {IERC2612Permit} from '../interfaces/IERC2612Permit.sol';
 import '../interfaces/IConverter.sol';
+import {ZeroControllerTemplate } from './ZeroControllerTemplate.sol';
 import '@openzeppelin/contracts/math/Math.sol';
 import 'hardhat/console.sol';
 
@@ -30,31 +31,9 @@ import 'hardhat/console.sol';
 @title upgradeable contract which determines the authority of a given address to sign off on loans
 @author raymondpulver
 */
-contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgradeable {
+contract ZeroController is ZeroControllerTemplate {
 	using SafeMath for uint256;
 	using SafeERC20 for *;
-
-	uint256 internal maxGasPrice = 100e9;
-	uint256 internal maxGasRepay = 250000;
-	uint256 internal maxGasLoan = 500000;
-	uint256 internal maxGasBurn = 500000;
-	string internal constant UNDERWRITER_LOCK_IMPLEMENTATION_ID = 'zero.underwriter.lock-implementation';
-	address internal underwriterLockImpl;
-	mapping(bytes32 => ZeroLib.LoanStatus) public loanStatus;
-	bytes32 internal constant ZERO_DOMAIN_SALT = 0xb225c57bf2111d6955b97ef0f55525b5a400dc909a5506e34b102e193dd53406;
-	bytes32 internal constant ZERO_DOMAIN_NAME_HASH = keccak256('ZeroController.RenVMBorrowMessage');
-	bytes32 internal constant ZERO_DOMAIN_VERSION_HASH = keccak256('v2');
-	bytes32 internal constant ZERO_RENVM_BORROW_MESSAGE_TYPE_HASH =
-		keccak256('RenVMBorrowMessage(address module,uint256 amount,address underwriter,uint256 pNonce,bytes pData)');
-	bytes32 internal constant TYPE_HASH = keccak256('TransferRequest(address asset,uint256 amount)');
-	bytes32 internal ZERO_DOMAIN_SEPARATOR;
-        bytes32 internal constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
-	mapping(uint256 => address) public ownerOf;
-
-	uint256 public fee;
-	address public gatewayRegistry;
-	mapping(address => uint256) public baseFeeByAsset;
-	mapping(address => bool) public approvedModules;
 
 	function getChainId() internal view returns (uint8 response) {
 		assembly {
@@ -67,7 +46,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		fee = _fee;
 	}
 
-	function approveModule(address module, bool isApproved) public {
+	function approveModule(address module, bool isApproved) public virtual {
 		require(msg.sender == governance, '!governance');
 		approvedModules[module] = isApproved;
 	}
@@ -127,7 +106,7 @@ contract ZeroController is ControllerUpgradeable, OwnableUpgradeable, EIP712Upgr
 		result = LockForImplLib.lockFor(address(this), underwriterLockImpl, underwriter);
 	}
 
-	function mint(address underwriter, address vault) public {
+	function mint(address underwriter, address vault) public virtual {
 		address lock = FactoryLib.deploy(underwriterLockImpl, bytes32(uint256(uint160(underwriter))));
 		ZeroUnderwriterLock(lock).initialize(vault);
 		ownerOf[uint256(uint160(lock))] = msg.sender;

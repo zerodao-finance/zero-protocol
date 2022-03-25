@@ -44,9 +44,11 @@ const common = require('./common');
 module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) => {
 	if (!common.isSelectedDeployment(__filename) || process.env.CHAIN === 'ETHEREUM') // || process.env.FORKING === 'true')
 		return;
+
 	const { deployer } = await getNamedAccounts(); //used as governance address
 	const [ethersSigner] = await ethers.getSigners();
 	const { provider } = ethersSigner;
+
 	//  provider.getGasPrice = createGetGasPrice('standard')
 	if (Number(ethers.utils.formatEther(await provider.getBalance(deployer))) === 0)
 		await ethersSigner.sendTransaction({

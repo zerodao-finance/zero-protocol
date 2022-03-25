@@ -35,17 +35,32 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 exports.__esModule = true;
+exports.LevelDBPersistenceAdapter = void 0;
 require("../types");
 var ethers_1 = require("ethers");
 require("./types");
 require("path");
+var memdown_1 = __importDefault(require("memdown"));
 var level = require('level');
+var levelup = require('levelup');
 var getValue = function (level, key) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0: return [4 /*yield*/, new Promise(function (resolve, reject) {
-                    return level.get(key, function (err, result) { return (err ? reject(err) : resolve(result)); });
+                    return level.get(key, function (err, result) {
+                        if (err) {
+                            if (err.notFound)
+                                return resolve(null);
+                            else
+                                return reject(err);
+                        }
+                        else
+                            resolve(result);
+                    });
                 })];
             case 1: return [2 /*return*/, _a.sent()];
         }
@@ -53,7 +68,7 @@ var getValue = function (level, key) { return __awaiter(void 0, void 0, void 0, 
 }); };
 var setValue = function (level, key, value) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
     switch (_a.label) {
-        case 0: return [4 /*yield*/, new Promise(function (resolve, reject) { return level.set(key, value, function (err) { return (err ? reject(err) : resolve()); }); })];
+        case 0: return [4 /*yield*/, new Promise(function (resolve, reject) { return level.put(key, value, function (err) { return (err ? reject(err) : resolve()); }); })];
         case 1: return [2 /*return*/, _a.sent()];
     }
 }); }); };
@@ -70,9 +85,10 @@ var transferRequestToKey = function (transferRequest) {
     return ethers_1.ethers.utils.solidityKeccak256(['bytes'], [transferRequest.signature]);
 };
 var transferRequestToPlain = function (transferRequest) {
-    var to = transferRequest.to, underwriter = transferRequest.underwriter, contractAddress = transferRequest.contractAddress, nonce = transferRequest.nonce, pNonce = transferRequest.pNonce, data = transferRequest.data, module = transferRequest.module, amount = transferRequest.amount, asset = transferRequest.asset, status = transferRequest.status, signature = transferRequest.signature;
+    var to = transferRequest.to, underwriter = transferRequest.underwriter, contractAddress = transferRequest.contractAddress, nonce = transferRequest.nonce, pNonce = transferRequest.pNonce, data = transferRequest.data, module = transferRequest.module, amount = transferRequest.amount, asset = transferRequest.asset, status = transferRequest.status, signature = transferRequest.signature, chainId = transferRequest.chainId;
     return {
         to: to,
+        chainId: chainId,
         underwriter: underwriter,
         contractAddress: contractAddress,
         nonce: nonce,
@@ -87,7 +103,11 @@ var transferRequestToPlain = function (transferRequest) {
 };
 var LevelDBPersistenceAdapter = /** @class */ (function () {
     function LevelDBPersistenceAdapter() {
-        this.backend = level(process.env.ZERO_PERSISTENCE_DB);
+        var db = process.env.ZERO_PERSISTENCE_DB;
+        if (db === '::memory')
+            this.backend = levelup((0, memdown_1["default"])());
+        else
+            this.backend = level(db);
     }
     LevelDBPersistenceAdapter.prototype.length = function () {
         return __awaiter(this, void 0, void 0, function () {
@@ -104,15 +124,13 @@ var LevelDBPersistenceAdapter = /** @class */ (function () {
     };
     LevelDBPersistenceAdapter.prototype.get = function (key) {
         return __awaiter(this, void 0, void 0, function () {
-            var index, _a, _b;
+            var _a, _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
-                    case 0: return [4 /*yield*/, getValue(this.backend, toKey(key))];
-                    case 1:
-                        index = _c.sent();
+                    case 0:
                         _b = (_a = JSON).parse;
                         return [4 /*yield*/, getValue(this.backend, toKey(key))];
-                    case 2: return [2 /*return*/, _b.apply(_a, [(_c.sent()) || '0']) || null];
+                    case 1: return [2 /*return*/, _b.apply(_a, [(_c.sent()) || '0']) || null];
                 }
             });
         });
@@ -269,3 +287,4 @@ var LevelDBPersistenceAdapter = /** @class */ (function () {
     };
     return LevelDBPersistenceAdapter;
 }());
+exports.LevelDBPersistenceAdapter = LevelDBPersistenceAdapter;

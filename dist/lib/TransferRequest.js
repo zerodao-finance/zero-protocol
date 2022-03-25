@@ -248,6 +248,7 @@ var TransferRequest = /** @class */ (function () {
                         return [4 /*yield*/, signer.provider.getNetwork()];
                     case 1:
                         chainId = (_f.sent()).chainId;
+                        this.chainId = chainId;
                         _f.label = 2;
                     case 2:
                         _f.trys.push([2, 4, , 7]);

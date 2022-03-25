@@ -2,7 +2,7 @@
 
 const path = require('path');
 const hre = require('hardhat');
-const { ethers, upgrades } = hre;
+const { ethers, upgrades, deployments } = hre;
 
 exports = module.exports = function () {};
 

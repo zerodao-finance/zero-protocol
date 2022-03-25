@@ -22,7 +22,7 @@ const SIGNER_ADDRESS = "0x0F4ee9631f4be0a63756515141281A3E2B293Bbe";
 module.exports = async ({
     getNamedAccounts
 }) => {
-    if (process.env.CHAIN !== "ETHEREUM") return;
+    if (process.env.CHAIN !== "ETHEREUM" || process.env.DEPLOYARBITRUMQUICKCONVERT) return;
     const { deployer } = await getNamedAccounts();
     const [ethersSigner] = await ethers.getSigners();
     const { provider } = ethersSigner;
