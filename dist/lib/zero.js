@@ -60,6 +60,7 @@ function createZeroConnection(address) {
                     switch (address) {
                         case 'mainnet':
                             connOptions = { multiaddr: '/dns4/p2p.zerodao.com/tcp/443/wss/p2p-webrtc-star/' };
+                            break;
                         default:
                             connOptions = { multiaddr: address };
                     }
