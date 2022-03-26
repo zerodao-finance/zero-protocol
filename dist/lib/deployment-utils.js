@@ -1,6 +1,6 @@
 "use strict";
 exports.__esModule = true;
-exports.logger = exports.getProvider = exports.RENVM_PROVIDERS = exports.RPC_ENDPOINTS = exports.CONTROLLER_DEPLOYMENTS = void 0;
+exports.logger = exports.getProvider = exports.getChainKey = exports.RENVM_PROVIDERS = exports.RPC_ENDPOINTS = exports.CONTROLLER_DEPLOYMENTS = void 0;
 //import './silence-init';
 require("@ethersproject/wallet");
 require("@ethersproject/abstract-signer");
@@ -22,12 +22,26 @@ exports.RENVM_PROVIDERS = {
     Polygon: chains_1.Polygon,
     Ethereum: chains_1.Ethereum
 };
+// very band-aid solution - needs to be changed later
+function getChainKey(chain) {
+    switch (chain) {
+        case 'MATIC':
+            return 'Polygon';
+        case 'MAINNET':
+            return 'Ethereum';
+        case 'ARBITRUM':
+            return 'Arbitrum';
+    }
+}
+exports.getChainKey = getChainKey;
 var getProvider = function (transferRequest) {
-    var chain = Object.entries(exports.CONTROLLER_DEPLOYMENTS).find(function (_a) {
-        var k = _a[0], v = _a[1];
-        return transferRequest.contractAddress === v;
-    });
-    var chain_key = chain[0];
+    var chain = process.env.CHAIN
+        ? Object.entries(exports.CONTROLLER_DEPLOYMENTS).find(function (_a) {
+            var k = _a[0], v = _a[1];
+            return transferRequest.contractAddress.toLowerCase() === v.toLowerCase();
+        })
+        : 'none';
+    var chain_key = process.env.CHAIN ? getChainKey(process.env.CHAIN) : chain[0];
     return exports.RENVM_PROVIDERS[chain_key](new ethers_1.ethers.providers.JsonRpcProvider(exports.RPC_ENDPOINTS[chain_key]), 'mainnet');
 };
 exports.getProvider = getProvider;

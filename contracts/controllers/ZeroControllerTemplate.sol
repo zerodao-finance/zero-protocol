@@ -7,7 +7,6 @@ contract ZeroControllerTemplate is ControllerUpgradeable, OwnableUpgradeable, EI
 	uint256 internal maxGasPrice = 100e9;
 	uint256 internal maxGasRepay = 250000;
 	uint256 internal maxGasLoan = 500000;
-	uint256 internal maxGasBurn = 500000;
 	string internal constant UNDERWRITER_LOCK_IMPLEMENTATION_ID = 'zero.underwriter.lock-implementation';
 	address internal underwriterLockImpl;
 	mapping(bytes32 => ZeroLib.LoanStatus) public loanStatus;
@@ -25,4 +24,5 @@ contract ZeroControllerTemplate is ControllerUpgradeable, OwnableUpgradeable, EI
 	address public gatewayRegistry;
 	mapping(address => uint256) public baseFeeByAsset;
 	mapping(address => bool) public approvedModules;
+	uint256 internal maxGasBurn = 500000;
 }

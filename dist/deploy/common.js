@@ -37,7 +37,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var path = require('path');
 var hre = require('hardhat');
-var ethers = hre.ethers, upgrades = hre.upgrades;
+var ethers = hre.ethers, upgrades = hre.upgrades, deployments = hre.deployments;
 exports = module.exports = function () { };
 exports.isSelectedDeployment = function (filename) {
     return !process.env.DEPLOYMENT_NUMBER ||
@@ -80,31 +80,29 @@ exports.getSigner = function (address) { return __awaiter(void 0, void 0, void 0
     });
 }); };
 exports.fundWithGas = function (address) { return __awaiter(void 0, void 0, void 0, function () {
-    var signer, balance, _a, _b, _c, _d, _e;
-    return __generator(this, function (_f) {
-        switch (_f.label) {
+    var signer, balance, _a, _b, _c;
+    return __generator(this, function (_d) {
+        switch (_d.label) {
             case 0:
                 if (!process.env.FORKING || hre.network.name !== 'hardhat')
                     return [2 /*return*/];
                 return [4 /*yield*/, hre.ethers.getSigners()];
             case 1:
-                signer = (_f.sent())[0];
+                signer = (_d.sent())[0];
                 _a = Number;
                 _c = (_b = hre.ethers.utils).formatEther;
-                _e = (_d = signer.provider).getBalance;
-                return [4 /*yield*/, signer.getAddress()];
-            case 2: return [4 /*yield*/, _e.apply(_d, [_f.sent()])];
-            case 3:
-                balance = _a.apply(void 0, [_c.apply(_b, [_f.sent()])]);
-                if (!(balance < 0.1)) return [3 /*break*/, 5];
+                return [4 /*yield*/, signer.provider.getBalance(address)];
+            case 2:
+                balance = _a.apply(void 0, [_c.apply(_b, [_d.sent()])]);
+                if (!(balance < 0.1)) return [3 /*break*/, 4];
                 return [4 /*yield*/, signer.sendTransaction({
                         to: address,
                         value: ethers.utils.parseEther('0.1')
                     })];
-            case 4:
-                _f.sent();
-                _f.label = 5;
-            case 5: return [2 /*return*/];
+            case 3:
+                _d.sent();
+                _d.label = 4;
+            case 4: return [2 /*return*/];
         }
     });
 }); };
@@ -144,6 +142,9 @@ exports.deployProxyFixedAddress = function () {
             switch (_a.label) {
                 case 0:
                     console.log('Deploying proxy');
+                    //const [signer] = await ethers.getSigners();
+                    //hijackSigner(signer);
+                    console.log(args);
                     return [4 /*yield*/, upgrades.deployProxy.apply(upgrades, args)];
                 case 1:
                     result = _a.sent();

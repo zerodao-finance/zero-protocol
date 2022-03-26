@@ -154,17 +154,25 @@ var ZeroUser = /** @class */ (function (_super) {
             });
         });
     };
-    ZeroUser.prototype.publishTransferRequest = function (transferRequest) {
+    ZeroUser.prototype.publishRequest = function (request, requestTemplate, requestType) {
+        if (requestType === void 0) { requestType = 'transfer'; }
         return __awaiter(this, void 0, void 0, function () {
-            var key, ackReceived_1, _i, _a, keeper, peer, stream, e_2, e_3;
+            var requestFromTemplate, key, ackReceived_1, _i, _a, keeper, peer, stream, e_2, e_3;
             var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
-                    case 0: return [4 /*yield*/, this.storage.set(transferRequest)];
+                    case 0:
+                        requestFromTemplate = requestTemplate
+                            ? Object.fromEntries(Object.entries(request).filter(function (_a) {
+                                var k = _a[0], v = _a[1];
+                                return requestTemplate.includes(k);
+                            }))
+                            : request;
+                        return [4 /*yield*/, this.storage.set(requestFromTemplate)];
                     case 1:
                         key = _b.sent();
                         if (this.keepers.length === 0) {
-                            this.log.error('Cannot publish transfer request if no keepers are found');
+                            this.log.error("Cannot publish " + requestType + " request if no keepers are found");
                             return [2 /*return*/];
                         }
                         _b.label = 2;
@@ -246,19 +254,7 @@ var ZeroUser = /** @class */ (function (_super) {
                         return [4 /*yield*/, this.conn.dialProtocol(peer, '/zero/keeper/dispatch')];
                     case 7:
                         stream = (_b.sent()).stream;
-                        (0, it_pipe_1["default"])(JSON.stringify({
-                            amount: transferRequest.amount,
-                            asset: transferRequest.asset,
-                            chainId: transferRequest.chainId,
-                            contractAddress: transferRequest.contractAddress,
-                            data: transferRequest.data,
-                            module: transferRequest.module,
-                            nonce: transferRequest.nonce,
-                            pNonce: transferRequest.pNonce,
-                            signature: transferRequest.signature,
-                            to: transferRequest.to,
-                            underwriter: transferRequest.underwriter
-                        }), it_length_prefixed_1["default"].encode(), stream.sink);
+                        (0, it_pipe_1["default"])(JSON.stringify(requestFromTemplate), it_length_prefixed_1["default"].encode(), stream.sink);
                         this.log.info("Published transfer request to " + keeper + ". Waiting for keeper confirmation.");
                         return [3 /*break*/, 9];
                     case 8:
@@ -278,6 +274,72 @@ var ZeroUser = /** @class */ (function (_super) {
                         this.log.debug(e_3.message);
                         return [2 /*return*/];
                     case 14: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    ZeroUser.prototype.publishBurnRequest = function (burnRequest) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.publishRequest(burnRequest, [
+                            'asset',
+                            'chainId',
+                            'contractAddress',
+                            'data',
+                            'module',
+                            'nonce',
+                            'pNonce',
+                            'signature',
+                            'underwriter',
+                            'owner',
+                            'amount',
+                            'deadline',
+                        ], 'burn')];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    ZeroUser.prototype.publishMetaRequest = function (metaRequest) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.publishRequest(metaRequest, [
+                            'asset',
+                            'chainId',
+                            'contractAddress',
+                            'data',
+                            'module',
+                            'nonce',
+                            'pNonce',
+                            'signature',
+                            'underwriter',
+                            'addressFrom',
+                        ], 'meta')];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    ZeroUser.prototype.publishTransferRequest = function (transferRequest) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.publishRequest(transferRequest, [
+                            'amount',
+                            'asset',
+                            'chainId',
+                            'contractAddress',
+                            'data',
+                            'module',
+                            'nonce',
+                            'pNonce',
+                            'signature',
+                            'to',
+                            'underwriter',
+                        ])];
+                    case 1: return [2 /*return*/, _a.sent()];
                 }
             });
         });
@@ -375,11 +437,15 @@ var ZeroKeeper = /** @class */ (function () {
                                             case 11: return [7 /*endfinally*/];
                                             case 12:
                                                 transferRequest = JSON.parse(string.join(''));
-                                                return [4 /*yield*/, (this.storage || { set: function () {
-                                                            return __awaiter(this, void 0, void 0, function () { return __generator(this, function (_a) {
-                                                                return [2 /*return*/, 0];
-                                                            }); });
-                                                        } }).set(transferRequest)];
+                                                return [4 /*yield*/, (this.storage || {
+                                                        set: function () {
+                                                            return __awaiter(this, void 0, void 0, function () {
+                                                                return __generator(this, function (_a) {
+                                                                    return [2 /*return*/, 0];
+                                                                });
+                                                            });
+                                                        }
+                                                    }).set(transferRequest)];
                                             case 13:
                                                 _b.sent();
                                                 callback(transferRequest);

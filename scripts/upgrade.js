@@ -10,6 +10,8 @@ const main = async () => {
   wallet = wallet.connect(signer.provider);
   const ADMIN_SLOT = ethers.utils.hexlify(hre.ethers.BigNumber.from(hre.ethers.utils.solidityKeccak256(['string'], [ 'eip1967.proxy.admin' ])).sub(1));
   const proxyAdmin = new ethers.Contract('0x' + (await wallet.provider.getStorageAt(getContract('ZeroController').address, ADMIN_SLOT)).substr(26), [ 'function upgrade(address, address)' ], wallet);
+	console.log(proxyAdmin.address);
+	process.exit(0);
   const NewController = await ethers.getContractFactory('ZeroController', {
     libraries: {
       ZeroUnderwriterLockBytecodeLib: getContract('ZeroUnderwriterLockBytecodeLib').address

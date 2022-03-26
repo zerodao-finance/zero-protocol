@@ -77,7 +77,7 @@ module.exports = function (_a) {
         return __generator(this, function (_o) {
             switch (_o.label) {
                 case 0:
-                    if (process.env.CHAIN !== "ETHEREUM")
+                    if (process.env.CHAIN !== "ETHEREUM" || process.env.DEPLOYARBITRUMQUICKCONVERT)
                         return [2 /*return*/];
                     return [4 /*yield*/, getNamedAccounts()];
                 case 1:

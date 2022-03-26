@@ -39,50 +39,52 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.MetaRequest = void 0;
+exports.BurnRequest = void 0;
 require("@ethersproject/wallet");
 require("@ethersproject/abstract-signer");
 var bytes_1 = require("@ethersproject/bytes");
 var random_1 = require("@ethersproject/random");
-var hash_1 = require("@ethersproject/hash");
+require("@ethersproject/hash");
 require("./types");
-var transactions_1 = require("@ethersproject/transactions");
+require("@ethersproject/transactions");
 require("buffer");
 var ethers_1 = require("ethers");
 var utils_1 = require("@0x/utils");
 require("@0x/types");
-require("./config/constants");
 var chains_1 = require("@renproject/chains");
 var ren_1 = __importDefault(require("@renproject/ren"));
 require("@renproject/interfaces");
 var deployment_utils_1 = require("./deployment-utils");
+require("./config/constants");
 /**
  * Supposed to provide a way to execute other functions while using renBTC to pay for the gas fees
  * what a flow to test would look like:
  * -> underwriter sends request to perform some operation on some contract somewhere
  * -> check if renBTC amount is debited correctly
  */
-var MetaRequest = /** @class */ (function () {
-    function MetaRequest(params) {
-        this.module = params.module;
-        this.addressFrom = params.addressFrom;
+var BurnRequest = /** @class */ (function () {
+    function BurnRequest(params) {
+        this.destination = params.destination;
+        this.owner = params.owner;
         this.underwriter = params.underwriter;
         this.asset = params.asset;
-        this.data = params.data;
         console.log('params.nonce', params.nonce);
         this.nonce = params.nonce ? (0, bytes_1.hexlify)(params.nonce) : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
         this.pNonce = params.pNonce ? (0, bytes_1.hexlify)(params.pNonce) : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
         this.chainId = params.chainId;
+        this.amount = params.amount;
+        this.deadline = params.deadline;
         this.contractAddress = params.contractAddress;
         this.signature = params.signature;
         //this._config =
+        //
         this._ren = new ren_1["default"]('mainnet', { loadCompletedDeposits: true });
         this._contractFn = 'zeroCall';
         this._contractParams = [
             {
                 name: 'from',
                 type: 'address',
-                value: this.addressFrom
+                value: this.owner
             },
             {
                 name: 'pNonce',
@@ -92,28 +94,20 @@ var MetaRequest = /** @class */ (function () {
             {
                 name: 'module',
                 type: 'address',
-                value: this.module
+                value: ethers_1.ethers.constants.AddressZero
             },
             {
                 name: 'data',
                 type: 'bytes',
-                value: this.data
+                value: '0x'
             },
         ];
     }
-    MetaRequest.prototype.destination = function (contractAddress, chainId, signature) {
-        if (this._destination)
-            return this._destination;
-        var payload = this.toEIP712(contractAddress || this.contractAddress, Number(chainId || this.chainId));
-        delete payload.types.EIP712Domain;
-        var digest = hash_1._TypedDataEncoder.hash(payload.domain, payload.types, payload.message);
-        return (this._destination = (0, transactions_1.recoverAddress)(digest, signature || this.signature));
-    };
-    MetaRequest.prototype.setProvider = function (provider) {
+    BurnRequest.prototype.setProvider = function (provider) {
         this.provider = provider;
         return this;
     };
-    MetaRequest.prototype.submitToRenVM = function (isTest) {
+    BurnRequest.prototype.submitToRenVM = function (isTest) {
         return __awaiter(this, void 0, void 0, function () {
             var result, _a;
             return __generator(this, function (_b) {
@@ -141,7 +135,7 @@ var MetaRequest = /** @class */ (function () {
             });
         });
     };
-    MetaRequest.prototype.waitForSignature = function () {
+    BurnRequest.prototype.waitForSignature = function () {
         return __awaiter(this, void 0, void 0, function () {
             var mint, deposit, _a, signature, nhash, phash, amount, result;
             return __generator(this, function (_b) {
@@ -173,32 +167,31 @@ var MetaRequest = /** @class */ (function () {
             });
         });
     };
-    MetaRequest.prototype.setUnderwriter = function (underwriter) {
+    BurnRequest.prototype.setUnderwriter = function (underwriter) {
         if (!ethers_1.ethers.utils.isAddress(underwriter))
             return false;
         this.underwriter = ethers_1.ethers.utils.getAddress(underwriter);
         return true;
     };
-    MetaRequest.prototype.toEIP712Digest = function (contractAddress, chainId) {
+    BurnRequest.prototype.toEIP712Digest = function (contractAddress, chainId) {
         return utils_1.signTypedDataUtils.generateTypedDataHash(this.toEIP712(contractAddress || this.contractAddress, Number(chainId || this.chainId)));
     };
-    MetaRequest.prototype.toEIP712 = function (contractAddress, chainId) {
+    BurnRequest.prototype.getExpiry = function (nonce) {
+        nonce = nonce || this.tokenNonce;
+        return ethers_1.ethers.utils.solidityKeccak256(['address', 'uint256', 'uint256', 'uint256', 'bytes'], [this.asset, this.amount, this.deadline, nonce, this.destination]);
+    };
+    BurnRequest.prototype.toEIP712 = function (contractAddress, chainId) {
         this.contractAddress = contractAddress || this.contractAddress;
         this.chainId = chainId || this.chainId;
-        console.log(this.underwriter);
         return {
             types: {
-                MetaRequest: [
+                Permit: [
                     {
-                        name: 'asset',
+                        name: 'holder',
                         type: 'address'
                     },
                     {
-                        name: 'underwriter',
-                        type: 'address'
-                    },
-                    {
-                        name: 'module',
+                        name: 'spender',
                         type: 'address'
                     },
                     {
@@ -206,28 +199,32 @@ var MetaRequest = /** @class */ (function () {
                         type: 'uint256'
                     },
                     {
-                        name: 'data',
-                        type: 'bytes'
+                        name: 'expiry',
+                        type: 'uint256'
+                    },
+                    {
+                        name: 'allowed',
+                        type: 'bool'
                     },
                 ]
             },
             domain: {
-                name: 'ZeroController',
+                name: this.assetName,
                 version: '1',
                 chainId: String(this.chainId) || '1',
-                verifyingContract: this.contractAddress || ethers_1.ethers.constants.AddressZero
+                verifyingContract: this.asset || ethers_1.ethers.constants.AddressZero
             },
             message: {
-                asset: this.asset,
-                module: this.module,
-                underwriter: this.underwriter,
-                nonce: this.pNonce,
-                data: this.data
+                holder: this.owner,
+                spender: contractAddress,
+                nonce: this.tokenNonce,
+                expiry: this.getExpiry(),
+                allowed: 'true'
             },
-            primaryType: 'MetaRequest'
+            primaryType: 'Permit'
         };
     };
-    MetaRequest.prototype.toGatewayAddress = function (input) {
+    BurnRequest.prototype.toGatewayAddress = function (input) {
         return __awaiter(this, void 0, void 0, function () {
             var mint;
             return __generator(this, function (_a) {
@@ -240,41 +237,53 @@ var MetaRequest = /** @class */ (function () {
             });
         });
     };
-    MetaRequest.prototype.sign = function (signer, contractAddress) {
+    BurnRequest.prototype.sign = function (signer, contractAddress) {
         return __awaiter(this, void 0, void 0, function () {
-            var provider, chainId, payload, _a, e_1, _b, _c, _d, _e;
-            return __generator(this, function (_f) {
-                switch (_f.label) {
+            var provider, chainId, token, _a, _b, _c, _d, payload, _e, e_1, _f, _g, _h, _j;
+            return __generator(this, function (_k) {
+                switch (_k.label) {
                     case 0:
                         provider = signer.provider;
                         return [4 /*yield*/, signer.provider.getNetwork()];
                     case 1:
-                        chainId = (_f.sent()).chainId;
-                        _f.label = 2;
+                        chainId = (_k.sent()).chainId;
+                        token = new ethers_1.ethers.Contract(this.asset, ['function name() view returns (string)', 'function nonces(address) view returns (uint256)'], signer.provider);
+                        _a = this;
+                        return [4 /*yield*/, token.name()];
                     case 2:
-                        _f.trys.push([2, 4, , 7]);
+                        _a.assetName = _k.sent();
+                        _b = this;
+                        _d = (_c = token).nonces;
+                        return [4 /*yield*/, signer.getAddress()];
+                    case 3: return [4 /*yield*/, _d.apply(_c, [_k.sent()])];
+                    case 4:
+                        _b.tokenNonce = (_k.sent()).toString();
+                        console.log(this.assetName, this.tokenNonce);
+                        _k.label = 5;
+                    case 5:
+                        _k.trys.push([5, 7, , 10]);
                         payload = this.toEIP712(contractAddress, chainId);
                         console.log(payload);
-                        _a = this;
+                        _e = this;
                         return [4 /*yield*/, signer._signTypedData(payload.domain, payload.types, payload.message)];
-                    case 3: return [2 /*return*/, (_a.signature = _f.sent())];
-                    case 4:
-                        e_1 = _f.sent();
+                    case 6: return [2 /*return*/, (_e.signature = _k.sent())];
+                    case 7:
+                        e_1 = _k.sent();
                         console.error(e_1);
-                        _b = this;
-                        _d = (_c = provider).send;
-                        _e = ['eth_signTypedData_v4'];
+                        _f = this;
+                        _h = (_g = provider).send;
+                        _j = ['eth_signTypedData_v4'];
                         return [4 /*yield*/, signer.getAddress()];
-                    case 5: return [4 /*yield*/, _d.apply(_c, _e.concat([[
-                                _f.sent(),
+                    case 8: return [4 /*yield*/, _h.apply(_g, _j.concat([[
+                                _k.sent(),
                                 this.toEIP712(this.contractAddress || contractAddress, chainId)
                             ]]))];
-                    case 6: return [2 /*return*/, (_b.signature = _f.sent())];
-                    case 7: return [2 /*return*/];
+                    case 9: return [2 /*return*/, (_f.signature = _k.sent())];
+                    case 10: return [2 /*return*/];
                 }
             });
         });
     };
-    return MetaRequest;
+    return BurnRequest;
 }());
-exports.MetaRequest = MetaRequest;
+exports.BurnRequest = BurnRequest;

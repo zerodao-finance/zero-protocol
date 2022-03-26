@@ -79,7 +79,7 @@ export const createMockKeeper = async (provider?: any) => {
 		})();
 		try {
 			console.log('dry');
-			const loan_result = await trivial.dry(keeperSigner, { from: await keeperSigner.getAddress() }, func);
+			const loan_result = await trivial.dry(keeperSigner);
 			console.log('Loan Result', loan_result);
 		} catch (err) {
 			console.log('ERROR', err);

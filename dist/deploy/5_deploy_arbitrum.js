@@ -1,14 +1,3 @@
-"use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -45,39 +34,27 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-exports.__esModule = true;
-exports.logger = exports.getProvider = exports.createZeroKeeper = exports.createZeroUser = exports.createZeroConnection = void 0;
-//import './silence-init';
-require("@ethersproject/hash");
-var p2p_1 = require("./p2p");
-require("./persistence");
-function createZeroConnection(address) {
-    return __awaiter(this, void 0, void 0, function () {
-        var connOptions;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    connOptions = {
-                        multiaddr: address
-                    };
-                    return [4 /*yield*/, (0, p2p_1.createNode)(connOptions)];
-                case 1: return [2 /*return*/, _a.sent()];
-            }
-        });
+var _this = this;
+var hre = require('hardhat');
+var ethers = hre.ethers;
+var deployFixedAddress = require('./common').deployFixedAddress;
+module.exports = function () { return __awaiter(_this, void 0, void 0, function () {
+    var zeroControllerAddress;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                if (!(process.env.CHAIN === 'ARBITRUM' && process.env.DEPLOYARBITRUMQUICKCONVERT)) return [3 /*break*/, 2];
+                zeroControllerAddress = "0x53f38bEA30fE6919e0475Fe57C2629f3D3754d1E";
+                return [4 /*yield*/, deployFixedAddress('ArbitrumConvertQuick', {
+                        args: [zeroControllerAddress, ethers.utils.parseUnits('15', 8), '100000'],
+                        contractName: 'ArbitrumConvertQuick',
+                        libraries: {},
+                        from: process.env.WALLET
+                    })];
+            case 1:
+                _a.sent();
+                _a.label = 2;
+            case 2: return [2 /*return*/];
+        }
     });
-}
-exports.createZeroConnection = createZeroConnection;
-function createZeroUser(connection, persistence) {
-    return new p2p_1.ZeroUser(connection, persistence);
-}
-exports.createZeroUser = createZeroUser;
-function createZeroKeeper(connection) {
-    return new p2p_1.ZeroKeeper(connection);
-}
-exports.createZeroKeeper = createZeroKeeper;
-var deployment_utils_1 = require("./deployment-utils");
-__createBinding(exports, deployment_utils_1, "getProvider");
-__createBinding(exports, deployment_utils_1, "logger");
-__exportStar(require("./UnderwriterRequest"), exports);
-__exportStar(require("./TransferRequest"), exports);
-__exportStar(require("./MetaRequest"), exports);
+}); };

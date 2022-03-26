@@ -1,19 +1,4 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -54,11 +39,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.UnderwriterTransferRequest = exports.TransferRequest = exports.ReleaseRequest = void 0;
+exports.TransferRequest = exports.ReleaseRequest = void 0;
 require("@ethersproject/wallet");
 require("@ethersproject/abstract-signer");
 var bytes_1 = require("@ethersproject/bytes");
-var contracts_1 = require("@ethersproject/contracts");
 var random_1 = require("@ethersproject/random");
 var hash_1 = require("@ethersproject/hash");
 require("./types");
@@ -276,102 +260,3 @@ var TransferRequest = /** @class */ (function () {
     return TransferRequest;
 }());
 exports.TransferRequest = TransferRequest;
-var UnderwriterTransferRequest = /** @class */ (function (_super) {
-    __extends(UnderwriterTransferRequest, _super);
-    function UnderwriterTransferRequest() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    UnderwriterTransferRequest.prototype.getController = function (signer) {
-        return __awaiter(this, void 0, void 0, function () {
-            var underwriter, _a;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        console.log('getting controller');
-                        underwriter = this.getUnderwriter(signer);
-                        console.log('got underwriter');
-                        _a = contracts_1.Contract.bind;
-                        return [4 /*yield*/, underwriter.controller()];
-                    case 1: return [2 /*return*/, new (_a.apply(contracts_1.Contract, [void 0, _b.sent(), [
-                                'function fallbackMint(address underwriter, address to, address asset, uint256 amount, uint256 actualAmount, uint256 nonce, address module, bytes32 nHash, bytes data, bytes signature)',
-                            ],
-                            signer]))()];
-                }
-            });
-        });
-    };
-    UnderwriterTransferRequest.prototype.fallbackMint = function (signer, params) {
-        if (params === void 0) { params = {}; }
-        return __awaiter(this, void 0, void 0, function () {
-            var controller, queryTxResult;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getController(signer)];
-                    case 1:
-                        controller = _a.sent();
-                        return [4 /*yield*/, this.waitForSignature()];
-                    case 2:
-                        queryTxResult = _a.sent();
-                        console.log(this.destination());
-                        return [4 /*yield*/, controller.fallbackMint(this.underwriter, this.destination(), this.asset, this.amount, queryTxResult.amount, this.pNonce, this.module, queryTxResult.nHash, this.data, queryTxResult.signature, params)];
-                    case 3: return [2 /*return*/, _a.sent()];
-                }
-            });
-        });
-    };
-    UnderwriterTransferRequest.prototype.getUnderwriter = function (signer) {
-        return new contracts_1.Contract(this.underwriter, [
-            'function controller() view returns (address)',
-            'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)',
-            'function loan(address, address, uint256, uint256, address, bytes, bytes)',
-        ], signer);
-    };
-    UnderwriterTransferRequest.prototype.loan = function (signer, params) {
-        if (params === void 0) { params = {}; }
-        return __awaiter(this, void 0, void 0, function () {
-            var underwriter;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        underwriter = this.getUnderwriter(signer);
-                        return [4 /*yield*/, underwriter.loan(this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature, params)];
-                    case 1: return [2 /*return*/, _a.sent()];
-                }
-            });
-        });
-    };
-    UnderwriterTransferRequest.prototype.dry = function (signer, params) {
-        if (params === void 0) { params = {}; }
-        return __awaiter(this, void 0, void 0, function () {
-            var underwriter;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        underwriter = this.getUnderwriter(signer);
-                        console.log('about to callstatic');
-                        return [4 /*yield*/, underwriter.callStatic.loan(this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature, params)];
-                    case 1: return [2 /*return*/, _a.sent()];
-                }
-            });
-        });
-    };
-    UnderwriterTransferRequest.prototype.repay = function (signer, params) {
-        if (params === void 0) { params = {}; }
-        return __awaiter(this, void 0, void 0, function () {
-            var underwriter, _a, actualAmount, nHash, signature;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        underwriter = this.getUnderwriter(signer);
-                        return [4 /*yield*/, this.waitForSignature()];
-                    case 1:
-                        _a = _b.sent(), actualAmount = _a.amount, nHash = _a.nHash, signature = _a.signature;
-                        return [4 /*yield*/, underwriter.repay(this.underwriter, this.destination(), this.asset, this.amount, actualAmount, this.pNonce, this.module, nHash, this.data, signature, params)];
-                    case 2: return [2 /*return*/, _b.sent()];
-                }
-            });
-        });
-    };
-    return UnderwriterTransferRequest;
-}(TransferRequest));
-exports.UnderwriterTransferRequest = UnderwriterTransferRequest;

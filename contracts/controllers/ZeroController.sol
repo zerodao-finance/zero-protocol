@@ -90,12 +90,14 @@ contract ZeroController is ZeroControllerTemplate {
 	function setGasParameters(
 		uint256 _maxGasPrice,
 		uint256 _maxGasRepay,
-		uint256 _maxGasLoan
+		uint256 _maxGasLoan,
+		uint256 _maxGasBurn
 	) public {
 		require(msg.sender == governance, '!governance');
 		maxGasPrice = _maxGasPrice;
 		maxGasRepay = _maxGasRepay;
 		maxGasLoan = _maxGasLoan;
+		maxGasBurn = _maxGasBurn;
 	}
 
 	function balanceOf(address _owner) public view override returns (uint256 result) {

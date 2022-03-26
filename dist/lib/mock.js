@@ -41,15 +41,85 @@ var zero_1 = require("./zero");
 var core_1 = require("./p2p/core");
 var ethers_1 = require("ethers");
 var events_1 = require("events");
+var UnderwriterRequest_1 = require("./UnderwriterRequest");
 var keepers = [];
 exports.TEST_KEEPER_ADDRESS = '0xec5d65739c722a46cd79951e069753c2fc879b27';
 var keeperSigner;
+function waitForMint(trivial) {
+    return __awaiter(this, void 0, void 0, function () {
+        var mint;
+        var _this = this;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, trivial.submitToRenVM(true)];
+                case 1:
+                    mint = _a.sent();
+                    return [4 /*yield*/, new Promise(function (resolve, reject) {
+                            return mint.on('deposit', function (deposit) { return __awaiter(_this, void 0, void 0, function () {
+                                var hash, _a, _b, confirmed, status;
+                                var _this = this;
+                                return __generator(this, function (_c) {
+                                    switch (_c.label) {
+                                        case 0: return [4 /*yield*/, resolve(deposit)];
+                                        case 1:
+                                            _c.sent();
+                                            return [4 /*yield*/, deposit.txHash()];
+                                        case 2:
+                                            hash = _c.sent();
+                                            console.log('hash', hash);
+                                            _b = (_a = console).log;
+                                            return [4 /*yield*/, deposit];
+                                        case 3:
+                                            _b.apply(_a, [_c.sent()]);
+                                            return [4 /*yield*/, deposit.confirmed()];
+                                        case 4:
+                                            confirmed = _c.sent();
+                                            confirmed
+                                                .on('target', function (target) {
+                                                console.log("0/" + target + " confirmations");
+                                            })
+                                                .on('confirmation', function (confs, target) { return __awaiter(_this, void 0, void 0, function () {
+                                                return __generator(this, function (_a) {
+                                                    switch (_a.label) {
+                                                        case 0:
+                                                            console.log(confs + "/" + target + " confirmations");
+                                                            if (!(confs == 6)) return [3 /*break*/, 3];
+                                                            return [4 /*yield*/, new Promise(function (resolve, reject) {
+                                                                    setTimeout(resolve, 500);
+                                                                })];
+                                                        case 1:
+                                                            _a.sent();
+                                                            return [4 /*yield*/, trivial.repay(keeperSigner)];
+                                                        case 2:
+                                                            _a.sent();
+                                                            _a.label = 3;
+                                                        case 3: return [2 /*return*/];
+                                                    }
+                                                });
+                                            }); });
+                                            return [4 /*yield*/, deposit.signed()];
+                                        case 5:
+                                            status = _c.sent();
+                                            status.on('status', function (status) { return console.log('status', status); });
+                                            return [2 /*return*/];
+                                    }
+                                });
+                            }); });
+                        })];
+                case 2:
+                    _a.sent();
+                    return [2 /*return*/, mint];
+            }
+        });
+    });
+}
 var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, void 0, function () {
     var keeper;
     return __generator(this, function (_a) {
         keeper = zero_1.createZeroKeeper({ on: function () { } });
         provider = provider || new ethers_1.ethers.providers.JsonRpcProvider('http://localhost:8545');
         keeperSigner = keeperSigner || provider.getSigner(exports.TEST_KEEPER_ADDRESS);
+        console.log(keepers.length);
         keepers.push(keeper);
         keeper.advertiseAsKeeper = function () { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
             return [2 /*return*/];
@@ -60,107 +130,78 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
                 return [2 /*return*/];
             });
         }); };
-        keeper.setTxDispatcher(function (transferRequest) { return __awaiter(void 0, void 0, void 0, function () {
-            var trivial, loan_result, _a, _b, _c, err_1, mint;
-            var _d;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
-                    case 0:
-                        console.log('got transferRequest');
-                        trivial = new zero_1.UnderwriterTransferRequest(transferRequest);
-                        _e.label = 1;
-                    case 1:
-                        _e.trys.push([1, 4, , 5]);
-                        _b = (_a = trivial).dry;
-                        _c = [keeperSigner];
-                        _d = {};
-                        return [4 /*yield*/, keeperSigner.getAddress()];
-                    case 2: return [4 /*yield*/, _b.apply(_a, _c.concat([(_d.from = _e.sent(), _d)]))];
-                    case 3:
-                        loan_result = _e.sent();
-                        console.log('Loan Result', loan_result);
-                        return [3 /*break*/, 5];
-                    case 4:
-                        err_1 = _e.sent();
-                        console.log('ERROR', err_1);
-                        return [3 /*break*/, 5];
-                    case 5: return [4 /*yield*/, trivial.submitToRenVM(true)];
-                    case 6:
-                        mint = _e.sent();
-                        return [4 /*yield*/, new Promise(function (resolve, reject) {
-                                return mint.on('deposit', function (deposit) { return __awaiter(void 0, void 0, void 0, function () {
-                                    var hash, _a, _b, confirmed, status;
-                                    return __generator(this, function (_c) {
-                                        switch (_c.label) {
-                                            case 0: return [4 /*yield*/, resolve(deposit)];
-                                            case 1:
-                                                _c.sent();
-                                                return [4 /*yield*/, deposit.txHash()];
-                                            case 2:
-                                                hash = _c.sent();
-                                                console.log('hash', hash);
-                                                _b = (_a = console).log;
-                                                return [4 /*yield*/, deposit];
-                                            case 3:
-                                                _b.apply(_a, [_c.sent()]);
-                                                return [4 /*yield*/, deposit.confirmed()];
-                                            case 4:
-                                                confirmed = _c.sent();
-                                                confirmed
-                                                    .on('target', function (target) {
-                                                    console.log("0/" + target + " confirmations");
-                                                })
-                                                    .on('confirmation', function (confs, target) { return __awaiter(void 0, void 0, void 0, function () {
-                                                    return __generator(this, function (_a) {
-                                                        switch (_a.label) {
-                                                            case 0:
-                                                                console.log(confs + "/" + target + " confirmations");
-                                                                if (!(confs == 6)) return [3 /*break*/, 3];
-                                                                return [4 /*yield*/, new Promise(function (resolve, reject) {
-                                                                        setTimeout(resolve, 500);
-                                                                    })];
-                                                            case 1:
-                                                                _a.sent();
-                                                                return [4 /*yield*/, trivial.repay(keeperSigner)];
-                                                            case 2:
-                                                                _a.sent();
-                                                                _a.label = 3;
-                                                            case 3: return [2 /*return*/];
-                                                        }
-                                                    });
-                                                }); });
-                                                return [4 /*yield*/, deposit.signed()];
-                                            case 5:
-                                                status = _c.sent();
-                                                status.on('status', function (status) { return console.log('status', status); });
-                                                return [2 /*return*/];
-                                        }
-                                    });
-                                }); });
-                            })];
-                    case 7:
-                        _e.sent();
-                        return [4 /*yield*/, trivial.loan(keeperSigner)];
-                    case 8:
-                        _e.sent();
-                        trivial.waitForSignature = function () { return __awaiter(void 0, void 0, void 0, function () {
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0: return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 500); })];
-                                    case 1:
-                                        _a.sent();
-                                        return [2 /*return*/, {
-                                                amount: ethers_1.ethers.BigNumber.from(trivial.amount).sub(ethers_1.ethers.utils.parseUnits('0.0015', 8)).toString(),
-                                                nHash: ethers_1.ethers.utils.hexlify(ethers_1.ethers.utils.randomBytes(32)),
-                                                signature: ethers_1.ethers.utils.hexlify(ethers_1.ethers.utils.randomBytes(65))
-                                            }];
+        keeper.setTxDispatcher(function (request, requestType) {
+            if (requestType === void 0) { requestType = 'TRANSFER'; }
+            return __awaiter(void 0, void 0, void 0, function () {
+                var _a, trivial, func, loan_result, err_1;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0:
+                            _a = (function () {
+                                console.log('requestType', requestType);
+                                switch (requestType) {
+                                    case 'META':
+                                        return {
+                                            trivial: new UnderwriterRequest_1.UnderwriterMetaRequest(request),
+                                            func: 'meta'
+                                        };
+                                    case 'BURN':
+                                        return {
+                                            trivial: new UnderwriterRequest_1.UnderwriterBurnRequest(request),
+                                            func: 'burn'
+                                        };
+                                    default:
+                                        return {
+                                            trivial: new zero_1.UnderwriterTransferRequest(request),
+                                            func: 'loan'
+                                        };
                                 }
-                            });
-                        }); };
-                        return [2 /*return*/];
-                }
+                            })(), trivial = _a.trivial, func = _a.func;
+                            _b.label = 1;
+                        case 1:
+                            _b.trys.push([1, 3, , 4]);
+                            console.log('dry');
+                            return [4 /*yield*/, trivial.dry(keeperSigner)];
+                        case 2:
+                            loan_result = _b.sent();
+                            console.log('Loan Result', loan_result);
+                            return [3 /*break*/, 4];
+                        case 3:
+                            err_1 = _b.sent();
+                            console.log('ERROR', err_1);
+                            return [3 /*break*/, 4];
+                        case 4:
+                            if (!(requestType == 'TRANSFER')) return [3 /*break*/, 6];
+                            return [4 /*yield*/, waitForMint(trivial)];
+                        case 5:
+                            _b.sent();
+                            _b.label = 6;
+                        case 6:
+                            console.log(trivial[func], trivial, func);
+                            return [4 /*yield*/, trivial[func](keeperSigner)];
+                        case 7:
+                            _b.sent();
+                            trivial.waitForSignature = function () { return __awaiter(void 0, void 0, void 0, function () {
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0: return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 500); })];
+                                        case 1:
+                                            _a.sent();
+                                            return [2 /*return*/, {
+                                                    amount: requestType == 'TRANSFER' &&
+                                                        //@ts-ignore
+                                                        ethers_1.ethers.BigNumber.from(trivial.amount).sub(ethers_1.ethers.utils.parseUnits('0.0015', 8)).toString(),
+                                                    nHash: ethers_1.ethers.utils.hexlify(ethers_1.ethers.utils.randomBytes(32)),
+                                                    signature: ethers_1.ethers.utils.hexlify(ethers_1.ethers.utils.randomBytes(65))
+                                                }];
+                                    }
+                                });
+                            }); };
+                            return [2 /*return*/];
+                    }
+                });
             });
-        }); });
+        });
         return [2 /*return*/];
     });
 }); };
@@ -205,7 +246,70 @@ var enableGlobalMockRuntime = function () {
             });
         });
     };
-    zero_1.TransferRequest.prototype.submitToRenVM = function (flag) {
+    core_1.ZeroUser.prototype.publishMetaRequest = function (metaRequest) {
+        return __awaiter(this, void 0, void 0, function () {
+            var e_1;
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4 /*yield*/, Promise.all(keepers.map(function (v) { return __awaiter(_this, void 0, void 0, function () {
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0:
+                                            if (!v._txDispatcher) return [3 /*break*/, 2];
+                                            return [4 /*yield*/, v._txDispatcher(metaRequest, 'META')];
+                                        case 1: return [2 /*return*/, _a.sent()];
+                                        case 2: return [2 /*return*/];
+                                    }
+                                });
+                            }); }))["catch"](console.error)];
+                    case 1:
+                        _a.sent();
+                        return [3 /*break*/, 3];
+                    case 2:
+                        e_1 = _a.sent();
+                        console.error(e_1);
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    core_1.ZeroUser.prototype.publishBurnRequest = function (burnRequest) {
+        return __awaiter(this, void 0, void 0, function () {
+            var e_2;
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        console.log(keepers.length);
+                        return [4 /*yield*/, Promise.all(keepers.map(function (v) { return __awaiter(_this, void 0, void 0, function () {
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0:
+                                            if (!v._txDispatcher) return [3 /*break*/, 2];
+                                            return [4 /*yield*/, v._txDispatcher(burnRequest, 'BURN')];
+                                        case 1: return [2 /*return*/, _a.sent()];
+                                        case 2: return [2 /*return*/];
+                                    }
+                                });
+                            }); }))["catch"](console.error)];
+                    case 1:
+                        _a.sent();
+                        return [3 /*break*/, 3];
+                    case 2:
+                        e_2 = _a.sent();
+                        console.error(e_2);
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    zero_1.UnderwriterTransferRequest.prototype.submitToRenVM = function (flag) {
         return __awaiter(this, void 0, void 0, function () {
             var confirmed, gatewayAddress, _signed, target, timeout, txHash, mint, deposit;
             var _this = this;
