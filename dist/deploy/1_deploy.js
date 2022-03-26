@@ -520,7 +520,7 @@ module.exports = function (_a) {
                 case 101:
                     // Unwrapper wETH -> ETH
                     _p.sent();
-                    return [4 /*yield*/, controller.setGasParameters(ethers.utils.parseUnits('2', 9), '250000', '500000')];
+                    return [4 /*yield*/, controller.setGasParameters(ethers.utils.parseUnits('2', 9), '250000', '500000', '500000')];
                 case 102:
                     _p.sent();
                     return [2 /*return*/];

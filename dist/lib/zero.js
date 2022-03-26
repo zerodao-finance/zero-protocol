@@ -57,9 +57,12 @@ function createZeroConnection(address) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    connOptions = {
-                        multiaddr: address
-                    };
+                    switch (address) {
+                        case 'mainnet':
+                            connOptions = { multiaddr: '/dns4/p2p.zerodao.com/tcp/443/wss/p2p-webrtc-star/' };
+                        default:
+                            connOptions = { multiaddr: address };
+                    }
                     return [4 /*yield*/, (0, p2p_1.createNode)(connOptions)];
                 case 1: return [2 /*return*/, _a.sent()];
             }

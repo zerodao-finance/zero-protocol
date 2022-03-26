@@ -3,10 +3,16 @@ import { _TypedDataEncoder } from '@ethersproject/hash';
 import { createNode, ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
 import { PersistenceAdapter } from './persistence';
 
-export async function createZeroConnection(address: string): Promise<ZeroConnection> {
-	const connOptions = {
-		multiaddr: address,
-	};
+export async function createZeroConnection(address?: string): Promise<ZeroConnection> {
+	
+	var connOptions
+	switch (address) {
+		case 'mainnet':
+			connOptions = { multiaddr: '/dns4/p2p.zerodao.com/tcp/443/wss/p2p-webrtc-star/'}
+		default:
+			connOptions =  { multiaddr: address }
+	}
+
 	return await createNode(connOptions);
 }
 
