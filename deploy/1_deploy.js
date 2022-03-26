@@ -346,5 +346,5 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 
 	// Unwrapper wETH -> ETH
 	await setConverter(controller, 'wNative', ethers.constants.AddressZero, unwrapper.address);
-	await controller.setGasParameters(ethers.utils.parseUnits('2', 9), '250000', '500000');
+	await controller.setGasParameters(ethers.utils.parseUnits('2', 9), '250000', '500000', '500000');
 };
