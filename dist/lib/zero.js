@@ -82,6 +82,7 @@ exports.createZeroKeeper = createZeroKeeper;
 var deployment_utils_1 = require("./deployment-utils");
 __createBinding(exports, deployment_utils_1, "getProvider");
 __createBinding(exports, deployment_utils_1, "logger");
+__exportStar(require("./BurnRequest"), exports);
 __exportStar(require("./UnderwriterRequest"), exports);
 __exportStar(require("./TransferRequest"), exports);
 __exportStar(require("./MetaRequest"), exports);

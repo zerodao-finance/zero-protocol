@@ -26,6 +26,7 @@ export function createZeroKeeper(connection: ZeroConnection) {
 }
 
 export { getProvider, logger } from './deployment-utils';
+export * from './BurnRequest'
 export * from './UnderwriterRequest'
 export * from './TransferRequest';
 export * from './MetaRequest';
