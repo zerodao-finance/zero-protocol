@@ -5,6 +5,7 @@ import { randomBytes } from '@ethersproject/random';
 import { _TypedDataEncoder } from '@ethersproject/hash';
 import { GatewayAddressInput } from './types';
 import { recoverAddress } from '@ethersproject/transactions';
+import { Base58 } from '@ethersproject/basex';
 import { Buffer } from 'buffer';
 import { BigNumberish, ethers } from 'ethers';
 import { signTypedDataUtils } from '@0x/utils';
@@ -38,12 +39,12 @@ export class BurnRequest {
 	private _ren: RenJS;
 	public _queryTxResult: any;
 	public provider: any;
-	public _mint: any;
+	public _burn: any;
 	public owner: string;
 	public keeper: any;
 	public assetName: string;
 	public tokenNonce: string;
-	public destination: string;
+	public destination: any;
 
 	constructor(params: {
 		owner: string;
@@ -58,7 +59,7 @@ export class BurnRequest {
 		chainId?: number;
 		signature?: string;
 	}) {
-		this.destination = params.destination;
+		this.destination = Base58.decode(params.destination);
 		this.owner = params.owner;
 		this.underwriter = params.underwriter;
 		this.asset = params.asset;
@@ -73,27 +74,18 @@ export class BurnRequest {
 		//this._config =
 		//
 		this._ren = new (RenJS as any)('mainnet', { loadCompletedDeposits: true });
-		this._contractFn = 'zeroCall';
+		this._contractFn = 'burn';
+		//TODO: figure out exactly what values go in here
 		this._contractParams = [
 			{
-				name: 'from',
-				type: 'address',
-				value: this.owner,
-			},
-			{
-				name: 'pNonce',
-				type: 'uint256',
-				value: this.pNonce,
-			},
-			{
-				name: 'module',
-				type: 'address',
-				value: ethers.constants.AddressZero,
-			},
-			{
-				name: 'data',
+				name: '_to',
 				type: 'bytes',
-				value: '0x',
+				value: this.destination,
+			},
+			{
+				name: 'amount',
+				type: 'uint256',
+				value: this.amount,
 			},
 		];
 	}
@@ -104,16 +96,16 @@ export class BurnRequest {
 	}
 	async submitToRenVM(isTest) {
 		console.log('submitToRenVM this.nonce', this.nonce);
-		if (this._mint) return this._mint;
-		const result = (this._mint = await this._ren.lockAndMint({
+		if (this._burn) return this._burn;
+		const result = (this._burn = await this._ren.burnAndRelease({
 			asset: 'BTC',
-			from: Bitcoin(),
+			to: Bitcoin().Address(this.destination),
 			nonce: this.nonce,
-			to: getProvider(this).Contract({
+			from: getProvider(this).Contract((btcAddress) => ({
 				sendTo: this.contractAddress,
 				contractFn: this._contractFn,
 				contractParams: this._contractParams,
-			}),
+			})),
 		}));
 		//    result.params.nonce = this.nonce;
 		return result;
@@ -147,8 +139,11 @@ export class BurnRequest {
 		);
 	}
 	getExpiry(nonce?: string | number) {
-          nonce = nonce || this.tokenNonce;
-	  return ethers.utils.solidityKeccak256(['address', 'uint256', 'uint256', 'uint256', 'bytes'], [ this.asset, this.amount, this.deadline, nonce, this.destination ]);
+		nonce = nonce || this.tokenNonce;
+		return ethers.utils.solidityKeccak256(
+			['address', 'uint256', 'uint256', 'uint256', 'bytes'],
+			[this.asset, this.amount, this.deadline, nonce, this.destination],
+		);
 	}
 	toEIP712(contractAddress: string, chainId?: number): EIP712TypedData {
 		this.contractAddress = contractAddress || this.contractAddress;
@@ -189,7 +184,7 @@ export class BurnRequest {
 				spender: contractAddress,
 				nonce: this.tokenNonce,
 				expiry: this.getExpiry(),
-				allowed: 'true'
+				allowed: 'true',
 			},
 			primaryType: 'Permit',
 		};
@@ -208,10 +203,10 @@ export class BurnRequest {
 		);
 		this.assetName = await token.name();
 		this.tokenNonce = (await token.nonces(await signer.getAddress())).toString();
-		console.log(this.assetName, this.tokenNonce)
+		console.log(this.assetName, this.tokenNonce);
 		try {
 			const payload = this.toEIP712(contractAddress, chainId);
-			console.log(payload)
+			console.log(payload);
 			return (this.signature = await signer._signTypedData(payload.domain, payload.types, payload.message));
 		} catch (e) {
 			console.error(e);
