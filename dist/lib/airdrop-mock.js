@@ -42,23 +42,22 @@ exports.__esModule = true;
 exports.testClaim = exports.startMockEnvironment = void 0;
 var hre = require('hardhat');
 var ethers = hre.ethers, deployments = hre.deployments;
-require("../deployments/localhost/ZeroDistributor.json");
 var balance_tree_1 = __importDefault(require("./merkle/balance-tree"));
 require("./merkle/merkle-tree");
 var config = {
     decimals: 18,
     airdrop: {
-        "0xe32d9D1F1484f57F8b5198f90bcdaBC914de0B5A": "100",
-        "0x7f78Da15E8298e7afe6404c54D93cb5269D97570": "100",
-        "0xdd2fd4581271e230360230f9337d5c0430bf44c0": "100",
-        "0x46F71A5b3aCF70cc1Eab83234c158A27F350c66A": "100"
+        '0xe32d9D1F1484f57F8b5198f90bcdaBC914de0B5A': '100',
+        '0x7f78Da15E8298e7afe6404c54D93cb5269D97570': '100',
+        '0xdd2fd4581271e230360230f9337d5c0430bf44c0': '100',
+        '0x46F71A5b3aCF70cc1Eab83234c158A27F350c66A': '100'
     }
 };
 var whitelist_config = [
-    { account: "0xe32d9D1F1484f57F8b5198f90bcdaBC914de0B5A", amount: ethers.utils.parseUnits('100', 18) },
-    { account: "0x46F71A5b3aCF70cc1Eab83234c158A27F350c66A", amount: ethers.utils.parseUnits('100', 18) },
-    { account: "0x7f78Da15E8298e7afe6404c54D93cb5269D97570", amount: ethers.utils.parseUnits('100', 18) },
-    { account: "0xdd2fd4581271e230360230f9337d5c0430bf44c0", amount: ethers.utils.parseUnits('100', 18) },
+    { account: '0xe32d9D1F1484f57F8b5198f90bcdaBC914de0B5A', amount: ethers.utils.parseUnits('100', 18) },
+    { account: '0x46F71A5b3aCF70cc1Eab83234c158A27F350c66A', amount: ethers.utils.parseUnits('100', 18) },
+    { account: '0x7f78Da15E8298e7afe6404c54D93cb5269D97570', amount: ethers.utils.parseUnits('100', 18) },
+    { account: '0xdd2fd4581271e230360230f9337d5c0430bf44c0', amount: ethers.utils.parseUnits('100', 18) },
 ];
 var startMockEnvironment = function () { return __awaiter(void 0, void 0, void 0, function () {
     var _a, owner, treasury, zeroDistributor, zeroToken, mTree, hexRoot, _b, _c, _d;
@@ -66,10 +65,10 @@ var startMockEnvironment = function () { return __awaiter(void 0, void 0, void 0
         switch (_e.label) {
             case 0:
                 _a = ethers.getSigners(), owner = _a[0], treasury = _a[1];
-                return [4 /*yield*/, new ethers.getContractFactory("ZeroDistributor", owner)];
+                return [4 /*yield*/, new ethers.getContractFactory('ZeroDistributor', owner)];
             case 1:
                 zeroDistributor = _e.sent();
-                return [4 /*yield*/, ethers.getContract("ZERO", treasury)];
+                return [4 /*yield*/, ethers.getContract('ZERO', treasury)];
             case 2:
                 zeroToken = _e.sent();
                 mTree = new balance_tree_1["default"](whitelist_config);
@@ -92,15 +91,19 @@ var testClaim = function (address, mTree) { return __awaiter(void 0, void 0, voi
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                index = whitelist_config.map(function (i) { return i.account; }).indexOf(address);
+                index = whitelist_config
+                    .map(function (i) {
+                    return i.account;
+                })
+                    .indexOf(address);
                 proof = mTree.getProof(index, whitelist_config[index].account, whitelist_config[index].amount);
                 return [4 /*yield*/, ethers.getSigners()];
             case 1:
                 signer = (_a.sent())[0];
-                return [4 /*yield*/, ethers.getContract("ZeroDistributor", signer)];
+                return [4 /*yield*/, ethers.getContract('ZeroDistributor', signer)];
             case 2:
                 zDist = _a.sent();
-                return [4 /*yield*/, zDist.claim(index, address, (whitelist_config[index].amount).toString(), proof)];
+                return [4 /*yield*/, zDist.claim(index, address, whitelist_config[index].amount.toString(), proof)];
             case 3:
                 _a.sent();
                 return [2 /*return*/, true];
