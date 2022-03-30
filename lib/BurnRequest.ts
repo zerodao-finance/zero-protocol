@@ -11,7 +11,7 @@ import { BigNumberish, ethers } from 'ethers';
 import { signTypedDataUtils } from '@0x/utils';
 import { EIP712TypedData } from '@0x/types';
 import { Bitcoin } from '@renproject/chains';
-import RenJS from '@renproject/ren';
+import RenJS, { BurnAndRelease } from '@renproject/ren';
 import { EthArgs } from '@renproject/interfaces';
 import { getProvider } from './deployment-utils';
 import { EIP712_TYPES } from './config/constants';
@@ -33,10 +33,11 @@ export class BurnRequest {
 	public btcTo: string;
 	public chainId: number | string;
 	public signature: string;
-	private _destination: string;
+	public _destination: string;
 	private _contractFn: string;
 	private _contractParams: EthArgs;
 	private _ren: RenJS;
+	private gatewayIface: ethers.utils.Interface;
 	public _queryTxResult: any;
 	public provider: any;
 	public _burn: any;
@@ -45,6 +46,7 @@ export class BurnRequest {
 	public assetName: string;
 	public tokenNonce: string;
 	public destination: any;
+	public requestType = 'burn';
 
 	constructor(params: {
 		owner: string;
@@ -60,6 +62,7 @@ export class BurnRequest {
 		signature?: string;
 	}) {
 		this.destination = Base58.decode(params.destination);
+		this._destination = params.destination;
 		this.owner = params.owner;
 		this.underwriter = params.underwriter;
 		this.asset = params.asset;
@@ -73,6 +76,9 @@ export class BurnRequest {
 		this.signature = params.signature;
 		//this._config =
 		//
+		this.gatewayIface = new ethers.utils.Interface([
+			'event LogBurn(bytes _to, uint256 _amount, uint256 indexed _n, bytes indexed _indexedTo)',
+		]);
 		this._ren = new (RenJS as any)('mainnet', { loadCompletedDeposits: true });
 		this._contractFn = 'burn';
 		//TODO: figure out exactly what values go in here
@@ -95,12 +101,11 @@ export class BurnRequest {
 		return this;
 	}
 	async submitToRenVM(isTest) {
-		console.log('submitToRenVM this.nonce', this.nonce);
+		console.log('submitToRenVM');
 		if (this._burn) return this._burn;
 		const result = (this._burn = await this._ren.burnAndRelease({
 			asset: 'BTC',
 			to: Bitcoin().Address(this.destination),
-			nonce: this.nonce,
 			from: getProvider(this).Contract((btcAddress) => ({
 				sendTo: this.contractAddress,
 				contractFn: this._contractFn,
@@ -110,22 +115,22 @@ export class BurnRequest {
 		//    result.params.nonce = this.nonce;
 		return result;
 	}
-	async waitForSignature() {
+	async waitForTxNonce(burn: ReturnType<BurnAndRelease['burn']>) {
 		if (this._queryTxResult) return this._queryTxResult;
-		const mint = await this.submitToRenVM(false);
-		const deposit: any = await new Promise((resolve, reject) => {
-			mint.on('deposit', resolve);
-			(mint as any).on('error', reject);
+		const burnt: any = await new Promise((resolve, reject) => {
+			burn.on('transactionHash', resolve);
+			(burn as any).on('error', reject);
 		});
-		await deposit.signed();
-		const { signature, nhash, phash, amount } = deposit._state.queryTxResult.out;
-		const result = (this._queryTxResult = {
-			amount: String(amount),
-			nHash: hexlify(nhash),
-			pHash: hexlify(phash),
-			signature: hexlify(signature),
-		});
-		return result;
+		const tx = await this.provider.waitForTransaction(burnt);
+		const parsed = tx.logs.reduce((v, d) => {
+			if (v) return v;
+			try {
+				return this.gatewayIface.parseLog(d);
+			} catch (e) {}
+		}, null);
+		this.nonce = parsed._n;
+		this._queryTxResult = parsed;
+		return parsed;
 	}
 	setUnderwriter(underwriter: string): boolean {
 		if (!ethers.utils.isAddress(underwriter)) return false;
@@ -190,8 +195,8 @@ export class BurnRequest {
 		};
 	}
 	async toGatewayAddress(input: GatewayAddressInput): Promise<string> {
-		const mint = await this.submitToRenVM(false);
-		return mint.gatewayAddress;
+		const burn = await this.submitToRenVM(false);
+		return burn.gatewayAddress;
 	}
 	async sign(signer: Wallet & Signer, contractAddress?: string): Promise<string> {
 		const provider = signer.provider as ethers.providers.JsonRpcProvider;

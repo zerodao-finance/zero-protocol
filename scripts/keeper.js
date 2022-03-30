@@ -1,7 +1,7 @@
 import { Wallet } from 'ethers';
 const { ethers } = require('hardhat');
 const path = require('path');
-const { UnderwriterTransferRequest } = require('../lib/zero');
+const { UnderwriterTransferRequest, UnderwriterBurnRequest } = require('../lib/zero');
 const { createZeroConnection, createZeroKeeper } = require('../lib/zero');
 const { LevelDBPersistenceAdapter } = require('../lib/persistence/leveldb');
 const Underwriter = require('../deployments/arbitrum/DelegateUnderwriter');
@@ -63,23 +63,6 @@ const executeLoan = async (transferRequest) => {
 
 	const repay = await transferRequest.repay(wallet);
 	await repay.wait();
-};
-
-const executeBurn = async (burnRequest) => {
-	const [signer] = await ethers.getSigners();
-	global.signer = signer;
-	global.provider = signer.provider;
-
-	const wallet = new Wallet(process.env.WALLET, signer.provider);
-
-	console.log(burnRequest);
-	burnRequest.setProvider(signer.provider);
-	console.log('running a staticcall');
-	await burnRequest.dry(signer);
-	const burn = await burnRequest.burn(wallet);
-	console.log('burn request executed:');
-	console.log(burn);
-	console.log(await burn.wait());
 };
 
 const hasEnough = async (transferRequest) => {
@@ -154,12 +137,53 @@ const handleTransferRequest = async (message) => {
 	}
 };
 
+const handleBurnRequest = (message) => {
+	try {
+		const burnRequest = new UnderwriterBurnRequest({
+			amount: message.amount,
+			asset: message.asset,
+			deadline: message.deadline,
+			destination: message.destination,
+			owner: message.owner,
+			underwriter: message.underwriter,
+			chainId: message.chainId,
+			contractAddress: message.contractAddress,
+			signature: message.signature,
+		});
+		const [signer] = await ethers.getSigners();
+		burnRequest.setProvider(signer.provider);
+		//if (!(hasEnough(transferRequest))) return;
+		console.log('Submitting to renVM...');
+		const burnAndRelease = await burnRequest.submitToRenVM();
+		console.log('Successfully submitted to renVM.');
+		console.log('Gateway address is', await burnRequest.toGatewayAddress());
+		console.log('RECEIVED MESSAGE', message);
+		console.log('RECEIVED TRANSFER REQUEST', burnRequest);
+		const burn = await burnAndRelease.burn();
+		const tx = await burnRequest.waitForTxNonce(burn);
+		await burnAndRelease
+			.release()
+			.on('status', (status) => (status === 'confirming' ? console.log('confirming') : console.log(status)))
+			.on('txHash', console.log);
+	} catch (e) {
+		console.log(e);
+	}
+};
+
+const handler = {
+	transfer: handleTransferRequest,
+	burn: handleBurnRequest,
+};
+
+const handleRequest = (request, type = 'transfer') =>
+	handler[request.requestType ? request.requestType : type](request);
+
 const run = async () => {
 	// Initialize the keeper
 	const keeper = createZeroKeeper(await createZeroConnection(KEEPER_URL));
 	if (!process.env.ZERO_PERSISTENCE_DB) process.env.ZERO_PERSISTENCE_DB = path.join(process.env.HOME, '.keeper.db');
 	keeper.setPersistence(new LevelDBPersistenceAdapter());
-	await keeper.setTxDispatcher(handleTransferRequest);
+	await keeper.setTxDispatcher(handleRequest);
 	await keeper.conn.start();
 	await keeper.advertiseAsKeeper();
 };
