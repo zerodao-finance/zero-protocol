@@ -13,12 +13,12 @@ type LocalStorageBackendType = Storage;
 const getValue = async (level: any, key: string): Promise<string> =>
 	await new Promise((resolve, reject) =>
 		level.get(key, (err, result: string) => {
-	          if (err) {
-	            if (err.notFound) return resolve(null);
-		    else return reject(err);
-		  } else resolve(result);
-		}));
-	
+			if (err) {
+				if (err.notFound) return resolve(null);
+				else return reject(err);
+			} else resolve(result);
+		}),
+	);
 
 const setValue = async (level, key: string, value: string) =>
 	await new Promise<void>((resolve, reject) => level.put(key, value, (err) => (err ? reject(err) : resolve())));
@@ -29,12 +29,26 @@ const toKey = (key) => 'request:' + key;
 const toIndexKey = (key) => 'index:' + key;
 const toKeyFromIndexKey = (index) => 'key: ' + index;
 
-const transferRequestToKey = (transferRequest) =>
-	ethers.utils.solidityKeccak256(['bytes'], [transferRequest.signature]);
+const requestToKey = (request) => ethers.utils.solidityKeccak256(['bytes'], [request.signature]);
 
-const transferRequestToPlain = (transferRequest) => {
-	const { to, underwriter, contractAddress, nonce, pNonce, data, module, amount, asset, status, signature, chainId } =
-		transferRequest;
+const requestToPlain = (request) => {
+	const {
+		to,
+		underwriter,
+		contractAddress,
+		nonce,
+		pNonce,
+		data,
+		module,
+		amount,
+		asset,
+		status,
+		signature,
+		chainId,
+		_destination,
+		addressFrom,
+		requestType,
+	} = request;
 	return {
 		to,
 		chainId,
@@ -48,6 +62,9 @@ const transferRequestToPlain = (transferRequest) => {
 		status,
 		asset,
 		signature,
+		_destination,
+		addressFrom,
+		requestType,
 	};
 };
 
@@ -55,7 +72,7 @@ export class LevelDBPersistenceAdapter implements PersistenceAdapter<LocalStorag
 	backend: any;
 	constructor() {
 		let db = process.env.ZERO_PERSISTENCE_DB;
-                if (db === '::memory') this.backend = levelup(memdown());
+		if (db === '::memory') this.backend = levelup(memdown());
 		else this.backend = level(db);
 	}
 	async length() {
@@ -71,7 +88,7 @@ export class LevelDBPersistenceAdapter implements PersistenceAdapter<LocalStorag
 		return (await getValue(this.backend, toKeyFromIndexKey(index))) || null;
 	}
 	async set(transferRequest) {
-		const key = transferRequestToKey(transferRequest);
+		const key = requestToKey(transferRequest);
 		let index = await this.getIndex(key);
 		if (!~index) {
 			index = await this.length();
@@ -79,7 +96,7 @@ export class LevelDBPersistenceAdapter implements PersistenceAdapter<LocalStorag
 		}
 		await setValue(this.backend, toIndexKey(key), String(index));
 		await setValue(this.backend, toKeyFromIndexKey(index), key);
-		await setValue(this.backend, toKey(key), JSON.stringify(transferRequestToPlain(transferRequest)));
+		await setValue(this.backend, toKey(key), JSON.stringify(requestToPlain(transferRequest)));
 		return key;
 	}
 	async remove(key) {
