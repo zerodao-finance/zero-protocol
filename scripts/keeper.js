@@ -24,7 +24,7 @@ const LOAN_CONFIRMATION = 1;
 const MAX_AMOUNT = 50000000;
 
 // URL of P2P network to use. DON'T MODIFY unless you know what you're doing...
-const KEEPER_URL = '/dns4/lourdehaufen.dynv6.net/tcp/443/wss/p2p-webrtc-star/';
+const KEEPER_URL = '/dns4/p2p.zerodao.com/tcp/443/wss/p2p-webrtc-star/'
 
 //-----------------------------------------------------------------------------
 const _getSigners = ethers.getSigners;
