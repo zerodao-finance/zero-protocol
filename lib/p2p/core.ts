@@ -132,6 +132,7 @@ class ZeroUser extends EventEmitter {
 				'owner',
 				'amount',
 				'deadline',
+				'requestType',
 			],
 			'burn',
 		);
@@ -150,6 +151,7 @@ class ZeroUser extends EventEmitter {
 				'signature',
 				'underwriter',
 				'addressFrom',
+				'requestType',
 			],
 			'meta',
 		);
@@ -168,6 +170,7 @@ class ZeroUser extends EventEmitter {
 			'signature',
 			'to',
 			'underwriter',
+			'requestType',
 		]);
 	}
 }
