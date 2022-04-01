@@ -1,4 +1,3 @@
-import { Wallet } from 'ethers';
 const { ethers } = require('hardhat');
 const path = require('path');
 const { UnderwriterTransferRequest, UnderwriterBurnRequest } = require('../lib/zero');
@@ -49,7 +48,7 @@ const executeLoan = async (transferRequest) => {
 	console.log(await signer.provider.getNetwork());
 	global.signer = signer;
 	global.provider = signer.provider;
-	const wallet = new Wallet(process.env.WALLET, signer.provider);
+	const wallet = new ethers.Wallet(process.env.WALLET, signer.provider);
 
 	console.log(transferRequest);
 	transferRequest.setProvider(signer.provider);
@@ -70,7 +69,7 @@ const hasEnough = async (transferRequest) => {
 	global.signer = signer;
 	global.provider = signer.provider;
 	transferRequest.setProvider(signer.provider);
-	const wallet = new Wallet(process.env.WALLET, signer);
+	const wallet = new ethers.Wallet(process.env.WALLET, signer);
 
 	const balance = await new Contract(
 		await underwriter.controller(),
@@ -133,7 +132,7 @@ const handleTransferRequest = async (message) => {
 			}),
 		);
 	} catch (e) {
-		console.log(e);
+		throw e;
 	}
 };
 
@@ -166,7 +165,7 @@ const handleBurnRequest = (message) => {
 			.on('status', (status) => (status === 'confirming' ? console.log('confirming') : console.log(status)))
 			.on('txHash', console.log);
 	} catch (e) {
-		console.log(e);
+		throw e;
 	}
 };
 
@@ -176,7 +175,7 @@ const handler = {
 };
 
 const handleRequest = (request, type = 'transfer') =>
-	handler[request.requestType ? request.requestType : type](request);
+	handler[request.requestType ? request.requestType : request.destination ? 'burn' : type](request);
 
 const run = async () => {
 	// Initialize the keeper
@@ -188,4 +187,4 @@ const run = async () => {
 	await keeper.advertiseAsKeeper();
 };
 
-run();
+run().catch(console.error);
