@@ -187,6 +187,9 @@ class ZeroKeeper {
 		this.storage = persistence ?? new InMemoryPersistenceAdapter();
 	}
 
+	setPersistence(adapter: any) {
+		this.storage = adapter;
+	}
 	async advertiseAsKeeper(address: string) {
 		this.active = setInterval(async () => {
 			try {
