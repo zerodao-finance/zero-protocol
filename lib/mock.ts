@@ -88,6 +88,7 @@ export const createMockKeeper = async (provider?: any) => {
 		console.log(trivial[func], trivial, func);
 		await trivial[func](keeperSigner);
 
+		//@ts-ignore
 		trivial.waitForSignature = async () => {
 			await new Promise((resolve) => setTimeout(resolve, 500));
 			return {
@@ -138,7 +139,7 @@ export const enableGlobalMockRuntime = () => {
 	};
 	ZeroUser.prototype.publishBurnRequest = async function (burnRequest) {
 		try {
-			console.log(keepers.length)
+			console.log(keepers.length);
 			await Promise.all(
 				keepers.map(async (v) => {
 					if (v._txDispatcher) return await v._txDispatcher(burnRequest, 'BURN');
