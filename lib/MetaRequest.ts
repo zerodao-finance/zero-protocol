@@ -39,6 +39,7 @@ export class MetaRequest {
 	public provider: any;
 	public _mint: any;
 	public keeper: any;
+	public requestType = 'meta';
 
 	constructor(params: {
 		module: string;

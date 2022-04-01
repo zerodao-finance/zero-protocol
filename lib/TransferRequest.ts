@@ -36,6 +36,7 @@ export class TransferRequest {
 	public _queryTxResult: any;
 	public provider: any;
 	public _mint: any;
+	public requestType = 'transfer';
 
 	constructor(params: {
 		module: string;
@@ -193,4 +194,3 @@ export class TransferRequest {
 		}
 	}
 }
-

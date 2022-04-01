@@ -4,14 +4,13 @@ import { createNode, ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
 import { PersistenceAdapter } from './persistence';
 
 export async function createZeroConnection(address?: string): Promise<ZeroConnection> {
-	
-	var connOptions
+	var connOptions;
 	switch (address) {
 		case 'mainnet':
-			connOptions = { multiaddr: '/dns4/p2p.zerodao.com/tcp/443/wss/p2p-webrtc-star/'}
-			break
+			connOptions = { multiaddr: '/dns4/p2p.zerodao.com/tcp/443/wss/p2p-webrtc-star/' };
+			break;
 		default:
-			connOptions =  { multiaddr: address }
+			connOptions = { multiaddr: address };
 	}
 
 	return await createNode(connOptions);
@@ -26,7 +25,9 @@ export function createZeroKeeper(connection: ZeroConnection) {
 }
 
 export { getProvider, logger } from './deployment-utils';
-export * from './BurnRequest'
-export * from './UnderwriterRequest'
+
+export * from './BurnRequest';
+export * from './UnderwriterRequest';
 export * from './TransferRequest';
 export * from './MetaRequest';
+export * from './BurnRequest';

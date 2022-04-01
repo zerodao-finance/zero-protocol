@@ -5,12 +5,13 @@ import { randomBytes } from '@ethersproject/random';
 import { _TypedDataEncoder } from '@ethersproject/hash';
 import { GatewayAddressInput } from './types';
 import { recoverAddress } from '@ethersproject/transactions';
+import { Base58 } from '@ethersproject/basex';
 import { Buffer } from 'buffer';
 import { BigNumberish, ethers } from 'ethers';
 import { signTypedDataUtils } from '@0x/utils';
 import { EIP712TypedData } from '@0x/types';
 import { Bitcoin } from '@renproject/chains';
-import RenJS from '@renproject/ren';
+import RenJS, { BurnAndRelease } from '@renproject/ren';
 import { EthArgs } from '@renproject/interfaces';
 import { getProvider } from './deployment-utils';
 import { EIP712_TYPES } from './config/constants';
@@ -32,18 +33,20 @@ export class BurnRequest {
 	public btcTo: string;
 	public chainId: number | string;
 	public signature: string;
-	private _destination: string;
+	public _destination: string;
 	private _contractFn: string;
 	private _contractParams: EthArgs;
 	private _ren: RenJS;
+	private gatewayIface: ethers.utils.Interface;
 	public _queryTxResult: any;
 	public provider: any;
-	public _mint: any;
+	public _burn: any;
 	public owner: string;
 	public keeper: any;
 	public assetName: string;
 	public tokenNonce: string;
-	public destination: string;
+	public destination: any;
+	public requestType = 'burn';
 
 	constructor(params: {
 		owner: string;
@@ -58,7 +61,8 @@ export class BurnRequest {
 		chainId?: number;
 		signature?: string;
 	}) {
-		this.destination = params.destination;
+		this.destination = Base58.decode(params.destination);
+		this._destination = params.destination;
 		this.owner = params.owner;
 		this.underwriter = params.underwriter;
 		this.asset = params.asset;
@@ -72,28 +76,22 @@ export class BurnRequest {
 		this.signature = params.signature;
 		//this._config =
 		//
+		this.gatewayIface = new ethers.utils.Interface([
+			'event LogBurn(bytes _to, uint256 _amount, uint256 indexed _n, bytes indexed _indexedTo)',
+		]);
 		this._ren = new (RenJS as any)('mainnet', { loadCompletedDeposits: true });
-		this._contractFn = 'zeroCall';
+		this._contractFn = 'burn';
+		//TODO: figure out exactly what values go in here
 		this._contractParams = [
 			{
-				name: 'from',
-				type: 'address',
-				value: this.owner,
-			},
-			{
-				name: 'pNonce',
-				type: 'uint256',
-				value: this.pNonce,
-			},
-			{
-				name: 'module',
-				type: 'address',
-				value: ethers.constants.AddressZero,
-			},
-			{
-				name: 'data',
+				name: '_to',
 				type: 'bytes',
-				value: '0x',
+				value: this.destination,
+			},
+			{
+				name: 'amount',
+				type: 'uint256',
+				value: this.amount,
 			},
 		];
 	}
@@ -103,37 +101,36 @@ export class BurnRequest {
 		return this;
 	}
 	async submitToRenVM(isTest) {
-		console.log('submitToRenVM this.nonce', this.nonce);
-		if (this._mint) return this._mint;
-		const result = (this._mint = await this._ren.lockAndMint({
+		console.log('submitToRenVM');
+		if (this._burn) return this._burn;
+		const result = (this._burn = await this._ren.burnAndRelease({
 			asset: 'BTC',
-			from: Bitcoin(),
-			nonce: this.nonce,
-			to: getProvider(this).Contract({
+			to: Bitcoin().Address(this.destination),
+			from: getProvider(this).Contract((btcAddress) => ({
 				sendTo: this.contractAddress,
 				contractFn: this._contractFn,
 				contractParams: this._contractParams,
-			}),
+			})),
 		}));
 		//    result.params.nonce = this.nonce;
 		return result;
 	}
-	async waitForSignature() {
+	async waitForTxNonce(burn: ReturnType<BurnAndRelease['burn']>) {
 		if (this._queryTxResult) return this._queryTxResult;
-		const mint = await this.submitToRenVM(false);
-		const deposit: any = await new Promise((resolve, reject) => {
-			mint.on('deposit', resolve);
-			(mint as any).on('error', reject);
+		const burnt: any = await new Promise((resolve, reject) => {
+			burn.on('transactionHash', resolve);
+			(burn as any).on('error', reject);
 		});
-		await deposit.signed();
-		const { signature, nhash, phash, amount } = deposit._state.queryTxResult.out;
-		const result = (this._queryTxResult = {
-			amount: String(amount),
-			nHash: hexlify(nhash),
-			pHash: hexlify(phash),
-			signature: hexlify(signature),
-		});
-		return result;
+		const tx = await this.provider.waitForTransaction(burnt);
+		const parsed = tx.logs.reduce((v, d) => {
+			if (v) return v;
+			try {
+				return this.gatewayIface.parseLog(d);
+			} catch (e) {}
+		}, null);
+		this.nonce = parsed._n;
+		this._queryTxResult = parsed;
+		return parsed;
 	}
 	setUnderwriter(underwriter: string): boolean {
 		if (!ethers.utils.isAddress(underwriter)) return false;
@@ -147,8 +144,11 @@ export class BurnRequest {
 		);
 	}
 	getExpiry(nonce?: string | number) {
-          nonce = nonce || this.tokenNonce;
-	  return ethers.utils.solidityKeccak256(['address', 'uint256', 'uint256', 'uint256', 'bytes'], [ this.asset, this.amount, this.deadline, nonce, this.destination ]);
+		nonce = nonce || this.tokenNonce;
+		return ethers.utils.solidityKeccak256(
+			['address', 'uint256', 'uint256', 'uint256', 'bytes'],
+			[this.asset, this.amount, this.deadline, nonce, this.destination],
+		);
 	}
 	toEIP712(contractAddress: string, chainId?: number): EIP712TypedData {
 		this.contractAddress = contractAddress || this.contractAddress;
@@ -189,14 +189,14 @@ export class BurnRequest {
 				spender: contractAddress,
 				nonce: this.tokenNonce,
 				expiry: this.getExpiry(),
-				allowed: 'true'
+				allowed: 'true',
 			},
 			primaryType: 'Permit',
 		};
 	}
 	async toGatewayAddress(input: GatewayAddressInput): Promise<string> {
-		const mint = await this.submitToRenVM(false);
-		return mint.gatewayAddress;
+		const burn = await this.submitToRenVM(false);
+		return burn.gatewayAddress;
 	}
 	async sign(signer: Wallet & Signer, contractAddress?: string): Promise<string> {
 		const provider = signer.provider as ethers.providers.JsonRpcProvider;
@@ -208,10 +208,10 @@ export class BurnRequest {
 		);
 		this.assetName = await token.name();
 		this.tokenNonce = (await token.nonces(await signer.getAddress())).toString();
-		console.log(this.assetName, this.tokenNonce)
+		console.log(this.assetName, this.tokenNonce);
 		try {
 			const payload = this.toEIP712(contractAddress, chainId);
-			console.log(payload)
+			console.log(payload);
 			return (this.signature = await signer._signTypedData(payload.domain, payload.types, payload.message));
 		} catch (e) {
 			console.error(e);
