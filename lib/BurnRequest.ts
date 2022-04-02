@@ -61,7 +61,7 @@ export class BurnRequest {
 		chainId?: number;
 		signature?: string;
 	}) {
-		this.destination = (params.destination);
+		this.destination = params.destination;
 		this._destination = params.destination;
 		this.owner = params.owner;
 		this.underwriter = params.underwriter;

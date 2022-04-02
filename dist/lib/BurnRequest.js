@@ -66,7 +66,7 @@ require("./config/constants");
 var BurnRequest = /** @class */ (function () {
     function BurnRequest(params) {
         this.requestType = 'burn';
-        this.destination = (params.destination);
+        this.destination = params.destination;
         this._destination = params.destination;
         this.owner = params.owner;
         this.underwriter = params.underwriter;

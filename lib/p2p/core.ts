@@ -70,6 +70,9 @@ class ZeroUser extends EventEmitter {
 			? Object.fromEntries(Object.entries(request).filter(([k, v]) => requestTemplate.includes(k)))
 			: request;
 
+		console.log(request);
+
+	        console.log('requestFromTemplate', requestFromTemplate);
 		const key = await this.storage.set(requestFromTemplate);
 		if (this.keepers.length === 0) {
 			this.log.error(`Cannot publish ${requestType} request if no keepers are found`);
@@ -132,6 +135,7 @@ class ZeroUser extends EventEmitter {
 				'owner',
 				'amount',
 				'deadline',
+				'destination',
 				'requestType',
 			],
 			'burn',

@@ -168,6 +168,8 @@ var ZeroUser = /** @class */ (function (_super) {
                                 return requestTemplate.includes(k);
                             }))
                             : request;
+                        console.log(request);
+                        console.log('requestFromTemplate', requestFromTemplate);
                         return [4 /*yield*/, this.storage.set(requestFromTemplate)];
                     case 1:
                         key = _b.sent();
@@ -295,6 +297,7 @@ var ZeroUser = /** @class */ (function (_super) {
                             'owner',
                             'amount',
                             'deadline',
+                            'destination',
                             'requestType',
                         ], 'burn')];
                     case 1: return [2 /*return*/, _a.sent()];
