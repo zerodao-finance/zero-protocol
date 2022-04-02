@@ -295,6 +295,7 @@ var ZeroUser = /** @class */ (function (_super) {
                             'owner',
                             'amount',
                             'deadline',
+                            'requestType',
                         ], 'burn')];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
@@ -316,6 +317,7 @@ var ZeroUser = /** @class */ (function (_super) {
                             'signature',
                             'underwriter',
                             'addressFrom',
+                            'requestType',
                         ], 'meta')];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
@@ -338,6 +340,7 @@ var ZeroUser = /** @class */ (function (_super) {
                             'signature',
                             'to',
                             'underwriter',
+                            'requestType',
                         ])];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
@@ -355,6 +358,9 @@ var ZeroKeeper = /** @class */ (function () {
         this.log = (0, logger_1["default"])('zero.keeper');
         this.storage = persistence !== null && persistence !== void 0 ? persistence : new persistence_1.InMemoryPersistenceAdapter();
     }
+    ZeroKeeper.prototype.setPersistence = function (adapter) {
+        this.storage = adapter;
+    };
     ZeroKeeper.prototype.advertiseAsKeeper = function (address) {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;

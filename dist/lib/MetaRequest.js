@@ -64,6 +64,7 @@ var deployment_utils_1 = require("./deployment-utils");
  */
 var MetaRequest = /** @class */ (function () {
     function MetaRequest(params) {
+        this.requestType = 'meta';
         this.module = params.module;
         this.addressFrom = params.addressFrom;
         this.underwriter = params.underwriter;

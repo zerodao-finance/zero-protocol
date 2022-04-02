@@ -181,6 +181,7 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
                             return [4 /*yield*/, trivial[func](keeperSigner)];
                         case 7:
                             _b.sent();
+                            //@ts-ignore
                             trivial.waitForSignature = function () { return __awaiter(void 0, void 0, void 0, function () {
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {

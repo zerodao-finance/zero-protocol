@@ -61,7 +61,7 @@ export class BurnRequest {
 		chainId?: number;
 		signature?: string;
 	}) {
-		this.destination = Base58.decode(params.destination);
+		this.destination = (params.destination);
 		this._destination = params.destination;
 		this.owner = params.owner;
 		this.underwriter = params.underwriter;
@@ -102,6 +102,7 @@ export class BurnRequest {
 	}
 	async submitToRenVM(isTest) {
 		console.log('submitToRenVM');
+		console.log(this);
 		if (this._burn) return this._burn;
 		const result = (this._burn = await this._ren.burnAndRelease({
 			asset: 'BTC',

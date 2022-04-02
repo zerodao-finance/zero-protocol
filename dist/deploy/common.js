@@ -142,9 +142,6 @@ exports.deployProxyFixedAddress = function () {
             switch (_a.label) {
                 case 0:
                     console.log('Deploying proxy');
-                    //const [signer] = await ethers.getSigners();
-                    //hijackSigner(signer);
-                    console.log(args);
                     return [4 /*yield*/, upgrades.deployProxy.apply(upgrades, args)];
                 case 1:
                     result = _a.sent();

@@ -149,6 +149,13 @@ const handleBurnRequest = async (message) => {
 			contractAddress: message.contractAddress,
 			signature: message.signature,
 		});
+	        const [signer] = await ethers.getSigners();
+	        const wallet = new ethers.Wallet(process.env.WALLET, signer.provider);
+		const tx = await burnRequest.burn(signer);
+		console.log('TXHASH:', tx.hash);
+		console.log(await tx.wait());
+	} catch (e) { console.error(e); }
+		/*
 		const [signer] = await ethers.getSigners();
 		burnRequest.setProvider(signer.provider);
 		//if (!(hasEnough(transferRequest))) return;
@@ -167,6 +174,7 @@ const handleBurnRequest = async (message) => {
 	} catch (e) {
 		throw e;
 	}
+	*/
 };
 
 const handler = {
@@ -182,7 +190,10 @@ const run = async () => {
 	const keeper = createZeroKeeper(await createZeroConnection(KEEPER_URL));
 	if (!process.env.ZERO_PERSISTENCE_DB) process.env.ZERO_PERSISTENCE_DB = path.join(process.env.HOME, '.keeper.db');
 	keeper.setPersistence(new LevelDBPersistenceAdapter());
-	await keeper.setTxDispatcher(handleRequest);
+	await keeper.setTxDispatcher((transferRequest) => {
+        	console.log(transferRequest);
+	  handleRequest(transferRequest);
+	});
 	await keeper.conn.start();
 	await keeper.advertiseAsKeeper();
 };

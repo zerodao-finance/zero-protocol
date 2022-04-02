@@ -64,6 +64,7 @@ var ReleaseRequest = /** @class */ (function () {
 exports.ReleaseRequest = ReleaseRequest;
 var TransferRequest = /** @class */ (function () {
     function TransferRequest(params) {
+        this.requestType = 'transfer';
         this.module = params.module;
         this.to = params.to;
         this.underwriter = params.underwriter;

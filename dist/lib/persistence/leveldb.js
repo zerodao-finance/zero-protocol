@@ -81,11 +81,9 @@ var delValue = function (level, key) { return __awaiter(void 0, void 0, void 0, 
 var toKey = function (key) { return 'request:' + key; };
 var toIndexKey = function (key) { return 'index:' + key; };
 var toKeyFromIndexKey = function (index) { return 'key: ' + index; };
-var transferRequestToKey = function (transferRequest) {
-    return ethers_1.ethers.utils.solidityKeccak256(['bytes'], [transferRequest.signature]);
-};
-var transferRequestToPlain = function (transferRequest) {
-    var to = transferRequest.to, underwriter = transferRequest.underwriter, contractAddress = transferRequest.contractAddress, nonce = transferRequest.nonce, pNonce = transferRequest.pNonce, data = transferRequest.data, module = transferRequest.module, amount = transferRequest.amount, asset = transferRequest.asset, status = transferRequest.status, signature = transferRequest.signature, chainId = transferRequest.chainId;
+var requestToKey = function (request) { return ethers_1.ethers.utils.solidityKeccak256(['bytes'], [request.signature]); };
+var requestToPlain = function (request) {
+    var to = request.to, underwriter = request.underwriter, contractAddress = request.contractAddress, nonce = request.nonce, pNonce = request.pNonce, data = request.data, module = request.module, amount = request.amount, asset = request.asset, status = request.status, signature = request.signature, chainId = request.chainId, _destination = request._destination, addressFrom = request.addressFrom, requestType = request.requestType;
     return {
         to: to,
         chainId: chainId,
@@ -98,7 +96,10 @@ var transferRequestToPlain = function (transferRequest) {
         amount: amount,
         status: status,
         asset: asset,
-        signature: signature
+        signature: signature,
+        _destination: _destination,
+        addressFrom: addressFrom,
+        requestType: requestType
     };
 };
 var LevelDBPersistenceAdapter = /** @class */ (function () {
@@ -164,7 +165,7 @@ var LevelDBPersistenceAdapter = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        key = transferRequestToKey(transferRequest);
+                        key = requestToKey(transferRequest);
                         return [4 /*yield*/, this.getIndex(key)];
                     case 1:
                         index = _a.sent();
@@ -182,7 +183,7 @@ var LevelDBPersistenceAdapter = /** @class */ (function () {
                         return [4 /*yield*/, setValue(this.backend, toKeyFromIndexKey(index), key)];
                     case 6:
                         _a.sent();
-                        return [4 /*yield*/, setValue(this.backend, toKey(key), JSON.stringify(transferRequestToPlain(transferRequest)))];
+                        return [4 /*yield*/, setValue(this.backend, toKey(key), JSON.stringify(requestToPlain(transferRequest)))];
                     case 7:
                         _a.sent();
                         return [2 /*return*/, key];

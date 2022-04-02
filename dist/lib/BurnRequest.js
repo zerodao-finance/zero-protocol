@@ -47,6 +47,7 @@ var random_1 = require("@ethersproject/random");
 require("@ethersproject/hash");
 require("./types");
 require("@ethersproject/transactions");
+require("@ethersproject/basex");
 require("buffer");
 var ethers_1 = require("ethers");
 var utils_1 = require("@0x/utils");
@@ -64,7 +65,9 @@ require("./config/constants");
  */
 var BurnRequest = /** @class */ (function () {
     function BurnRequest(params) {
-        this.destination = params.destination;
+        this.requestType = 'burn';
+        this.destination = (params.destination);
+        this._destination = params.destination;
         this.owner = params.owner;
         this.underwriter = params.underwriter;
         this.asset = params.asset;
@@ -78,28 +81,22 @@ var BurnRequest = /** @class */ (function () {
         this.signature = params.signature;
         //this._config =
         //
+        this.gatewayIface = new ethers_1.ethers.utils.Interface([
+            'event LogBurn(bytes _to, uint256 _amount, uint256 indexed _n, bytes indexed _indexedTo)',
+        ]);
         this._ren = new ren_1["default"]('mainnet', { loadCompletedDeposits: true });
-        this._contractFn = 'zeroCall';
+        this._contractFn = 'burn';
+        //TODO: figure out exactly what values go in here
         this._contractParams = [
             {
-                name: 'from',
-                type: 'address',
-                value: this.owner
-            },
-            {
-                name: 'pNonce',
-                type: 'uint256',
-                value: this.pNonce
-            },
-            {
-                name: 'module',
-                type: 'address',
-                value: ethers_1.ethers.constants.AddressZero
-            },
-            {
-                name: 'data',
+                name: '_to',
                 type: 'bytes',
-                value: '0x'
+                value: this.destination
+            },
+            {
+                name: 'amount',
+                type: 'uint256',
+                value: this.amount
             },
         ];
     }
@@ -110,59 +107,61 @@ var BurnRequest = /** @class */ (function () {
     BurnRequest.prototype.submitToRenVM = function (isTest) {
         return __awaiter(this, void 0, void 0, function () {
             var result, _a;
+            var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        console.log('submitToRenVM this.nonce', this.nonce);
-                        if (this._mint)
-                            return [2 /*return*/, this._mint];
+                        console.log('submitToRenVM');
+                        console.log(this);
+                        if (this._burn)
+                            return [2 /*return*/, this._burn];
                         _a = this;
-                        return [4 /*yield*/, this._ren.lockAndMint({
+                        return [4 /*yield*/, this._ren.burnAndRelease({
                                 asset: 'BTC',
-                                from: (0, chains_1.Bitcoin)(),
-                                nonce: this.nonce,
-                                to: (0, deployment_utils_1.getProvider)(this).Contract({
-                                    sendTo: this.contractAddress,
-                                    contractFn: this._contractFn,
-                                    contractParams: this._contractParams
-                                })
+                                to: (0, chains_1.Bitcoin)().Address(this.destination),
+                                from: (0, deployment_utils_1.getProvider)(this).Contract(function (btcAddress) { return ({
+                                    sendTo: _this.contractAddress,
+                                    contractFn: _this._contractFn,
+                                    contractParams: _this._contractParams
+                                }); })
                             })];
                     case 1:
-                        result = (_a._mint = _b.sent());
+                        result = (_a._burn = _b.sent());
                         //    result.params.nonce = this.nonce;
                         return [2 /*return*/, result];
                 }
             });
         });
     };
-    BurnRequest.prototype.waitForSignature = function () {
+    BurnRequest.prototype.waitForTxNonce = function (burn) {
         return __awaiter(this, void 0, void 0, function () {
-            var mint, deposit, _a, signature, nhash, phash, amount, result;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var burnt, tx, parsed;
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         if (this._queryTxResult)
                             return [2 /*return*/, this._queryTxResult];
-                        return [4 /*yield*/, this.submitToRenVM(false)];
-                    case 1:
-                        mint = _b.sent();
                         return [4 /*yield*/, new Promise(function (resolve, reject) {
-                                mint.on('deposit', resolve);
-                                mint.on('error', reject);
+                                burn.on('transactionHash', resolve);
+                                burn.on('error', reject);
                             })];
+                    case 1:
+                        burnt = _a.sent();
+                        return [4 /*yield*/, this.provider.waitForTransaction(burnt)];
                     case 2:
-                        deposit = _b.sent();
-                        return [4 /*yield*/, deposit.signed()];
-                    case 3:
-                        _b.sent();
-                        _a = deposit._state.queryTxResult.out, signature = _a.signature, nhash = _a.nhash, phash = _a.phash, amount = _a.amount;
-                        result = (this._queryTxResult = {
-                            amount: String(amount),
-                            nHash: (0, bytes_1.hexlify)(nhash),
-                            pHash: (0, bytes_1.hexlify)(phash),
-                            signature: (0, bytes_1.hexlify)(signature)
-                        });
-                        return [2 /*return*/, result];
+                        tx = _a.sent();
+                        parsed = tx.logs.reduce(function (v, d) {
+                            if (v)
+                                return v;
+                            try {
+                                return _this.gatewayIface.parseLog(d);
+                            }
+                            catch (e) { }
+                        }, null);
+                        this.nonce = parsed._n;
+                        this._queryTxResult = parsed;
+                        return [2 /*return*/, parsed];
                 }
             });
         });
@@ -226,13 +225,13 @@ var BurnRequest = /** @class */ (function () {
     };
     BurnRequest.prototype.toGatewayAddress = function (input) {
         return __awaiter(this, void 0, void 0, function () {
-            var mint;
+            var burn;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.submitToRenVM(false)];
                     case 1:
-                        mint = _a.sent();
-                        return [2 /*return*/, mint.gatewayAddress];
+                        burn = _a.sent();
+                        return [2 /*return*/, burn.gatewayAddress];
                 }
             });
         });
