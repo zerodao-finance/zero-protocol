@@ -25,6 +25,8 @@ const deployParameters = require('../lib/fixtures');
 
 const network = process.env.CHAIN || 'MATIC';
 
+const TEST_DEPOSIT = '100000000';
+
 //@ts-ignore
 hre.ethers.providers.BaseProvider.prototype.getGasPrice = async () => ethers.utils.parseUnits('100', 9);
 //ethers.providers.BaseProvider.prototype.getGasPrice = gasnow.createGetGasPrice('rapid');
@@ -144,6 +146,7 @@ const underwriterDeposit = async (amountOfRenBTC: string) => {
 };
 
 const getStrategyContract = async (signer) => {
+	if (process.env.CHAIN === 'ETHEREUM') return await getContract('StrategyRenVMEthereum', signer);
 	if (process.env.CHAIN === 'ARBITRUM') return await getContract('StrategyRenVMArbitrum', signer);
 	return await getContract('StrategyRenVM', signer);
 };
@@ -163,11 +166,11 @@ const getFixtures = async () => {
 		swapModule:
 			network === 'ARBITRUM'
 				? await getContract('ArbitrumConvert', signer)
-				: await getContract('PolygonConvert', signer),
+				: network === 'MATIC' ? await getContract('PolygonConvert', signer) : await getContract('BadgerBridge', signer),
 		convertModule:
 			network === 'ARBITRUM'
 				? await getContract('ArbitrumConvert', signer)
-				: await getContract('PolygonConvert', signer),
+				: network === 'MATIC' ? await getContract('PolygonConvert', signer) : await getContract('BadgerBridge', signer),
 		uniswapFactory: await getContract('ZeroUniswapFactory', signer),
 		curveFactory: await getContract('ZeroCurveFactory', signer),
 		wrapper: await getContract('WrapNative', signer),
@@ -380,7 +383,7 @@ describe('Zero', () => {
 		const { renBTC, btcVault } = await getFixtures();
 
 		const beforeBalance = (await renBTC.balanceOf(btcVault.address)).toNumber() / (await renBTC.decimals());
-		const addedAmount = '4000000';
+		const addedAmount = TEST_DEPOSIT;
 		await underwriterDeposit(addedAmount);
 		const afterBalance = (await renBTC.balanceOf(btcVault.address)).toNumber() / (await renBTC.decimals());
 		console.log('Deposited funds into vault');
@@ -393,7 +396,7 @@ describe('Zero', () => {
 	});
 	it('should transfer overflow funds to strategy vault', async () => {
 		const { btcVault, renBTC } = await getFixtures();
-		await underwriterDeposit('4000000');
+		await underwriterDeposit(TEST_DEPOSIT);
 		console.log('deposited all renBTC into vault');
 		await getBalances();
 		await btcVault.earn();
@@ -406,7 +409,7 @@ describe('Zero', () => {
 
 		const renbtc = new ethers.Contract(await btcVault.token(), btcVault.interface, signer);
 		await renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
-		await btcVault.deposit('4000000');
+		await btcVault.deposit(TEST_DEPOSIT);
 		await btcVault.earn();
 		console.log('Deposited 15renBTC and called earn');
 		await getBalances();
@@ -418,17 +421,15 @@ describe('Zero', () => {
 				process.env.CHAIN === 'ARBITRUM' || process.env.CHAIN === 'MATIC'
 					? convertModule.address
 					: swapModule.address,
-			to: '0xC6ccaC065fCcA640F44289886Ce7861D9A527F9E',
-			underwriter: '0xd0D8fA764352e33F40c66C75B3BC0204DC95973e',
-			asset: '0xDBf31dF14B66535aF65AaC99C32e9eA844e14501',
+			to: await signer.getAddress(),
+			underwriter: underwriter.address,
+			asset: renbtc.address,
 			amount: '0x061a80',
 			data: '0x00000000000000000000000000000000000000000000000000009184e72a0000',
 			nonce: '0xb67ed6c41ea6f5b7395f005ceb172eb093273396d1e5bb49d919c4df396e0d5a',
 			pNonce: '0x0153c5fa086b7eceef6ec52b6b96381ee6f16852a6ace5b742f239296b4cd901',
-			chainId: process.env.CHAIN === 'ARBITRUM' ? 42161 : 137,
-			contractAddress: '0x53f38bEA30fE6919e0475Fe57C2629f3D3754d1E',
-			signature:
-				'0x42e48680f15b7207c7602fec83b9c252fa3548c8533246ed532a75c6d0c486394648ba8f42a73a0ce2482712f09d177c3641ef07fcfd3b5cd3b4329982f756141b',
+			chainId: process.env.CHAIN === 'ARBITRUM' ? 42161 : process.env.CHAIN === 'ETHEREUM' ? 1 : 137,
+			contractAddress: controller.address
 		});
 		transferRequest.setProvider((await ethers.getSigners())[0].provider);
 
@@ -436,17 +437,9 @@ describe('Zero', () => {
 		const signature = await transferRequest.sign(signer, controller.address);
 
 		console.log('\nWriting a small loan');
-		await transferRequest.loan(signer, { gasLimit: 1.5e6 });
-		/*
-			transferRequest.to,
-			transferRequest.asset,
-			transferRequest.amount,
-			transferRequest.pNonce,
-			transferRequest.module,
-			transferRequest.data,
-			signature,
-		);
-*/
+		const loanTx = (await transferRequest.loan(signer, { gasLimit: 1.5e6 }));
+		console.log(await loanTx.wait());
+		process.exit(0);
 		await getBalances();
 
 		console.log('\nRepaying loan...');
@@ -477,7 +470,7 @@ describe('Zero', () => {
 		const renbtc = new ethers.Contract(await btcVault.token(), btcVault.interface, signer);
 		await renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
 
-		await btcVault.deposit('4000000');
+		await btcVault.deposit(TEST_DEPOSIT);
 		await btcVault.earn();
 		console.log('Deposited 15renBTC and called earn');
 		await getBalances();
@@ -524,7 +517,7 @@ describe('Zero', () => {
 		const renbtc = new ethers.Contract(await btcVault.token(), btcVault.interface, signer);
 		await renbtc.approve(btcVault.address, ethers.constants.MaxUint256);
 
-		await btcVault.deposit('4000000');
+		await btcVault.deposit(TEST_DEPOSIT);
 		await btcVault.earn();
 		console.log('Deposited 15renBTC and called earn');
 		await getBalances();
@@ -598,7 +591,7 @@ describe('Zero', () => {
 		if (process.env.CHAIN !== 'ARBITRUM') return;
 		const { signer, controller, btcVault } = await getFixtures();
 		const renbtc = await btcVault.token();
-		await btcVault.deposit('4000000');
+		await btcVault.deposit(TEST_DEPOSIT);
 
 		await btcVault.earn();
 		console.log('called earn');

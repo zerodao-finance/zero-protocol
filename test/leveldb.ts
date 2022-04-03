@@ -64,19 +64,19 @@ describe('leveldb', () => {
 		const burnRequest = new BurnRequest({
 			owner: await signer.getAddress(),
 			amount: ethers.utils.parseUnits('0.05', 8),
-			deadline: (+new Date() + 10000) / 1000,
+			deadline: ethers.utils.hexlify(Math.floor((+new Date() + 10000) / 1000)),
 			asset,
 			destination: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
 			underwriter: ethers.constants.AddressZero,
 			chainId,
 			contractAddress: ethers.constants.AddressZero,
 		});
-		await burnRequest.sign(signer);
+		await burnRequest.sign(signer, ethers.constants.AddressZero);
 		process.env.ZERO_PERSISTENCE_DB = '::memory';
 		const persistence = new LevelDBPersistenceAdapter();
 		await persistence.set(burnRequest);
 		burnRequest.amount = ethers.utils.parseUnits('0.04', 8);
-		await burnRequest.sign(signer);
+		await burnRequest.sign(signer, ethers.constants.AddressZero);
 		await persistence.set(burnRequest);
 		const requests = await persistence.getAllTransferRequests();
 		expect(requests.length).to.eql(2);

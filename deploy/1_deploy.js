@@ -42,7 +42,7 @@ const network = process.env.CHAIN || 'MATIC';
 const common = require('./common');
 
 module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) => {
-	if (!common.isSelectedDeployment(__filename) || process.env.CHAIN === 'ETHEREUM') // || process.env.FORKING === 'true')
+	if (!common.isSelectedDeployment(__filename)) // || process.env.FORKING === 'true')
 		return;
 
 	const { deployer } = await getNamedAccounts(); //used as governance address
@@ -137,9 +137,9 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 
 	const controller = await ethers.getContract('ZeroController');
 	if (isLocalhost) {
-		const meta = await deployFixedAddress('MetaExecutor', {
+		const meta = await deployFixedAddress(process.env.CHAIN === 'ETHEREUM' ? 'MetaExecutorEthereum' : 'MetaExecutor', {
 			args: [controller.address, ethers.utils.parseUnits('15', 8), '100000'],
-			contractName: 'MetaExecutor',
+			contractName: process.env.CHAIN === 'ETHEREUM' ? 'MetaExecutorEthereum' : 'MetaExecutor',
 			libraries: {},
 			from: deployer,
 		});
@@ -161,7 +161,11 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 					contractName: 'PolygonConvert',
 					from: deployer,
 			  })
-			: { address: ethers.constants.AddressZero };
+			: await deployFixedAddress('BadgerBridge', {
+				args: [ zeroController.address],
+				contractName: 'BadgerBridge',
+				from: deployer
+			  });
 	await controller.approveModule(module.address, true);
 	if (network === 'ARBITRUM') {
 		const quick = await deployFixedAddress('ArbitrumConvertQuick', {
@@ -173,7 +177,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 		await controller.approveModule(quick.address, true);
 	}
 	// await controller.approveModule(module.address, true);
-	const strategyRenVM = await deployments.deploy(network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : 'StrategyRenVM', {
+	const strategyRenVM = await deployments.deploy(network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : network === 'MATIC' ? 'StrategyRenVM' : 'StrategyRenVMEthereum', {
 		args: [
 			zeroController.address,
 			deployParameters[network]['renBTC'],
@@ -181,7 +185,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 			dummyVault.address,
 			deployParameters[network]['wBTC'],
 		],
-		contractName: network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : 'StrategyRenVM',
+		contractName: network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : network === 'ETHEREUM' ? 'StrategyRenVMEthereum' : 'StrategyRenVM',
 		from: deployer,
 		waitConfirmations: 1,
 	});
