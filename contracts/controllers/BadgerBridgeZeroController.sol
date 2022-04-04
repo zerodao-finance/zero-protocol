@@ -21,7 +21,7 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 	address constant renCrv = 0x93054188d876f558f4a66B2EF1d97d16eDf0895B;
 	address constant tricrypto = 0x80466c64868E1ab14a1Ddf27A676C3fcBE638Fe5;
 	uint256 public constant governanceFee = uint256(5e17);
-	uint256 public constant GAS_COST = uint256(5e5);
+	uint256 public constant GAS_COST = uint256(3e5);
 	uint256 public constant ETH_RESERVE = uint256(5 ether);
 	uint256 public gasCostInWBTC;
 	mapping(address => uint256) public nonces;
