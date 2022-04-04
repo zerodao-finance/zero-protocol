@@ -19,8 +19,8 @@ const RPC_ENDPOINTS = {
 	MATIC: 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
 	ETHEREUM: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
 };
-const deployParameters = require('./lib/fixtures');
 
+var deployParameters = require('./lib/fixtures');
 declare var extendEnvironment;
 extendEnvironment(async (hre) => {
 	if (process.argv.slice(1).includes('node')) {

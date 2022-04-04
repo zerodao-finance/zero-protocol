@@ -183,7 +183,19 @@ var UnderwriterTransferRequest = /** @class */ (function (_super) {
                         return [4 /*yield*/, this.waitForSignature()];
                     case 1:
                         _a = _b.sent(), actualAmount = _a.amount, nHash = _a.nHash, signature = _a.signature;
-                        return [4 /*yield*/, underwriter.repay(this.underwriter, this.destination(), this.asset, this.amount, actualAmount, this.pNonce, this.module, nHash, this.data, signature, params)];
+                        return [4 /*yield*/, underwriter.repay.apply(underwriter, (function (v) { console.log(v); return v; })([
+                                this.underwriter,
+                                this.destination(),
+                                this.asset,
+                                this.amount,
+                                actualAmount,
+                                this.pNonce,
+                                this.module,
+                                nHash,
+                                this.data,
+                                signature,
+                                params,
+                            ]))];
                     case 2: return [2 /*return*/, _b.sent()];
                 }
             });

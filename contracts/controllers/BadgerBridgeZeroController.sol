@@ -162,10 +162,12 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 		bytes memory destination
 	) internal view returns (uint256 result) {
 		result = uint256(keccak256(abi.encodePacked(asset, amount, deadline, nonce, destination)));
+/*
 		while (result < block.timestamp) {
 			// negligible probability of this
 			result = uint256(keccak256(abi.encodePacked(result)));
 		}
+*/
 	}
 
 	function computeERC20PermitDigest(

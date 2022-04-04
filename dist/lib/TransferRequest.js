@@ -239,11 +239,13 @@ var TransferRequest = /** @class */ (function () {
                         _f.trys.push([2, 4, , 7]);
                         payload = this.toEIP712(contractAddress, chainId);
                         delete payload.types.EIP712Domain;
+                        console.log('signing');
                         _a = this;
                         return [4 /*yield*/, signer._signTypedData(payload.domain, payload.types, payload.message)];
                     case 3: return [2 /*return*/, (_a.signature = _f.sent())];
                     case 4:
                         e_1 = _f.sent();
+                        console.error(e_1);
                         _b = this;
                         _d = (_c = provider).send;
                         _e = ['eth_signTypedData_v4'];
