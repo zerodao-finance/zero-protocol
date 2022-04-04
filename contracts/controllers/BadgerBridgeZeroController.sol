@@ -30,6 +30,7 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
         address constant ibbtc = 0xc4E15973E6fF2A35cC804c2CF9D2a1b817a8b40F;
 	uint256 public constant governanceFee = uint256(5e17);
 	uint256 public constant GAS_COST = uint256(3e5);
+        uint256 public constant IBBTC_GAS_COST = uint256(7e5);
 	uint256 public constant ETH_RESERVE = uint256(5 ether);
 	uint256 public gasCostInWBTC;
 	mapping(address => uint256) public nonces;
@@ -113,11 +114,11 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 		}
 	}
 
-	function deductFee(uint256 amountIn) internal view returns (uint256 amount) {
-		amount = amountIn.sub(applyFee(amountIn));
+	function deductFee(uint256 amountIn, uint256 multiplier) internal view returns (uint256 amount) {
+		amount = amountIn.sub(applyFee(amountIn, multiplier));
 	}
-	function applyFee(uint256 amountIn) internal view returns (uint256 amount) {
-		amount = gasCostInWBTC.mul(tx.gasprice).div(uint256(1 ether)).add(applyRatio(amountIn, fee));
+	function applyFee(uint256 amountIn, uint256 multiplier) internal view returns (uint256 amount) {
+		amount = gasCostInWBTC.mul(multiplier).mul(tx.gasprice).div(uint256(1 ether)).add(applyRatio(amountIn, fee));
 	}
 
 	function toTypedDataHash(ZeroLib.LoanParams memory params, address underwriter)
@@ -174,7 +175,7 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 			signature
 		);
                 
-                uint256 amount = module == wbtc ? deductFee(toWBTC()) : module == ibbtc ? toIBBTC(deductFee(_mintAmount)) : deductFee(_mintAmount);
+                uint256 amount = module == wbtc ? deductFee(toWBTC(), 1) : module == ibbtc ? toIBBTC(deductFee(_mintAmount, 3)) : deductFee(_mintAmount, 1);
 		tx.origin.transfer(Math.min(_gasBefore.sub(gasleft()).add(10e3).mul(tx.gasprice), address(this).balance));
 		IERC20(module).safeTransfer(to, amount);
 	}
@@ -241,7 +242,7 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 		{
 			IERC20(wbtc).transferFrom(to, address(this), amount);
 		}
-	        IGateway(btcGateway).burn(destination, toRenBTC(deductFee(amount)));
+	        IGateway(btcGateway).burn(destination, toRenBTC(deductFee(amount, 1)));
 	}
 
 	function fallbackMint(
