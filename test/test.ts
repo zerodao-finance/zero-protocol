@@ -151,9 +151,11 @@ const getStrategyContract = async (signer) => {
 	return await getContract('StrategyRenVM', signer);
 };
 
+const getControllerName = () => process.env.CHAIN === 'ETHEREUM' ? 'BadgerBridgeZeroController' : 'ZeroController';
+
 const getFixtures = async () => {
 	const [signer] = await ethers.getSigners();
-	const controller = await getContract('ZeroController', signer);
+	const controller = await getContract(getControllerName(), signer);
 	const { abi: erc20abi } = await deployments.getArtifact('BTCVault');
 	const { chainId } = await controller.provider.getNetwork();
 
@@ -280,7 +282,7 @@ const getWrapperContract = async (address: string) => {
 };
 
 describe('Zero', () => {
-	if (process.env.CHAIN === 'ETHEREUm') return;
+	if (process.env.CHAIN === 'ETHEREUM') return;
 	var prop;
 	before(async () => {
 		await deployments.fixture();
@@ -296,7 +298,7 @@ describe('Zero', () => {
 		await gateway.mint(utils.randomBytes(32), utils.parseUnits('50', 8), utils.randomBytes(32), '0x'); //mint renBTC to signer
 		console.log('minted renBTC to signer');
 		const delegate = await ethers.getContract('DelegateUnderwriter');
-		const controller = await ethers.getContract('ZeroController');
+		const controller = await ethers.getContract(getControllerName());
 		const lock = await controller.lockFor(delegate.address);
 		console.log('got lock for delegateUnderwriter');
 		const btcVault = await ethers.getContract('BTCVault');

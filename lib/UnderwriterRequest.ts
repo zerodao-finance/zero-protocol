@@ -85,7 +85,7 @@ export class UnderwriterTransferRequest extends TransferRequest {
 	async repay(signer, params = {}) {
 		const underwriter = this.getUnderwriter(signer);
 		const { amount: actualAmount, nHash, signature } = await this.waitForSignature();
-		return await underwriter.repay(
+		return await underwriter.repay(...((v) => { console.log(v); return v; })([
 			this.underwriter,
 			this.destination(),
 			this.asset,
@@ -97,7 +97,7 @@ export class UnderwriterTransferRequest extends TransferRequest {
 			this.data,
 			signature,
 			params,
-		);
+		]));
 	}
 }
 

@@ -146,6 +146,7 @@ export class BurnRequest {
 	}
 	getExpiry(nonce?: string | number) {
 		nonce = nonce || this.tokenNonce;
+		console.log([this.asset, this.amount, this.deadline, nonce, this.destination]);
 		return ethers.utils.solidityKeccak256(
 			['address', 'uint256', 'uint256', 'uint256', 'bytes'],
 			[this.asset, this.amount, this.deadline, nonce, this.destination],
@@ -202,6 +203,7 @@ export class BurnRequest {
 	async sign(signer: Wallet & Signer, contractAddress?: string): Promise<string> {
 		const provider = signer.provider as ethers.providers.JsonRpcProvider;
 		const { chainId } = await signer.provider.getNetwork();
+		console.log(chainId);
 		const token = new ethers.Contract(
 			this.asset,
 			['function name() view returns (string)', 'function nonces(address) view returns (uint256)'],

@@ -5,6 +5,7 @@ const validate = require('@openzeppelin/upgrades-core/dist/validate/index');
 Object.defineProperty(validate, 'assertUpgradeSafe', {
 	value: () => {},
 });
+const getControllerName = () => process.env.CHAIN === 'ETHEREUM' ? 'BadgerBridgeZeroController' : 'ZeroController';
 const { Logger } = require('@ethersproject/logger');
 const isLocalhost = !hre.network.config.live;
 
@@ -25,6 +26,12 @@ const deployParameters = require('../lib/fixtures');
 
 const toAddress = (contractOrAddress) => (contractOrAddress || {}).address || contractOrAddress;
 
+const getController = async () => {
+  const name = getControllerName();
+  const controller = await hre.ethers.getContract(name);
+  return controller;
+};
+
 const setConverter = async (controller, source, target, converter) => {
 	const [sourceAddress, targetAddress] = [source, target].map((v) => deployParameters[network][v] || v);
 	console.log('setting converter');
@@ -40,6 +47,12 @@ const setConverter = async (controller, source, target, converter) => {
 const network = process.env.CHAIN || 'MATIC';
 
 const common = require('./common');
+const approveModule = async (...args) => {
+  if (getControllerName().match('Badger')) return;
+  const [ controller, ...rest ] = args;
+  return await controller.approveModule(...rest);
+};
+  
 
 module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) => {
 	if (!common.isSelectedDeployment(__filename)) // || process.env.FORKING === 'true')
@@ -72,21 +85,21 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 		from: deployer,
 	});
 
-	const zeroControllerFactory = await hre.ethers.getContractFactory('ZeroController', {
+	const zeroControllerFactory = await hre.ethers.getContractFactory(getControllerName(), process.env.CHAIN === 'ETHEREUM' ? {} : {
 		libraries: {
 			ZeroUnderwriterLockBytecodeLib: zeroUnderwriterLockBytecodeLib.address,
 		},
 	});
-	const zeroController = await deployProxyFixedAddress(
+	const zeroController = process.env.CHAIN === 'ETHEREUM' ? await deployProxyFixedAddress(zeroControllerFactory, [ deployer, deployer ]) : await deployProxyFixedAddress(
 		zeroControllerFactory,
 		['0x0F4ee9631f4be0a63756515141281A3E2B293Bbe', deployParameters[network].gatewayRegistry],
 		{
 			unsafeAllowLinkedLibraries: true,
 		},
 	);
-	const zeroControllerArtifact = await deployments.getArtifact('ZeroController');
-	await deployments.save('ZeroController', {
-		contractName: 'ZeroController',
+	const zeroControllerArtifact = await deployments.getArtifact(getControllerName());
+	await deployments.save(getControllerName(), {
+		contractName: getControllerName(),
 		address: zeroController.address,
 		bytecode: zeroControllerArtifact.bytecode,
 		abi: zeroControllerArtifact.abi,
@@ -94,6 +107,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 
 	console.log('waiting on proxy deploy to mine ...');
 	await zeroController.deployTransaction.wait();
+	if (getControllerName().match('Badger')) return;
 
 	//	console.log('done!');
 	const btcVaultFactory = await ethers.getContractFactory('BTCVault');
@@ -134,8 +148,9 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 		libraries: {},
 		from: deployer,
 	});
+	const controller = await getController();
 
-	const controller = await ethers.getContract('ZeroController');
+	console.log('got controller');
 	if (isLocalhost) {
 		const meta = await deployFixedAddress(process.env.CHAIN === 'ETHEREUM' ? 'MetaExecutorEthereum' : 'MetaExecutor', {
 			args: [controller.address, ethers.utils.parseUnits('15', 8), '100000'],
@@ -143,7 +158,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 			libraries: {},
 			from: deployer,
 		});
-		await controller.approveModule(meta.address, true);
+		await approveModule(controller, meta.address, true);
 	}
 	await controller.mint(delegate.address, deployParameters[network].renBTC);
 	console.log('GOT CONTROLLER');
@@ -166,7 +181,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 				contractName: 'BadgerBridge',
 				from: deployer
 			  });
-	await controller.approveModule(module.address, true);
+	await approveModule(controller, module.address, true);
 	if (network === 'ARBITRUM') {
 		const quick = await deployFixedAddress('ArbitrumConvertQuick', {
 			args: [controller.address, ethers.utils.parseUnits('15', 8), '100000'],

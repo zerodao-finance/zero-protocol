@@ -185,8 +185,10 @@ export class TransferRequest {
 		try {
 			const payload = this.toEIP712(contractAddress, chainId);
 			delete payload.types.EIP712Domain;
+			console.log('signing');
 			return (this.signature = await signer._signTypedData(payload.domain, payload.types, payload.message));
 		} catch (e) {
+			console.error(e);
 			return (this.signature = await provider.send('eth_signTypedData_v4', [
 				await signer.getAddress(),
 				this.toEIP712(this.contractAddress || contractAddress, chainId),
