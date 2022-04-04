@@ -39,6 +39,6 @@ contract UnwrapNative {
 
 	function convert(address _module) external payable returns (uint256) {
 		IWETH(wrapper).withdraw(IERC20(wrapper).balanceOf(address(this)));
-		msg.sender.send(address(this).balance);
+		require(msg.sender.send(address(this).balance), "!send");
 	}
 }
