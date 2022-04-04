@@ -47,6 +47,20 @@ describe('BadgerBridgeZeroController', () => {
 		await renbtc.approve(renCrv.address, ethers.constants.MaxUint256);
 		await renCrv.exchange(0, 1, ethers.utils.parseUnits('1', 8), 0);
 		console.log('minted renBTC to signer');
+		await hre.network.provider.send('hardhat_impersonateAccount', [ '0xcf7346a5e41b0821b80d5b3fdc385eeb6dc59f44' ]);
+		const governanceSigner = await hre.ethers.getSigner('0xcf7346a5e41b0821b80d5b3fdc385eeb6dc59f44');
+		await signer.sendTransaction({
+			value: utils.parseEther('0.1'),
+			to: await governanceSigner.getAddress()
+		});
+		await (new hre.ethers.Contract('0x41671BA1abcbA387b9b2B752c205e22e916BE6e3', [ 'function approveContractAccess(address)' ], governanceSigner)).approveContractAccess((await hre.ethers.getContract('BadgerBridgeZeroController')).address);
+		await hre.network.provider.send('hardhat_impersonateAccount', [ '0xb65cef03b9b89f99517643226d76e286ee999e77' ]);
+		const settGovernanceSigner = await hre.ethers.getSigner('0xb65cef03b9b89f99517643226d76e286ee999e77');
+		await signer.sendTransaction({
+			value: utils.parseEther('0.1'),
+			to: await settGovernanceSigner.getAddress()
+		});
+		await (new hre.ethers.Contract('0x6def55d2e18486b9ddfaa075bc4e4ee0b28c1545', [ 'function approveContractAccess(address)' ], settGovernanceSigner)).approveContractAccess((await hre.ethers.getContract('BadgerBridgeZeroController')).address);
 	});
 	it('should do a transfer', async () => {
 		const contractAddress = (await hre.ethers.getContract('BadgerBridgeZeroController')).address;
@@ -58,7 +72,7 @@ describe('BadgerBridgeZeroController', () => {
 			nonce: utils.hexlify(utils.randomBytes(32)),
 			to: await signer.getAddress(),
 			pNonce: utils.hexlify(utils.randomBytes(32)),
-			module: hre.ethers.constants.AddressZero,
+			module: deployParameters[process.env.CHAIN].renBTC,
 			amount: utils.hexlify(utils.parseUnits('0.005', 8)),
 			asset: deployParameters[process.env.CHAIN].wBTC,
 			chainId,
