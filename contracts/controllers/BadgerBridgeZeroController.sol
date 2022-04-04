@@ -43,10 +43,10 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 		IERC20(wbtc).safeApprove(tricrypto, ~uint256(0) >> 2);
 		PERMIT_DOMAIN_SEPARATOR = keccak256(
 			abi.encode(
-				keccak256('EIP712Domain(string name,string version, uint256 chainId, address verifyingContract)'),
+				keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
 				keccak256('WBTC'),
 				keccak256('1'),
-				uint256(1),
+				getChainId(),
 				wbtc
 			)
 		);

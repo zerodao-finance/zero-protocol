@@ -177,6 +177,7 @@ var BurnRequest = /** @class */ (function () {
     };
     BurnRequest.prototype.getExpiry = function (nonce) {
         nonce = nonce || this.tokenNonce;
+        console.log([this.asset, this.amount, this.deadline, nonce, this.destination]);
         return ethers_1.ethers.utils.solidityKeccak256(['address', 'uint256', 'uint256', 'uint256', 'bytes'], [this.asset, this.amount, this.deadline, nonce, this.destination]);
     };
     BurnRequest.prototype.toEIP712 = function (contractAddress, chainId) {
@@ -246,6 +247,7 @@ var BurnRequest = /** @class */ (function () {
                         return [4 /*yield*/, signer.provider.getNetwork()];
                     case 1:
                         chainId = (_k.sent()).chainId;
+                        console.log(chainId);
                         token = new ethers_1.ethers.Contract(this.asset, ['function name() view returns (string)', 'function nonces(address) view returns (uint256)'], signer.provider);
                         _a = this;
                         return [4 /*yield*/, token.name()];
