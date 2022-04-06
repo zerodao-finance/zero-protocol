@@ -31,6 +31,15 @@ interface IERC2612Permit {
 		bytes32 r,
 		bytes32 s
 	) external;
+	function permit(
+		address holder,
+		address spender,
+		uint256 value,
+                uint256 deadline,
+		uint8 v,
+		bytes32 r,
+		bytes32 s
+	) external;
 
 	/**
 	 * @dev Returns the current ERC2612 nonce for `owner`. This value must be

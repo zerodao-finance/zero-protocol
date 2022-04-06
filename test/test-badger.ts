@@ -20,6 +20,57 @@ UnderwriterTransferRequest.prototype.waitForSignature = async function () {
 	};
 };
 
+const getRepl = async (o) => {
+  const r = require('repl').start('> ');
+  Object.assign(r.context, o || {})
+  await new Promise(() => {});
+};
+
+const toEIP712USDC = function (contractAddress, chainId) {
+		this.contractAddress = contractAddress || this.contractAddress;
+		this.chainId = chainId || this.chainId;
+		return {
+			types: {
+				Permit: [
+					{
+						name: 'owner',
+						type: 'address',
+					},
+					{
+						name: 'spender',
+						type: 'address',
+					},
+					{
+						name: 'value',
+						type: 'uint256'
+					},
+					{
+						name: 'nonce',
+						type: 'uint256',
+					},
+					{
+						name: 'deadline',
+						type: 'uint256',
+					},
+				],
+			},
+			domain: {
+				name: "USD Coin",
+				version: "2",
+				chainId: String(this.chainId) || '1',
+				verifyingContract: this.asset || ethers.constants.AddressZero,
+			},
+			message: {
+				owner: this.owner,
+				spender: contractAddress,
+				nonce: this.tokenNonce,
+				deadline: this.getExpiry(),
+				value: this.amount
+			},
+			primaryType: 'Permit',
+		};
+	};
+
 describe('BadgerBridgeZeroController', () => {
 	before(async () => {
 		await deployments.fixture();
@@ -128,7 +179,7 @@ describe('BadgerBridgeZeroController', () => {
 				).nonces(await signer.getAddress()),
 			);
 			this.contractAddress = contractAddress;
-			transferRequest.toEIP712 = function (...args) {
+			transferRequest.toEIP712 = function (...args: any[]) {
 				this.asset = asset;
 				this.tokenNonce = tokenNonce;
 				this.assetName = 'WBTC';
@@ -195,6 +246,75 @@ describe('BadgerBridgeZeroController', () => {
 		const tx = (await transferRequest.repay(signer));
 		console.log((await tx.wait()).gasUsed);
 	});
+	it('should do a transfer of usdc', async () => {
+		const contractAddress = (await hre.ethers.getContract('BadgerBridgeZeroController')).address;
+		deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
+		const [signer] = await hre.ethers.getSigners();
+		const { chainId } = await signer.provider.getNetwork();
+		const transferRequest = new UnderwriterTransferRequest({
+			contractAddress,
+			nonce: utils.hexlify(utils.randomBytes(32)),
+			to: await signer.getAddress(),
+			pNonce: utils.hexlify(utils.randomBytes(32)),
+			module: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+			amount: utils.hexlify(utils.parseUnits('0.5', 8)),
+			asset: deployParameters[process.env.CHAIN].wBTC,
+			chainId,
+			data: '0x',
+			underwriter: contractAddress,
+		});
+		transferRequest.requestType = 'TRANSFER';
+		await transferRequest.sign(signer);
+		console.log('signed', transferRequest.signature);
+		const tx = (await transferRequest.repay(signer));
+		console.log((await tx.wait()).gasUsed);
+	});
+	it('should do a transfer of eth', async () => {
+		const contractAddress = (await hre.ethers.getContract('BadgerBridgeZeroController')).address;
+		deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
+		const [signer] = await hre.ethers.getSigners();
+		const { chainId } = await signer.provider.getNetwork();
+		const transferRequest = new UnderwriterTransferRequest({
+			contractAddress,
+			nonce: utils.hexlify(utils.randomBytes(32)),
+			to: await signer.getAddress(),
+			pNonce: utils.hexlify(utils.randomBytes(32)),
+			module: ethers.constants.AddressZero,
+			amount: utils.hexlify(utils.parseUnits('0.5', 8)),
+			asset: deployParameters[process.env.CHAIN].wBTC,
+			chainId,
+			data: '0x',
+			underwriter: contractAddress,
+		});
+		transferRequest.requestType = 'TRANSFER';
+		await transferRequest.sign(signer);
+		console.log('signed', transferRequest.signature);
+		const tx = (await transferRequest.repay(signer));
+		console.log((await tx.wait()).gasUsed);
+	});
+	it('should do a usdc burn', async () => {
+		const contractAddress = (await hre.ethers.getContract('BadgerBridgeZeroController')).address;
+		deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
+		const [signer] = await hre.ethers.getSigners();
+		const { chainId } = await signer.provider.getNetwork();
+		console.log(chainId);
+		const transferRequest = new UnderwriterBurnRequest({
+			contractAddress,
+			owner: await signer.getAddress(),
+			amount: utils.hexlify(utils.parseUnits('1000', 6)),
+			asset: deployParameters[process.env.CHAIN].USDC,
+			chainId,
+			underwriter: contractAddress,
+			deadline: Math.floor((+new Date() + 1000*60*60*24) / 1000),
+			destination: utils.hexlify(utils.randomBytes(64))
+		});
+		transferRequest.toEIP712 = toEIP712USDC;
+		transferRequest.requestType = 'BURN';
+		await transferRequest.sign(signer, contractAddress);
+		console.log('signed', transferRequest.signature);
+		const tx = (await transferRequest.burn(signer));
+		console.log((await tx.wait()).gasUsed);
+	});
 	it('should do a ibbtc burn', async () => {
 		const contractAddress = (await hre.ethers.getContract('BadgerBridgeZeroController')).address;
 		deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
@@ -218,7 +338,7 @@ describe('BadgerBridgeZeroController', () => {
 		  this.asset = deployParameters[process.env.CHAIN].renBTC;
 	          const tokenNonce = String(await (new ethers.Contract(this.contractAddress, [ 'function nonces(address) view returns (uint256) '], signer)).nonces(await signer.getAddress()));
 		  this.contractAddress = contractAddress;
-		  transferRequest.toEIP712 = function (...args) {
+		  transferRequest.toEIP712 = function (...args: any[]) {
 	            this.asset = asset;
 	            this.tokenNonce = tokenNonce;
 		    this.assetName = 'ibBTC';

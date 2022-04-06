@@ -113,12 +113,7 @@ module.exports = function (_a) {
         var _this = this;
         return __generator(this, function (_q) {
             switch (_q.label) {
-                case 0:
-                    console.log(__filename);
-                    if (!common.isSelectedDeployment(__filename))
-                        // || process.env.FORKING === 'true')
-                        return [2 /*return*/];
-                    return [4 /*yield*/, getNamedAccounts()];
+                case 0: return [4 /*yield*/, getNamedAccounts()];
                 case 1:
                     deployer = (_q.sent()).deployer;
                     return [4 /*yield*/, ethers.getSigners()];

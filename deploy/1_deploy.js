@@ -55,10 +55,6 @@ const approveModule = async (...args) => {
 };
 
 module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) => {
-	console.log(__filename);
-	if (!common.isSelectedDeployment(__filename))
-		// || process.env.FORKING === 'true')
-		return;
 
 	const { deployer } = await getNamedAccounts(); //used as governance address
 	const [ethersSigner] = await ethers.getSigners();

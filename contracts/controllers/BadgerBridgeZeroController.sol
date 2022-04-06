@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.6.0;
 
+import {IUniswapV2Router02} from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import {ZeroLib} from '../libraries/ZeroLib.sol';
 import {IERC2612Permit} from '../interfaces/IERC2612Permit.sol';
 import {ZeroControllerTemplate} from './ZeroControllerTemplate.sol';
@@ -22,6 +23,9 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 	using SafeERC20 for IERC20;
 	using SafeMath for *;
 	address constant btcGateway = 0xe4b679400F0f267212D5D812B95f58C83243EE71;
+	address constant router = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+        address constant usdc = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+        address constant weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 	address constant wbtc = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
 	address constant renbtc = 0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D;
 	address constant renCrv = 0x93054188d876f558f4a66B2EF1d97d16eDf0895B;
@@ -30,11 +34,12 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
         address constant bCrvRen = 0x6dEf55d2e18486B9dDfaA075bc4e4EE0B28c1545;
         address constant settPeak = 0x41671BA1abcbA387b9b2B752c205e22e916BE6e3;
         address constant ibbtc = 0xc4E15973E6fF2A35cC804c2CF9D2a1b817a8b40F;
-	uint256 public constant governanceFee = uint256(5e17);
+	uint256 public governanceFee;
 	uint256 public constant GAS_COST = uint256(3e5);
         uint256 public constant IBBTC_GAS_COST = uint256(7e5);
 	uint256 public constant ETH_RESERVE = uint256(5 ether);
 	uint256 public gasCostInWBTC;
+        uint256 public burnFee;
 	mapping(address => uint256) public nonces;
 	bytes32 public PERMIT_DOMAIN_SEPARATOR_WBTC;
 	bytes32 public PERMIT_DOMAIN_SEPARATOR_IBBTC;
@@ -44,9 +49,23 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 			result := chainid()
 		}
 	}
+        function setGovernanceFee(uint256 _governanceFee) public {
+          require(governance == msg.sender, "!governance");
+          governanceFee = _governanceFee;
+        }
+        function setFee(uint256 _fee) public {
+          require(governance == msg.sender, "!governance");
+          fee = _fee;
+        }
+        function setBurnFee(uint256 _burnFee) public {
+          require(governance == msg.sender, "!governance");
+          burnFee = _burnFee;
+        }
 
 	function initialize(address _governance, address _strategist) public initializer {
-	        fee = uint256(3e15);
+	        fee = uint256(25e14);
+                burnFee = uint256(4e15);
+		governanceFee = uint256(5e17);
 		governance = _governance;
 		strategist = _strategist;
 		IERC20(renbtc).safeApprove(btcGateway, ~uint256(0) >> 2);
@@ -55,6 +74,8 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 		IERC20(wbtc).safeApprove(tricrypto, ~uint256(0) >> 2);
 		IERC20(renCrvLp).safeApprove(bCrvRen, ~uint256(0) >> 2);
 		IERC20(bCrvRen).safeApprove(settPeak, ~uint256(0) >> 2);
+		IERC20(renbtc).safeApprove(router, ~uint256(0) >> 2);
+		IERC20(usdc).safeApprove(router, ~uint256(0) >> 2);
 		PERMIT_DOMAIN_SEPARATOR_WBTC = keccak256(
 			abi.encode(
 				keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
@@ -94,6 +115,20 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
             ISett(bCrvRen).deposit(IERC20(renCrvLp).balanceOf(address(this)));
             amountOut = IBadgerSettPeak(settPeak).mint(0, IERC20(bCrvRen).balanceOf(address(this)), new bytes32[](0));
         }
+        function toUSDC(uint256 amountIn, address out) internal returns (uint256 amountOut) {
+          address[] memory path = new address[](2);
+          path[0] = renbtc;
+          path[1] = usdc;
+          uint256[] memory amountsOut = IUniswapV2Router02(router).swapExactTokensForTokens(amountIn, 1, path, out, block.timestamp + 1);
+          amountOut = amountsOut[1];
+        }
+        function toETH(uint256 amountIn, address out) internal returns (uint256 amountOut) {
+          address[] memory path = new address[](2);
+          path[0] = renbtc;
+          path[1] = weth;
+          uint256[] memory amountsOut = IUniswapV2Router02(router).swapExactTokensForETH(amountIn, 1, path, out, block.timestamp + 1);
+          amountOut = amountsOut[1];
+        }
         function fromIBBTC(uint256 amountIn) internal returns (uint256 amountOut) {
           uint256 amountStart = IERC20(renbtc).balanceOf(address(this));
           IBadgerSettPeak(settPeak).redeem(0, amountIn);
@@ -101,6 +136,13 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
           (bool success,) = renCrv.call(abi.encodeWithSelector(ICurveFi.remove_liquidity_one_coin.selector, IERC20(renCrvLp).balanceOf(address(this)), 0, 0));
           require(success, "!curve");
           amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
+        }
+        function fromUSDC(uint256 amountIn) internal returns (uint256 amountOut) {
+          address[] memory path = new address[](2);
+          path[0] = usdc;
+          path[1] = renbtc;
+          uint256[] memory amountsOut = IUniswapV2Router02(router).swapExactTokensForTokens(amountIn, 1, path, address(this), block.timestamp + 1);
+          amountOut = amountsOut[1];
         }
 	function toRenBTC(uint256 amountIn) internal returns (uint256 amountOut) {
 		uint256 balanceStart = IERC20(renbtc).balanceOf(address(this));
@@ -132,11 +174,14 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 		}
 	}
 
-	function deductFee(uint256 amountIn, uint256 multiplier) internal view returns (uint256 amount) {
-		amount = amountIn.sub(applyFee(amountIn, multiplier));
+	function deductMintFee(uint256 amountIn, uint256 multiplier) internal view returns (uint256 amount) {
+		amount = amountIn.sub(applyFee(amountIn, fee, multiplier));
 	}
-	function applyFee(uint256 amountIn, uint256 multiplier) internal view returns (uint256 amount) {
-		amount = gasCostInWBTC.mul(multiplier).mul(tx.gasprice).div(uint256(1 ether)).add(applyRatio(amountIn, fee));
+	function deductBurnFee(uint256 amountIn, uint256 multiplier) internal view returns (uint256 amount) {
+		amount = amountIn.sub(applyFee(amountIn, burnFee, multiplier));
+	}
+	function applyFee(uint256 amountIn, uint256 _fee, uint256 multiplier) internal view returns (uint256 amount) {
+		amount = gasCostInWBTC.mul(multiplier).mul(tx.gasprice).div(uint256(1 ether)).add(applyRatio(amountIn, _fee));
 	}
 
 	function toTypedDataHash(ZeroLib.LoanParams memory params, address underwriter)
@@ -173,8 +218,8 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 		bytes32 nHash,
 		bytes memory data,
 		bytes memory signature
-	) public {
-                require(module == wbtc || module == ibbtc || module == renbtc, "!approved-module");
+	) public returns (uint256 amountOut) {
+                require(module == wbtc || module == usdc || module == ibbtc || module == renbtc || module == address(0x0), "!approved-module");
 		uint256 _gasBefore = gasleft();
 		ZeroLib.LoanParams memory params = ZeroLib.LoanParams({
 			to: to,
@@ -193,9 +238,9 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 			signature
 		);
                 
-                uint256 amount = module == wbtc ? deductFee(toWBTC(), 1) : module == ibbtc ? toIBBTC(deductFee(_mintAmount, 3)) : deductFee(_mintAmount, 1);
+                amountOut = module == wbtc ? deductMintFee(toWBTC(), 1) : module == address(0x0) ? toETH(deductMintFee(_mintAmount, 1), to) : module == usdc ? toUSDC(deductMintFee(_mintAmount, 1), to) : module == ibbtc ? toIBBTC(deductMintFee(_mintAmount, 3)) : deductMintFee(_mintAmount, 1);
 		tx.origin.transfer(Math.min(_gasBefore.sub(gasleft()).add(10e3).mul(tx.gasprice), address(this).balance));
-		IERC20(module).safeTransfer(to, amount);
+		if (module != usdc && module != address(0x0)) IERC20(module).safeTransfer(to, amountOut);
 	}
 
 	function computeBurnNonce(
@@ -260,7 +305,7 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 			); //  wbtc does not implement ERC20Permit
 			{
 				IERC20(asset).transferFrom(to, address(this), amount);
-	                        amountToBurn = toRenBTC(deductFee(amount, 1));
+	                        amountToBurn = toRenBTC(deductBurnFee(amount, 1));
 			}
 		} else if (asset == ibbtc) {
 			uint256 nonce = nonces[to];
@@ -282,7 +327,7 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 			); //  wbtc ibbtc do not implement ERC20Permit
 			{
 				IERC20(asset).transferFrom(to, address(this), amount);
-				amountToBurn = deductFee(fromIBBTC(amount), 3);
+				amountToBurn = deductBurnFee(fromIBBTC(amount), 3);
 			}
 		} else if (asset == renbtc) {
 			uint256 nonce;
@@ -298,7 +343,22 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 			{
 				IERC20(asset).transferFrom(to, address(this), amount);
 			}
-			amountToBurn = deductFee(amount, 1);
+			amountToBurn = deductBurnFee(amount, 1);
+		} else if (asset == usdc) {
+			uint256 nonce;
+			uint256 burnNonce;
+			{
+				nonce = IERC2612Permit(asset).nonces(to);
+				burnNonce = computeBurnNonce(asset, amount, deadline, nonce, destination);
+			}
+			{
+                        	(uint8 v, bytes32 r, bytes32 s) = SplitSignatureLib.splitSignature(signature);
+	 			IERC2612Permit(asset).permit(to, address(this), amount, burnNonce, v, r, s);
+			}
+			{
+				IERC20(asset).transferFrom(to, address(this), amount);
+			}
+			amountToBurn = deductBurnFee(fromUSDC(amount), 1);
 		} else revert("!supported-asset");
 	        IGateway(btcGateway).burn(destination, amountToBurn);
 	}
