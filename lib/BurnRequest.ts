@@ -206,9 +206,10 @@ export class BurnRequest {
 		console.log(chainId);
 		const token = new ethers.Contract(
 			this.asset,
-			['function name() view returns (string)', 'function nonces(address) view returns (uint256)'],
+			['function DOMAIN_SEPARATOR() view returns (bytes32)', 'function name() view returns (string)', 'function nonces(address) view returns (uint256)'],
 			signer.provider,
 		);
+		console.log('domain', await token.DOMAIN_SEPARATOR());
 		this.assetName = await token.name();
 		this.tokenNonce = (await token.nonces(await signer.getAddress())).toString();
 		console.log(this.assetName, this.tokenNonce);

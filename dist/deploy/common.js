@@ -40,13 +40,14 @@ var hre = require('hardhat');
 var ethers = hre.ethers, upgrades = hre.upgrades, deployments = hre.deployments;
 exports = module.exports = function () { };
 exports.isSelectedDeployment = function (filename) {
-    return !process.env.DEPLOYMENT_NUMBER ||
-        (function () {
-            var match = filename.match(/(?:\d+)/g);
-            if (!match)
+    return process.env.DEPLOYMENT_NUMBER
+        ? (function () {
+            var match = filename.match(/(?:\d+)(?=_deploy)/gi);
+            if (match.length == 0)
                 return false;
-            return match[0] === process.env.DEPLOYMENT_NUMBER;
-        })();
+            return Number(match[0]) == process.env.DEPLOYMENT_NUMBER;
+        })()
+        : false;
 };
 exports.networkNameFromEnv = function () {
     if (!process.env.CHAIN)

@@ -15,7 +15,7 @@
       "chainId": "1",
       "contracts": {
         "ZeroUnderwriterLockBytecodeLib": {
-          "address": "0x74Cf9087AD26D541930BaC724B7ab21bA8F00a27",
+          "address": "0xefAB0Beb0A557E452b398035eA964948c750b2Fd",
           "abi": [
             {
               "inputs": [],
@@ -33,7 +33,7 @@
           ]
         },
         "BadgerBridgeZeroController": {
-          "address": "0x70bDA08DBe07363968e9EE53d899dFE48560605B",
+          "address": "0x26B862f640357268Bd2d9E95bc81553a2Aa81D7E",
           "abi": [
             {
               "anonymous": false,
@@ -82,7 +82,33 @@
             },
             {
               "inputs": [],
-              "name": "PERMIT_DOMAIN_SEPARATOR",
+              "name": "IBBTC_GAS_COST",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "PERMIT_DOMAIN_SEPARATOR_IBBTC",
+              "outputs": [
+                {
+                  "internalType": "bytes32",
+                  "name": "",
+                  "type": "bytes32"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "PERMIT_DOMAIN_SEPARATOR_WBTC",
               "outputs": [
                 {
                   "internalType": "bytes32",
@@ -945,7 +971,7 @@
           ]
         },
         "ZERO": {
-          "address": "0x26B862f640357268Bd2d9E95bc81553a2Aa81D7E",
+          "address": "0xA56F946D6398Dd7d9D4D9B337Cf9E0F68982ca5B",
           "abi": [
             {
               "anonymous": false,
@@ -1546,7 +1572,7 @@
           ]
         },
         "ZeroDistributor": {
-          "address": "0xA56F946D6398Dd7d9D4D9B337Cf9E0F68982ca5B",
+          "address": "0x5D42EBdBBa61412295D7b0302d6F50aC449Ddb4F",
           "abi": [
             {
               "inputs": [

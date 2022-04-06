@@ -1,6 +1,7 @@
 const hre = require('hardhat');
 const { createGetGasPrice } = require('ethers-polygongastracker');
 const { options } = require('libp2p/src/keychain');
+const { TEST_KEEPER_ADDRESS } = require('../lib/mock');
 const validate = require('@openzeppelin/upgrades-core/dist/validate/index');
 Object.defineProperty(validate, 'assertUpgradeSafe', {
 	value: () => {},
@@ -70,10 +71,18 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 			to: deployer,
 		});
 	const { chainId } = await provider.getNetwork();
-	if (chainId === 31337) {
+	if (hre.network.name === 'hardhat') {
 		await hre.network.provider.request({
 			method: 'hardhat_impersonateAccount',
 			params: [SIGNER_ADDRESS],
+		});
+		await hre.network.provider.request({
+			method: 'hardhat_impersonateAccount',
+			params: [TEST_KEEPER_ADDRESS],
+		});
+		await ethersSigner.sendTransaction({
+			value: ethers.utils.parseEther('0.5'),
+			to: TEST_KEEPER_ADDRESS
 		});
 	}
 	const signer = await ethers.getSigner(SIGNER_ADDRESS);
