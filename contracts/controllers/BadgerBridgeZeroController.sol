@@ -238,8 +238,7 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 		uint256 deadline,
 		bytes memory destination,
 		bytes memory signature
-	) public {
-                uint256 amountToBurn;
+	) public returns (uint256 amountToBurn) {
 		require(block.timestamp < deadline, '!deadline');
 		if (asset == wbtc) {
 			uint256 nonce = nonces[to];
