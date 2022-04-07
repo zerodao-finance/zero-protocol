@@ -186,14 +186,14 @@ const getFixtures = async () => {
 		//@ts-ignore
 		usdc: new Contract(deployParameters[network]['USDC'], erc20abi, signer),
 		//@ts-ignore
-		wBTC: new Contract(deployParameters[network]['wBTC'], erc20abi, signer),
+		WBTC: new Contract(deployParameters[network]['WBTC'], erc20abi, signer),
 		yvWBTC: await getContract('DummyVault', signer),
 	};
 };
 
 const getBalances = async () => {
 	return;
-	const { swapModule, strategy, controller, btcVault, signerAddress, renBTC, wETH, usdc, wBTC, yvWBTC } =
+	const { swapModule, strategy, controller, btcVault, signerAddress, renBTC, wETH, usdc, WBTC, yvWBTC } =
 		await getFixtures();
 	const wallets: { [index: string]: string } = {
 		Wallet: signerAddress,
@@ -208,7 +208,7 @@ const getBalances = async () => {
 		wETH,
 		ETH: 0,
 		usdc,
-		wBTC,
+		WBTC,
 		yvWBTC,
 		zBTC: btcVault,
 	};
@@ -363,15 +363,15 @@ describe('Zero', () => {
 		);
 	});
 
-	it('Swap renBTC -> wBTC -> renBTC', async () => {
-		const { renBTC, wBTC, controller, signer } = await getFixtures();
+	it('Swap renBTC -> WBTC -> renBTC', async () => {
+		const { renBTC, WBTC, controller, signer } = await getFixtures();
 		const amount = ethers.utils.parseUnits('5', '8');
-		await convert(controller, renBTC, wBTC, amount);
-		console.log('Converted renBTC to wBTC');
+		await convert(controller, renBTC, WBTC, amount);
+		console.log('Converted renBTC to WBTC');
 		await getBalances();
-		const newAmount = Number(await wBTC.balanceOf(await signer.getAddress()));
-		await convert(controller, wBTC, renBTC, newAmount);
-		console.log('Converted wBTC to renBTC');
+		const newAmount = Number(await WBTC.balanceOf(await signer.getAddress()));
+		await convert(controller, WBTC, renBTC, newAmount);
+		console.log('Converted WBTC to renBTC');
 		expect(Number(await renBTC.balanceOf(await signer.getAddress())) > 0, 'The swap amounts dont add up');
 	});
 

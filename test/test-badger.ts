@@ -139,7 +139,7 @@ describe('BadgerBridgeZeroController', () => {
 			pNonce: utils.hexlify(utils.randomBytes(32)),
 			module: deployParameters[process.env.CHAIN].renBTC,
 			amount: utils.hexlify(utils.parseUnits('0.005', 8)),
-			asset: deployParameters[process.env.CHAIN].wBTC,
+			asset: deployParameters[process.env.CHAIN].WBTC,
 			chainId,
 			data: '0x',
 			underwriter: contractAddress,
@@ -160,7 +160,7 @@ describe('BadgerBridgeZeroController', () => {
 			contractAddress,
 			owner: await signer.getAddress(),
 			amount: utils.hexlify(utils.parseUnits('0.005', 8)),
-			asset: deployParameters[process.env.CHAIN].wBTC,
+			asset: deployParameters[process.env.CHAIN].WBTC,
 			chainId,
 			underwriter: contractAddress,
 			deadline: Math.floor((+new Date() + 1000 * 60 * 60 * 24) / 1000),
@@ -191,7 +191,7 @@ describe('BadgerBridgeZeroController', () => {
 		await transferRequest.sign(signer, contractAddress);
 		console.log('signed', transferRequest.signature);
 		const wbtc = new ethers.Contract(
-			deployParameters[process.env.CHAIN].wBTC,
+			deployParameters[process.env.CHAIN].WBTC,
 			['function approve(address, uint256)'],
 			signer,
 		);
@@ -235,7 +235,7 @@ describe('BadgerBridgeZeroController', () => {
 			pNonce: utils.hexlify(utils.randomBytes(32)),
 			module: '0xc4E15973E6fF2A35cC804c2CF9D2a1b817a8b40F',
 			amount: utils.hexlify(utils.parseUnits('0.5', 8)),
-			asset: deployParameters[process.env.CHAIN].wBTC,
+			asset: deployParameters[process.env.CHAIN].WBTC,
 			chainId,
 			data: '0x',
 			underwriter: contractAddress,
@@ -258,7 +258,7 @@ describe('BadgerBridgeZeroController', () => {
 			pNonce: utils.hexlify(utils.randomBytes(32)),
 			module: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
 			amount: utils.hexlify(utils.parseUnits('0.5', 8)),
-			asset: deployParameters[process.env.CHAIN].wBTC,
+			asset: deployParameters[process.env.CHAIN].WBTC,
 			chainId,
 			data: '0x',
 			underwriter: contractAddress,
@@ -281,7 +281,7 @@ describe('BadgerBridgeZeroController', () => {
 			pNonce: utils.hexlify(utils.randomBytes(32)),
 			module: ethers.constants.AddressZero,
 			amount: utils.hexlify(utils.parseUnits('0.5', 8)),
-			asset: deployParameters[process.env.CHAIN].wBTC,
+			asset: deployParameters[process.env.CHAIN].WBTC,
 			chainId,
 			data: '0x',
 			underwriter: contractAddress,
