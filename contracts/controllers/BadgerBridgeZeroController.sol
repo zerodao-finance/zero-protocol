@@ -2,6 +2,7 @@
 pragma solidity >=0.6.0;
 
 import {IUniswapV2Router02} from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+import {UniswapV2Library} from "../libraries/UniswapV2Library.sol";
 import {ZeroLib} from '../libraries/ZeroLib.sol';
 import {IERC2612Permit} from '../interfaces/IERC2612Permit.sol';
 import {ZeroControllerTemplate} from './ZeroControllerTemplate.sol';
@@ -24,6 +25,7 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 	using SafeMath for *;
 	address constant btcGateway = 0xe4b679400F0f267212D5D812B95f58C83243EE71;
 	address constant router = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+	address constant factory = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
         address constant usdc = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
         address constant weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 	address constant wbtc = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
@@ -35,36 +37,28 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
         address constant settPeak = 0x41671BA1abcbA387b9b2B752c205e22e916BE6e3;
         address constant ibbtc = 0xc4E15973E6fF2A35cC804c2CF9D2a1b817a8b40F;
 	uint256 public governanceFee;
-	uint256 public constant GAS_COST = uint256(3e5);
-        uint256 public constant IBBTC_GAS_COST = uint256(7e5);
-	uint256 public constant ETH_RESERVE = uint256(5 ether);
-	uint256 public gasCostInWBTC;
-        uint256 public burnFee;
+	uint256 constant GAS_COST = uint256(3e5);
+        uint256 constant IBBTC_GAS_COST = uint256(7e5);
+	uint256 constant ETH_RESERVE = uint256(5 ether);
+	uint256 internal renbtcForOneETHPrice;
+        uint256 internal burnFee;
 	mapping(address => uint256) public nonces;
-	bytes32 public PERMIT_DOMAIN_SEPARATOR_WBTC;
-	bytes32 public PERMIT_DOMAIN_SEPARATOR_IBBTC;
+	bytes32 internal PERMIT_DOMAIN_SEPARATOR_WBTC;
+	bytes32 internal PERMIT_DOMAIN_SEPARATOR_IBBTC;
 
 	function getChainId() internal pure returns (uint256 result) {
 		assembly {
 			result := chainid()
 		}
 	}
-        function setGovernanceFee(uint256 _governanceFee) public {
+        function setParameters(uint256 _governanceFee, uint256 _fee, uint256 _burnFee) public {
           require(governance == msg.sender, "!governance");
           governanceFee = _governanceFee;
-        }
-        function setFee(uint256 _fee) public {
-          require(governance == msg.sender, "!governance");
           fee = _fee;
-        }
-        function setBurnFee(uint256 _burnFee) public {
-          require(governance == msg.sender, "!governance");
           burnFee = _burnFee;
         }
-
 	function initialize(address _governance, address _strategist) public initializer {
 	        fee = uint256(25e14);
-                gasCostInWBTC = 1;
                 burnFee = uint256(4e15);
 		governanceFee = uint256(5e17);
 		governance = _governance;
@@ -101,10 +95,10 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 		result = v.mul(n).div(uint256(1 ether));
 	}
 
-	function toWBTC() internal returns (uint256 amountOut) {
+	function toWBTC(uint256 amount) internal returns (uint256 amountOut) {
 		uint256 amountStart = IERC20(wbtc).balanceOf(address(this));
 		(bool success, ) = renCrv.call(
-			abi.encodeWithSelector(IRenCrv.exchange.selector, 0, 1, IERC20(renbtc).balanceOf(address(this)))
+			abi.encodeWithSelector(IRenCrv.exchange.selector, 0, 1, amount)
 		);
 		amountOut = IERC20(wbtc).balanceOf(address(this)).sub(amountStart);
 	}
@@ -117,13 +111,18 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
             amountOut = IBadgerSettPeak(settPeak).mint(0, IERC20(bCrvRen).balanceOf(address(this)), new bytes32[](0));
         }
         function toUSDC(uint256 amountIn, address out) internal returns (uint256 amountOut) {
-          address[] memory path = new address[](2);
+          address[] memory path = new address[](3);
           path[0] = renbtc;
-          path[1] = usdc;
+	  path[1] = weth;
+          path[2] = usdc;
           uint256[] memory amountsOut = IUniswapV2Router02(router).swapExactTokensForTokens(amountIn, 1, path, out, block.timestamp + 1);
-          amountOut = amountsOut[1];
+          amountOut = amountsOut[2];
         }
-        function toETH(uint256 amountIn, address out) internal returns (uint256 amountOut) {
+        function quote() internal {
+          (uint256 amountWeth, uint256 amountRenBTC) = UniswapV2Library.getReserves(factory, weth, renbtc);
+          renbtcForOneETHPrice = UniswapV2Library.quote(uint256(1 ether), amountWeth, amountRenBTC);
+        }
+        function renBTCtoETH(uint256 amountIn, address out) internal returns (uint256 amountOut) {
           address[] memory path = new address[](2);
           path[0] = renbtc;
           path[1] = weth;
@@ -158,11 +157,14 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 			abi.encodeWithSelector(ICurveETHUInt256.exchange.selector, 1, 2, wbtcStart, 0, true)
 		);
 		amountOut = address(this).balance.sub(amountStart);
-		if (amountOut != 0) gasCostInWBTC = GAS_COST.mul(wbtcStart.mul(uint256(1 ether))).div(amountOut);
 	}
 
+	receive() payable external { 
+		// no-op 
+	}
 	function earn() public {
-                toWBTC();
+                quote();
+                toWBTC(IERC20(renbtc).balanceOf(address(this)));
 		toETH();
 		uint256 balance = address(this).balance;
 		if (balance > ETH_RESERVE) {
@@ -175,6 +177,9 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 		}
 	}
 
+	function computeRenBTCGasFee(uint256 gasCost, uint256 gasPrice) internal view returns (uint256 result) {
+          result = gasCost.mul(tx.gasprice).mul(renbtcForOneETHPrice).div(uint256(1 ether));
+        }
 	function deductMintFee(uint256 amountIn, uint256 multiplier) internal view returns (uint256 amount) {
 		amount = amountIn.sub(applyFee(amountIn, fee, multiplier));
 	}
@@ -182,7 +187,7 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 		amount = amountIn.sub(applyFee(amountIn, burnFee, multiplier));
 	}
 	function applyFee(uint256 amountIn, uint256 _fee, uint256 multiplier) internal view returns (uint256 amount) {
-		amount = gasCostInWBTC.mul(multiplier).mul(tx.gasprice).div(uint256(1 ether)).add(applyRatio(amountIn, _fee));
+		amount = computeRenBTCGasFee(GAS_COST, tx.gasprice).add(applyRatio(amountIn, _fee));
 	}
 
 	function toTypedDataHash(ZeroLib.LoanParams memory params, address underwriter)
@@ -239,7 +244,7 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 			signature
 		);
                 
-                amountOut = module == wbtc ? deductMintFee(toWBTC(), 1) : module == address(0x0) ? toETH(deductMintFee(_mintAmount, 1), to) : module == usdc ? toUSDC(deductMintFee(_mintAmount, 1), to) : module == ibbtc ? toIBBTC(deductMintFee(_mintAmount, 3)) : deductMintFee(_mintAmount, 1);
+                amountOut = module == wbtc ? toWBTC(deductMintFee(_mintAmount, 1)) : module == address(0x0) ? renBTCtoETH(deductMintFee(_mintAmount, 1), to) : module == usdc ? toUSDC(deductMintFee(_mintAmount, 1), to) : module == ibbtc ? toIBBTC(deductMintFee(_mintAmount, 3)) : deductMintFee(_mintAmount, 1);
 		tx.origin.transfer(Math.min(_gasBefore.sub(gasleft()).add(10e3).mul(tx.gasprice), address(this).balance));
 		if (module != usdc && module != address(0x0)) IERC20(module).safeTransfer(to, amountOut);
 	}
