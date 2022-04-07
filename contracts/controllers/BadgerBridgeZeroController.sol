@@ -64,6 +64,7 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 
 	function initialize(address _governance, address _strategist) public initializer {
 	        fee = uint256(25e14);
+                gasCostInWBTC = 1;
                 burnFee = uint256(4e15);
 		governanceFee = uint256(5e17);
 		governance = _governance;
@@ -157,7 +158,7 @@ contract BadgerBridgeZeroController is ZeroControllerTemplate {
 			abi.encodeWithSelector(ICurveETHUInt256.exchange.selector, 1, 2, wbtcStart, 0, true)
 		);
 		amountOut = address(this).balance.sub(amountStart);
-		gasCostInWBTC = GAS_COST.mul(wbtcStart.mul(uint256(1 ether))).div(amountOut);
+		if (amountOut != 0) gasCostInWBTC = GAS_COST.mul(wbtcStart.mul(uint256(1 ether))).div(amountOut);
 	}
 
 	function earn() public {
