@@ -4,6 +4,7 @@ const { UnderwriterTransferRequest, UnderwriterBurnRequest } = require('../lib/z
 const { createZeroConnection, createZeroKeeper } = require('../lib/zero');
 const { LevelDBPersistenceAdapter } = require('../lib/persistence/leveldb');
 const Underwriter = require('../deployments/arbitrum/DelegateUnderwriter');
+const BadgerBridgeZeroController = require('../deployments/mainnet/BadgerBridgeZeroController');
 const trivial = new ethers.Contract(
 	Underwriter.address,
 	Underwriter.abi,
@@ -97,6 +98,10 @@ const handleTransferRequest = async (message) => {
 			chainId: message.chainId,
 			signature: message.signature,
 		});
+		if (transferRequest.contractAddress === BadgerBridgeZeroController.address) {
+                  transferRequest.dry = async () => [];
+		  transferRequest.loan = async (...args) => ({ async wait() { return {}; } });
+		};
 		const [signer] = await ethers.getSigners();
 		transferRequest.setProvider(signer.provider);
 		//if (!(hasEnough(transferRequest))) return;
