@@ -7,6 +7,22 @@ import { getChain } from './deployment-utils';
 import { TEST_KEEPER_ADDRESS } from './mock';
 
 export class UnderwriterTransferRequest extends TransferRequest {
+	public callStatic: any;
+        repayAbi() { return 'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)' };
+	constructor(o: any) {
+          super(o);
+	  const self = this;
+	  this.callStatic = {
+            async repay(signer: any) {
+              return await self.repay.apply(Object.setPrototypeOf({
+                ...self,
+		getUnderwriter(o: any) {
+			return self.getUnderwriter(o).callStatic;
+		}
+	      }, Object.getPrototypeOf(self)), [ signer ]);
+	    }
+	  };
+	}
 	async getController(signer) {
 		console.log('getting controller');
 		const underwriter = this.getUnderwriter(signer);
@@ -42,11 +58,12 @@ export class UnderwriterTransferRequest extends TransferRequest {
 			this.underwriter,
 			[
 				'function controller() view returns (address)',
-				'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)',
+				(this.repayAbi && this.repayAbi()),
 				'function loan(address, address, uint256, uint256, address, bytes, bytes)',
 				'function meta(address, address, address, uint256, bytes, bytes)',
-				'function burn(address, address, uint256, uint256, bytes, bytes)',
-			],
+				'function burn(address, address, uint256, uint256, bytes, bytes)'
+			].filter(Boolean),
+
 			signer,
 		);
 	}

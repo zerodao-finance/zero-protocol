@@ -1,11 +1,12 @@
 const hre = require('hardhat');
 const { createGetGasPrice } = require('ethers-polygongastracker');
 const { options } = require('libp2p/src/keychain');
+const { TEST_KEEPER_ADDRESS } = require('../lib/mock');
 const validate = require('@openzeppelin/upgrades-core/dist/validate/index');
 Object.defineProperty(validate, 'assertUpgradeSafe', {
 	value: () => {},
 });
-const getControllerName = () => process.env.CHAIN === 'ETHEREUM' ? 'BadgerBridgeZeroController' : 'ZeroController';
+const getControllerName = () => (process.env.CHAIN === 'ETHEREUM' ? 'BadgerBridgeZeroController' : 'ZeroController');
 const { Logger } = require('@ethersproject/logger');
 const isLocalhost = !hre.network.config.live;
 
@@ -27,9 +28,9 @@ const deployParameters = require('../lib/fixtures');
 const toAddress = (contractOrAddress) => (contractOrAddress || {}).address || contractOrAddress;
 
 const getController = async () => {
-  const name = getControllerName();
-  const controller = await hre.ethers.getContract(name);
-  return controller;
+	const name = getControllerName();
+	const controller = await hre.ethers.getContract(name);
+	return controller;
 };
 
 const setConverter = async (controller, source, target, converter) => {
@@ -48,15 +49,12 @@ const network = process.env.CHAIN || 'MATIC';
 
 const common = require('./common');
 const approveModule = async (...args) => {
-  if (getControllerName().match('Badger')) return;
-  const [ controller, ...rest ] = args;
-  return await controller.approveModule(...rest);
+	if (getControllerName().match('Badger')) return;
+	const [controller, ...rest] = args;
+	return await controller.approveModule(...rest);
 };
-  
 
 module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) => {
-	if (!common.isSelectedDeployment(__filename)) // || process.env.FORKING === 'true')
-		return;
 
 	const { deployer } = await getNamedAccounts(); //used as governance address
 	const [ethersSigner] = await ethers.getSigners();
@@ -69,10 +67,18 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 			to: deployer,
 		});
 	const { chainId } = await provider.getNetwork();
-	if (chainId === 31337) {
+	if (hre.network.name === 'hardhat') {
 		await hre.network.provider.request({
 			method: 'hardhat_impersonateAccount',
 			params: [SIGNER_ADDRESS],
+		});
+		await hre.network.provider.request({
+			method: 'hardhat_impersonateAccount',
+			params: [TEST_KEEPER_ADDRESS],
+		});
+		await ethersSigner.sendTransaction({
+			value: ethers.utils.parseEther('0.5'),
+			to: TEST_KEEPER_ADDRESS
 		});
 	}
 	const signer = await ethers.getSigner(SIGNER_ADDRESS);
@@ -85,18 +91,26 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 		from: deployer,
 	});
 
-	const zeroControllerFactory = await hre.ethers.getContractFactory(getControllerName(), process.env.CHAIN === 'ETHEREUM' ? {} : {
-		libraries: {
-			ZeroUnderwriterLockBytecodeLib: zeroUnderwriterLockBytecodeLib.address,
-		},
-	});
-	const zeroController = process.env.CHAIN === 'ETHEREUM' ? await deployProxyFixedAddress(zeroControllerFactory, [ deployer, deployer ]) : await deployProxyFixedAddress(
-		zeroControllerFactory,
-		['0x0F4ee9631f4be0a63756515141281A3E2B293Bbe', deployParameters[network].gatewayRegistry],
-		{
-			unsafeAllowLinkedLibraries: true,
-		},
+	const zeroControllerFactory = await hre.ethers.getContractFactory(
+		getControllerName(),
+		process.env.CHAIN === 'ETHEREUM'
+			? {}
+			: {
+					libraries: {
+						ZeroUnderwriterLockBytecodeLib: zeroUnderwriterLockBytecodeLib.address,
+					},
+			  },
 	);
+	const zeroController =
+		process.env.CHAIN === 'ETHEREUM'
+			? await deployProxyFixedAddress(zeroControllerFactory, [deployer, deployer])
+			: await deployProxyFixedAddress(
+					zeroControllerFactory,
+					['0x0F4ee9631f4be0a63756515141281A3E2B293Bbe', deployParameters[network].gatewayRegistry],
+					{
+						unsafeAllowLinkedLibraries: true,
+					},
+			  );
 	const zeroControllerArtifact = await deployments.getArtifact(getControllerName());
 	await deployments.save(getControllerName(), {
 		contractName: getControllerName(),
@@ -152,12 +166,15 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 
 	console.log('got controller');
 	if (isLocalhost) {
-		const meta = await deployFixedAddress(process.env.CHAIN === 'ETHEREUM' ? 'MetaExecutorEthereum' : 'MetaExecutor', {
-			args: [controller.address, ethers.utils.parseUnits('15', 8), '100000'],
-			contractName: process.env.CHAIN === 'ETHEREUM' ? 'MetaExecutorEthereum' : 'MetaExecutor',
-			libraries: {},
-			from: deployer,
-		});
+		const meta = await deployFixedAddress(
+			process.env.CHAIN === 'ETHEREUM' ? 'MetaExecutorEthereum' : 'MetaExecutor',
+			{
+				args: [controller.address, ethers.utils.parseUnits('15', 8), '100000'],
+				contractName: process.env.CHAIN === 'ETHEREUM' ? 'MetaExecutorEthereum' : 'MetaExecutor',
+				libraries: {},
+				from: deployer,
+			},
+		);
 		await approveModule(controller, meta.address, true);
 	}
 	await controller.mint(delegate.address, deployParameters[network].renBTC);
@@ -177,9 +194,9 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 					from: deployer,
 			  })
 			: await deployFixedAddress('BadgerBridge', {
-				args: [ zeroController.address],
-				contractName: 'BadgerBridge',
-				from: deployer
+					args: [zeroController.address],
+					contractName: 'BadgerBridge',
+					from: deployer,
 			  });
 	await approveModule(controller, module.address, true);
 	if (network === 'ARBITRUM') {
@@ -192,18 +209,30 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 		await controller.approveModule(quick.address, true);
 	}
 	// await controller.approveModule(module.address, true);
-	const strategyRenVM = await deployments.deploy(network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : network === 'MATIC' ? 'StrategyRenVM' : 'StrategyRenVMEthereum', {
-		args: [
-			zeroController.address,
-			deployParameters[network]['renBTC'],
-			deployParameters[network]['wNative'],
-			dummyVault.address,
-			deployParameters[network]['wBTC'],
-		],
-		contractName: network === 'ARBITRUM' ? 'StrategyRenVMArbitrum' : network === 'ETHEREUM' ? 'StrategyRenVMEthereum' : 'StrategyRenVM',
-		from: deployer,
-		waitConfirmations: 1,
-	});
+	const strategyRenVM = await deployments.deploy(
+		network === 'ARBITRUM'
+			? 'StrategyRenVMArbitrum'
+			: network === 'MATIC'
+			? 'StrategyRenVM'
+			: 'StrategyRenVMEthereum',
+		{
+			args: [
+				zeroController.address,
+				deployParameters[network]['renBTC'],
+				deployParameters[network]['wNative'],
+				dummyVault.address,
+				deployParameters[network]['wBTC'],
+			],
+			contractName:
+				network === 'ARBITRUM'
+					? 'StrategyRenVMArbitrum'
+					: network === 'ETHEREUM'
+					? 'StrategyRenVMEthereum'
+					: 'StrategyRenVM',
+			from: deployer,
+			waitConfirmations: 1,
+		},
+	);
 	//hijackSigner(ethersSigner);
 	await controller.setGovernance(await ethersSigner.getAddress());
 	await controller.setFee(ethers.utils.parseEther('0.003'));
