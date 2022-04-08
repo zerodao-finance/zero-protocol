@@ -9,7 +9,7 @@ import { Polygon, Ethereum, Arbitrum } from '@renproject/chains';
 export const CONTROLLER_DEPLOYMENTS = {
 	Arbitrum: require('../deployments/arbitrum/ZeroController').address,
 	Polygon: require('../deployments/matic/ZeroController').address,
-	Ethereum: ethers.constants.AddressZero,
+	Ethereum: require('../deployments/mainnet/BadgerBridgeZeroController').address,
 };
 export const RPC_ENDPOINTS = {
 	Arbitrum: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
@@ -23,8 +23,12 @@ export const RENVM_PROVIDERS = {
 	Ethereum,
 };
 
+export const getChain = (transferRequest) => {
+	return Object.entries(CONTROLLER_DEPLOYMENTS).find(([k, v]) => transferRequest.contractAddress === v);
+};
+
 export const getProvider = (transferRequest) => {
-	const chain = Object.entries(CONTROLLER_DEPLOYMENTS).find(([k, v]) => transferRequest.contractAddress === v);
+	const chain = getChain(transferRequest);
 	const chain_key = chain[0];
 	return RENVM_PROVIDERS[chain_key](new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]), 'mainnet');
 };
