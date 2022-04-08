@@ -149,13 +149,15 @@ const handleBurnRequest = async (message) => {
 			contractAddress: message.contractAddress,
 			signature: message.signature,
 		});
-	        const [signer] = await ethers.getSigners();
-	        const wallet = new ethers.Wallet(process.env.WALLET, signer.provider);
+		const [signer] = await ethers.getSigners();
+		const wallet = new ethers.Wallet(process.env.WALLET, signer.provider);
 		const tx = await burnRequest.burn(signer);
 		console.log('TXHASH:', tx.hash);
 		console.log(await tx.wait());
-	} catch (e) { console.error(e); }
-		/*
+	} catch (e) {
+		console.error(e);
+	}
+	/*
 		const [signer] = await ethers.getSigners();
 		burnRequest.setProvider(signer.provider);
 		//if (!(hasEnough(transferRequest))) return;
@@ -182,17 +184,17 @@ const handler = {
 	burn: handleBurnRequest,
 };
 
-const handleRequest = (request, type = 'transfer') =>
-	handler[request.requestType ? request.requestType : request.destination ? 'burn' : type](request);
+const handleRequest = (...args) =>
+	handler[request.requestType ? request.requestType : request.destination ? 'burn' : 'transfer'](...args);
 
 const run = async () => {
 	// Initialize the keeper
 	const keeper = createZeroKeeper(await createZeroConnection(KEEPER_URL));
 	if (!process.env.ZERO_PERSISTENCE_DB) process.env.ZERO_PERSISTENCE_DB = path.join(process.env.HOME, '.keeper.db');
 	keeper.setPersistence(new LevelDBPersistenceAdapter());
-	await keeper.setTxDispatcher((transferRequest) => {
-        	console.log(transferRequest);
-	  handleRequest(transferRequest);
+	await keeper.setTxDispatcher((...args) => {
+		console.log(args[0]);
+		handleRequest(...args);
 	});
 	await keeper.conn.start();
 	await keeper.advertiseAsKeeper();
