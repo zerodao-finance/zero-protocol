@@ -2,6 +2,8 @@ const { ethers } = require('hardhat');
 const path = require('path');
 const { UnderwriterTransferRequest, UnderwriterBurnRequest } = require('../lib/zero');
 const { createZeroConnection, createZeroKeeper } = require('../lib/zero');
+const pipe = require('it-pipe');
+const lp = require('it-length-prefixed');
 const { LevelDBPersistenceAdapter } = require('../lib/persistence/leveldb');
 const Underwriter = require('../deployments/arbitrum/DelegateUnderwriter');
 const trivial = new ethers.Contract(
@@ -43,7 +45,7 @@ ethers.getSigners = async () => {
 	return [await getSigner()];
 };
 
-const executeLoan = async (transferRequest) => {
+const executeLoan = async (transferRequest, peerId, connection) => {
 	const [signer] = await ethers.getSigners();
 	console.log(await signer.provider.getNetwork());
 	global.signer = signer;
@@ -56,12 +58,17 @@ const executeLoan = async (transferRequest) => {
 	const loan = await transferRequest.loan(wallet);
 	console.log(loan);
 	console.log('loaned');
-	console.log(await loan.wait());
+	const loanTx = await loan.wait();
+	console.log(loanTx);
 
+	const { loanStream } = await connection.dispatchProtocol(peerId, '/zero/user/loanDispatch');
+	pipe(JSON.stringify(loanTx), lp.encode(), loanStream.sink);
 	await transferRequest.waitForSignature();
 
+	const { repayStream } = await connection.dispatchProtocol(peerId, '/zero/user/repayDispatch');
 	const repay = await transferRequest.repay(wallet);
-	await repay.wait();
+	const repayTx = await repay.wait();
+	pipe(JSON.stringify(repayTx), lp.encode(), repayStream.sink);
 };
 
 const hasEnough = async (transferRequest) => {
@@ -81,7 +88,7 @@ const hasEnough = async (transferRequest) => {
 
 let triggered = false;
 
-const handleTransferRequest = async (message) => {
+const handleTransferRequest = async (message, peerId, connection) => {
 	try {
 		const transferRequest = new UnderwriterTransferRequest({
 			amount: message.amount,
@@ -122,7 +129,7 @@ const handleTransferRequest = async (message) => {
 						depositLog(`${confs}/${target} confirmations`);
 						if (!triggered || confs == LOAN_CONFIRMATION) {
 							triggered = true;
-							await executeLoan(transferRequest);
+							await executeLoan(transferRequest, peerId, connection);
 						}
 					});
 
