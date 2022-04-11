@@ -47,8 +47,8 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	uint256 constant ETH_RESERVE = uint256(5 ether);
 	uint256 internal renbtcForOneETHPrice;
         uint256 internal burnFee;
-        uint256 public constant REPAY_GAS_DIFF = 10000;
-        uint256 public constant BURN_GAS_DIFF = 234712;
+        uint256 public constant REPAY_GAS_DIFF = 41483;
+        uint256 public constant BURN_GAS_DIFF = 41075;
 	mapping(address => uint256) public nonces;
 	bytes32 internal PERMIT_DOMAIN_SEPARATOR_WBTC;
 	bytes32 internal PERMIT_DOMAIN_SEPARATOR_IBBTC;
@@ -61,6 +61,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		governance = _governance;
 	}
         function computeCalldataGasDiff() internal pure returns (uint256 diff) {
+	  if (true) return 0; // TODO: implement exact gas metering
           // EVM charges less for zero bytes, we must compute the offset for refund
 	  // TODO make this efficient
 	  uint256 sz;

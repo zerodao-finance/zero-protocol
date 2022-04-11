@@ -104,23 +104,60 @@ const doBurn = async (contractAddress) => {
 	console.log('sign');
 	await transferRequest.sign(second, contractAddress);
 	console.log('signed');
+	await signer.sendTransaction({
+		value: ethers.utils.parseEther('1'),
+		to: contractAddress,
+	});
 	const ethStart = await signer.provider.getBalance(signer.getAddress());
-	const tx = await transferRequest.burn(signer, { gasPrice: ethers.utils.parseUnits('10', 9) });
+	const tx = await transferRequest.burn(signer);
 	console.log('burned');
 	const receipt = await tx.wait();
 	const ethEnd = await signer.provider.getBalance(signer.getAddress());
-	const BURN_GAS_DIFF = await (new ethers.Contract(
+	const BURN_GAS_DIFF = await new ethers.Contract(
 		contractAddress,
 		['function BURN_GAS_DIFF() view returns (uint256)'],
 		signer,
-	)).BURN_GAS_DIFF();
+	).BURN_GAS_DIFF();
 	/*
 	const zeroGasDiff = ethers.BigNumber.from(Array.from(utils.arrayify(tx.data)).reduce((r, v) => {
           return r + ((!v && 64) || v);
         }, 0));
 	*/
 	console.log('gasUsed', Number(receipt.gasUsed));
-	return BURN_GAS_DIFF.sub(ethStart.sub(ethEnd).div(receipt.effectiveGasPrice));
+	console.log(receipt);
+	return ethStart.sub(ethEnd).div(receipt.effectiveGasPrice);
+};
+const doRepay = async () => {
+	const contractAddress = (await hre.ethers.getContract('BadgerBridgeZeroController')).address;
+	deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
+	const [signer, second] = await hre.ethers.getSigners();
+	const { chainId } = await signer.provider.getNetwork();
+	const transferRequest = new UnderwriterTransferRequest({
+		contractAddress,
+		nonce: utils.hexlify(utils.randomBytes(32)),
+		to: await signer.getAddress(),
+		pNonce: utils.hexlify(utils.randomBytes(32)),
+		module: deployParameters[process.env.CHAIN].renBTC,
+		amount: utils.hexlify(utils.parseUnits('0.005', 8)),
+		asset: deployParameters[process.env.CHAIN].WBTC,
+		chainId,
+		data: '0x',
+		underwriter: contractAddress,
+	});
+	transferRequest.requestType = 'TRANSFER';
+	console.log('sign');
+	await transferRequest.sign(second, contractAddress);
+	console.log('signed');
+	await signer.sendTransaction({
+		value: ethers.utils.parseEther('1'),
+		to: contractAddress,
+	});
+	const ethStart = await signer.provider.getBalance(signer.getAddress());
+	const tx = await transferRequest.repay(signer);
+	const ethEnd = await signer.provider.getBalance(signer.getAddress());
+	const receipt = await tx.wait();
+	console.log('gasUsed', Number(receipt.gasUsed));
+	return ethStart.sub(ethEnd).div(receipt.effectiveGasPrice);
 };
 (async () => {
 	if (network.name !== 'hardhat') throw Error('must use hardhat network');
@@ -128,8 +165,8 @@ const doBurn = async (contractAddress) => {
 	const [signer] = await hre.ethers.getSigners();
 	const badgerBridge = await ethers.getContract('BadgerBridgeZeroController');
 	console.log(await doBurn(badgerBridge.address));
-	process.exit(0);
+	console.log(await doRepay(badgerBridge.address));
 })().catch((err) => {
-  console.error(err);
-  process.exit(1);
+	console.error(err);
+	process.exit(1);
 });
