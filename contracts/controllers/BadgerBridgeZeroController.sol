@@ -47,8 +47,9 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	uint256 constant ETH_RESERVE = uint256(5 ether);
 	uint256 internal renbtcForOneETHPrice;
         uint256 internal burnFee;
-        uint256 public constant REPAY_GAS_DIFF = 41483;
-        uint256 public constant BURN_GAS_DIFF = 41075;
+        uint256 public keeperReward;
+        uint256 public constant REPAY_GAS_DIFF = 41510;
+        uint256 public constant BURN_GAS_DIFF = 41118;
 	mapping(address => uint256) public nonces;
 	bytes32 internal PERMIT_DOMAIN_SEPARATOR_WBTC;
 	bytes32 internal PERMIT_DOMAIN_SEPARATOR_IBBTC;
@@ -85,11 +86,12 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 			result := chainid()
 		}
 	}
-        function setParameters(uint256 _governanceFee, uint256 _fee, uint256 _burnFee) public {
+        function setParameters(uint256 _governanceFee, uint256 _fee, uint256 _burnFee, uint256 _keeperReward) public {
           require(governance == msg.sender, "!governance");
           governanceFee = _governanceFee;
           fee = _fee;
           burnFee = _burnFee;
+	  keeperReward = _keeperReward;
         }
 	function initialize(address _governance, address _strategist) public initializer {
 	        fee = uint256(25e14);
@@ -97,6 +99,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		governanceFee = uint256(5e17);
 		governance = _governance;
 		strategist = _strategist;
+		keeperReward = uint256(1 ether).div(1000);
 		IERC20(renbtc).safeApprove(btcGateway, ~uint256(0) >> 2);
 		IERC20(renbtc).safeApprove(renCrv, ~uint256(0) >> 2);
 		IERC20(wbtc).safeApprove(renCrv, ~uint256(0) >> 2);
@@ -217,11 +220,20 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	function deductMintFee(uint256 amountIn, uint256 multiplier) internal view returns (uint256 amount) {
 		amount = amountIn.sub(applyFee(amountIn, fee, multiplier));
 	}
+	function deductIBBTCMintFee(uint256 amountIn, uint256 multiplier) internal view returns (uint256 amount) {
+		amount = amountIn.sub(applyIBBTCFee(amountIn, fee, multiplier));
+	}
 	function deductBurnFee(uint256 amountIn, uint256 multiplier) internal view returns (uint256 amount) {
 		amount = amountIn.sub(applyFee(amountIn, burnFee, multiplier));
 	}
+	function deductIBBTCBurnFee(uint256 amountIn, uint256 multiplier) internal view returns (uint256 amount) {
+		amount = amountIn.sub(applyIBBTCFee(amountIn, burnFee, multiplier));
+	}
 	function applyFee(uint256 amountIn, uint256 _fee, uint256 multiplier) internal view returns (uint256 amount) {
-		amount = computeRenBTCGasFee(GAS_COST, tx.gasprice).add(applyRatio(amountIn, _fee));
+		amount = computeRenBTCGasFee(GAS_COST.add(keeperReward.div(tx.gasprice)), tx.gasprice).add(applyRatio(amountIn, _fee));
+	}
+        function applyIBBTCFee(uint256 amountIn, uint256 _fee, uint256 multiplier) internal view returns (uint256 amount) {
+		amount = computeRenBTCGasFee(IBBTC_GAS_COST.add(keeperReward.div(tx.gasprice)), tx.gasprice).add(applyRatio(amountIn, _fee));
 	}
         struct LoanParams {
           address to;
@@ -296,13 +308,13 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		);
                 
 		{
-                	amountOut = module == wbtc ? toWBTC(deductMintFee(params._mintAmount, 1)) : module == address(0x0) ? renBTCtoETH(deductMintFee(params._mintAmount, 1), to) : module == usdc ? toUSDC(deductMintFee(params._mintAmount, 1), to) : module == ibbtc ? toIBBTC(deductMintFee(params._mintAmount, 3)) : deductMintFee(params._mintAmount, 1);
+                	amountOut = module == wbtc ? toWBTC(deductMintFee(params._mintAmount, 1)) : module == address(0x0) ? renBTCtoETH(deductMintFee(params._mintAmount, 1), to) : module == usdc ? toUSDC(deductMintFee(params._mintAmount, 1), to) : module == ibbtc ? toIBBTC(deductIBBTCMintFee(params._mintAmount, 3)) : deductMintFee(params._mintAmount, 1);
 		}
 		{
 			if (module != usdc && module != address(0x0)) IERC20(module).safeTransfer(to, amountOut);
 		}
 		{
-			tx.origin.transfer(Math.min(_gasBefore.sub(gasleft()).add(REPAY_GAS_DIFF).add(params.gasDiff).mul(tx.gasprice), address(this).balance));
+			tx.origin.transfer(Math.min(_gasBefore.sub(gasleft()).add(REPAY_GAS_DIFF).add(params.gasDiff).mul(tx.gasprice).add(keeperReward), address(this).balance));
 		}
 	}
 
@@ -406,7 +418,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 			); //  wbtc ibbtc do not implement ERC20Permit
 			{
 				IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
-				amountToBurn = deductBurnFee(fromIBBTC(params.amount), 3);
+				amountToBurn = deductIBBTCBurnFee(fromIBBTC(params.amount), 3);
 			}
 		} else if (params.asset == renbtc) {
 			{
@@ -439,7 +451,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	        	IGateway(btcGateway).burn(params.destination, amountToBurn);
 		}
 		{
-			tx.origin.transfer(Math.min(params.gasBefore.sub(gasleft()).add(BURN_GAS_DIFF).add(params.gasDiff).mul(tx.gasprice), address(this).balance));
+			tx.origin.transfer(Math.min(params.gasBefore.sub(gasleft()).add(BURN_GAS_DIFF).add(params.gasDiff).mul(tx.gasprice).add(keeperReward), address(this).balance));
 		}
 	}
 

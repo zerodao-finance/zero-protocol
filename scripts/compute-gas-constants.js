@@ -51,7 +51,6 @@ const before = async () => {
 	);
 	await renbtc.approve(renCrv.address, ethers.constants.MaxUint256);
 	await renCrv.exchange(0, 1, ethers.utils.parseUnits('1', 8), 0);
-	console.log('minted renBTC to signer');
 	await hre.network.provider.send('hardhat_impersonateAccount', ['0xcf7346a5e41b0821b80d5b3fdc385eeb6dc59f44']);
 	const governanceSigner = await hre.ethers.getSigner('0xcf7346a5e41b0821b80d5b3fdc385eeb6dc59f44');
 	await signer.sendTransaction({
@@ -101,16 +100,13 @@ const doBurn = async (contractAddress) => {
 		destination: utils.hexlify(utils.randomBytes(64)),
 	});
 	transferRequest.requestType = 'BURN';
-	console.log('sign');
 	await transferRequest.sign(second, contractAddress);
-	console.log('signed');
 	await signer.sendTransaction({
 		value: ethers.utils.parseEther('1'),
 		to: contractAddress,
 	});
 	const ethStart = await signer.provider.getBalance(signer.getAddress());
 	const tx = await transferRequest.burn(signer);
-	console.log('burned');
 	const receipt = await tx.wait();
 	const ethEnd = await signer.provider.getBalance(signer.getAddress());
 	const BURN_GAS_DIFF = await new ethers.Contract(
@@ -123,8 +119,6 @@ const doBurn = async (contractAddress) => {
           return r + ((!v && 64) || v);
         }, 0));
 	*/
-	console.log('gasUsed', Number(receipt.gasUsed));
-	console.log(receipt);
 	return ethStart.sub(ethEnd).div(receipt.effectiveGasPrice);
 };
 const doRepay = async () => {
@@ -145,9 +139,7 @@ const doRepay = async () => {
 		underwriter: contractAddress,
 	});
 	transferRequest.requestType = 'TRANSFER';
-	console.log('sign');
 	await transferRequest.sign(second, contractAddress);
-	console.log('signed');
 	await signer.sendTransaction({
 		value: ethers.utils.parseEther('1'),
 		to: contractAddress,
@@ -156,8 +148,7 @@ const doRepay = async () => {
 	const tx = await transferRequest.repay(signer);
 	const ethEnd = await signer.provider.getBalance(signer.getAddress());
 	const receipt = await tx.wait();
-	console.log('gasUsed', Number(receipt.gasUsed));
-	return ethStart.sub(ethEnd).div(receipt.effectiveGasPrice);
+	return ethStart.sub(ethEnd.sub(ethers.utils.parseEther('0.001'))).div(receipt.effectiveGasPrice);
 };
 (async () => {
 	if (network.name !== 'hardhat') throw Error('must use hardhat network');
