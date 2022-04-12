@@ -140,7 +140,7 @@ const handleTransferRequest = async (message, replyDispatcher) => {
 	}
 };
 
-const handleBurnRequest = async (message) => {
+const handleBurnRequest = async (message, replyDispatcher) => {
 	try {
 		const burnRequest = new UnderwriterBurnRequest({
 			amount: message.amount,
@@ -157,7 +157,9 @@ const handleBurnRequest = async (message) => {
 		const wallet = new ethers.Wallet(process.env.WALLET, signer.provider);
 		const tx = await burnRequest.burn(signer);
 		console.log('TXHASH:', tx.hash);
-		console.log(await tx.wait());
+		const burnReceipt = await tx.wait();
+		console.log(burnReceipt);
+		replyDispatcher('/zero/user/burnDispatch', burnReceipt);
 	} catch (e) {
 		console.error(e);
 	}
