@@ -4,6 +4,7 @@ const { deployments } = hre;
 const { BigNumber, utils } = ethers;
 const { UnderwriterTransferRequest, UnderwriterBurnRequest } = require('../');
 const { enableGlobalMockRuntime } = require('../dist/lib/mock');
+const badger = require('../lib/badger');
 var deployParameters = require('../lib/fixtures');
 var deploymentUtils = require('../dist/lib/deployment-utils');
 

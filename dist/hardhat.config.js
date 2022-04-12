@@ -89,7 +89,8 @@ process.env.ETHEREUM_MAINNET_URL =
     process.env.ETHEREUM_MAINNET_URL || 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2';
 var ETHERSCAN_API_KEYS = {
     ARBITRUM: '7PW6SPNBFYV1EM5E5NT36JW7ARMS1FB4HW',
-    MATIC: 'I13U9EN9YQ9931GYK9CJYQS9ZF51D5Z1F9'
+    MATIC: 'I13U9EN9YQ9931GYK9CJYQS9ZF51D5Z1F9',
+    ETHEREUM: '34W9GX5VZDJKJKVV6YEAMQ3TDP7R8SR633'
 };
 var ETHERSCAN_API_KEY = ETHERSCAN_API_KEYS[process.env.CHAIN || 'ARBITRUM'] || ETHERSCAN_API_KEYS['ARBITRUM'];
 module.exports = {
@@ -162,7 +163,7 @@ module.exports = {
                 settings: {
                     optimizer: {
                         enabled: true,
-                        runs: 200
+                        runs: 5
                     }
                 }
             },
@@ -171,7 +172,7 @@ module.exports = {
                 settings: {
                     optimizer: {
                         enabled: true,
-                        runs: 200
+                        runs: 5
                     }
                 }
             },
@@ -180,7 +181,7 @@ module.exports = {
                 settings: {
                     optimizer: {
                         enabled: true,
-                        runs: 200
+                        runs: 5
                     }
                 }
             },
@@ -189,7 +190,7 @@ module.exports = {
                 settings: {
                     optimizer: {
                         enabled: true,
-                        runs: 200
+                        runs: 5
                     }
                 }
             },

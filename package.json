@@ -89,6 +89,7 @@
 		"@renproject/chains-ethereum": "^2.5.10-1",
 		"@types/gun": "^0.9.3",
 		"@types/node": "^16.4.1",
+		"@uniswap/sdk": "^3.0.3",
 		"@uniswap/v2-periphery": "^1.1.0-beta.0",
 		"axios": "^0.22.0",
 		"bignumber.js": "^9.0.1",
