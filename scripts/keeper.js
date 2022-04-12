@@ -45,7 +45,7 @@ ethers.getSigners = async () => {
 	return [await getSigner()];
 };
 
-const executeLoan = async (transferRequest, peerId, connection) => {
+const executeLoan = async (transferRequest, replyDispatcher) => {
 	const [signer] = await ethers.getSigners();
 	console.log(await signer.provider.getNetwork());
 	global.signer = signer;
@@ -61,14 +61,11 @@ const executeLoan = async (transferRequest, peerId, connection) => {
 	const loanTx = await loan.wait();
 	console.log(loanTx);
 
-	const { loanStream } = await connection.dispatchProtocol(peerId, '/zero/user/loanDispatch');
-	pipe(JSON.stringify(loanTx), lp.encode(), loanStream.sink);
-	await transferRequest.waitForSignature();
+	await replyDispatcher('/zero/user/loanDispatch', loanTx);
 
-	const { repayStream } = await connection.dispatchProtocol(peerId, '/zero/user/repayDispatch');
 	const repay = await transferRequest.repay(wallet);
 	const repayTx = await repay.wait();
-	pipe(JSON.stringify(repayTx), lp.encode(), repayStream.sink);
+	await replyDispatcher('/zero/user/repayDispatch', repayTx);
 };
 
 const hasEnough = async (transferRequest) => {
@@ -88,7 +85,7 @@ const hasEnough = async (transferRequest) => {
 
 let triggered = false;
 
-const handleTransferRequest = async (message, peerId, connection) => {
+const handleTransferRequest = async (message, replyDispatcher) => {
 	try {
 		const transferRequest = new UnderwriterTransferRequest({
 			amount: message.amount,
@@ -129,7 +126,7 @@ const handleTransferRequest = async (message, peerId, connection) => {
 						depositLog(`${confs}/${target} confirmations`);
 						if (!triggered || confs == LOAN_CONFIRMATION) {
 							triggered = true;
-							await executeLoan(transferRequest, peerId, connection);
+							await executeLoan(transferRequest, replyDispatcher);
 						}
 					});
 
