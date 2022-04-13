@@ -125,6 +125,12 @@ export const enableGlobalMockRuntime = () => {
 				}
 			})();
 		}, 500);
+		return {
+			repay: null,
+			loan: null,
+			burn: null,
+			meta: null,
+		};
 	};
 	ZeroUser.prototype.publishMetaRequest = async function (metaRequest) {
 		try {
@@ -136,6 +142,12 @@ export const enableGlobalMockRuntime = () => {
 		} catch (e) {
 			console.error(e);
 		}
+		return {
+			repay: null,
+			loan: null,
+			burn: null,
+			meta: null,
+		};
 	};
 	ZeroUser.prototype.publishBurnRequest = async function (burnRequest) {
 		try {
@@ -148,6 +160,12 @@ export const enableGlobalMockRuntime = () => {
 		} catch (e) {
 			console.error(e);
 		}
+		return {
+			repay: null,
+			loan: null,
+			burn: null,
+			meta: null,
+		};
 	};
 	UnderwriterTransferRequest.prototype.submitToRenVM = async function (flag) {
 		const confirmed = new EventEmitter();
