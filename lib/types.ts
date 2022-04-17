@@ -1,5 +1,5 @@
 import { BigNumberish } from '@ethersproject/bignumber';
-import { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signer-with-address';
+//import { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signer-with-address';
 import { ZeroConnection, ZeroKeeper, ZeroUser } from './p2p';
 import { PersistenceAdapter } from './persistence';
 import { EIP712TypedData } from '@0x/types';
@@ -50,7 +50,7 @@ export declare class TransferRequest {
 	public toEIP712Digest(contractAddress: string, chainId: number): Buffer;
 	public toEIP712(contractAddress: string, chainId: number): EIP712TypedData;
 	public toGatewayAddress(input: GatewayAddressInput): string;
-	public sign(signer: SignerWithAddress, contractAddress: string): Promise<string>;
+	public sign(signer: any, contractAddress: string): Promise<string>;
 }
 
 export declare function createZeroConnection(address: string): Promise<ZeroConnection>;

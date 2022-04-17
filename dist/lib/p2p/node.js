@@ -36,7 +36,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 var libp2p = require('libp2p');
-var TCP = require('libp2p-tcp');
 var WS = require('libp2p-websockets');
 var Mplex = require('libp2p-mplex');
 var SECIO = require('libp2p-secio');
