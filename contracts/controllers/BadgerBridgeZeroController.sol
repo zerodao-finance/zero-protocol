@@ -175,11 +175,12 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
           amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
         }
         function fromUSDC(uint256 amountIn) internal returns (uint256 amountOut) {
-          address[] memory path = new address[](2);
+          address[] memory path = new address[](3);
           path[0] = usdc;
-          path[1] = renbtc;
+	  path[1] = weth;
+          path[2] = renbtc;
           uint256[] memory amountsOut = IUniswapV2Router02(router).swapExactTokensForTokens(amountIn, 1, path, address(this), block.timestamp + 1);
-          amountOut = amountsOut[1];
+          amountOut = amountsOut[2];
         }
 	function toRenBTC(uint256 amountIn) internal returns (uint256 amountOut) {
 		uint256 balanceStart = IERC20(renbtc).balanceOf(address(this));
