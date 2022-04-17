@@ -118,6 +118,7 @@
 		"libp2p-websocket-star": "^0.10.2",
 		"libp2p-websockets": "^0.16.2",
 		"object-hash": "^2.2.0",
+		"path": "^0.12.7",
 		"pull-stream": "^3.6.14",
 		"rpc-bitcoin": "^2.0.0",
 		"send-crypto": "^0.2.33",
