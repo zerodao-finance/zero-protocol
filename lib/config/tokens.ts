@@ -10,7 +10,7 @@ export enum SUPPORTED_TOKENS {
 	USDC = 'USDC',
 	DAI = 'DAI',
 	ETH = 'Ethereum',
-	WBTC = 'wBTC',
+	WBTC = 'WBTC',
 	MATIC = 'Matic',
 	BNB = 'BNB',
 }

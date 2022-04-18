@@ -14,6 +14,17 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -69,9 +80,27 @@ var contracts_1 = require("@ethersproject/contracts");
 var mock_1 = require("./mock");
 var UnderwriterTransferRequest = /** @class */ (function (_super) {
     __extends(UnderwriterTransferRequest, _super);
-    function UnderwriterTransferRequest() {
-        return _super !== null && _super.apply(this, arguments) || this;
+    function UnderwriterTransferRequest(o) {
+        var _this = _super.call(this, o) || this;
+        var self = _this;
+        _this.callStatic = {
+            repay: function (signer) {
+                return __awaiter(this, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0: return [4 /*yield*/, self.repay.apply(Object.setPrototypeOf(__assign(__assign({}, self), { getUnderwriter: function (o) {
+                                        return self.getUnderwriter(o).callStatic;
+                                    } }), Object.getPrototypeOf(self)), [signer])];
+                            case 1: return [2 /*return*/, _a.sent()];
+                        }
+                    });
+                });
+            }
+        };
+        return _this;
     }
+    UnderwriterTransferRequest.prototype.repayAbi = function () { return 'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)'; };
+    ;
     UnderwriterTransferRequest.prototype.getController = function (signer) {
         return __awaiter(this, void 0, void 0, function () {
             var underwriter, _a;
@@ -113,11 +142,11 @@ var UnderwriterTransferRequest = /** @class */ (function (_super) {
     UnderwriterTransferRequest.prototype.getUnderwriter = function (signer) {
         return new contracts_1.Contract(this.underwriter, [
             'function controller() view returns (address)',
-            'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)',
+            (this.repayAbi && this.repayAbi()),
             'function loan(address, address, uint256, uint256, address, bytes, bytes)',
             'function meta(address, address, address, uint256, bytes, bytes)',
             'function burn(address, address, uint256, uint256, bytes, bytes)'
-        ], signer);
+        ].filter(Boolean), signer);
     };
     UnderwriterTransferRequest.prototype.loan = function (signer, params) {
         if (params === void 0) { params = {}; }

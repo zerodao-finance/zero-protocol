@@ -7,12 +7,13 @@ const { ethers, upgrades, deployments } = hre;
 exports = module.exports = function () {};
 
 exports.isSelectedDeployment = (filename) =>
-	!process.env.DEPLOYMENT_NUMBER ||
-	(() => {
-		const match = filename.match(/(?:\d+)/g);
-		if (!match) return false;
-		return match[0] === process.env.DEPLOYMENT_NUMBER;
-	})();
+	process.env.DEPLOYMENT_NUMBER
+		? (() => {
+				const match = filename.match(/(?:\d+)(?=_deploy)/gi);
+				if (match.length == 0) return false;
+				return Number(match[0]) == process.env.DEPLOYMENT_NUMBER;
+		  })()
+		: false;
 
 exports.networkNameFromEnv = () => {
 	if (!process.env.CHAIN) return 'localhost';

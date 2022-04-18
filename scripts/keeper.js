@@ -1,11 +1,17 @@
-const { ethers } = require('hardhat');
+const { network, ethers } = require('hardhat');
 const path = require('path');
 const { UnderwriterTransferRequest, UnderwriterBurnRequest } = require('../lib/zero');
 const { createZeroConnection, createZeroKeeper } = require('../lib/zero');
+
 const pipe = require('it-pipe');
 const lp = require('it-length-prefixed');
+
+const gasnow = require('ethers-gasnow');
+if (network.name === 'mainnet') ethers.providers.BaseProvider.prototype.getGasPrice = gasnow.createGetGasPrice('rapid');
+
 const { LevelDBPersistenceAdapter } = require('../lib/persistence/leveldb');
 const Underwriter = require('../deployments/arbitrum/DelegateUnderwriter');
+const BadgerBridgeZeroController = require('../deployments/mainnet/BadgerBridgeZeroController');
 const trivial = new ethers.Contract(
 	Underwriter.address,
 	Underwriter.abi,
@@ -28,6 +34,7 @@ const MAX_AMOUNT = 50000000;
 const KEEPER_URL = '/dns4/p2p.zerodao.com/tcp/443/wss/p2p-webrtc-star/';
 
 //-----------------------------------------------------------------------------
+/*
 const _getSigners = ethers.getSigners;
 const getSigner = async () => {
 	const [signer] = await _getSigners.call(ethers);
@@ -44,6 +51,7 @@ const getSigner = async () => {
 ethers.getSigners = async () => {
 	return [await getSigner()];
 };
+*/
 
 const executeLoan = async (transferRequest, replyDispatcher) => {
 	const [signer] = await ethers.getSigners();
@@ -101,6 +109,10 @@ const handleTransferRequest = async (message, replyDispatcher) => {
 			chainId: message.chainId,
 			signature: message.signature,
 		});
+		if (transferRequest.address === BadgerBridgeZeroController.address) {
+                  transferRequest.dry = async () => [];
+                  transferRequest.loan = async () => ({ async wait() { return {} } });
+                }
 		const [signer] = await ethers.getSigners();
 		transferRequest.setProvider(signer.provider);
 		//if (!(hasEnough(transferRequest))) return;
@@ -153,9 +165,10 @@ const handleBurnRequest = async (message, replyDispatcher) => {
 			contractAddress: message.contractAddress,
 			signature: message.signature,
 		});
-		const [signer] = await ethers.getSigners();
-		const wallet = new ethers.Wallet(process.env.WALLET, signer.provider);
-		const tx = await burnRequest.burn(signer);
+       const [signer] = await ethers.getSigners();
+	        const wallet = new ethers.Wallet(process.env.WALLET, signer.provider);
+		const tx = await burnRequest.burn(signer, { gasLimit: 500000 });
+
 		console.log('TXHASH:', tx.hash);
 		const burnReceipt = await tx.wait();
 		console.log(burnReceipt);

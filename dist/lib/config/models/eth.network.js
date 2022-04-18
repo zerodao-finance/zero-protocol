@@ -50,7 +50,7 @@ var TOKENS = [
     },
     {
         name: tokens_1.SUPPORTED_TOKENS.WBTC,
-        symbol: 'wBTC',
+        symbol: 'WBTC',
         address: TOKEN_MAP.WBTC,
         decimals: 8,
         route: [TOKEN_MAP.ETH, TOKEN_MAP.WBTC]
