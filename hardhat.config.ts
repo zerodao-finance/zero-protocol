@@ -10,9 +10,14 @@ require('./tasks/init-multisig');
 
 import { ethers } from 'ethers';
 import { readFileSync } from 'fs';
+import * as gasnow from 'ethers-gasnow';
+
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'ARBITRUM') process.env.CHAIN_ID = '42161';
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'MATIC') process.env.CHAIN_ID = '137';
-if (!process.env.CHAIN_ID && process.env.CHAIN === 'ETHEREUM') process.env.CHAIN_ID = '1';
+if (!process.env.CHAIN_ID && process.env.CHAIN === 'ETHEREUM') {
+	gasnow.mixinGetGasPrice(ethers.providers.BaseProvider, 'rapid');
+	process.env.CHAIN_ID = '1';
+}
 
 const RPC_ENDPOINTS = {
 	ARBITRUM: 'https://arb1.arbitrum.io/rpc',
@@ -22,7 +27,7 @@ const RPC_ENDPOINTS = {
 
 var deployParameters = require('./lib/fixtures');
 declare var extendEnvironment;
-extendEnvironment(async (hre) => {
+extendEnvironment(async hre => {
 	if (process.argv.slice(1).includes('node')) {
 		(async () => {
 			const artifact = require('./artifacts/contracts/test/MockGatewayLogicV1.sol/MockGatewayLogicV1');
@@ -30,7 +35,7 @@ extendEnvironment(async (hre) => {
 				hre.ethers.utils.getAddress(deployParameters[process.env.CHAIN].btcGateway),
 				artifact.deployedBytecode,
 			]);
-		})().catch((err) => console.error(err));
+		})().catch(err => console.error(err));
 	}
 });
 

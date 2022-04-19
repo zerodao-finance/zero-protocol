@@ -7611,9 +7611,10 @@ ethereumjs-util@^7.0.10, ethereumjs-util@^7.0.2, ethereumjs-util@^7.0.3, ethereu
     ethereum-cryptography "^0.1.3"
     rlp "^2.2.4"
 
-"ethers-gasnow@https://github.com/kungfuflex/ethers-gasnow":
+ethers-gasnow@^0.1.3:
   version "0.1.3"
-  resolved "https://github.com/kungfuflex/ethers-gasnow#9e87793ce6e084785c741c6c685c024b8c426867"
+  resolved "https://registry.yarnpkg.com/ethers-gasnow/-/ethers-gasnow-0.1.3.tgz#70a56a2c97540bd9d57add3e59207aff7c5d8d36"
+  integrity sha512-XL4v9fNpZmpDjYOCsRjY2VY4CQ7b2LTnueVFe4ZcAuNn0pD6ojb24FBmMBUO1TOAGBNoAnEEvGAHUdYVKtMgAA==
   dependencies:
     "@ethersproject/bignumber" "^5.0.8"
     axios "^0.21.0"
