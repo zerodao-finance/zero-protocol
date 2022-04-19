@@ -14,6 +14,12 @@ import peerId = require('peer-id');
 import peerInfo = require('peer-info');
 import { EventEmitter } from 'events';
 
+const listeners = {
+	burn: ['burn'],
+	meta: ['meta'],
+	transfer: ['repay', 'loan'],
+};
+
 class ZeroConnection extends libp2p {}
 
 class ZeroUser extends EventEmitter {
@@ -65,6 +71,17 @@ class ZeroUser extends EventEmitter {
 		this.keepers = [];
 	}
 
+	handleConnection(callback: Function) {
+		return ({ stream }: { stream: any }) => {
+			pipe(stream.source, lp.decode(), async (rawData: any) => {
+				let string = [];
+				for await (const msg of rawData) {
+					string.push(msg.toString());
+				}
+				callback(JSON.parse(string.join('')));
+			});
+		};
+	}
 	async publishRequest(request: any, requestTemplate?: string[], requestType: string = 'transfer') {
 		const requestFromTemplate = requestTemplate
 			? Object.fromEntries(Object.entries(request).filter(([k, v]) => requestTemplate.includes(k)))
@@ -72,28 +89,35 @@ class ZeroUser extends EventEmitter {
 
 		console.log(request);
 
-	        console.log('requestFromTemplate', requestFromTemplate);
+		let result = {
+			meta: null,
+			burn: null,
+			loan: null,
+			repay: null,
+		};
+		console.log('requestFromTemplate', requestFromTemplate);
 		const key = await this.storage.set(requestFromTemplate);
 		if (this.keepers.length === 0) {
 			this.log.error(`Cannot publish ${requestType} request if no keepers are found`);
-			return;
+			return result;
 		}
 		try {
 			let ackReceived = false;
 			// should add handler for rejection
+			listeners[requestType].map((d) => {
+				result[d] = new Promise(async (resolve) => {
+					this.conn.handle(`/zero/user/${d}Dispatch`, this.handleConnection(resolve));
+				});
+			});
 
-			await this.conn.handle('/zero/user/confirmation', async ({ stream }: { stream: any }) => {
-				pipe(stream.source, lp.decode(), async (rawData: any) => {
-					let string = [];
-					for await (const msg of rawData) {
-						string.push(msg.toString());
-					}
-					const { txConfirmation } = JSON.parse(string.join(''));
+			await this.conn.handle(
+				'/zero/user/confirmation',
+				this.handleConnection(async ({ txConfirmation }) => {
 					await this.storage.setStatus(key, 'succeeded');
 					ackReceived = true;
 					this.log.info(`txDispatch confirmed: ${txConfirmation}`);
-				});
-			});
+				}),
+			);
 			for (const keeper of this.keepers) {
 				// Typescript error: This condition will always return 'true' since the types 'false' and 'true' have no overlap.
 				// This is incorrect, because ackReceived is set to true in the handler of /zero/user/confirmation
@@ -115,8 +139,12 @@ class ZeroUser extends EventEmitter {
 		} catch (e: any) {
 			this.log.error('Could not publish transfer request');
 			this.log.debug(e.message);
-			return;
+			Object.keys(result).map((d) => {
+				result[d] = null;
+			});
+			return result;
 		}
+		return result;
 	}
 
 	async publishBurnRequest(burnRequest: any) {
@@ -216,6 +244,13 @@ class ZeroKeeper {
 		this.log.info('Started to listen for tx dispatch requests');
 	}
 
+	makeReplyDispatcher(remotePeer: any) {
+		const replyDispatcher = async (target: string, data: Object) => {
+			const { stream } = await this.conn.dialProtocol(remotePeer, target);
+			pipe(JSON.stringify(data), lp.encode(), stream.sink);
+		};
+		return replyDispatcher;
+	}
 	async setTxDispatcher(callback: Function) {
 		const handler = async (duplex: any) => {
 			const stream: any = duplex.stream;
@@ -237,7 +272,7 @@ class ZeroKeeper {
 						},
 					}
 				).set(transferRequest);
-				callback(transferRequest);
+				callback(transferRequest, this.makeReplyDispatcher(duplex.connection.remotePeer));
 			});
 		};
 		await this.conn.handle('/zero/keeper/dispatch', handler);

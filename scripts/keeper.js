@@ -2,8 +2,13 @@ const { network, ethers } = require('hardhat');
 const path = require('path');
 const { UnderwriterTransferRequest, UnderwriterBurnRequest } = require('../lib/zero');
 const { createZeroConnection, createZeroKeeper } = require('../lib/zero');
+
+const pipe = require('it-pipe');
+const lp = require('it-length-prefixed');
+
 const gasnow = require('ethers-gasnow');
 if (network.name === 'mainnet') ethers.providers.BaseProvider.prototype.getGasPrice = gasnow.createGetGasPrice('rapid');
+
 const { LevelDBPersistenceAdapter } = require('../lib/persistence/leveldb');
 const Underwriter = require('../deployments/arbitrum/DelegateUnderwriter');
 const BadgerBridgeZeroController = require('../deployments/mainnet/BadgerBridgeZeroController');
@@ -48,7 +53,7 @@ ethers.getSigners = async () => {
 };
 */
 
-const executeLoan = async (transferRequest) => {
+const executeLoan = async (transferRequest, replyDispatcher) => {
 	const [signer] = await ethers.getSigners();
 	console.log(await signer.provider.getNetwork());
 	global.signer = signer;
@@ -61,12 +66,14 @@ const executeLoan = async (transferRequest) => {
 	const loan = await transferRequest.loan(wallet);
 	console.log(loan);
 	console.log('loaned');
-	console.log(await loan.wait());
+	const loanTx = await loan.wait();
+	console.log(loanTx);
 
-	await transferRequest.waitForSignature();
+	await replyDispatcher('/zero/user/loanDispatch', loanTx);
 
 	const repay = await transferRequest.repay(wallet);
-	await repay.wait();
+	const repayTx = await repay.wait();
+	await replyDispatcher('/zero/user/repayDispatch', repayTx);
 };
 
 const hasEnough = async (transferRequest) => {
@@ -86,7 +93,7 @@ const hasEnough = async (transferRequest) => {
 
 let triggered = false;
 
-const handleTransferRequest = async (message) => {
+const handleTransferRequest = async (message, replyDispatcher) => {
 	try {
 		const transferRequest = new UnderwriterTransferRequest({
 			amount: message.amount,
@@ -131,7 +138,7 @@ const handleTransferRequest = async (message) => {
 						depositLog(`${confs}/${target} confirmations`);
 						if (!triggered || confs == LOAN_CONFIRMATION) {
 							triggered = true;
-							await executeLoan(transferRequest);
+							await executeLoan(transferRequest, replyDispatcher);
 						}
 					});
 
@@ -145,7 +152,7 @@ const handleTransferRequest = async (message) => {
 	}
 };
 
-const handleBurnRequest = async (message) => {
+const handleBurnRequest = async (message, replyDispatcher) => {
 	try {
 		const burnRequest = new UnderwriterBurnRequest({
 			amount: message.amount,
@@ -158,13 +165,18 @@ const handleBurnRequest = async (message) => {
 			contractAddress: message.contractAddress,
 			signature: message.signature,
 		});
-	        const [signer] = await ethers.getSigners();
+       const [signer] = await ethers.getSigners();
 	        const wallet = new ethers.Wallet(process.env.WALLET, signer.provider);
 		const tx = await burnRequest.burn(signer, { gasLimit: 500000 });
+
 		console.log('TXHASH:', tx.hash);
-		console.log(await tx.wait());
-	} catch (e) { console.error(e); }
-		/*
+		const burnReceipt = await tx.wait();
+		console.log(burnReceipt);
+		replyDispatcher('/zero/user/burnDispatch', burnReceipt);
+	} catch (e) {
+		console.error(e);
+	}
+	/*
 		const [signer] = await ethers.getSigners();
 		burnRequest.setProvider(signer.provider);
 		//if (!(hasEnough(transferRequest))) return;
@@ -191,17 +203,17 @@ const handler = {
 	burn: handleBurnRequest,
 };
 
-const handleRequest = (request, type = 'transfer') =>
-	handler[request.requestType ? request.requestType : request.destination ? 'burn' : type](request);
+const handleRequest = (...args) =>
+	handler[request.requestType ? request.requestType : request.destination ? 'burn' : 'transfer'](...args);
 
 const run = async () => {
 	// Initialize the keeper
 	const keeper = createZeroKeeper(await createZeroConnection(KEEPER_URL));
 	if (!process.env.ZERO_PERSISTENCE_DB) process.env.ZERO_PERSISTENCE_DB = path.join(process.env.HOME, '.keeper.db');
 	keeper.setPersistence(new LevelDBPersistenceAdapter());
-	await keeper.setTxDispatcher((transferRequest) => {
-        	console.log(transferRequest);
-	  handleRequest(transferRequest);
+	await keeper.setTxDispatcher((...args) => {
+		console.log(args[0]);
+		handleRequest(...args);
 	});
 	await keeper.conn.start();
 	await keeper.advertiseAsKeeper();
