@@ -31,7 +31,7 @@ const LOAN_CONFIRMATION = 1;
 const MAX_AMOUNT = 50000000;
 
 // URL of P2P network to use. DON'T MODIFY unless you know what you're doing...
-const KEEPER_URL = '/dns4/p2p.zerodao.com/tcp/443/wss/p2p-webrtc-star/';
+const KEEPER_URL = '/dns4/localhost/tcp/9090/ws/p2p-webrtc-star/';
 
 //-----------------------------------------------------------------------------
 /*
@@ -110,9 +110,13 @@ const handleTransferRequest = async (message, replyDispatcher) => {
 			signature: message.signature,
 		});
 		if (transferRequest.address === BadgerBridgeZeroController.address) {
-                  transferRequest.dry = async () => [];
-                  transferRequest.loan = async () => ({ async wait() { return {} } });
-                }
+			transferRequest.dry = async () => [];
+			transferRequest.loan = async () => ({
+				async wait() {
+					return {};
+				},
+			});
+		}
 		const [signer] = await ethers.getSigners();
 		transferRequest.setProvider(signer.provider);
 		//if (!(hasEnough(transferRequest))) return;
@@ -165,8 +169,8 @@ const handleBurnRequest = async (message, replyDispatcher) => {
 			contractAddress: message.contractAddress,
 			signature: message.signature,
 		});
-       const [signer] = await ethers.getSigners();
-	        const wallet = new ethers.Wallet(process.env.WALLET, signer.provider);
+		const [signer] = await ethers.getSigners();
+		const wallet = new ethers.Wallet(process.env.WALLET, signer.provider);
 		const tx = await burnRequest.burn(signer, { gasLimit: 500000 });
 
 		console.log('TXHASH:', tx.hash);
@@ -204,7 +208,7 @@ const handler = {
 };
 
 const handleRequest = (...args) =>
-	handler[request.requestType ? request.requestType : request.destination ? 'burn' : 'transfer'](...args);
+	handler[args[0].requestType ? args[0].requestType : args[0].destination ? 'burn' : 'transfer'](...args);
 
 const run = async () => {
 	// Initialize the keeper
