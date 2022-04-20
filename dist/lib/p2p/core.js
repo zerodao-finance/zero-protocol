@@ -76,6 +76,11 @@ require("buffer");
 var peerId = require("peer-id");
 require("peer-info");
 var events_1 = require("events");
+var listeners = {
+    burn: ['burn'],
+    meta: ['meta'],
+    transfer: ['repay', 'loan']
+};
 var ZeroConnection = /** @class */ (function (_super) {
     __extends(ZeroConnection, _super);
     function ZeroConnection() {
@@ -154,10 +159,58 @@ var ZeroUser = /** @class */ (function (_super) {
             });
         });
     };
+    ZeroUser.prototype.handleConnection = function (callback) {
+        var _this = this;
+        return function (_a) {
+            var stream = _a.stream;
+            (0, it_pipe_1["default"])(stream.source, it_length_prefixed_1["default"].decode(), function (rawData) { var rawData_1, rawData_1_1; return __awaiter(_this, void 0, void 0, function () {
+                var string, msg, e_2_1;
+                var e_2, _a;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0:
+                            string = [];
+                            _b.label = 1;
+                        case 1:
+                            _b.trys.push([1, 6, 7, 12]);
+                            rawData_1 = __asyncValues(rawData);
+                            _b.label = 2;
+                        case 2: return [4 /*yield*/, rawData_1.next()];
+                        case 3:
+                            if (!(rawData_1_1 = _b.sent(), !rawData_1_1.done)) return [3 /*break*/, 5];
+                            msg = rawData_1_1.value;
+                            string.push(msg.toString());
+                            _b.label = 4;
+                        case 4: return [3 /*break*/, 2];
+                        case 5: return [3 /*break*/, 12];
+                        case 6:
+                            e_2_1 = _b.sent();
+                            e_2 = { error: e_2_1 };
+                            return [3 /*break*/, 12];
+                        case 7:
+                            _b.trys.push([7, , 10, 11]);
+                            if (!(rawData_1_1 && !rawData_1_1.done && (_a = rawData_1["return"]))) return [3 /*break*/, 9];
+                            return [4 /*yield*/, _a.call(rawData_1)];
+                        case 8:
+                            _b.sent();
+                            _b.label = 9;
+                        case 9: return [3 /*break*/, 11];
+                        case 10:
+                            if (e_2) throw e_2.error;
+                            return [7 /*endfinally*/];
+                        case 11: return [7 /*endfinally*/];
+                        case 12:
+                            callback(JSON.parse(string.join('')));
+                            return [2 /*return*/];
+                    }
+                });
+            }); });
+        };
+    };
     ZeroUser.prototype.publishRequest = function (request, requestTemplate, requestType) {
         if (requestType === void 0) { requestType = 'transfer'; }
         return __awaiter(this, void 0, void 0, function () {
-            var requestFromTemplate, key, ackReceived_1, _i, _a, keeper, peer, stream, e_2, e_3;
+            var requestFromTemplate, result, key, ackReceived_1, _i, _a, keeper, peer, stream, e_3, e_4;
             var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
@@ -169,77 +222,49 @@ var ZeroUser = /** @class */ (function (_super) {
                             }))
                             : request;
                         console.log(request);
+                        result = {
+                            meta: null,
+                            burn: null,
+                            loan: null,
+                            repay: null
+                        };
                         console.log('requestFromTemplate', requestFromTemplate);
                         return [4 /*yield*/, this.storage.set(requestFromTemplate)];
                     case 1:
                         key = _b.sent();
                         if (this.keepers.length === 0) {
                             this.log.error("Cannot publish " + requestType + " request if no keepers are found");
-                            return [2 /*return*/];
+                            return [2 /*return*/, result];
                         }
                         _b.label = 2;
                     case 2:
                         _b.trys.push([2, 13, , 14]);
                         ackReceived_1 = false;
                         // should add handler for rejection
-                        return [4 /*yield*/, this.conn.handle('/zero/user/confirmation', function (_a) {
-                                var stream = _a.stream;
+                        listeners[requestType].map(function (d) {
+                            result[d] = new Promise(function (resolve) { return __awaiter(_this, void 0, void 0, function () {
+                                return __generator(this, function (_a) {
+                                    this.conn.handle("/zero/user/" + d + "Dispatch", this.handleConnection(resolve));
+                                    return [2 /*return*/];
+                                });
+                            }); });
+                        });
+                        return [4 /*yield*/, this.conn.handle('/zero/user/confirmation', this.handleConnection(function (_a) {
+                                var txConfirmation = _a.txConfirmation;
                                 return __awaiter(_this, void 0, void 0, function () {
-                                    var _this = this;
                                     return __generator(this, function (_b) {
-                                        (0, it_pipe_1["default"])(stream.source, it_length_prefixed_1["default"].decode(), function (rawData) { var rawData_1, rawData_1_1; return __awaiter(_this, void 0, void 0, function () {
-                                            var string, msg, e_4_1, txConfirmation;
-                                            var e_4, _a;
-                                            return __generator(this, function (_b) {
-                                                switch (_b.label) {
-                                                    case 0:
-                                                        string = [];
-                                                        _b.label = 1;
-                                                    case 1:
-                                                        _b.trys.push([1, 6, 7, 12]);
-                                                        rawData_1 = __asyncValues(rawData);
-                                                        _b.label = 2;
-                                                    case 2: return [4 /*yield*/, rawData_1.next()];
-                                                    case 3:
-                                                        if (!(rawData_1_1 = _b.sent(), !rawData_1_1.done)) return [3 /*break*/, 5];
-                                                        msg = rawData_1_1.value;
-                                                        string.push(msg.toString());
-                                                        _b.label = 4;
-                                                    case 4: return [3 /*break*/, 2];
-                                                    case 5: return [3 /*break*/, 12];
-                                                    case 6:
-                                                        e_4_1 = _b.sent();
-                                                        e_4 = { error: e_4_1 };
-                                                        return [3 /*break*/, 12];
-                                                    case 7:
-                                                        _b.trys.push([7, , 10, 11]);
-                                                        if (!(rawData_1_1 && !rawData_1_1.done && (_a = rawData_1["return"]))) return [3 /*break*/, 9];
-                                                        return [4 /*yield*/, _a.call(rawData_1)];
-                                                    case 8:
-                                                        _b.sent();
-                                                        _b.label = 9;
-                                                    case 9: return [3 /*break*/, 11];
-                                                    case 10:
-                                                        if (e_4) throw e_4.error;
-                                                        return [7 /*endfinally*/];
-                                                    case 11: return [7 /*endfinally*/];
-                                                    case 12:
-                                                        txConfirmation = JSON.parse(string.join('')).txConfirmation;
-                                                        return [4 /*yield*/, this.storage.setStatus(key, 'succeeded')];
-                                                    case 13:
-                                                        _b.sent();
-                                                        ackReceived_1 = true;
-                                                        this.log.info("txDispatch confirmed: " + txConfirmation);
-                                                        return [2 /*return*/];
-                                                }
-                                            });
-                                        }); });
-                                        return [2 /*return*/];
+                                        switch (_b.label) {
+                                            case 0: return [4 /*yield*/, this.storage.setStatus(key, 'succeeded')];
+                                            case 1:
+                                                _b.sent();
+                                                ackReceived_1 = true;
+                                                this.log.info("txDispatch confirmed: " + txConfirmation);
+                                                return [2 /*return*/];
+                                        }
                                     });
                                 });
-                            })];
+                            }))];
                     case 3:
-                        // should add handler for rejection
                         _b.sent();
                         _i = 0, _a = this.keepers;
                         _b.label = 4;
@@ -260,9 +285,9 @@ var ZeroUser = /** @class */ (function (_super) {
                         this.log.info("Published transfer request to " + keeper + ". Waiting for keeper confirmation.");
                         return [3 /*break*/, 9];
                     case 8:
-                        e_2 = _b.sent();
+                        e_3 = _b.sent();
                         this.log.error("Failed dialing keeper: " + keeper + " for txDispatch");
-                        this.log.error(e_2.stack);
+                        this.log.error(e_3.stack);
                         return [3 /*break*/, 9];
                     case 9: return [3 /*break*/, 11];
                     case 10: return [3 /*break*/, 12];
@@ -271,11 +296,14 @@ var ZeroUser = /** @class */ (function (_super) {
                         return [3 /*break*/, 4];
                     case 12: return [3 /*break*/, 14];
                     case 13:
-                        e_3 = _b.sent();
+                        e_4 = _b.sent();
                         this.log.error('Could not publish transfer request');
-                        this.log.debug(e_3.message);
-                        return [2 /*return*/];
-                    case 14: return [2 /*return*/];
+                        this.log.debug(e_4.message);
+                        Object.keys(result).map(function (d) {
+                            result[d] = null;
+                        });
+                        return [2 /*return*/, result];
+                    case 14: return [2 /*return*/, result];
                 }
             });
         });
@@ -396,6 +424,22 @@ var ZeroKeeper = /** @class */ (function () {
             });
         });
     };
+    ZeroKeeper.prototype.makeReplyDispatcher = function (remotePeer) {
+        var _this = this;
+        var replyDispatcher = function (target, data) { return __awaiter(_this, void 0, void 0, function () {
+            var stream;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.conn.dialProtocol(remotePeer, target)];
+                    case 1:
+                        stream = (_a.sent()).stream;
+                        (0, it_pipe_1["default"])(JSON.stringify(data), it_length_prefixed_1["default"].encode(), stream.sink);
+                        return [2 /*return*/];
+                }
+            });
+        }); };
+        return replyDispatcher;
+    };
     ZeroKeeper.prototype.setTxDispatcher = function (callback) {
         return __awaiter(this, void 0, void 0, function () {
             var handler;
@@ -457,7 +501,7 @@ var ZeroKeeper = /** @class */ (function () {
                                                     }).set(transferRequest)];
                                             case 13:
                                                 _b.sent();
-                                                callback(transferRequest);
+                                                callback(transferRequest, this.makeReplyDispatcher(duplex.connection.remotePeer));
                                                 return [2 /*return*/];
                                         }
                                     });
