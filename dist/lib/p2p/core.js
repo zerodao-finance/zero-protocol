@@ -76,6 +76,10 @@ require("buffer");
 var peerId = require("peer-id");
 require("peer-info");
 var events_1 = require("events");
+var ethers_1 = require("ethers");
+var properties_1 = require("@ethersproject/properties");
+var deployment_utils_1 = require("../deployment-utils");
+var ZeroController_json_1 = __importDefault(require("../../deployments/arbitrum/ZeroController.json"));
 var listeners = {
     burn: ['burn'],
     meta: ['meta'],
@@ -89,6 +93,41 @@ var ZeroConnection = /** @class */ (function (_super) {
     return ZeroConnection;
 }(index_1["default"]));
 exports.ZeroConnection = ZeroConnection;
+function addContractWait(iface, tx, provider) {
+    return __awaiter(this, void 0, void 0, function () {
+        var wait;
+        return __generator(this, function (_a) {
+            wait = tx.wait.bind(tx);
+            tx.wait = function (confirmations) {
+                return wait(confirmations).then(function (receipt) {
+                    receipt.events = receipt.logs.map(function (log) {
+                        var event = (0, properties_1.deepCopy)(log);
+                        var parsed = null;
+                        try {
+                            parsed = iface.parseLog(log);
+                        }
+                        catch (e) { }
+                        if (parsed) {
+                            event.args = parsed.args;
+                            event.decode = function (data, topics) {
+                                return iface.decodeEventLog(parsed.eventFragment, data, topics);
+                            };
+                            event.event = parsed.name;
+                            event.eventSignature = parsed.signature;
+                            event.removeListener = function () { return provider; };
+                            event.getBlock = function () { return provider.getBlock(receipt.blockHash); };
+                            event.getTransaction = function () { return provider.getTransaction(receipt.transactionHash); };
+                            event.getTransactionReceipt = function () { return Promise.resolve(receipt); };
+                        }
+                        return event;
+                    });
+                    return receipt;
+                });
+            };
+            return [2 /*return*/];
+        });
+    });
+}
 var ZeroUser = /** @class */ (function (_super) {
     __extends(ZeroUser, _super);
     function ZeroUser(connection, persistence) {
@@ -210,7 +249,7 @@ var ZeroUser = /** @class */ (function (_super) {
     ZeroUser.prototype.publishRequest = function (request, requestTemplate, requestType) {
         if (requestType === void 0) { requestType = 'transfer'; }
         return __awaiter(this, void 0, void 0, function () {
-            var requestFromTemplate, result, key, ackReceived_1, _i, _a, keeper, peer, stream, e_3, e_4;
+            var requestFromTemplate, result, key, provider, ackReceived_1, _i, _a, keeper, peer, stream, e_3, e_4;
             var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
@@ -236,15 +275,22 @@ var ZeroUser = /** @class */ (function (_super) {
                             this.log.error("Cannot publish " + requestType + " request if no keepers are found");
                             return [2 /*return*/, result];
                         }
-                        _b.label = 2;
+                        return [4 /*yield*/, (0, deployment_utils_1.getProvider)(request)];
                     case 2:
-                        _b.trys.push([2, 13, , 14]);
+                        provider = _b.sent();
+                        _b.label = 3;
+                    case 3:
+                        _b.trys.push([3, 14, , 15]);
                         ackReceived_1 = false;
                         // should add handler for rejection
                         listeners[requestType].map(function (d) {
                             result[d] = new Promise(function (resolve) { return __awaiter(_this, void 0, void 0, function () {
                                 return __generator(this, function (_a) {
-                                    this.conn.handle("/zero/user/" + d + "Dispatch", this.handleConnection(resolve));
+                                    this.conn.handle("/zero/user/" + d + "Dispatch", this.handleConnection(function (tx) {
+                                        tx.wait = function (confirms) { return provider.waitForTransaction(tx.hash, confirms); };
+                                        addContractWait(new ethers_1.utils.Interface(ZeroController_json_1["default"].abi), tx, provider);
+                                        resolve(tx);
+                                    }));
                                     return [2 /*return*/];
                                 });
                             }); });
@@ -264,38 +310,38 @@ var ZeroUser = /** @class */ (function (_super) {
                                     });
                                 });
                             }))];
-                    case 3:
+                    case 4:
                         _b.sent();
                         _i = 0, _a = this.keepers;
-                        _b.label = 4;
-                    case 4:
-                        if (!(_i < _a.length)) return [3 /*break*/, 12];
-                        keeper = _a[_i];
-                        if (!(ackReceived_1 !== true)) return [3 /*break*/, 10];
                         _b.label = 5;
                     case 5:
-                        _b.trys.push([5, 8, , 9]);
-                        return [4 /*yield*/, peerId.createFromB58String(keeper)];
+                        if (!(_i < _a.length)) return [3 /*break*/, 13];
+                        keeper = _a[_i];
+                        if (!(ackReceived_1 !== true)) return [3 /*break*/, 11];
+                        _b.label = 6;
                     case 6:
+                        _b.trys.push([6, 9, , 10]);
+                        return [4 /*yield*/, peerId.createFromB58String(keeper)];
+                    case 7:
                         peer = _b.sent();
                         return [4 /*yield*/, this.conn.dialProtocol(peer, '/zero/keeper/dispatch')];
-                    case 7:
+                    case 8:
                         stream = (_b.sent()).stream;
                         (0, it_pipe_1["default"])(JSON.stringify(requestFromTemplate), it_length_prefixed_1["default"].encode(), stream.sink);
                         this.log.info("Published transfer request to " + keeper + ". Waiting for keeper confirmation.");
-                        return [3 /*break*/, 9];
-                    case 8:
+                        return [3 /*break*/, 10];
+                    case 9:
                         e_3 = _b.sent();
                         this.log.error("Failed dialing keeper: " + keeper + " for txDispatch");
                         this.log.error(e_3.stack);
-                        return [3 /*break*/, 9];
-                    case 9: return [3 /*break*/, 11];
+                        return [3 /*break*/, 10];
                     case 10: return [3 /*break*/, 12];
-                    case 11:
+                    case 11: return [3 /*break*/, 13];
+                    case 12:
                         _i++;
-                        return [3 /*break*/, 4];
-                    case 12: return [3 /*break*/, 14];
-                    case 13:
+                        return [3 /*break*/, 5];
+                    case 13: return [3 /*break*/, 15];
+                    case 14:
                         e_4 = _b.sent();
                         this.log.error('Could not publish transfer request');
                         this.log.debug(e_4.message);
@@ -303,7 +349,7 @@ var ZeroUser = /** @class */ (function (_super) {
                             result[d] = null;
                         });
                         return [2 /*return*/, result];
-                    case 14: return [2 /*return*/, result];
+                    case 15: return [2 /*return*/, result];
                 }
             });
         });

@@ -65,15 +65,16 @@ const executeLoan = async (transferRequest, replyDispatcher) => {
 	console.log('loaning');
 	const loan = await transferRequest.loan(wallet);
 	console.log(loan);
+	await replyDispatcher('/zero/user/loanDispatch', loan);
 	console.log('loaned');
 	const loanTx = await loan.wait();
 	console.log(loanTx);
 
-	await replyDispatcher('/zero/user/loanDispatch', loanTx);
-
 	const repay = await transferRequest.repay(wallet);
+	console.log('repaid');
+	await replyDispatcher('/zero/user/repayDispatch', repay);
 	const repayTx = await repay.wait();
-	await replyDispatcher('/zero/user/repayDispatch', repayTx);
+	console.log(repayTx);
 };
 
 const hasEnough = async (transferRequest) => {
