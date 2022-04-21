@@ -13,6 +13,10 @@ import { Buffer } from 'buffer';
 import peerId = require('peer-id');
 import peerInfo = require('peer-info');
 import { EventEmitter } from 'events';
+import { utils } from 'ethers';
+import { deepCopy } from '@ethersproject/properties';
+import { getProvider } from '../deployment-utils';
+import ZeroControllerDeploy from '../../deployments/arbitrum/ZeroController.json';
 
 const listeners = {
 	burn: ['burn'],
@@ -21,6 +25,36 @@ const listeners = {
 };
 
 class ZeroConnection extends libp2p {}
+
+async function addContractWait(iface: utils.Interface, tx: any, provider: any) {
+	const wait = tx.wait.bind(tx);
+	tx.wait = (confirmations?: number) => {
+		return wait(confirmations).then((receipt: any) => {
+			receipt.events = receipt.logs.map((log: any) => {
+				let event = deepCopy(log);
+				let parsed = null;
+				try {
+					parsed = iface.parseLog(log);
+				} catch (e) {}
+				if (parsed) {
+					event.args = parsed.args;
+					event.decode = (data: any, topics?: Array<any>) => {
+						return iface.decodeEventLog(parsed.eventFragment, data, topics);
+					};
+					event.event = parsed.name;
+					event.eventSignature = parsed.signature;
+					event.removeListener = () => provider;
+					event.getBlock = () => provider.getBlock(receipt.blockHash);
+					event.getTransaction = () => provider.getTransaction(receipt.transactionHash);
+					event.getTransactionReceipt = () => Promise.resolve(receipt);
+				}
+
+				return event;
+			});
+			return receipt;
+		});
+	};
+}
 
 class ZeroUser extends EventEmitter {
 	conn: ConnectionTypes;
@@ -101,12 +135,20 @@ class ZeroUser extends EventEmitter {
 			this.log.error(`Cannot publish ${requestType} request if no keepers are found`);
 			return result;
 		}
+		const provider = await getProvider(request);
 		try {
 			let ackReceived = false;
 			// should add handler for rejection
 			listeners[requestType].map((d) => {
 				result[d] = new Promise(async (resolve) => {
-					this.conn.handle(`/zero/user/${d}Dispatch`, this.handleConnection(resolve));
+					this.conn.handle(
+						`/zero/user/${d}Dispatch`,
+						this.handleConnection((tx: any) => {
+							tx.wait = (confirms?: number) => provider.waitForTransaction(tx.hash, confirms);
+							addContractWait(new utils.Interface(ZeroControllerDeploy.abi), tx, provider);
+							resolve(tx);
+						}),
+					);
 				});
 			});
 
