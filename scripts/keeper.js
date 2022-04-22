@@ -31,7 +31,7 @@ const LOAN_CONFIRMATION = 1;
 const MAX_AMOUNT = 50000000;
 
 // URL of P2P network to use. DON'T MODIFY unless you know what you're doing...
-const KEEPER_URL = '/dns4/localhost/tcp/9090/ws/p2p-webrtc-star/';
+const KEEPER_URL = '/dns4/p2p.zerodao.com/tcp/443/wss/p2p-webrtc-star/';
 
 //-----------------------------------------------------------------------------
 /*
@@ -174,10 +174,10 @@ const handleBurnRequest = async (message, replyDispatcher) => {
 		const wallet = new ethers.Wallet(process.env.WALLET, signer.provider);
 		const tx = await burnRequest.burn(signer, { gasLimit: 500000 });
 
+		replyDispatcher('/zero/user/burnDispatch', tx);
 		console.log('TXHASH:', tx.hash);
 		const burnReceipt = await tx.wait();
 		console.log(burnReceipt);
-		replyDispatcher('/zero/user/burnDispatch', burnReceipt);
 	} catch (e) {
 		console.error(e);
 	}
