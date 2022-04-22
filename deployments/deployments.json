@@ -392,7 +392,7 @@
           ]
         },
         "GnosisSafe": {
-          "address": "0xC0F783EdfEBB995eB5e590af08E36E43D4c36Cbd",
+          "address": "0x5E9B37149b7d7611bD0Eb070194dDA78EB11EfdC",
           "abi": []
         }
       }
@@ -402,7 +402,7 @@
       "chainId": "1",
       "contracts": {
         "ZeroUnderwriterLockBytecodeLib": {
-          "address": "0xaca81583840B1bf2dDF6CDe824ada250C1936B4D",
+          "address": "0x70bDA08DBe07363968e9EE53d899dFE48560605B",
           "abi": [
             {
               "inputs": [],
@@ -420,7 +420,7 @@
           ]
         },
         "BadgerBridgeZeroController": {
-          "address": "0xA56F946D6398Dd7d9D4D9B337Cf9E0F68982ca5B",
+          "address": "0x5D42EBdBBa61412295D7b0302d6F50aC449Ddb4F",
           "abi": [
             {
               "inputs": [],
@@ -784,7 +784,7 @@
           ]
         },
         "ZERO": {
-          "address": "0x5D42EBdBBa61412295D7b0302d6F50aC449Ddb4F",
+          "address": "0xddE78e6202518FF4936b5302cC2891ec180E8bFf",
           "abi": [
             {
               "anonymous": false,
@@ -1385,7 +1385,7 @@
           ]
         },
         "ZeroDistributor": {
-          "address": "0xddE78e6202518FF4936b5302cC2891ec180E8bFf",
+          "address": "0xB06c856C8eaBd1d8321b687E188204C1018BC4E5",
           "abi": [
             {
               "inputs": [
