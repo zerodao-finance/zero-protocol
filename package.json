@@ -26,7 +26,7 @@
 		"deploy:arbitrum": "DEPLOYARBITRUMQUICKCONVERT=true CHAIN=ARBITRUM hardhat deploy --network arbitrum",
 		"node:polygon": "CHAIN=MATIC CHAIN_ID=137 FORKING=true hardhat node --no-deploy",
 		"node:mainnet": "CHAIN=ETHEREUM CHAIN_ID=1 FORKING=true hardhat node",
-		"node:badger": "DEPLOYMENT_NUMBER=1 yarn node:ethereum --export-all deployments/deployments.json",
+		"node:badger": "DEPLOYMENT_NUMBER=1 yarn node:ethereum",
 		"node:badger:local": "DEPLOYMENT_NUMBER=1 yarn node:badger:ethereum --export-all deployments/deployments.json",
 		"script:harvester": "hardhat run scripts/harvester.js"
 	},
