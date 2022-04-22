@@ -7,9 +7,9 @@ import { ethers } from 'ethers';
 import { Polygon, Ethereum, Arbitrum } from '@renproject/chains';
 
 export const CONTROLLER_DEPLOYMENTS = {
-	Arbitrum: require('../deployments/arbitrum/ZeroController').address,
-	Polygon: require('../deployments/matic/ZeroController').address,
-	Ethereum: ethers.constants.AddressZero,
+	[require('../deployments/arbitrum/ZeroController').address]: 'Arbitrum',
+	[require('../deployments/matic/ZeroController').address]: 'Polygon',
+	[require('../deployments/mainnet/BadgerBridgeZeroController.json').address]: 'Ethereum',
 };
 export const RPC_ENDPOINTS = {
 	Arbitrum: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
@@ -24,9 +24,12 @@ export const RENVM_PROVIDERS = {
 };
 
 export const getProvider = (transferRequest) => {
-	const chain = Object.entries(CONTROLLER_DEPLOYMENTS).find(([k, v]) => transferRequest.contractAddress === v);
-	const chain_key = chain[0];
-	return RENVM_PROVIDERS[chain_key](new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]), 'mainnet');
+	if (Object.keys(CONTROLLER_DEPLOYMENTS).includes(transferRequest.contractAddress)) {
+		const chain_key = CONTROLLER_DEPLOYMENTS[transferRequest.contractAddress];
+		return RENVM_PROVIDERS[chain_key](new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]), 'mainnet');
+	} else {
+		throw new Error('Not a contract currently deployed');
+	}
 };
 
 export const logger = {
