@@ -110,7 +110,7 @@ const handleTransferRequest = async (message, replyDispatcher) => {
 			chainId: message.chainId,
 			signature: message.signature,
 		});
-		if (transferRequest.address === BadgerBridgeZeroController.address) {
+		if (transferRequest.contractAddress === BadgerBridgeZeroController.address) {
 			transferRequest.dry = async () => [];
 			transferRequest.loan = async () => ({
 				async wait() {
