@@ -144,12 +144,6 @@ class ZeroUser extends EventEmitter {
 
 		console.log(request);
 
-		let result = {
-			meta: null,
-			burn: null,
-			loan: null,
-			repay: null,
-		};
 
 		const digest = request.toEIP712Digest();
 		const result = this._pending[digest] = new EventEmitter();
