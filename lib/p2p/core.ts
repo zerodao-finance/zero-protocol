@@ -123,6 +123,14 @@ class ZeroUser extends EventEmitter {
 		this.log = createLogger('zero.user');
 		this.storage = persistence ?? new InMemoryPersistenceAdapter();
 		this._pending = {};
+	        this.conn.handle(`/zero/user/update`, this.handleConnection((data: any) => {
+							        const { request, tx } = data;
+								if (tx.nonce) {
+                    tx.wait = (confirms?: number) => provider.waitForTransaction(tx.hash, confirms);
+                    addContractWait(new utils.Interface(ZeroControllerDeploy.abi), tx, provider);
+                  }
+								if (this._pending[request]) this._pending[request].emit('update', tx);
+		});
 	}
 
 	async subscribeKeepers() {
@@ -170,14 +178,14 @@ class ZeroUser extends EventEmitter {
 			});
 		};
 	}
-	async *publishRequest(request: any, requestTemplate?: string[], requestType: string = 'transfer') {
+	async publishRequest(request: any, requestTemplate?: string[], requestType: string = 'transfer') {
 		const requestFromTemplate = requestTemplate
 			? Object.fromEntries(Object.entries(request).filter(([k, v]) => requestTemplate.includes(k)))
 			: request;
 
 		console.log(request);
 		const digest = request.toEIP712Digest();
-		this._pending[digest] = deferIterable();
+		const result = this._pending[digest] = new EventEmitter();
 		const key = await this.storage.set(requestFromTemplate);
 		if (this.keepers.length === 0) {
 			this.log.error(`Cannot publish ${requestType} request if no keepers are found`);
@@ -187,27 +195,7 @@ class ZeroUser extends EventEmitter {
 		try {
 			let ackReceived = false;
 			// should add handler for rejection
-			listeners[requestType].map((d) => {
-				result[d] = new Promise(async (resolve) => {
-					this.conn.handle(
-						`/zero/user/${d}Dispatch`,
-						this.handleConnection((tx: any) => {
-							tx.wait = (confirms?: number) => provider.waitForTransaction(tx.hash, confirms);
-							addContractWait(new utils.Interface(ZeroControllerDeploy.abi), tx, provider);
-							resolve(tx);
-						}),
-					);
-				});
-			});
 
-			await this.conn.handle(
-				'/zero/user/confirmation',
-				this.handleConnection(async ({ txConfirmation }) => {
-					await this.storage.setStatus(key, 'succeeded');
-					ackReceived = true;
-					this.log.info(`txDispatch confirmed: ${txConfirmation}`);
-				}),
-			);
 			for (const keeper of this.keepers) {
 				// Typescript error: This condition will always return 'true' since the types 'false' and 'true' have no overlap.
 				// This is incorrect, because ackReceived is set to true in the handler of /zero/user/confirmation
@@ -223,16 +211,10 @@ class ZeroUser extends EventEmitter {
 						this.log.error(e.stack);
 					}
 				} else {
-					break;
 				}
 			}
-		} catch (e: any) {
-			this.log.error('Could not publish transfer request');
-			this.log.debug(e.message);
-			Object.keys(result).map((d) => {
-				result[d] = null;
-			});
-			return result;
+		} catch (e) {
+			console.error(e);
 		}
 		return result;
 	}
