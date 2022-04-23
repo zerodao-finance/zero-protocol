@@ -38,9 +38,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 var ethers = require('ethers');
 var fixtures = require('./fixtures');
 var UNISWAP = require('@uniswap/sdk');
+var Route = require('@uniswap/sdk').Route;
 var provider = new ethers.providers.InfuraProvider('mainnet', '816df2901a454b18b7df259e61f92cd2');
 var getRenBTCForOneETHPrice = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var renBTC, pair;
+    var renBTC, pair, route, renBTCForOneEth;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -48,7 +49,9 @@ var getRenBTCForOneETHPrice = function () { return __awaiter(void 0, void 0, voi
                 return [4 /*yield*/, UNISWAP.Fetcher.fetchPairData(renBTC, UNISWAP.WETH[renBTC.chainId], provider)];
             case 1:
                 pair = _a.sent();
-                return [2 /*return*/, ethers.BigNumber.from((new UNISWAP.Route([pair], UNISWAP.WETH[renBTC.chainId]).midPrice).toFixed(0))];
+                route = new Route([pair], UNISWAP.WETH[renBTC.chainId]);
+                renBTCForOneEth = route.midPrice.toSignificant(7);
+                return [2 /*return*/, ethers.utils.parseUnits(renBTCForOneEth, 8)];
         }
     });
 }); };
@@ -79,7 +82,7 @@ var applyFee = function (amountIn, fee, multiplier, gasPrice) { return __awaiter
 var burnFee = ethers.utils.parseEther('0.004');
 var mintFee = ethers.utils.parseEther('0.0025');
 var deductBurnFee = function (amount, multiplier) { return __awaiter(void 0, void 0, void 0, function () {
-    var gasPrice, _a, _b;
+    var gasPrice, amountAfterDeduction, _a, _b;
     return __generator(this, function (_c) {
         switch (_c.label) {
             case 0:
@@ -89,12 +92,14 @@ var deductBurnFee = function (amount, multiplier) { return __awaiter(void 0, voi
                 gasPrice = _c.sent();
                 _b = (_a = amount).sub;
                 return [4 /*yield*/, applyFee(amount, burnFee, multiplier, gasPrice)];
-            case 2: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
+            case 2:
+                amountAfterDeduction = _b.apply(_a, [_c.sent()]);
+                return [2 /*return*/, amountAfterDeduction <= 0 ? 0 : amountAfterDeduction];
         }
     });
 }); };
 var deductMintFee = function (amount, multiplier) { return __awaiter(void 0, void 0, void 0, function () {
-    var gasPrice, _a, _b;
+    var gasPrice, amountAfterDeduction, _a, _b;
     return __generator(this, function (_c) {
         switch (_c.label) {
             case 0:
@@ -104,7 +109,9 @@ var deductMintFee = function (amount, multiplier) { return __awaiter(void 0, voi
                 gasPrice = _c.sent();
                 _b = (_a = amount).sub;
                 return [4 /*yield*/, applyFee(amount, mintFee, multiplier, gasPrice)];
-            case 2: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
+            case 2:
+                amountAfterDeduction = _b.apply(_a, [_c.sent()]);
+                return [2 /*return*/, amountAfterDeduction <= 0 ? 0 : amountAfterDeduction];
         }
     });
 }); };

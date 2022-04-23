@@ -28,6 +28,7 @@ class ZeroConnection extends libp2p {}
 
 async function addContractWait(iface: utils.Interface, tx: any, provider: any) {
 	const wait = tx.wait.bind(tx);
+	provider = await provider;
 	tx.wait = (confirmations?: number) => {
 		return wait(confirmations).then((receipt: any) => {
 			receipt.events = receipt.logs.map((log: any) => {
@@ -65,55 +66,13 @@ const defer = () => {
   return { promise, resolve, reject };
 };
 
-const deferIterable = () => {
-  let deferred = defer();
-  const stack = [];
-  let done = false;
-  const next = (v) => {
-    const { promise, resolve } = deferred;
-    deferred = defer();
-    stack.push(promise);
-    resolve(v);
-  };
-  const return = (v) => {
-    done = true;
-    next(v);
-  };
-  const reject = (err) => {
-    const { reject: _reject, promise } = deferred;
-    stack.push(promise); 
-    done = true;
-    _reject(err);
-  };
-  const iterator = function *() {
-    for (const promise of stack) {
-      yield await promise;
-    }
-    while (!done) {
-      yield await deferred.promise;
-    } 
-  };
-  const iterable = iterator();
-  iterable[Symbol.iterator] = iterator;
-  return {
-    iterable,
-    next,
-    reject,
-    return
-  };
-};
-      
-
-
-    
-   
-    
 
 class ZeroUser extends EventEmitter {
 	conn: ConnectionTypes;
 	keepers: string[];
 	log: Logger;
 	storage: PersistenceAdapter<any, any>;
+	_pending: Object;
 
 	constructor(connection: ConnectionTypes, persistence?: PersistenceAdapter<any, any>) {
 		super();
@@ -123,14 +82,14 @@ class ZeroUser extends EventEmitter {
 		this.log = createLogger('zero.user');
 		this.storage = persistence ?? new InMemoryPersistenceAdapter();
 		this._pending = {};
-	        this.conn.handle(`/zero/user/update`, this.handleConnection((data: any) => {
-							        const { request, tx } = data;
-								if (tx.nonce) {
-                    tx.wait = (confirms?: number) => provider.waitForTransaction(tx.hash, confirms);
-                    addContractWait(new utils.Interface(ZeroControllerDeploy.abi), tx, provider);
+	        this.conn.handle(`/zero/user/update`, this.handleConnection((tx: any) => {
+							        const { request, data } = tx;
+								if (data.nonce) {
+                    data.wait = async (confirms?: number) => await (await getProvider(request)).waitForTransaction(data.hash, confirms);
+                    addContractWait(new utils.Interface(ZeroControllerDeploy.abi), data, getProvider(request));
                   }
-								if (this._pending[request]) this._pending[request].emit('update', tx);
-		});
+								if (this._pending[request]) this._pending[request].emit('update', data);
+		}));
 	}
 
 	async subscribeKeepers() {
@@ -191,7 +150,6 @@ class ZeroUser extends EventEmitter {
 			this.log.error(`Cannot publish ${requestType} request if no keepers are found`);
 			return result;
 		}
-		const provider = await getProvider(request);
 		try {
 			let ackReceived = false;
 			// should add handler for rejection

@@ -243,12 +243,7 @@ var enableGlobalMockRuntime = function () {
                         });
                     }); })();
                 }, 500);
-                return [2 /*return*/, {
-                        repay: null,
-                        loan: null,
-                        burn: null,
-                        meta: null
-                    }];
+                return [2 /*return*/, new events_1.EventEmitter()];
             });
         });
     };
@@ -278,12 +273,7 @@ var enableGlobalMockRuntime = function () {
                         e_1 = _a.sent();
                         console.error(e_1);
                         return [3 /*break*/, 3];
-                    case 3: return [2 /*return*/, {
-                            repay: null,
-                            loan: null,
-                            burn: null,
-                            meta: null
-                        }];
+                    case 3: return [2 /*return*/, new events_1.EventEmitter()];
                 }
             });
         });
@@ -315,12 +305,7 @@ var enableGlobalMockRuntime = function () {
                         e_2 = _a.sent();
                         console.error(e_2);
                         return [3 /*break*/, 3];
-                    case 3: return [2 /*return*/, {
-                            repay: null,
-                            loan: null,
-                            burn: null,
-                            meta: null
-                        }];
+                    case 3: return [2 /*return*/, new events_1.EventEmitter()];
                 }
             });
         });
