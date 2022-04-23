@@ -56,6 +56,59 @@ async function addContractWait(iface: utils.Interface, tx: any, provider: any) {
 	};
 }
 
+const defer = () => {
+  let resolve, reject;
+  const promise = new Promise((_resolve, _reject) => {
+    resolve = _resolve;
+    reject = _reject;
+  });
+  return { promise, resolve, reject };
+};
+
+const deferIterable = () => {
+  let deferred = defer();
+  const stack = [];
+  let done = false;
+  const next = (v) => {
+    const { promise, resolve } = deferred;
+    deferred = defer();
+    stack.push(promise);
+    resolve(v);
+  };
+  const return = (v) => {
+    done = true;
+    next(v);
+  };
+  const reject = (err) => {
+    const { reject: _reject, promise } = deferred;
+    stack.push(promise); 
+    done = true;
+    _reject(err);
+  };
+  const iterator = function *() {
+    for (const promise of stack) {
+      yield await promise;
+    }
+    while (!done) {
+      yield await deferred.promise;
+    } 
+  };
+  const iterable = iterator();
+  iterable[Symbol.iterator] = iterator;
+  return {
+    iterable,
+    next,
+    reject,
+    return
+  };
+};
+      
+
+
+    
+   
+    
+
 class ZeroUser extends EventEmitter {
 	conn: ConnectionTypes;
 	keepers: string[];
@@ -69,6 +122,7 @@ class ZeroUser extends EventEmitter {
 		this.keepers = [];
 		this.log = createLogger('zero.user');
 		this.storage = persistence ?? new InMemoryPersistenceAdapter();
+		this._pending = {};
 	}
 
 	async subscribeKeepers() {
@@ -116,20 +170,14 @@ class ZeroUser extends EventEmitter {
 			});
 		};
 	}
-	async publishRequest(request: any, requestTemplate?: string[], requestType: string = 'transfer') {
+	async *publishRequest(request: any, requestTemplate?: string[], requestType: string = 'transfer') {
 		const requestFromTemplate = requestTemplate
 			? Object.fromEntries(Object.entries(request).filter(([k, v]) => requestTemplate.includes(k)))
 			: request;
 
 		console.log(request);
-
-		let result = {
-			meta: null,
-			burn: null,
-			loan: null,
-			repay: null,
-		};
-		console.log('requestFromTemplate', requestFromTemplate);
+		const digest = request.toEIP712Digest();
+		this._pending[digest] = deferIterable();
 		const key = await this.storage.set(requestFromTemplate);
 		if (this.keepers.length === 0) {
 			this.log.error(`Cannot publish ${requestType} request if no keepers are found`);
