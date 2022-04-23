@@ -75,7 +75,7 @@ const deferIterable = () => {
     stack.push(promise);
     resolve(v);
   };
-  const return = (v) => {
+  const returnValue = (v) => {
     done = true;
     next(v);
   };
@@ -85,7 +85,7 @@ const deferIterable = () => {
     done = true;
     _reject(err);
   };
-  const iterator = function *() {
+  const iterator = async function *() {
     for (const promise of stack) {
       yield await promise;
     }
@@ -99,7 +99,7 @@ const deferIterable = () => {
     iterable,
     next,
     reject,
-    return
+    returnValue,
   };
 };
       
@@ -114,6 +114,7 @@ class ZeroUser extends EventEmitter {
 	keepers: string[];
 	log: Logger;
 	storage: PersistenceAdapter<any, any>;
+	_pending: Object;
 
 	constructor(connection: ConnectionTypes, persistence?: PersistenceAdapter<any, any>) {
 		super();
@@ -176,6 +177,14 @@ class ZeroUser extends EventEmitter {
 			: request;
 
 		console.log(request);
+
+		let result = {
+			meta: null,
+			burn: null,
+			loan: null,
+			repay: null,
+		};
+
 		const digest = request.toEIP712Digest();
 		this._pending[digest] = deferIterable();
 		const key = await this.storage.set(requestFromTemplate);
