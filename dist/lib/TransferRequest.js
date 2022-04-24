@@ -186,7 +186,10 @@ var TransferRequest = /** @class */ (function () {
         return true;
     };
     TransferRequest.prototype.toEIP712Digest = function (contractAddress, chainId) {
-        return utils_1.signTypedDataUtils.generateTypedDataHash(this.toEIP712(contractAddress || this.contractAddress, Number(chainId || this.chainId)));
+        console.log("Starting Digest");
+        var returnValue = utils_1.signTypedDataUtils.generateTypedDataHash(this.toEIP712(contractAddress || this.contractAddress, Number(chainId || this.chainId)));
+        console.log("Got Return Value");
+        return returnValue;
     };
     TransferRequest.prototype.toEIP712 = function (contractAddress, chainId) {
         this.contractAddress = contractAddress || this.contractAddress;

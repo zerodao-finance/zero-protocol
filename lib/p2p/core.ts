@@ -138,15 +138,19 @@ class ZeroUser extends EventEmitter {
 		};
 	}
 	async publishRequest(request: any, requestTemplate?: string[], requestType: string = 'transfer') {
+		console.log("Starting TR Request PT. 2");
 		const requestFromTemplate = requestTemplate
 			? Object.fromEntries(Object.entries(request).filter(([k, v]) => requestTemplate.includes(k)))
 			: request;
 
 		console.log(request);
+		console.log("Starting TR Request PT. 3");
 
 
 		const digest = request.toEIP712Digest();
+		console.log("set digest");
 		const result = this._pending[digest] = new EventEmitter();
+		console.log("setting key");
 		const key = await this.storage.set(requestFromTemplate);
 		if (this.keepers.length === 0) {
 			this.log.error(`Cannot publish ${requestType} request if no keepers are found`);
@@ -170,12 +174,14 @@ class ZeroUser extends EventEmitter {
 						this.log.error(`Failed dialing keeper: ${keeper} for txDispatch`);
 						this.log.error(e.stack);
 					}
-				} else {
 				}
 			}
 		} catch (e) {
+			console.log("ERROR ON 177");
 			console.error(e);
 		}
+
+		console.log("Finish PBTR");
 		return result;
 	}
 

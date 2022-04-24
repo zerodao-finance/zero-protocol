@@ -283,6 +283,7 @@ var ZeroUser = /** @class */ (function (_super) {
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
+                        console.log("Starting TR Request PT. 2");
                         requestFromTemplate = requestTemplate
                             ? Object.fromEntries(Object.entries(request).filter(function (_a) {
                                 var k = _a[0], v = _a[1];
@@ -290,8 +291,11 @@ var ZeroUser = /** @class */ (function (_super) {
                             }))
                             : request;
                         console.log(request);
+                        console.log("Starting TR Request PT. 3");
                         digest = request.toEIP712Digest();
+                        console.log("set digest");
                         result = this._pending[digest] = new events_1.EventEmitter();
+                        console.log("setting key");
                         return [4 /*yield*/, this.storage.set(requestFromTemplate)];
                     case 1:
                         key = _b.sent();
@@ -301,14 +305,14 @@ var ZeroUser = /** @class */ (function (_super) {
                         }
                         _b.label = 2;
                     case 2:
-                        _b.trys.push([2, 11, , 12]);
+                        _b.trys.push([2, 10, , 11]);
                         ackReceived = false;
                         _i = 0, _a = this.keepers;
                         _b.label = 3;
                     case 3:
-                        if (!(_i < _a.length)) return [3 /*break*/, 10];
+                        if (!(_i < _a.length)) return [3 /*break*/, 9];
                         keeper = _a[_i];
-                        if (!(ackReceived !== true)) return [3 /*break*/, 9];
+                        if (!(ackReceived !== true)) return [3 /*break*/, 8];
                         _b.label = 4;
                     case 4:
                         _b.trys.push([4, 7, , 8]);
@@ -326,16 +330,18 @@ var ZeroUser = /** @class */ (function (_super) {
                         this.log.error("Failed dialing keeper: " + keeper + " for txDispatch");
                         this.log.error(e_3.stack);
                         return [3 /*break*/, 8];
-                    case 8: return [3 /*break*/, 9];
-                    case 9:
+                    case 8:
                         _i++;
                         return [3 /*break*/, 3];
-                    case 10: return [3 /*break*/, 12];
-                    case 11:
+                    case 9: return [3 /*break*/, 11];
+                    case 10:
                         e_4 = _b.sent();
+                        console.log("ERROR ON 177");
                         console.error(e_4);
-                        return [3 /*break*/, 12];
-                    case 12: return [2 /*return*/, result];
+                        return [3 /*break*/, 11];
+                    case 11:
+                        console.log("Finish PBTR");
+                        return [2 /*return*/, result];
                 }
             });
         });

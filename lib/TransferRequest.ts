@@ -147,9 +147,12 @@ export class TransferRequest {
 	}
 
 	toEIP712Digest(contractAddress: string, chainId?: number): Buffer {
-		return signTypedDataUtils.generateTypedDataHash(
+		console.log("Starting Digest");
+		const returnValue = signTypedDataUtils.generateTypedDataHash(
 			this.toEIP712(contractAddress || this.contractAddress, Number(chainId || this.chainId)),
 		);
+		console.log("Got Return Value");
+		return returnValue;
 	}
 
 	toEIP712(contractAddress: string, chainId?: number): EIP712TypedData {
