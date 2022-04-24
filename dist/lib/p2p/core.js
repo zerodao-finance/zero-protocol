@@ -97,37 +97,51 @@ function addContractWait(iface, tx, provider) {
     return __awaiter(this, void 0, void 0, function () {
         var wait;
         return __generator(this, function (_a) {
-            wait = tx.wait.bind(tx);
-            tx.wait = function (confirmations) {
-                return wait(confirmations).then(function (receipt) {
-                    receipt.events = receipt.logs.map(function (log) {
-                        var event = (0, properties_1.deepCopy)(log);
-                        var parsed = null;
-                        try {
-                            parsed = iface.parseLog(log);
-                        }
-                        catch (e) { }
-                        if (parsed) {
-                            event.args = parsed.args;
-                            event.decode = function (data, topics) {
-                                return iface.decodeEventLog(parsed.eventFragment, data, topics);
-                            };
-                            event.event = parsed.name;
-                            event.eventSignature = parsed.signature;
-                            event.removeListener = function () { return provider; };
-                            event.getBlock = function () { return provider.getBlock(receipt.blockHash); };
-                            event.getTransaction = function () { return provider.getTransaction(receipt.transactionHash); };
-                            event.getTransactionReceipt = function () { return Promise.resolve(receipt); };
-                        }
-                        return event;
-                    });
-                    return receipt;
-                });
-            };
-            return [2 /*return*/];
+            switch (_a.label) {
+                case 0:
+                    wait = tx.wait.bind(tx);
+                    return [4 /*yield*/, provider];
+                case 1:
+                    provider = _a.sent();
+                    tx.wait = function (confirmations) {
+                        return wait(confirmations).then(function (receipt) {
+                            receipt.events = receipt.logs.map(function (log) {
+                                var event = (0, properties_1.deepCopy)(log);
+                                var parsed = null;
+                                try {
+                                    parsed = iface.parseLog(log);
+                                }
+                                catch (e) { }
+                                if (parsed) {
+                                    event.args = parsed.args;
+                                    event.decode = function (data, topics) {
+                                        return iface.decodeEventLog(parsed.eventFragment, data, topics);
+                                    };
+                                    event.event = parsed.name;
+                                    event.eventSignature = parsed.signature;
+                                    event.removeListener = function () { return provider; };
+                                    event.getBlock = function () { return provider.getBlock(receipt.blockHash); };
+                                    event.getTransaction = function () { return provider.getTransaction(receipt.transactionHash); };
+                                    event.getTransactionReceipt = function () { return Promise.resolve(receipt); };
+                                }
+                                return event;
+                            });
+                            return receipt;
+                        });
+                    };
+                    return [2 /*return*/];
+            }
         });
     });
 }
+var defer = function () {
+    var resolve, reject;
+    var promise = new Promise(function (_resolve, _reject) {
+        resolve = _resolve;
+        reject = _reject;
+    });
+    return { promise: promise, resolve: resolve, reject: reject };
+};
 var ZeroUser = /** @class */ (function (_super) {
     __extends(ZeroUser, _super);
     function ZeroUser(connection, persistence) {
@@ -137,6 +151,22 @@ var ZeroUser = /** @class */ (function (_super) {
         _this.keepers = [];
         _this.log = (0, logger_1["default"])('zero.user');
         _this.storage = persistence !== null && persistence !== void 0 ? persistence : new persistence_1.InMemoryPersistenceAdapter();
+        _this._pending = {};
+        _this.conn.handle("/zero/user/update", _this.handleConnection(function (tx) {
+            var request = tx.request, data = tx.data;
+            if (data.nonce) {
+                data.wait = function (confirms) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, (0, deployment_utils_1.getProvider)(request)];
+                        case 1: return [4 /*yield*/, (_a.sent()).waitForTransaction(data.hash, confirms)];
+                        case 2: return [2 /*return*/, _a.sent()];
+                    }
+                }); }); };
+                addContractWait(new ethers_1.utils.Interface(ZeroController_json_1["default"].abi), data, (0, deployment_utils_1.getProvider)(request));
+            }
+            if (_this._pending[request])
+                _this._pending[request].emit('update', data);
+        }));
         return _this;
     }
     ZeroUser.prototype.subscribeKeepers = function () {
@@ -249,8 +279,7 @@ var ZeroUser = /** @class */ (function (_super) {
     ZeroUser.prototype.publishRequest = function (request, requestTemplate, requestType) {
         if (requestType === void 0) { requestType = 'transfer'; }
         return __awaiter(this, void 0, void 0, function () {
-            var requestFromTemplate, result, key, provider, ackReceived_1, _i, _a, keeper, peer, stream, e_3, e_4;
-            var _this = this;
+            var requestFromTemplate, digest, result, key, ackReceived, _i, _a, keeper, peer, stream, e_3, e_4;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -261,13 +290,8 @@ var ZeroUser = /** @class */ (function (_super) {
                             }))
                             : request;
                         console.log(request);
-                        result = {
-                            meta: null,
-                            burn: null,
-                            loan: null,
-                            repay: null
-                        };
-                        console.log('requestFromTemplate', requestFromTemplate);
+                        digest = request.toEIP712Digest();
+                        result = this._pending[digest] = new events_1.EventEmitter();
                         return [4 /*yield*/, this.storage.set(requestFromTemplate)];
                     case 1:
                         key = _b.sent();
@@ -275,81 +299,43 @@ var ZeroUser = /** @class */ (function (_super) {
                             this.log.error("Cannot publish " + requestType + " request if no keepers are found");
                             return [2 /*return*/, result];
                         }
-                        return [4 /*yield*/, (0, deployment_utils_1.getProvider)(request)];
+                        _b.label = 2;
                     case 2:
-                        provider = _b.sent();
+                        _b.trys.push([2, 11, , 12]);
+                        ackReceived = false;
+                        _i = 0, _a = this.keepers;
                         _b.label = 3;
                     case 3:
-                        _b.trys.push([3, 14, , 15]);
-                        ackReceived_1 = false;
-                        // should add handler for rejection
-                        listeners[requestType].map(function (d) {
-                            result[d] = new Promise(function (resolve) { return __awaiter(_this, void 0, void 0, function () {
-                                return __generator(this, function (_a) {
-                                    this.conn.handle("/zero/user/" + d + "Dispatch", this.handleConnection(function (tx) {
-                                        tx.wait = function (confirms) { return provider.waitForTransaction(tx.hash, confirms); };
-                                        addContractWait(new ethers_1.utils.Interface(ZeroController_json_1["default"].abi), tx, provider);
-                                        resolve(tx);
-                                    }));
-                                    return [2 /*return*/];
-                                });
-                            }); });
-                        });
-                        return [4 /*yield*/, this.conn.handle('/zero/user/confirmation', this.handleConnection(function (_a) {
-                                var txConfirmation = _a.txConfirmation;
-                                return __awaiter(_this, void 0, void 0, function () {
-                                    return __generator(this, function (_b) {
-                                        switch (_b.label) {
-                                            case 0: return [4 /*yield*/, this.storage.setStatus(key, 'succeeded')];
-                                            case 1:
-                                                _b.sent();
-                                                ackReceived_1 = true;
-                                                this.log.info("txDispatch confirmed: " + txConfirmation);
-                                                return [2 /*return*/];
-                                        }
-                                    });
-                                });
-                            }))];
-                    case 4:
-                        _b.sent();
-                        _i = 0, _a = this.keepers;
-                        _b.label = 5;
-                    case 5:
-                        if (!(_i < _a.length)) return [3 /*break*/, 13];
+                        if (!(_i < _a.length)) return [3 /*break*/, 10];
                         keeper = _a[_i];
-                        if (!(ackReceived_1 !== true)) return [3 /*break*/, 11];
-                        _b.label = 6;
-                    case 6:
-                        _b.trys.push([6, 9, , 10]);
+                        if (!(ackReceived !== true)) return [3 /*break*/, 9];
+                        _b.label = 4;
+                    case 4:
+                        _b.trys.push([4, 7, , 8]);
                         return [4 /*yield*/, peerId.createFromB58String(keeper)];
-                    case 7:
+                    case 5:
                         peer = _b.sent();
                         return [4 /*yield*/, this.conn.dialProtocol(peer, '/zero/keeper/dispatch')];
-                    case 8:
+                    case 6:
                         stream = (_b.sent()).stream;
                         (0, it_pipe_1["default"])(JSON.stringify(requestFromTemplate), it_length_prefixed_1["default"].encode(), stream.sink);
                         this.log.info("Published transfer request to " + keeper + ". Waiting for keeper confirmation.");
-                        return [3 /*break*/, 10];
-                    case 9:
+                        return [3 /*break*/, 8];
+                    case 7:
                         e_3 = _b.sent();
                         this.log.error("Failed dialing keeper: " + keeper + " for txDispatch");
                         this.log.error(e_3.stack);
-                        return [3 /*break*/, 10];
-                    case 10: return [3 /*break*/, 12];
-                    case 11: return [3 /*break*/, 13];
-                    case 12:
+                        return [3 /*break*/, 8];
+                    case 8: return [3 /*break*/, 9];
+                    case 9:
                         _i++;
-                        return [3 /*break*/, 5];
-                    case 13: return [3 /*break*/, 15];
-                    case 14:
+                        return [3 /*break*/, 3];
+                    case 10: return [3 /*break*/, 12];
+                    case 11:
                         e_4 = _b.sent();
-                        this.log.error('Could not publish transfer request');
-                        this.log.debug(e_4.message);
-                        Object.keys(result).map(function (d) {
-                            result[d] = null;
-                        });
-                        return [2 /*return*/, result];
-                    case 15: return [2 /*return*/, result];
+                        console.error(e_4);
+                        return [3 /*break*/, 12];
+                    case 12: return [2 /*return*/, result];
                 }
             });
         });

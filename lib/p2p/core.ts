@@ -28,6 +28,7 @@ class ZeroConnection extends libp2p {}
 
 async function addContractWait(iface: utils.Interface, tx: any, provider: any) {
 	const wait = tx.wait.bind(tx);
+	provider = await provider;
 	tx.wait = (confirmations?: number) => {
 		return wait(confirmations).then((receipt: any) => {
 			receipt.events = receipt.logs.map((log: any) => {
@@ -56,11 +57,21 @@ async function addContractWait(iface: utils.Interface, tx: any, provider: any) {
 	};
 }
 
+const defer = () => {
+	let resolve, reject;
+	const promise = new Promise((_resolve, _reject) => {
+		resolve = _resolve;
+		reject = _reject;
+	});
+	return { promise, resolve, reject };
+};
+
 class ZeroUser extends EventEmitter {
 	conn: ConnectionTypes;
 	keepers: string[];
 	log: Logger;
 	storage: PersistenceAdapter<any, any>;
+	_pending: Object;
 
 	constructor(connection: ConnectionTypes, persistence?: PersistenceAdapter<any, any>) {
 		super();
@@ -69,6 +80,19 @@ class ZeroUser extends EventEmitter {
 		this.keepers = [];
 		this.log = createLogger('zero.user');
 		this.storage = persistence ?? new InMemoryPersistenceAdapter();
+		this._pending = {};
+		this.conn.handle(
+			`/zero/user/update`,
+			this.handleConnection((tx: any) => {
+				const { request, data } = tx;
+				if (data.nonce) {
+					data.wait = async (confirms?: number) =>
+						await (await getProvider(request)).waitForTransaction(data.hash, confirms);
+					addContractWait(new utils.Interface(ZeroControllerDeploy.abi), data, getProvider(request));
+				}
+				if (this._pending[request]) this._pending[request].emit('update', data);
+			}),
+		);
 	}
 
 	async subscribeKeepers() {
@@ -123,43 +147,17 @@ class ZeroUser extends EventEmitter {
 
 		console.log(request);
 
-		let result = {
-			meta: null,
-			burn: null,
-			loan: null,
-			repay: null,
-		};
-		console.log('requestFromTemplate', requestFromTemplate);
+		const digest = request.toEIP712Digest(request.contractAddress, request.chainId);
+		const result = (this._pending[digest] = new EventEmitter());
 		const key = await this.storage.set(requestFromTemplate);
 		if (this.keepers.length === 0) {
 			this.log.error(`Cannot publish ${requestType} request if no keepers are found`);
 			return result;
 		}
-		const provider = await getProvider(request);
 		try {
 			let ackReceived = false;
 			// should add handler for rejection
-			listeners[requestType].map((d) => {
-				result[d] = new Promise(async (resolve) => {
-					this.conn.handle(
-						`/zero/user/${d}Dispatch`,
-						this.handleConnection((tx: any) => {
-							tx.wait = (confirms?: number) => provider.waitForTransaction(tx.hash, confirms);
-							addContractWait(new utils.Interface(ZeroControllerDeploy.abi), tx, provider);
-							resolve(tx);
-						}),
-					);
-				});
-			});
 
-			await this.conn.handle(
-				'/zero/user/confirmation',
-				this.handleConnection(async ({ txConfirmation }) => {
-					await this.storage.setStatus(key, 'succeeded');
-					ackReceived = true;
-					this.log.info(`txDispatch confirmed: ${txConfirmation}`);
-				}),
-			);
 			for (const keeper of this.keepers) {
 				// Typescript error: This condition will always return 'true' since the types 'false' and 'true' have no overlap.
 				// This is incorrect, because ackReceived is set to true in the handler of /zero/user/confirmation
@@ -175,16 +173,10 @@ class ZeroUser extends EventEmitter {
 						this.log.error(e.stack);
 					}
 				} else {
-					break;
 				}
 			}
-		} catch (e: any) {
-			this.log.error('Could not publish transfer request');
-			this.log.debug(e.message);
-			Object.keys(result).map((d) => {
-				result[d] = null;
-			});
-			return result;
+		} catch (e) {
+			console.error(e);
 		}
 		return result;
 	}
