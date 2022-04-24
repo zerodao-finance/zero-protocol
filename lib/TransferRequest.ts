@@ -156,7 +156,7 @@ export class TransferRequest {
 		this.contractAddress = contractAddress || this.contractAddress;
 		this.chainId = chainId || this.chainId;
 		return {
-			types: EIP712_TYPES,
+			types: { ...EIP712_TYPES },
 			domain: {
 				name: 'ZeroController',
 				version: '1',
