@@ -146,7 +146,7 @@ export class TransferRequest {
 		return true;
 	}
 
-	toEIP712Digest(contractAddress: string, chainId?: number): Buffer {
+	toEIP712Digest(contractAddress?: string, chainId?: number): Buffer {
 		return signTypedDataUtils.generateTypedDataHash(
 			this.toEIP712(contractAddress || this.contractAddress, Number(chainId || this.chainId)),
 		);
