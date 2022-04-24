@@ -2,13 +2,11 @@ const hre = require('hardhat');
 const { UnderwriterTransferRequest } = require('../dist/lib/zero');
 
 const transferRequest = new UnderwriterTransferRequest(
-	JSON.parse(
-		`{"module":"0x6b9F827D9e0607098d5DdA6D84D2c2164e1B90A9","to":"0xFE7B639c04c205b7E758Ee999cb72C80344b3B0e","underwriter":"0x3D0810cd7976b9CFcB9b747A1618E9CE40B3Df3F","asset":"0xDBf31dF14B66535aF65AaC99C32e9eA844e14501","amount":"0x07a120","data":"0x0000000000000000000000000000000000000000000000000de0b6b3a7640000","nonce":"0x6b73dd867c88b699a30f5f90086429e1a5b77c2637d06c27b8e0c73114beced7","pNonce":"0xae6fb5a55d2ac4129b12f899fd3e63e8bd5fe016b283b21f5276874282c81f40","chainId":42161,"contractAddress":"0x53f38bEA30fE6919e0475Fe57C2629f3D3754d1E","signature":"0x622cf6a969b8b93cbef53f2e1aa484e46523d940a66b423040ac515c1eebdafd0f5d0de36d9f7ef8ef35e0121e2462de8f340a38680898678d067c8c5af4f5ba1c"}`,
-	),
-); 
+	JSON.parse(`{"module":"0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48","to":"0x7A8192079E2983C6AB03bbd6aDDE2f8F4cd625E5","underwriter":"0xa8bd3ffebf92538b3b830dd5b2516a5111db164d","asset":"0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D","amount":"0x0493e0","data":"0x0000000000000000000000000000000000000000000000000000000000000000","nonce":"0xb7d856604f89511a64da114b18f4625683d3828eda3161d070da3d37c41e12b2","pNonce":"0x3c7bb526397c0686e9777d96286f24dfcee0ccb2f79a486ce1753f3d266cc03e","chainId":1,"contractAddress":"0xa8bd3ffebf92538b3b830dd5b2516a5111db164d","signature":"0x0a8379fba5a8053b698c73bc38aee5cbc51791c6bdfaf1a74faf1b2fb1c32cc818e1a5ec4a473b11e8f6cea6e698fa819205fd7c88f39bad290046bcfd0716141c"}`)
+	);
 
 (async () => {
-	const tx = await transferRequest.repay((await hre.ethers.getSigners())[0]);
+	const tx = await transferRequest.repay((await hre.ethers.getSigners())[0], { gasLimit: 800000 });
 	console.log(require('util').inspect(tx, { colors: true, depth: 15 }));
 	console.log('waiting ... ');
 	console.log(await tx.wait());

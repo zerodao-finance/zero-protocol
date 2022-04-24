@@ -73,7 +73,7 @@ const executeLoan = async (transferRequest, replyDispatcher) => {
 	const loanTx = await loan.wait();
 	console.log(loanTx);
 
-	const repay = await transferRequest.repay(wallet);
+	const repay = await transferRequest.repay(wallet, { gasLimit: 800000 });
 	console.log('repaid');
 	await replyDispatcher('/zero/user/update', {
 		request: transferRequest.toEIP712Digest(),
