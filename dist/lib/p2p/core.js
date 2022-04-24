@@ -290,8 +290,8 @@ var ZeroUser = /** @class */ (function (_super) {
                             }))
                             : request;
                         console.log(request);
-                        digest = request.toEIP712Digest();
-                        result = this._pending[digest] = new events_1.EventEmitter();
+                        digest = request.toEIP712Digest(request.contractAddress, request.chainId);
+                        result = (this._pending[digest] = new events_1.EventEmitter());
                         return [4 /*yield*/, this.storage.set(requestFromTemplate)];
                     case 1:
                         key = _b.sent();
