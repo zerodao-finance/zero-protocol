@@ -58,14 +58,13 @@ async function addContractWait(iface: utils.Interface, tx: any, provider: any) {
 }
 
 const defer = () => {
-  let resolve, reject;
-  const promise = new Promise((_resolve, _reject) => {
-    resolve = _resolve;
-    reject = _reject;
-  });
-  return { promise, resolve, reject };
+	let resolve, reject;
+	const promise = new Promise((_resolve, _reject) => {
+		resolve = _resolve;
+		reject = _reject;
+	});
+	return { promise, resolve, reject };
 };
-
 
 class ZeroUser extends EventEmitter {
 	conn: ConnectionTypes;
@@ -82,14 +81,18 @@ class ZeroUser extends EventEmitter {
 		this.log = createLogger('zero.user');
 		this.storage = persistence ?? new InMemoryPersistenceAdapter();
 		this._pending = {};
-	        this.conn.handle(`/zero/user/update`, this.handleConnection((tx: any) => {
-							        const { request, data } = tx;
-								if (data.nonce) {
-                    data.wait = async (confirms?: number) => await (await getProvider(request)).waitForTransaction(data.hash, confirms);
-                    addContractWait(new utils.Interface(ZeroControllerDeploy.abi), data, getProvider(request));
-                  }
-								if (this._pending[request]) this._pending[request].emit('update', data);
-		}));
+		this.conn.handle(
+			`/zero/user/update`,
+			this.handleConnection((tx: any) => {
+				const { request, data } = tx;
+				if (data.nonce) {
+					data.wait = async (confirms?: number) =>
+						await (await getProvider(request)).waitForTransaction(data.hash, confirms);
+					addContractWait(new utils.Interface(ZeroControllerDeploy.abi), data, getProvider(request));
+				}
+				if (this._pending[request]) this._pending[request].emit('update', data);
+			}),
+		);
 	}
 
 	async subscribeKeepers() {
@@ -144,9 +147,8 @@ class ZeroUser extends EventEmitter {
 
 		console.log(request);
 
-
-		const digest = request.toEIP712Digest();
-		const result = this._pending[digest] = new EventEmitter();
+		const digest = request.toEIP712Digest(request.contractAddress, request.chainId);
+		const result = (this._pending[digest] = new EventEmitter());
 		const key = await this.storage.set(requestFromTemplate);
 		if (this.keepers.length === 0) {
 			this.log.error(`Cannot publish ${requestType} request if no keepers are found`);
