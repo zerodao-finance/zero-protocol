@@ -180,7 +180,10 @@ const handleBurnRequest = async (message, replyDispatcher) => {
 		const wallet = new ethers.Wallet(process.env.WALLET, signer.provider);
 		const tx = await burnRequest.burn(signer, { gasLimit: 500000 });
 
-		replyDispatcher('/zero/user/burnDispatch', tx);
+		replyDispatcher('/zero/user/update', {
+	          request: burnRequest.toEIP712Digest(),
+	          data: tx
+		});
 		console.log('TXHASH:', tx.hash);
 		const burnReceipt = await tx.wait();
 		console.log(burnReceipt);
