@@ -56,7 +56,7 @@ var chains_1 = require("@renproject/chains");
 var ren_1 = __importDefault(require("@renproject/ren"));
 require("@renproject/interfaces");
 var deployment_utils_1 = require("./deployment-utils");
-require("./config/constants");
+var constants_1 = require("./config/constants");
 /**
  * Supposed to provide a way to execute other functions while using renBTC to pay for the gas fees
  * what a flow to test would look like:
@@ -185,6 +185,7 @@ var BurnRequest = /** @class */ (function () {
         this.chainId = chainId || this.chainId;
         return {
             types: {
+                EIP712Domain: constants_1.EIP712_TYPES.EIP712Domain,
                 Permit: [
                     {
                         name: 'holder',
@@ -208,6 +209,7 @@ var BurnRequest = /** @class */ (function () {
                     },
                 ]
             },
+            primaryType: 'Permit',
             domain: {
                 name: this.assetName,
                 version: '1',
@@ -220,8 +222,7 @@ var BurnRequest = /** @class */ (function () {
                 nonce: this.tokenNonce,
                 expiry: this.getExpiry(),
                 allowed: 'true'
-            },
-            primaryType: 'Permit'
+            }
         };
     };
     BurnRequest.prototype.toGatewayAddress = function (input) {
@@ -270,6 +271,7 @@ var BurnRequest = /** @class */ (function () {
                         _o.trys.push([6, 8, , 11]);
                         payload = this.toEIP712(contractAddress, chainId);
                         console.log(payload);
+                        delete payload.types.EIP712Domain;
                         _h = this;
                         return [4 /*yield*/, signer._signTypedData(payload.domain, payload.types, payload.message)];
                     case 7: return [2 /*return*/, (_h.signature = _o.sent())];

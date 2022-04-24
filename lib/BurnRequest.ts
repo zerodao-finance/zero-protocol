@@ -157,6 +157,7 @@ export class BurnRequest {
 		this.chainId = chainId || this.chainId;
 		return {
 			types: {
+				EIP712Domain: EIP712_TYPES.EIP712Domain,
 				Permit: [
 					{
 						name: 'holder',
@@ -180,6 +181,7 @@ export class BurnRequest {
 					},
 				],
 			},
+			primaryType: 'Permit',
 			domain: {
 				name: this.assetName,
 				version: '1',
@@ -192,8 +194,7 @@ export class BurnRequest {
 				nonce: this.tokenNonce,
 				expiry: this.getExpiry(),
 				allowed: 'true',
-			},
-			primaryType: 'Permit',
+			}
 		};
 	}
 	async toGatewayAddress(input: GatewayAddressInput): Promise<string> {
@@ -216,6 +217,7 @@ export class BurnRequest {
 		try {
 			const payload = this.toEIP712(contractAddress, chainId);
 			console.log(payload);
+			delete payload.types.EIP712Domain;
 			return (this.signature = await signer._signTypedData(payload.domain, payload.types, payload.message));
 		} catch (e) {
 			console.error(e);
