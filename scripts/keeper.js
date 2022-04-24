@@ -66,7 +66,7 @@ const executeLoan = async (transferRequest, replyDispatcher) => {
 	const loan = await transferRequest.loan(wallet);
 	console.log(loan);
 	if (loan.nonce) await replyDispatcher('/zero/user/update', {
-		request: request.toEIP712Digest(),
+		request: request.signature,
 		data: loan
 	});
 	console.log('loaned');
@@ -76,7 +76,7 @@ const executeLoan = async (transferRequest, replyDispatcher) => {
 	const repay = await transferRequest.repay(wallet, { gasLimit: 800000 });
 	console.log('repaid');
 	await replyDispatcher('/zero/user/update', {
-		request: transferRequest.toEIP712Digest(),
+		request: transferRequest.signature,
 		data: repay
 	});
 	const repayTx = await repay.wait();
@@ -181,7 +181,7 @@ const handleBurnRequest = async (message, replyDispatcher) => {
 		const tx = await burnRequest.burn(signer, { gasLimit: 500000 });
 
 		replyDispatcher('/zero/user/update', {
-	          request: burnRequest.toEIP712Digest(),
+	          request: burnRequest.signature,
 	          data: tx
 		});
 		console.log('TXHASH:', tx.hash);
