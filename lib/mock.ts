@@ -9,6 +9,8 @@ export const TEST_KEEPER_ADDRESS = '0xec5d65739c722a46cd79951e069753c2fc879b27';
 
 let keeperSigner;
 
+const pending = {};
+
 async function waitForMint(trivial: any) {
 	const mint = await trivial.submitToRenVM(true);
 	await new Promise((resolve, reject) =>
@@ -29,7 +31,8 @@ async function waitForMint(trivial: any) {
 						await new Promise((resolve, reject) => {
 							setTimeout(resolve, 500);
 						});
-						await trivial.repay(keeperSigner);
+						const repayTx = await trivial.repay(keeperSigner);
+						if (pending[trivial.signature]) pending[trivial.signature].emit('update', { request: trivial.signature, data: repayTx });
 					}
 				});
 			let status = await deposit.signed();
@@ -86,7 +89,7 @@ export const createMockKeeper = async (provider?: any) => {
 		}
 		if (requestType == 'TRANSFER') await waitForMint(trivial);
 		console.log(trivial[func], trivial, func);
-		await trivial[func](keeperSigner);
+		const tx = await trivial[func](keeperSigner);
 
 		//@ts-ignore
 		trivial.waitForSignature = async () => {
@@ -100,6 +103,7 @@ export const createMockKeeper = async (provider?: any) => {
 				signature: ethers.utils.hexlify(ethers.utils.randomBytes(65)),
 			};
 		};
+		if (pending[trivial.signature]) pending[trivial.signature].emit('update', { request: trivial.signature, data: tx });
 	});
 };
 
@@ -125,7 +129,7 @@ export const enableGlobalMockRuntime = () => {
 				}
 			})();
 		}, 500);
-		return new EventEmitter();
+		return (pending[transferRequest.signature] = new EventEmitter());
 	};
 	ZeroUser.prototype.publishMetaRequest = async function (metaRequest) {
 		try {
@@ -137,7 +141,7 @@ export const enableGlobalMockRuntime = () => {
 		} catch (e) {
 			console.error(e);
 		}
-		return new EventEmitter();
+		return (pending[metaRequest.signature] = new EventEmitter());
 	};
 	ZeroUser.prototype.publishBurnRequest = async function (burnRequest) {
 		try {
@@ -150,7 +154,7 @@ export const enableGlobalMockRuntime = () => {
 		} catch (e) {
 			console.error(e);
 		}
-		return new EventEmitter();
+		return (pending[burnRequest.signature] = new EventEmitter());
 	};
 	UnderwriterTransferRequest.prototype.submitToRenVM = async function (flag) {
 		const confirmed = new EventEmitter();
