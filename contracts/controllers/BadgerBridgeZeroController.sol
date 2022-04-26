@@ -188,6 +188,9 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		amountOut = IERC20(renbtc).balanceOf(address(this)).sub(balanceStart);
 	}
 
+	function fromETHToRenBTC(uint256 amountIn) internal returns (uint256 amountOut) {
+		amountOut = amountIn; // TODO: implement
+	}
 	function toETH() internal returns (uint256 amountOut) {
 		uint256 wbtcStart = IERC20(wbtc).balanceOf(address(this));
 		uint256 amountStart = address(this).balance;
@@ -454,6 +457,12 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		{
 			tx.origin.transfer(Math.min(params.gasBefore.sub(gasleft()).add(BURN_GAS_DIFF).add(params.gasDiff).mul(tx.gasprice).add(keeperReward), address(this).balance));
 		}
+	}
+	function burnETH(
+		bytes memory destination
+	) public payable returns (uint256 amountToBurn) {
+		amountToBurn = fromETHToRenBTC(msg.value.sub(applyRatio(msg.value, burnFee)));
+		IGateway(btcGateway).burn(destination, amountToBurn);
 	}
 
 	function fallbackMint(

@@ -147,7 +147,7 @@ class ZeroUser extends EventEmitter {
 
 		console.log(request);
 
-		const digest = request.toEIP712Digest(request.contractAddress, request.chainId);
+		const digest = request.signature;
 		const result = (this._pending[digest] = new EventEmitter());
 		const key = await this.storage.set(requestFromTemplate);
 		if (this.keepers.length === 0) {

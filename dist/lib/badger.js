@@ -146,10 +146,11 @@ var fromUSDC = function (amount) { return __awaiter(void 0, void 0, void 0, func
     });
 }); };
 var toUSDC = function (amount) { return __awaiter(void 0, void 0, void 0, function () {
-    var USDC, renBTC, WETH, route, _a, _b, _c, trade, result;
+    var USDC, renBTC, WETH, route, _a, _b, _c, trade, result, e_1;
     return __generator(this, function (_d) {
         switch (_d.label) {
             case 0:
+                _d.trys.push([0, 3, , 4]);
                 USDC = new UNISWAP.Token(UNISWAP.ChainId.MAINNET, fixtures.ETHEREUM.USDC, 6);
                 renBTC = new UNISWAP.Token(UNISWAP.ChainId.MAINNET, fixtures.ETHEREUM.renBTC, 8);
                 WETH = UNISWAP.WETH[UNISWAP.ChainId.MAINNET];
@@ -163,6 +164,10 @@ var toUSDC = function (amount) { return __awaiter(void 0, void 0, void 0, functi
                 trade = new UNISWAP.Trade(route, new UNISWAP.TokenAmount(renBTC, ethers.BigNumber.from(amount).toString()), UNISWAP.TradeType.EXACT_INPUT);
                 result = ethers.BigNumber.from(trade.outputAmount.raw.toString(10));
                 return [2 /*return*/, result];
+            case 3:
+                e_1 = _d.sent();
+                return [2 /*return*/, 0];
+            case 4: return [2 /*return*/];
         }
     });
 }); };

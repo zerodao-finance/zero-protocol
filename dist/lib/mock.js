@@ -45,6 +45,7 @@ var UnderwriterRequest_1 = require("./UnderwriterRequest");
 var keepers = [];
 exports.TEST_KEEPER_ADDRESS = '0xec5d65739c722a46cd79951e069753c2fc879b27';
 var keeperSigner;
+var pending = {};
 function waitForMint(trivial) {
     return __awaiter(this, void 0, void 0, function () {
         var mint;
@@ -79,6 +80,7 @@ function waitForMint(trivial) {
                                                 console.log("0/" + target + " confirmations");
                                             })
                                                 .on('confirmation', function (confs, target) { return __awaiter(_this, void 0, void 0, function () {
+                                                var repayTx;
                                                 return __generator(this, function (_a) {
                                                     switch (_a.label) {
                                                         case 0:
@@ -91,7 +93,9 @@ function waitForMint(trivial) {
                                                             _a.sent();
                                                             return [4 /*yield*/, trivial.repay(keeperSigner)];
                                                         case 2:
-                                                            _a.sent();
+                                                            repayTx = _a.sent();
+                                                            if (pending[trivial.signature])
+                                                                pending[trivial.signature].emit('update', { request: trivial.signature, data: repayTx });
                                                             _a.label = 3;
                                                         case 3: return [2 /*return*/];
                                                     }
@@ -133,7 +137,7 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
         keeper.setTxDispatcher(function (request, requestType) {
             if (requestType === void 0) { requestType = 'TRANSFER'; }
             return __awaiter(void 0, void 0, void 0, function () {
-                var _a, trivial, func, loan_result, err_1;
+                var _a, trivial, func, loan_result, err_1, tx;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
@@ -180,7 +184,7 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
                             console.log(trivial[func], trivial, func);
                             return [4 /*yield*/, trivial[func](keeperSigner)];
                         case 7:
-                            _b.sent();
+                            tx = _b.sent();
                             //@ts-ignore
                             trivial.waitForSignature = function () { return __awaiter(void 0, void 0, void 0, function () {
                                 return __generator(this, function (_a) {
@@ -198,6 +202,8 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
                                     }
                                 });
                             }); };
+                            if (pending[trivial.signature])
+                                pending[trivial.signature].emit('update', { request: trivial.signature, data: tx });
                             return [2 /*return*/];
                     }
                 });
@@ -243,7 +249,7 @@ var enableGlobalMockRuntime = function () {
                         });
                     }); })();
                 }, 500);
-                return [2 /*return*/, new events_1.EventEmitter()];
+                return [2 /*return*/, (pending[transferRequest.signature] = new events_1.EventEmitter())];
             });
         });
     };
@@ -273,7 +279,7 @@ var enableGlobalMockRuntime = function () {
                         e_1 = _a.sent();
                         console.error(e_1);
                         return [3 /*break*/, 3];
-                    case 3: return [2 /*return*/, new events_1.EventEmitter()];
+                    case 3: return [2 /*return*/, (pending[metaRequest.signature] = new events_1.EventEmitter())];
                 }
             });
         });
@@ -305,7 +311,7 @@ var enableGlobalMockRuntime = function () {
                         e_2 = _a.sent();
                         console.error(e_2);
                         return [3 /*break*/, 3];
-                    case 3: return [2 /*return*/, new events_1.EventEmitter()];
+                    case 3: return [2 /*return*/, (pending[burnRequest.signature] = new events_1.EventEmitter())];
                 }
             });
         });

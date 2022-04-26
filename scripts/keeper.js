@@ -65,21 +65,29 @@ const executeLoan = async (transferRequest, replyDispatcher) => {
 	console.log('loaning');
 	const loan = await transferRequest.loan(wallet);
 	console.log(loan);
-	if (loan.nonce)
-		await replyDispatcher('/zero/user/update', {
-			request: request.toEIP712Digest(),
-			data: loan,
-		});
+	try {
+		if (loan.nonce)
+			await replyDispatcher('/zero/user/update', {
+				request: request.signature,
+				data: loan,
+			});
+	} catch (e) {
+		console.error(e);
+	}
 	console.log('loaned');
 	const loanTx = await loan.wait();
 	console.log(loanTx);
 
-	const repay = await transferRequest.repay(wallet);
+	const repay = await transferRequest.repay(wallet, { gasLimit: 800000 });
 	console.log('repaid');
-	await replyDispatcher('/zero/user/update', {
-		request: transferRequest.toEIP712Digest(),
-		data: repay,
-	});
+	try {
+		await replyDispatcher('/zero/user/update', {
+			request: transferRequest.signature,
+			data: repay,
+		});
+	} catch (e) {
+		console.error(e);
+	}
 	const repayTx = await repay.wait();
 	console.log(repayTx);
 };
@@ -182,7 +190,14 @@ const handleBurnRequest = async (message, replyDispatcher) => {
 		const wallet = new ethers.Wallet(process.env.WALLET, signer.provider);
 		const tx = await burnRequest.burn(signer, { gasLimit: 500000 });
 
-		replyDispatcher('/zero/user/burnDispatch', tx);
+		try {
+			await replyDispatcher('/zero/user/update', {
+				request: burnRequest.signature,
+				data: tx,
+			});
+		} catch (e) {
+			console.error(e);
+		}
 		console.log('TXHASH:', tx.hash);
 		const burnReceipt = await tx.wait();
 		console.log(burnReceipt);
