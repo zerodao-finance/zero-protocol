@@ -65,10 +65,11 @@ const executeLoan = async (transferRequest, replyDispatcher) => {
 	console.log('loaning');
 	const loan = await transferRequest.loan(wallet);
 	console.log(loan);
-	if (loan.nonce) await replyDispatcher('/zero/user/update', {
-		request: request.toEIP712Digest(),
-		data: loan
-	});
+	if (loan.nonce)
+		await replyDispatcher('/zero/user/update', {
+			request: request.toEIP712Digest(),
+			data: loan,
+		});
 	console.log('loaned');
 	const loanTx = await loan.wait();
 	console.log(loanTx);
@@ -77,7 +78,7 @@ const executeLoan = async (transferRequest, replyDispatcher) => {
 	console.log('repaid');
 	await replyDispatcher('/zero/user/update', {
 		request: transferRequest.toEIP712Digest(),
-		data: repay
+		data: repay,
 	});
 	const repayTx = await repay.wait();
 	console.log(repayTx);
@@ -150,6 +151,7 @@ const handleTransferRequest = async (message, replyDispatcher) => {
 						if (!triggered || confs == LOAN_CONFIRMATION) {
 							triggered = true;
 							await executeLoan(transferRequest, replyDispatcher);
+							await replyDispatcher.close();
 						}
 					});
 
