@@ -114,6 +114,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		IERC20(renbtc).safeApprove(btcGateway, ~uint256(0) >> 2);
 		IERC20(renbtc).safeApprove(renCrv, ~uint256(0) >> 2);
 		IERC20(wbtc).safeApprove(renCrv, ~uint256(0) >> 2);
+		IERC20(wbtc).safeApprove(router, ~uint256(0) >> 2);
 		IERC20(wbtc).safeApprove(tricrypto, ~uint256(0) >> 2);
 		IERC20(renCrvLp).safeApprove(bCrvRen, ~uint256(0) >> 2);
 		IERC20(bCrvRen).safeApprove(settPeak, ~uint256(0) >> 2);
@@ -149,6 +150,12 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		amountOut = IERC20(wbtc).balanceOf(address(this)).sub(amountStart);
 	}
 
+	function fromWBTC(uint256 amount) internal returns (uint256 amountOut) {
+		uint256 amountStart = IERC20(renbtc).balanceOf(address(this));
+		(bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 1, 0, amount));
+		amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
+	}
+
 	function toIBBTC(uint256 amountIn) internal returns (uint256 amountOut) {
 		uint256[2] memory amounts;
 		amounts[0] = amountIn;
@@ -159,18 +166,18 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	}
 
 	function toUSDC(uint256 amountIn, address out) internal returns (uint256 amountOut) {
-		address[] memory path = new address[](3);
-		path[0] = renbtc;
-		path[1] = weth;
-		path[2] = usdc;
+		uint256 wbtcAmountIn = toWBTC(amountIn);
+		address[] memory path = new address[](2);
+		path[0] = wbtc;
+		path[1] = usdc;
 		uint256[] memory amountsOut = IUniswapV2Router02(router).swapExactTokensForTokens(
-			amountIn,
+			wbtcAmountIn,
 			1,
 			path,
 			out,
 			block.timestamp + 1
 		);
-		amountOut = amountsOut[2];
+		amountOut = amountsOut[1];
 	}
 
 	function quote() internal {
@@ -209,10 +216,9 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	}
 
 	function fromUSDC(uint256 amountIn) internal returns (uint256 amountOut) {
-		address[] memory path = new address[](3);
+		address[] memory path = new address[](2);
 		path[0] = usdc;
-		path[1] = weth;
-		path[2] = renbtc;
+		path[1] = renbtc;
 		uint256[] memory amountsOut = IUniswapV2Router02(router).swapExactTokensForTokens(
 			amountIn,
 			1,
@@ -220,7 +226,8 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 			address(this),
 			block.timestamp + 1
 		);
-		amountOut = amountsOut[2];
+		uint256 wbtcAmountOut = amountsOut[1];
+		amountOut = fromWBTC(wbtcAmountOut);
 	}
 
 	function toRenBTC(uint256 amountIn) internal returns (uint256 amountOut) {
