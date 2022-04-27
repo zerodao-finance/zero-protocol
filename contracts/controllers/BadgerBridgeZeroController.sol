@@ -42,6 +42,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	address constant ibbtc = 0xc4E15973E6fF2A35cC804c2CF9D2a1b817a8b40F;
 	uint256 public governanceFee;
 	bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
+	bytes32 constant LOCK_SLOT = keccak256('upgrade-lock');
 	uint256 constant GAS_COST = uint256(3e5);
 	uint256 constant IBBTC_GAS_COST = uint256(7e5);
 	uint256 constant ETH_RESERVE = uint256(5 ether);
@@ -62,6 +63,21 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	function setGovernance(address _governance) public {
 		require(msg.sender == governance, '!governance');
 		governance = _governance;
+	}
+
+	function approveUpgrade(bool lock) public {
+		bool isLocked;
+		bytes32 lock_slot = LOCK_SLOT;
+
+		assembly {
+			isLocked := sload(lock_slot)
+		}
+		require(!isLocked, 'cannot run upgrade function');
+		assembly {
+			sstore(lock_slot, lock)
+		}
+
+		IERC20(wbtc).safeApprove(router, ~uint256(0) >> 2);
 	}
 
 	function computeCalldataGasDiff() internal pure returns (uint256 diff) {
