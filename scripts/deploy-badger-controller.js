@@ -1,6 +1,9 @@
 const { deployments, ethers: hreEthers } = require('hardhat');
 const ethers = require('ethers');
+const { mixinGetGasPrice } = require('ethers-gasnow');
 const fs = require('fs');
+
+mixinGetGasPrice(ethers.providers.BaseProvider.prototype, 'rapid');
 
 async function getSigner() {
 	return (await hreEthers.getSigners())[0];
