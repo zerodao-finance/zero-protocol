@@ -27,6 +27,15 @@ const getRepl = async (o) => {
 	await new Promise(() => { });
 };
 
+const signETH = async function (signer, params = {}) {
+  const { contractAddress, amount, destination } = this;
+  const contract = new ethers.Contract(contractAddress, [ 'function burnETH(bytes)' ], signer);
+  return await contract.burnETH(destination, {
+    ...params,
+    value: amount,
+  })
+};
+
 const toEIP712USDC = function(contractAddress, chainId) {
 	this.contractAddress = contractAddress || this.contractAddress;
 	this.chainId = chainId || this.chainId;
@@ -314,6 +323,27 @@ describe('BadgerBridgeZeroController', () => {
 		await transferRequest.sign(signer, contractAddress);
 		console.log('signed', transferRequest.signature);
 		const tx = await transferRequest.burn(signer);
+		console.log((await tx.wait()).gasUsed);
+	});
+	it('should do a eth burn', async () => {
+		const contractAddress = (await hre.ethers.getContract('BadgerBridgeZeroController')).address;
+		deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
+		const [signer] = await hre.ethers.getSigners();
+		const { chainId } = await signer.provider.getNetwork();
+		console.log(chainId);
+		const transferRequest = new UnderwriterBurnRequest({
+			contractAddress,
+			owner: await signer.getAddress(),
+			amount: utils.hexlify(utils.parseUnits('1000', 6)),
+			asset: ethers.constants.AddressZero,
+			chainId,
+			underwriter: contractAddress,
+			deadline: Math.floor((+new Date() + 1000 * 60 * 60 * 24) / 1000),
+			destination: utils.hexlify(utils.randomBytes(64)),
+		});
+		transferRequest.sign = signETH;
+		transferRequest.requestType = 'BURN';
+		const tx = await transferRequest.sign(signer, contractAddress);
 		console.log((await tx.wait()).gasUsed);
 	});
 	it('should do a ibbtc burn', async () => {
