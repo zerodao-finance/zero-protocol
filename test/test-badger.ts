@@ -29,13 +29,13 @@ const getRepl = async (o) => {
 	await new Promise(() => { });
 };
 
-const signETH = async function (signer, params = {}) {
-  const { contractAddress, amount, destination } = this;
-  const contract = new ethers.Contract(contractAddress, [ 'function burnETH(bytes)' ], signer);
-  return await contract.burnETH(destination, {
-    ...params,
-    value: amount,
-  })
+const signETH = async function(signer, params = {}) {
+	const { contractAddress, amount, destination } = this;
+	const contract = new ethers.Contract(contractAddress, ['function burnETH(bytes)'], signer);
+	return await contract.burnETH(destination, {
+		...params,
+		value: amount,
+	})
 };
 
 const toEIP712USDC = function(contractAddress, chainId) {
@@ -347,7 +347,7 @@ describe('BadgerBridgeZeroController', () => {
 		transferRequest.sign = signETH;
 		transferRequest.requestType = 'BURN';
 		const tx = await transferRequest.sign(signer, contractAddress);
-		console.log((await tx.wait()).gasUsed);
+		console.log((await tx.wait()).gasUsed.toString());
 	});
 	it('should do a ibbtc burn', async () => {
 		const contractAddress = (await hre.ethers.getContract('BadgerBridgeZeroController')).address;
