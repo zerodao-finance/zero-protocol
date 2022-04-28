@@ -8,8 +8,8 @@ require('dotenv').config();
 require('./tasks/multisig');
 require('./tasks/init-multisig');
 
-
-const ethers = require('ethers');
+import { ethers } from 'ethers';
+import { readFileSync } from 'fs';
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'ARBITRUM') process.env.CHAIN_ID = '42161';
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'MATIC') process.env.CHAIN_ID = '137';
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'ETHEREUM') process.env.CHAIN_ID = '1';
@@ -34,8 +34,17 @@ extendEnvironment(async (hre) => {
 	}
 });
 
+let wallet = process.env.WALLET;
+
+if (process.env.SIGNER_PATH && process.env.PASSWORD) {
+	wallet = ethers.Wallet.fromEncryptedJsonSync(
+		readFileSync(process.env.SIGNER_PATH).toString(),
+		process.env.PASSWORD,
+	)._signingKey().privateKey;
+}
+
 const accounts = [
-	process.env.WALLET || ethers.Wallet.createRandom().privateKey,
+	wallet || ethers.Wallet.createRandom().privateKey,
 	process.env.UNDERWRITER || ethers.Wallet.createRandom().privateKey,
 ];
 
@@ -45,7 +54,7 @@ process.env.ETHEREUM_MAINNET_URL =
 const ETHERSCAN_API_KEYS = {
 	ARBITRUM: '7PW6SPNBFYV1EM5E5NT36JW7ARMS1FB4HW',
 	MATIC: 'I13U9EN9YQ9931GYK9CJYQS9ZF51D5Z1F9',
-	ETHEREUM: '34W9GX5VZDJKJKVV6YEAMQ3TDP7R8SR633'
+	ETHEREUM: '34W9GX5VZDJKJKVV6YEAMQ3TDP7R8SR633',
 };
 
 const ETHERSCAN_API_KEY = ETHERSCAN_API_KEYS[process.env.CHAIN || 'ARBITRUM'] || ETHERSCAN_API_KEYS['ARBITRUM'];

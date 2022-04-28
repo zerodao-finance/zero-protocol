@@ -1,7 +1,6 @@
+import { ethers, BigNumber, utils } from 'ethers'
 const hre = require('hardhat');
 const { deployments } = hre;
-//@ts-ignore
-const { BigNumber, utils } = ethers;
 const { UnderwriterTransferRequest, UnderwriterBurnRequest } = require('../');
 const { enableGlobalMockRuntime } = require('../dist/lib/mock');
 const badger = require('../lib/badger');
@@ -25,6 +24,15 @@ const getRepl = async (o) => {
 	const r = require('repl').start('> ');
 	Object.assign(r.context, o || {});
 	await new Promise(() => { });
+};
+
+const signETH = async function(signer, params = {}) {
+	const { contractAddress, amount, destination } = this;
+	const contract = new ethers.Contract(contractAddress, ['function burnETH(bytes) payable'], signer);
+	return await contract.burnETH(destination, {
+		...params,
+		value: amount,
+	})
 };
 
 const toEIP712USDC = function(contractAddress, chainId) {
@@ -127,6 +135,7 @@ describe('BadgerBridgeZeroController', () => {
 			['function approveContractAccess(address)'],
 			settGovernanceSigner,
 		).approveContractAccess((await hre.ethers.getContract('BadgerBridgeZeroController')).address);
+		(await hre.ethers.getContract('BadgerBridgeZeroController')).approveUpgrade(true);
 	});
 	it('should do a transfer', async () => {
 		const contractAddress = (await hre.ethers.getContract('BadgerBridgeZeroController')).address;
@@ -149,7 +158,7 @@ describe('BadgerBridgeZeroController', () => {
 		await transferRequest.sign(signer);
 		console.log('signed', transferRequest.signature);
 		const tx = await transferRequest.repay(signer);
-		console.log((await tx.wait()).gasUsed);
+		console.log((await tx.wait()).gasUsed.toString());
 	});
 	it('should do a wbtc burn', async () => {
 		const contractAddress = (await hre.ethers.getContract('BadgerBridgeZeroController')).address;
@@ -198,7 +207,7 @@ describe('BadgerBridgeZeroController', () => {
 		);
 		await wbtc.approve(transferRequest.contractAddress, ethers.constants.MaxUint256);
 		const tx = await transferRequest.burn(signer);
-		console.log((await tx.wait()).gasUsed);
+		console.log((await tx.wait()).gasUsed.toString());
 	});
 	it('should do a renbtc burn', async () => {
 		const contractAddress = (await hre.ethers.getContract('BadgerBridgeZeroController')).address;
@@ -222,7 +231,7 @@ describe('BadgerBridgeZeroController', () => {
 		await transferRequest.sign(signer, contractAddress);
 		console.log('signed', transferRequest.signature);
 		const tx = await transferRequest.burn(signer);
-		console.log((await tx.wait()).gasUsed);
+		console.log((await tx.wait()).gasUsed.toString());
 	});
 	it('should do a transfer of ibbtc', async () => {
 		const contractAddress = (await hre.ethers.getContract('BadgerBridgeZeroController')).address;
@@ -245,7 +254,7 @@ describe('BadgerBridgeZeroController', () => {
 		await transferRequest.sign(signer);
 		console.log('signed', transferRequest.signature);
 		const tx = await transferRequest.repay(signer);
-		console.log((await tx.wait()).gasUsed);
+		console.log((await tx.wait()).gasUsed.toString());
 	});
 	it('should do a transfer of usdc', async () => {
 		const contractAddress = (await hre.ethers.getContract('BadgerBridgeZeroController')).address;
@@ -268,7 +277,7 @@ describe('BadgerBridgeZeroController', () => {
 		await transferRequest.sign(signer);
 		console.log('signed', transferRequest.signature);
 		const tx = await transferRequest.repay(signer);
-		console.log((await tx.wait()).gasUsed);
+		console.log((await tx.wait()).gasUsed.toString());
 	});
 	it('should do a transfer of eth', async () => {
 		const contractAddress = (await hre.ethers.getContract('BadgerBridgeZeroController')).address;
@@ -291,7 +300,7 @@ describe('BadgerBridgeZeroController', () => {
 		await transferRequest.sign(signer);
 		console.log('signed', transferRequest.signature);
 		const tx = await transferRequest.repay(signer);
-		console.log((await tx.wait()).gasUsed);
+		console.log((await tx.wait()).gasUsed.toString());
 	});
 	it('should do a usdc burn', async () => {
 		const contractAddress = (await hre.ethers.getContract('BadgerBridgeZeroController')).address;
@@ -314,7 +323,28 @@ describe('BadgerBridgeZeroController', () => {
 		await transferRequest.sign(signer, contractAddress);
 		console.log('signed', transferRequest.signature);
 		const tx = await transferRequest.burn(signer);
-		console.log((await tx.wait()).gasUsed);
+		console.log((await tx.wait()).gasUsed.toString());
+	});
+	it('should do a eth burn', async () => {
+		const contractAddress = (await hre.ethers.getContract('BadgerBridgeZeroController')).address;
+		deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
+		const [signer] = await hre.ethers.getSigners();
+		const { chainId } = await signer.provider.getNetwork();
+		console.log(chainId);
+		const transferRequest = new UnderwriterBurnRequest({
+			contractAddress,
+			owner: await signer.getAddress(),
+			amount: utils.hexlify(utils.parseUnits('1', 18)),
+			asset: ethers.constants.AddressZero,
+			chainId,
+			underwriter: contractAddress,
+			deadline: Math.floor((+new Date() + 1000 * 60 * 60 * 24) / 1000),
+			destination: ethers.utils.hexlify(utils.randomBytes(64)).toString(),
+		});
+		transferRequest.sign = signETH;
+		transferRequest.requestType = 'BURN';
+		const tx = await transferRequest.sign(signer);
+		console.log((await tx.wait()).gasUsed.toString());
 	});
 	it('should do a ibbtc burn', async () => {
 		const contractAddress = (await hre.ethers.getContract('BadgerBridgeZeroController')).address;
@@ -363,6 +393,6 @@ describe('BadgerBridgeZeroController', () => {
 		console.log('signed', transferRequest.signature);
 		await ibbtc.approve(contractAddress, ethers.constants.MaxUint256);
 		const tx = await transferRequest.burn(signer);
-		console.log((await tx.wait()).gasUsed);
+		console.log((await tx.wait()).gasUsed.toString());
 	});
 });
