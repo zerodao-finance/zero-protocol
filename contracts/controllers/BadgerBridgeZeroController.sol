@@ -43,7 +43,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	uint256 public governanceFee;
 	bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
 	bytes32 constant LOCK_SLOT = keccak256('upgrade-lock');
-	uint256 constant GAS_COST = uint256(3e5);
+	uint256 constant GAS_COST = uint256(37e4);
 	uint256 constant IBBTC_GAS_COST = uint256(7e5);
 	uint256 constant ETH_RESERVE = uint256(5 ether);
 	uint256 internal renbtcForOneETHPrice;
@@ -130,7 +130,6 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		IERC20(renbtc).safeApprove(btcGateway, ~uint256(0) >> 2);
 		IERC20(renbtc).safeApprove(renCrv, ~uint256(0) >> 2);
 		IERC20(wbtc).safeApprove(renCrv, ~uint256(0) >> 2);
-		IERC20(wbtc).safeApprove(router, ~uint256(0) >> 2);
 		IERC20(wbtc).safeApprove(tricrypto, ~uint256(0) >> 2);
 		IERC20(renCrvLp).safeApprove(bCrvRen, ~uint256(0) >> 2);
 		IERC20(bCrvRen).safeApprove(settPeak, ~uint256(0) >> 2);
