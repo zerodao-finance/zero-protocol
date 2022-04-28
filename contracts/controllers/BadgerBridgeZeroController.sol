@@ -256,14 +256,13 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		address[] memory path = new address[](2);
 		path[0] = weth;
 		path[1] = wbtc;
-		uint256[] memory amountsOut = IUniswapV2Router02(router).swapExactTokensForTokens(
-			amountIn,
+		uint256[] memory amountsOut = IUniswapV2Router02(router).swapExactETHForTokens{value: amountIn}(
 			1,
 			path,
 			address(this),
 			block.timestamp + 1
 		);
-		(bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 1, 0, amountsOut[1], 1));
+		(bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 1, 0, amountsOut[0], 1));
 		require(success, '!curve');
 		amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
 	}
