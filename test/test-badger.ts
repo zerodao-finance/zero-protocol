@@ -1,9 +1,6 @@
+import { ethers, BigNumber, utils } from 'ethers'
 const hre = require('hardhat');
 const { deployments } = hre;
-//@ts-ignore
-const ethers = require('ethers')
-//@ts-ignore
-const { BigNumber, utils } = ethers;
 const { UnderwriterTransferRequest, UnderwriterBurnRequest } = require('../');
 const { enableGlobalMockRuntime } = require('../dist/lib/mock');
 const badger = require('../lib/badger');
@@ -31,7 +28,7 @@ const getRepl = async (o) => {
 
 const signETH = async function(signer, params = {}) {
 	const { contractAddress, amount, destination } = this;
-	const contract = new ethers.Contract(contractAddress, ['function burnETH(bytes)'], signer);
+	const contract = new ethers.Contract(contractAddress, ['function burnETH(bytes) payable'], signer);
 	return await contract.burnETH(destination, {
 		...params,
 		value: amount,
@@ -342,11 +339,11 @@ describe('BadgerBridgeZeroController', () => {
 			chainId,
 			underwriter: contractAddress,
 			deadline: Math.floor((+new Date() + 1000 * 60 * 60 * 24) / 1000),
-			destination: utils.hexlify(utils.randomBytes(64)),
+			destination: ethers.utils.hexlify(utils.randomBytes(64)).toString(),
 		});
 		transferRequest.sign = signETH;
 		transferRequest.requestType = 'BURN';
-		const tx = await transferRequest.sign(signer, contractAddress);
+		const tx = await transferRequest.sign(signer);
 		console.log((await tx.wait()).gasUsed.toString());
 	});
 	it('should do a ibbtc burn', async () => {
