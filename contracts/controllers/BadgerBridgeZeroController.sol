@@ -187,7 +187,17 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 
 	function renBTCtoETH(uint256 amountIn, address out) internal returns (uint256 amountOut) {
 		uint256 wbtcAmountOut = toWBTC(amountIn);
-		amountOut = toETH(wbtcAmountOut, true);
+		address[] memory path = new address[](2);
+		path[0] = wbtc;
+		path[1] = weth;
+		uint256[] memory amountsOut = IUniswapV2Router02(router).swapExactTokensForTokens(
+			wbtcAmountOut,
+			1,
+			path,
+			out,
+			block.timestamp + 1
+		);
+		amountOut = amountsOut[1];
 	}
 
 	function fromIBBTC(uint256 amountIn) internal returns (uint256 amountOut) {
@@ -230,11 +240,9 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		amountOut = amountIn; // TODO: implement
 	}
 
-	function toETH(uint256 amountIn, bool useAmount) internal returns (uint256 amountOut) {
-		uint256 wbtcStart = amountIn;
-		if (!useAmount) {
-			IERC20(wbtc).balanceOf(address(this));
-		}
+	function toETH() internal returns (uint256 amountOut) {
+		uint256 wbtcStart = IERC20(wbtc).balanceOf(address(this));
+
 		uint256 amountStart = address(this).balance;
 		(bool success, ) = tricrypto.call(
 			abi.encodeWithSelector(ICurveETHUInt256.exchange.selector, 1, 2, wbtcStart, 0, true)
@@ -249,7 +257,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	function earn() public {
 		quote();
 		toWBTC(IERC20(renbtc).balanceOf(address(this)));
-		toETH(0, false);
+		toETH();
 		uint256 balance = address(this).balance;
 		if (balance > ETH_RESERVE) {
 			uint256 output = balance - ETH_RESERVE;
