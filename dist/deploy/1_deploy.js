@@ -238,7 +238,7 @@ module.exports = function (_a) {
                     _q.sent();
                     return [4 /*yield*/, deployFixedAddress('DummyVault', {
                             contractName: 'DummyVault',
-                            args: [deployParameters[network]['wBTC'], zeroController.address, 'yearnBTC', 'yvWBTC'],
+                            args: [deployParameters[network]['WBTC'], zeroController.address, 'yearnBTC', 'yvWBTC'],
                             from: deployer
                         })];
                 case 28:
@@ -246,7 +246,7 @@ module.exports = function (_a) {
                     return [4 /*yield*/, ethers.getContract('DummyVault')];
                 case 29:
                     w = _q.sent();
-                    return [4 /*yield*/, w.attach(deployParameters[network]['wBTC'])];
+                    return [4 /*yield*/, w.attach(deployParameters[network]['WBTC'])];
                 case 30:
                     _q.sent();
                     // .balanceOf(ethers.constants.AddressZero);
@@ -352,7 +352,7 @@ module.exports = function (_a) {
                             deployParameters[network]['renBTC'],
                             deployParameters[network]['wNative'],
                             dummyVault.address,
-                            deployParameters[network]['wBTC'],
+                            deployParameters[network]['WBTC'],
                         ],
                         contractName: network === 'ARBITRUM'
                             ? 'StrategyRenVMArbitrum'
@@ -459,7 +459,7 @@ module.exports = function (_a) {
                     return [4 /*yield*/, getWrapperAddress(wBTCToRenBTCTx)];
                 case 67:
                     wBTCToRenBTC = _q.sent();
-                    return [4 /*yield*/, setConverter(controller, 'wBTC', 'renBTC', wBTCToRenBTC)];
+                    return [4 /*yield*/, setConverter(controller, 'WBTC', 'renBTC', wBTCToRenBTC)];
                 case 68:
                     _q.sent();
                     return [4 /*yield*/, curveFactory.createWrapper(false, 0, 1, deployParameters[network]['Curve_SBTC'])];
@@ -468,7 +468,7 @@ module.exports = function (_a) {
                     return [4 /*yield*/, getWrapperAddress(renBTCToWBTCTx)];
                 case 70:
                     renBTCToWBTC = _q.sent();
-                    return [4 /*yield*/, setConverter(controller, 'renBTC', 'wBTC', renBTCToWBTC)];
+                    return [4 /*yield*/, setConverter(controller, 'renBTC', 'WBTC', renBTCToWBTC)];
                 case 71:
                     _q.sent();
                     return [4 /*yield*/, curveFactory.createWrapper(false, 2, 1, deployParameters[network]['Curve_TriCryptoTwo'], { gasLimit: 8e6 })];
@@ -477,7 +477,7 @@ module.exports = function (_a) {
                     return [4 /*yield*/, getWrapperAddress(wEthToWBTCTx)];
                 case 73:
                     wEthToWBTC = _q.sent();
-                    return [4 /*yield*/, setConverter(controller, 'wNative', 'wBTC', wEthToWBTC)];
+                    return [4 /*yield*/, setConverter(controller, 'wNative', 'WBTC', wEthToWBTC)];
                 case 74:
                     _q.sent();
                     return [4 /*yield*/, curveFactory.createWrapper(false, 1, 2, deployParameters[network]['Curve_TriCryptoTwo'], { gasLimit: 8e6 })];
@@ -486,7 +486,7 @@ module.exports = function (_a) {
                     return [4 /*yield*/, getWrapperAddress(wBtcToWETHTx)];
                 case 76:
                     wBtcToWETH = _q.sent();
-                    return [4 /*yield*/, setConverter(controller, 'wBTC', 'wNative', wBtcToWETH)];
+                    return [4 /*yield*/, setConverter(controller, 'WBTC', 'wNative', wBtcToWETH)];
                 case 77:
                     _q.sent();
                     return [3 /*break*/, 105];
@@ -502,7 +502,7 @@ module.exports = function (_a) {
                     return [4 /*yield*/, getWrapperAddress(wBTCToRenBTCTx)];
                 case 81:
                     wBTCToRenBTC = _q.sent();
-                    return [4 /*yield*/, setConverter(controller, 'wBTC', 'renBTC', wBTCToRenBTC)];
+                    return [4 /*yield*/, setConverter(controller, 'WBTC', 'renBTC', wBTCToRenBTC)];
                 case 82:
                     _q.sent();
                     return [4 /*yield*/, curveFactory.createWrapper(true, 1, 0, deployParameters[network]['Curve_Ren'], {
@@ -513,25 +513,25 @@ module.exports = function (_a) {
                     return [4 /*yield*/, getWrapperAddress(renBTCToWBTCTx)];
                 case 84:
                     renBTCToWBTC = _q.sent();
-                    return [4 /*yield*/, setConverter(controller, 'renBTC', 'wBTC', renBTCToWBTC)];
+                    return [4 /*yield*/, setConverter(controller, 'renBTC', 'WBTC', renBTCToWBTC)];
                 case 85:
                     _q.sent();
-                    return [4 /*yield*/, sushiFactory.createWrapper([deployParameters[network]['wNative'], deployParameters[network]['wBTC']], { gasLimit: 5e6 })];
+                    return [4 /*yield*/, sushiFactory.createWrapper([deployParameters[network]['wNative'], deployParameters[network]['WBTC']], { gasLimit: 5e6 })];
                 case 86:
                     wEthToWBTCTx = _q.sent();
                     return [4 /*yield*/, getWrapperAddress(wEthToWBTCTx)];
                 case 87:
                     wEthToWBTC = _q.sent();
-                    return [4 /*yield*/, setConverter(controller, 'wNative', 'wBTC', '0x7157d98368923a298C0882a503cF44353A847F37')];
+                    return [4 /*yield*/, setConverter(controller, 'wNative', 'WBTC', '0x7157d98368923a298C0882a503cF44353A847F37')];
                 case 88:
                     _q.sent();
-                    return [4 /*yield*/, sushiFactory.createWrapper([deployParameters[network]['wBTC'], deployParameters[network]['wNative']], { gasLimit: 5e6 })];
+                    return [4 /*yield*/, sushiFactory.createWrapper([deployParameters[network]['WBTC'], deployParameters[network]['wNative']], { gasLimit: 5e6 })];
                 case 89:
                     wBtcToWETHTx = _q.sent();
                     return [4 /*yield*/, getWrapperAddress(wBtcToWETHTx)];
                 case 90:
                     wBtcToWETH = _q.sent();
-                    return [4 /*yield*/, setConverter(controller, 'wBTC', 'wNative', wBtcToWETH)];
+                    return [4 /*yield*/, setConverter(controller, 'WBTC', 'wNative', wBtcToWETH)];
                 case 91:
                     _q.sent();
                     return [3 /*break*/, 105];
@@ -543,7 +543,7 @@ module.exports = function (_a) {
                     return [4 /*yield*/, getWrapperAddress(wETHToWBTCArbTx)];
                 case 94:
                     wETHToWBTCArb = _q.sent();
-                    return [4 /*yield*/, setConverter(controller, 'wNative', 'wBTC', wETHToWBTCArb)];
+                    return [4 /*yield*/, setConverter(controller, 'wNative', 'WBTC', wETHToWBTCArb)];
                 case 95:
                     _q.sent();
                     console.log('wETH->wBTC Converter Set.');
@@ -553,7 +553,7 @@ module.exports = function (_a) {
                     return [4 /*yield*/, getWrapperAddress(wBtcToWETHArbTx)];
                 case 97:
                     wBtcToWETHArb = _q.sent();
-                    return [4 /*yield*/, setConverter(controller, 'wBTC', 'wNative', wBtcToWETHArb)];
+                    return [4 /*yield*/, setConverter(controller, 'WBTC', 'wNative', wBtcToWETHArb)];
                 case 98:
                     _q.sent();
                     console.log('wBTC->wETH Converter Set.');
@@ -563,7 +563,7 @@ module.exports = function (_a) {
                     return [4 /*yield*/, getWrapperAddress(wBTCToRenBTCArbTx)];
                 case 100:
                     wBTCToRenBTCArb = _q.sent();
-                    return [4 /*yield*/, setConverter(controller, 'wBTC', 'renBTC', wBTCToRenBTCArb)];
+                    return [4 /*yield*/, setConverter(controller, 'WBTC', 'renBTC', wBTCToRenBTCArb)];
                 case 101:
                     _q.sent();
                     console.log('wBTC->renBTC Converter Set.');
@@ -574,7 +574,7 @@ module.exports = function (_a) {
                     return [4 /*yield*/, getWrapperAddress(renBTCToWBTCArbTx)];
                 case 103:
                     renBTCToWBTCArb = _q.sent();
-                    return [4 /*yield*/, setConverter(controller, 'renBTC', 'wBTC', renBTCToWBTCArb)];
+                    return [4 /*yield*/, setConverter(controller, 'renBTC', 'WBTC', renBTCToWBTCArb)];
                 case 104:
                     _q.sent();
                     _q.label = 105;
