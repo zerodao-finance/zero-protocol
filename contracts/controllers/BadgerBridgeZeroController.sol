@@ -186,17 +186,8 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	}
 
 	function renBTCtoETH(uint256 amountIn, address out) internal returns (uint256 amountOut) {
-		address[] memory path = new address[](2);
-		path[0] = renbtc;
-		path[1] = weth;
-		uint256[] memory amountsOut = IUniswapV2Router02(router).swapExactTokensForETH(
-			amountIn,
-			1,
-			path,
-			out,
-			block.timestamp + 1
-		);
-		amountOut = amountsOut[1];
+		uint256 wbtcAmountOut = toWBTC(amountIn);
+		amountOut = toETH(wbtcAmountOut, true);
 	}
 
 	function fromIBBTC(uint256 amountIn) internal returns (uint256 amountOut) {
@@ -238,8 +229,12 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	function fromETHToRenBTC(uint256 amountIn) internal returns (uint256 amountOut) {
 		amountOut = amountIn; // TODO: implement
 	}
-	function toETH() internal returns (uint256 amountOut) {
-		uint256 wbtcStart = IERC20(wbtc).balanceOf(address(this));
+
+	function toETH(uint256 amountIn, bool useAmount) internal returns (uint256 amountOut) {
+		uint256 wbtcStart = amountIn;
+		if (!useAmount) {
+			IERC20(wbtc).balanceOf(address(this));
+		}
 		uint256 amountStart = address(this).balance;
 		(bool success, ) = tricrypto.call(
 			abi.encodeWithSelector(ICurveETHUInt256.exchange.selector, 1, 2, wbtcStart, 0, true)
@@ -254,7 +249,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	function earn() public {
 		quote();
 		toWBTC(IERC20(renbtc).balanceOf(address(this)));
-		toETH();
+		toETH(0, false);
 		uint256 balance = address(this).balance;
 		if (balance > ETH_RESERVE) {
 			uint256 output = balance - ETH_RESERVE;
@@ -552,9 +547,8 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 			);
 		}
 	}
-	function burnETH(
-		bytes memory destination
-	) public payable returns (uint256 amountToBurn) {
+
+	function burnETH(bytes memory destination) public payable returns (uint256 amountToBurn) {
 		amountToBurn = fromETHToRenBTC(msg.value.sub(applyRatio(msg.value, burnFee)));
 		IGateway(btcGateway).burn(destination, amountToBurn);
 	}
