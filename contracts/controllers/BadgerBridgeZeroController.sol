@@ -262,7 +262,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 			address(this),
 			block.timestamp + 1
 		);
-		(bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 1, 0, amountsOut[0], 1));
+		(bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 1, 0, amountsOut[1], 1));
 		require(success, '!curve');
 		amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
 	}

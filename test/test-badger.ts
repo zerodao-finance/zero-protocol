@@ -334,7 +334,7 @@ describe('BadgerBridgeZeroController', () => {
 		const transferRequest = new UnderwriterBurnRequest({
 			contractAddress,
 			owner: await signer.getAddress(),
-			amount: utils.hexlify(utils.parseUnits('1000', 6)),
+			amount: utils.hexlify(utils.parseUnits('1', 18)),
 			asset: ethers.constants.AddressZero,
 			chainId,
 			underwriter: contractAddress,
