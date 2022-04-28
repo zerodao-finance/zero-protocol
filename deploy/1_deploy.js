@@ -55,7 +55,6 @@ const approveModule = async (...args) => {
 };
 
 module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) => {
-
 	const { deployer } = await getNamedAccounts(); //used as governance address
 	const [ethersSigner] = await ethers.getSigners();
 	const { provider } = ethersSigner;
@@ -78,7 +77,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 		});
 		await ethersSigner.sendTransaction({
 			value: ethers.utils.parseEther('0.5'),
-			to: TEST_KEEPER_ADDRESS
+			to: TEST_KEEPER_ADDRESS,
 		});
 	}
 	const signer = await ethers.getSigner(SIGNER_ADDRESS);
@@ -144,11 +143,11 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 
 	const dummyVault = await deployFixedAddress('DummyVault', {
 		contractName: 'DummyVault',
-		args: [deployParameters[network]['wBTC'], zeroController.address, 'yearnBTC', 'yvWBTC'],
+		args: [deployParameters[network]['WBTC'], zeroController.address, 'yearnBTC', 'yvWBTC'],
 		from: deployer,
 	});
 	const w = await ethers.getContract('DummyVault');
-	await w.attach(deployParameters[network]['wBTC']);
+	await w.attach(deployParameters[network]['WBTC']);
 	// .balanceOf(ethers.constants.AddressZero);
 	console.log('Deployed DummyVault to', dummyVault.address);
 
@@ -221,7 +220,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 				deployParameters[network]['renBTC'],
 				deployParameters[network]['wNative'],
 				dummyVault.address,
-				deployParameters[network]['wBTC'],
+				deployParameters[network]['WBTC'],
 			],
 			contractName:
 				network === 'ARBITRUM'
@@ -291,11 +290,11 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 				deployParameters[network]['Curve_SBTC'],
 			);
 			var wBTCToRenBTC = await getWrapperAddress(wBTCToRenBTCTx);
-			await setConverter(controller, 'wBTC', 'renBTC', wBTCToRenBTC);
+			await setConverter(controller, 'WBTC', 'renBTC', wBTCToRenBTC);
 			// Curve renBTC -> wBTC
 			var renBTCToWBTCTx = await curveFactory.createWrapper(false, 0, 1, deployParameters[network]['Curve_SBTC']);
 			var renBTCToWBTC = await getWrapperAddress(renBTCToWBTCTx);
-			await setConverter(controller, 'renBTC', 'wBTC', renBTCToWBTC);
+			await setConverter(controller, 'renBTC', 'WBTC', renBTCToWBTC);
 			// Curve wNative -> wBTC
 			var wEthToWBTCTx = await curveFactory.createWrapper(
 				false,
@@ -305,7 +304,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 				{ gasLimit: 8e6 },
 			);
 			var wEthToWBTC = await getWrapperAddress(wEthToWBTCTx);
-			await setConverter(controller, 'wNative', 'wBTC', wEthToWBTC);
+			await setConverter(controller, 'wNative', 'WBTC', wEthToWBTC);
 			// Curve wBTC -> wNative
 			var wBtcToWETHTx = await curveFactory.createWrapper(
 				false,
@@ -315,7 +314,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 				{ gasLimit: 8e6 },
 			);
 			var wBtcToWETH = await getWrapperAddress(wBtcToWETHTx);
-			await setConverter(controller, 'wBTC', 'wNative', wBtcToWETH);
+			await setConverter(controller, 'WBTC', 'wNative', wBtcToWETH);
 			break;
 		case 'MATIC':
 			const sushiFactory = await ethers.getContract('ZeroUniswapFactory', deployer);
@@ -325,27 +324,27 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 				gasLimit: 5e6,
 			});
 			var wBTCToRenBTC = await getWrapperAddress(wBTCToRenBTCTx);
-			await setConverter(controller, 'wBTC', 'renBTC', wBTCToRenBTC);
+			await setConverter(controller, 'WBTC', 'renBTC', wBTCToRenBTC);
 			// Curve renBTC -> wBTC
 			var renBTCToWBTCTx = await curveFactory.createWrapper(true, 1, 0, deployParameters[network]['Curve_Ren'], {
 				gasLimit: 5e6,
 			});
 			var renBTCToWBTC = await getWrapperAddress(renBTCToWBTCTx);
-			await setConverter(controller, 'renBTC', 'wBTC', renBTCToWBTC);
+			await setConverter(controller, 'renBTC', 'WBTC', renBTCToWBTC);
 			// Sushi wNative -> wBTC
 			var wEthToWBTCTx = await sushiFactory.createWrapper(
-				[deployParameters[network]['wNative'], deployParameters[network]['wBTC']],
+				[deployParameters[network]['wNative'], deployParameters[network]['WBTC']],
 				{ gasLimit: 5e6 },
 			);
 			var wEthToWBTC = await getWrapperAddress(wEthToWBTCTx);
-			await setConverter(controller, 'wNative', 'wBTC', '0x7157d98368923a298C0882a503cF44353A847F37');
+			await setConverter(controller, 'wNative', 'WBTC', '0x7157d98368923a298C0882a503cF44353A847F37');
 			// Sushi wBTC -> wNative
 			var wBtcToWETHTx = await sushiFactory.createWrapper(
-				[deployParameters[network]['wBTC'], deployParameters[network]['wNative']],
+				[deployParameters[network]['WBTC'], deployParameters[network]['wNative']],
 				{ gasLimit: 5e6 },
 			);
 			var wBtcToWETH = await getWrapperAddress(wBtcToWETHTx);
-			await setConverter(controller, 'wBTC', 'wNative', wBtcToWETH);
+			await setConverter(controller, 'WBTC', 'wNative', wBtcToWETH);
 			break;
 		case 'ARBITRUM':
 			console.log('Running arbitrum');
@@ -356,7 +355,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 				'0x960ea3e3C7FB317332d990873d354E18d7645590',
 			);
 			var wETHToWBTCArb = await getWrapperAddress(wETHToWBTCArbTx);
-			await setConverter(controller, 'wNative', 'wBTC', wETHToWBTCArb);
+			await setConverter(controller, 'wNative', 'WBTC', wETHToWBTCArb);
 			console.log('wETH->wBTC Converter Set.');
 			var wBtcToWETHArbTx = await curveFactory.createWrapper(
 				false,
@@ -365,7 +364,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 				'0x960ea3e3C7FB317332d990873d354E18d7645590',
 			);
 			var wBtcToWETHArb = await getWrapperAddress(wBtcToWETHArbTx);
-			await setConverter(controller, 'wBTC', 'wNative', wBtcToWETHArb);
+			await setConverter(controller, 'WBTC', 'wNative', wBtcToWETHArb);
 			console.log('wBTC->wETH Converter Set.');
 			// Curve wBTC -> renBTC
 			var wBTCToRenBTCArbTx = await curveFactory.createWrapper(
@@ -375,7 +374,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 				deployParameters[network]['Curve_Ren'],
 			);
 			var wBTCToRenBTCArb = await getWrapperAddress(wBTCToRenBTCArbTx);
-			await setConverter(controller, 'wBTC', 'renBTC', wBTCToRenBTCArb);
+			await setConverter(controller, 'WBTC', 'renBTC', wBTCToRenBTCArb);
 			console.log('wBTC->renBTC Converter Set.');
 			// Curve renBTC -> wBTC
 			var renBTCToWBTCArbTx = await curveFactory.createWrapper(
@@ -386,7 +385,7 @@ module.exports = async ({ getChainId, getUnnamedAccounts, getNamedAccounts }) =>
 			);
 			console.log('renBTC->wBTC Converter Set.');
 			var renBTCToWBTCArb = await getWrapperAddress(renBTCToWBTCArbTx);
-			await setConverter(controller, 'renBTC', 'wBTC', renBTCToWBTCArb);
+			await setConverter(controller, 'renBTC', 'WBTC', renBTCToWBTCArb);
 	}
 
 	// Wrapper ETH -> wETH
