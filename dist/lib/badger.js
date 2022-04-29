@@ -227,7 +227,7 @@ var WBTCFromETH = function (amount) { return __awaiter(void 0, void 0, void 0, f
     return __generator(this, function (_c) {
         switch (_c.label) {
             case 0:
-                WETH = new UNISWAP.WETH[UNISWAP.ChainId.MAINNET];
+                WETH = UNISWAP.WETH[UNISWAP.ChainId.MAINNET];
                 WBTC = new UNISWAP.Token(UNISWAP.ChainId.MAINNET, fixtures.ETHEREUM.WBTC, 8);
                 _b = (_a = UNISWAP.Route).bind;
                 return [4 /*yield*/, UNISWAP.Fetcher.fetchPairData(WETH, WBTC, provider)];
@@ -248,7 +248,7 @@ var renBTCToETH = function (amount) { return __awaiter(void 0, void 0, void 0, f
             case 0: return [4 /*yield*/, WBTCFromRenBTC(amount)];
             case 1:
                 wbtcOut = _c.sent();
-                WETH = new UNISWAP.WETH[UNISWAP.ChainId.MAINNET];
+                WETH = UNISWAP.WETH[UNISWAP.ChainId.MAINNET];
                 WBTC = new UNISWAP.Token(UNISWAP.ChainId.MAINNET, fixtures.ETHEREUM.WBTC, 8);
                 _b = (_a = UNISWAP.Route).bind;
                 return [4 /*yield*/, UNISWAP.Fetcher.fetchPairData(WBTC, WETH, provider)];
