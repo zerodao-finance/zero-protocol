@@ -236,36 +236,37 @@ var TransferRequest = /** @class */ (function () {
     };
     TransferRequest.prototype.sign = function (signer, contractAddress) {
         return __awaiter(this, void 0, void 0, function () {
-            var provider, chainId, payload, _a, e_1, _b, _c, _d, _e;
-            return __generator(this, function (_f) {
-                switch (_f.label) {
+            var provider, chainId, payload, sig, e_1, _a, _b, _c, _d;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
                     case 0:
                         provider = signer.provider;
                         return [4 /*yield*/, signer.provider.getNetwork()];
                     case 1:
-                        chainId = (_f.sent()).chainId;
+                        chainId = (_e.sent()).chainId;
                         this.chainId = chainId;
-                        _f.label = 2;
+                        _e.label = 2;
                     case 2:
-                        _f.trys.push([2, 4, , 7]);
+                        _e.trys.push([2, 4, , 7]);
                         payload = this.toEIP712(contractAddress, chainId);
                         delete payload.types.EIP712Domain;
                         console.log('signing');
-                        _a = this;
                         return [4 /*yield*/, signer._signTypedData(payload.domain, payload.types, payload.message)];
-                    case 3: return [2 /*return*/, (_a.signature = _f.sent())];
+                    case 3:
+                        sig = _e.sent();
+                        return [2 /*return*/, (this.signature = ethers_1.ethers.utils.joinSignature(ethers_1.ethers.utils.splitSignature(sig)))];
                     case 4:
-                        e_1 = _f.sent();
+                        e_1 = _e.sent();
                         console.error(e_1);
-                        _b = this;
-                        _d = (_c = provider).send;
-                        _e = ['eth_signTypedData_v4'];
+                        _a = this;
+                        _c = (_b = provider).send;
+                        _d = ['eth_signTypedData_v4'];
                         return [4 /*yield*/, signer.getAddress()];
-                    case 5: return [4 /*yield*/, _d.apply(_c, _e.concat([[
-                                _f.sent(),
+                    case 5: return [4 /*yield*/, _c.apply(_b, _d.concat([[
+                                _e.sent(),
                                 this.toEIP712(this.contractAddress || contractAddress, chainId)
                             ]]))];
-                    case 6: return [2 /*return*/, (_b.signature = _f.sent())];
+                    case 6: return [2 /*return*/, (_a.signature = _e.sent())];
                     case 7: return [2 /*return*/];
                 }
             });
