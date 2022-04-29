@@ -30,9 +30,9 @@ const signETH = async function(signer, params = {}) {
 	const { contractAddress, amount, destination } = this;
 	const contract = new ethers.Contract(contractAddress, ['function burnETH(bytes) payable'], signer);
 	return await contract.burnETH(destination, {
-		...params,
 		value: amount,
-	})
+		...params
+	});
 };
 
 const toEIP712USDC = function(contractAddress, chainId) {
