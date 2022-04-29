@@ -135,7 +135,13 @@ var fromUSDC = function (amount) { return __awaiter(void 0, void 0, void 0, func
                 return [4 /*yield*/, UNISWAP.Fetcher.fetchPairData(USDC, WBTC, provider)];
             case 1:
                 route = new (_b.apply(_a, [void 0, [_c.sent()], USDC]))();
-                trade = new UNISWAP.Trade(route, new UNISWAP.TokenAmount(USDC, ethers.BigNumber.from(amount).toString()), UNISWAP.TradeType.EXACT_INPUT);
+                try {
+                    trade = new UNISWAP.Trade(route, new UNISWAP.TokenAmount(USDC, ethers.BigNumber.from(amount).toString()), UNISWAP.TradeType.EXACT_INPUT);
+                }
+                catch (e) {
+                    console.error("Insufficient USDC amount for price fetch");
+                    return [2 /*return*/, 0];
+                }
                 return [4 /*yield*/, renBTCFromWBTC(ethers.BigNumber.from(trade.outputAmount.raw.toString(10)))];
             case 2:
                 result = _c.sent();

@@ -46,7 +46,6 @@ export const createMockKeeper = async (provider?: any) => {
 	const keeper = (createZeroKeeper as any)({ on() {} });
 	provider = provider || new ethers.providers.JsonRpcProvider('http://localhost:8545');
 	keeperSigner = keeperSigner || provider.getSigner(TEST_KEEPER_ADDRESS);
-	console.log(keepers.length);
 	keepers.push(keeper);
 	keeper.advertiseAsKeeper = async () => {};
 	keeper.setTxDispatcher = async (fn) => {
@@ -145,7 +144,6 @@ export const enableGlobalMockRuntime = () => {
 	};
 	ZeroUser.prototype.publishBurnRequest = async function (burnRequest) {
 		try {
-			console.log(keepers.length);
 			await Promise.all(
 				keepers.map(async (v) => {
 					if (v._txDispatcher) return await v._txDispatcher(burnRequest, 'BURN');
