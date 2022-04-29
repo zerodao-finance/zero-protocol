@@ -123,7 +123,6 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
         keeper = zero_1.createZeroKeeper({ on: function () { } });
         provider = provider || new ethers_1.ethers.providers.JsonRpcProvider('http://localhost:8545');
         keeperSigner = keeperSigner || provider.getSigner(exports.TEST_KEEPER_ADDRESS);
-        console.log(keepers.length);
         keepers.push(keeper);
         keeper.advertiseAsKeeper = function () { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
             return [2 /*return*/];
@@ -292,7 +291,6 @@ var enableGlobalMockRuntime = function () {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
-                        console.log(keepers.length);
                         return [4 /*yield*/, Promise.all(keepers.map(function (v) { return __awaiter(_this, void 0, void 0, function () {
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
