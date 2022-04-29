@@ -6,4 +6,3 @@ artifacts/
 *.swp
 *.swo
 deployments/localhost/
-deployments/deployments.json
