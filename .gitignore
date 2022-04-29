@@ -5,5 +5,5 @@ artifacts/
 .env
 *.swp
 *.swo
-/deployments/localhost
-/deployments/deployments.json
+deployments/localhost/
+deployments/deployments.json
