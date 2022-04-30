@@ -1,7 +1,7 @@
 'use strict';
-import { TransferRequest } from '../types';
+import { TransferRequest, Request, BurnRequest, RequestStates, RequestWithStatus } from '../types';
 import { ethers } from 'ethers';
-import { PersistenceAdapter, RequestStates, TransferRequestWithStatus } from './types';
+import { PersistenceAdapter } from './types';
 import path from 'path';
 import memdown from 'memdown';
 const level: any = require('level');
@@ -118,17 +118,23 @@ export class LevelDBPersistenceAdapter implements PersistenceAdapter<LocalStorag
 		transferRequest.status = value;
 		await this.set(transferRequest);
 	}
-	async getAllTransferRequests() {
+	async getAllRequests(filter) {
 		const length = await this.length();
 		const result = [];
 		for (let i = 0; i < length; i++) {
 			const key = await this.getKeyFromIndex(i);
-			const transferRequest = (await this.get(key)) as TransferRequestWithStatus;
-			transferRequest.status = transferRequest.status || 'pending';
-			if (transferRequest) {
-				result.push(transferRequest);
+			const request = (await this.get(key)) as RequestWithStatus<Request>;
+			request.status = request.status || 'pending';
+			if (request && (filter && request.requestType === filter)) {
+				result.push(request);
 			}
 		}
 		return result;
+	}
+	async getAllTransferRequests() {
+		return await this.getAllRequests("transfer")
+	}
+	async getAllBurnRequests() {
+		return await this.getAllRequests("burn")
 	}
 }

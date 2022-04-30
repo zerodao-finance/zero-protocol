@@ -24,7 +24,7 @@ const listeners = {
 	transfer: ['repay', 'loan'],
 };
 
-class ZeroConnection extends libp2p {}
+class ZeroConnection extends libp2p { }
 
 async function addContractWait(iface: utils.Interface, tx: any, provider: any) {
 	const wait = tx.wait.bind(tx);
@@ -36,7 +36,7 @@ async function addContractWait(iface: utils.Interface, tx: any, provider: any) {
 				let parsed = null;
 				try {
 					parsed = iface.parseLog(log);
-				} catch (e) {}
+				} catch (e) { }
 				if (parsed) {
 					event.args = parsed.args;
 					event.decode = (data: any, topics?: Array<any>) => {
@@ -294,6 +294,7 @@ class ZeroKeeper {
 					callback(fromBufferToJSON(stream.source));
 					return;
 				}*/
+				let errors: any
 				let string = [];
 				for await (const msg of rawData) {
 					string.push(msg.toString());
@@ -305,8 +306,11 @@ class ZeroKeeper {
 							return 0;
 						},
 					}
-				).set(transferRequest);
-				callback(transferRequest, this.makeReplyDispatcher(duplex.connection.remotePeer));
+				).set(transferRequest).catch(e => {
+					this.log.error(e.toString())
+					errors = e
+				});
+				callback(transferRequest, this.makeReplyDispatcher(duplex.connection.remotePeer), errors);
 			});
 		};
 		await this.conn.handle('/zero/keeper/dispatch', handler);
