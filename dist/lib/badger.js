@@ -115,7 +115,6 @@ var deductMintFee = function (amount, multiplier) { return __awaiter(void 0, voi
                 return [4 /*yield*/, applyFee(amount, mintFee, multiplier)];
             case 1:
                 feeAmounts = _a.sent();
-                console.log('USED TOTAL FEE: ' + ethers.utils.formatUnits(feeAmounts.totalFees, 8));
                 amountAfterDeduction = amount.sub(feeAmounts.totalFees);
                 return [2 /*return*/, amountAfterDeduction <= 0 ? 0 : amountAfterDeduction];
         }
