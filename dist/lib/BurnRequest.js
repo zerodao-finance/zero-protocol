@@ -354,7 +354,7 @@ var BurnRequest = /** @class */ (function () {
     };
     BurnRequest.prototype.waitForRemoteTransaction = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var address, e_2;
+            var address, utxos, e_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -370,7 +370,9 @@ var BurnRequest = /** @class */ (function () {
                                 confirmations: 0
                             })];
                     case 3:
-                        _a.sent();
+                        utxos = _a.sent();
+                        if (utxos.length)
+                            return [2 /*return*/, utxos];
                         return [3 /*break*/, 5];
                     case 4:
                         e_2 = _a.sent();

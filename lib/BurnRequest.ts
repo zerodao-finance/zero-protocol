@@ -263,10 +263,11 @@ export class BurnRequest {
           const address = ethers.utils.base58.encode(this.destination);
 	  while (true) {
             try {
-      	      await BTCHandler.getUTXOs(false, {
+      	      const utxos = await BTCHandler.getUTXOs(false, {
                 address,
 		confirmations: 0
 	      });
+	      if (utxos.length) return utxos;
 	    } catch (e) {
               console.error(e);
 	    }
