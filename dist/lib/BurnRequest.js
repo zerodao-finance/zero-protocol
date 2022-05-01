@@ -56,6 +56,8 @@ var chains_1 = require("@renproject/chains");
 var ren_1 = __importDefault(require("@renproject/ren"));
 require("@renproject/interfaces");
 var deployment_utils_1 = require("./deployment-utils");
+var fixtures_1 = __importDefault(require("./fixtures"));
+var BTCHandler_1 = require("send-crypto/build/module/handlers/BTC/BTCHandler");
 var constants_1 = require("./config/constants");
 /**
  * Supposed to provide a way to execute other functions while using renBTC to pay for the gas fees
@@ -293,6 +295,92 @@ var BurnRequest = /** @class */ (function () {
                             ]]))];
                     case 10: return [2 /*return*/, (_h.signature = _m.sent())];
                     case 11: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    BurnRequest.prototype.waitForHostTransaction = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var network, provider, renbtc;
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        network = (function (v) { return v === 'ethereum' ? 'mainnet' : v; })(deployment_utils_1.CONTROLLER_DEPLOYMENTS[this.contractAddress.toLowerCase()].toLowerCase());
+                        provider = new ethers_1.ethers.providers.InfuraProvider(network, '2f1de898efb74331bf933d3ac469b98d');
+                        renbtc = new ethers_1.ethers.Contract(fixtures_1["default"][network.toUpperCase()].renBTC, ['event Transfer(address indexed from, address indexed to, uint256 amount)'], provider);
+                        return [4 /*yield*/, new Promise(function (resolve, reject) {
+                                var filter = renbtc.filters.Transfer(_this.contractAddress, ethers_1.ethers.constants.AddressZero);
+                                var done = function (rcpt) {
+                                    renbtc.off(filter, listener);
+                                    resolve(rcpt);
+                                };
+                                var listener = function (from, to, amount, evt) {
+                                    (function () { return __awaiter(_this, void 0, void 0, function () {
+                                        var tx, _a, receipt, events;
+                                        var _this = this;
+                                        return __generator(this, function (_b) {
+                                            switch (_b.label) {
+                                                case 0:
+                                                    if (!(this.asset == ethers_1.ethers.constants.AddressZero)) return [3 /*break*/, 4];
+                                                    return [4 /*yield*/, evt.getTransaction()];
+                                                case 1:
+                                                    tx = _b.sent();
+                                                    if (!(tx.from === this.owner && ethers_1.ethers.utils.hexlify(tx.value) === ethers_1.ethers.utils.hexlify(this.amount))) return [3 /*break*/, 3];
+                                                    _a = done;
+                                                    return [4 /*yield*/, evt.getTransactionReceipt()];
+                                                case 2: return [2 /*return*/, _a.apply(void 0, [_b.sent()])];
+                                                case 3: return [3 /*break*/, 7];
+                                                case 4: return [4 /*yield*/, evt.getTransactionReceipt()];
+                                                case 5:
+                                                    receipt = _b.sent();
+                                                    return [4 /*yield*/, evt.getTransactionReceipt()];
+                                                case 6:
+                                                    events = (_b.sent()).events;
+                                                    if (events.find(function (v) { return v.address.toLowerCase() === _this.asset && v.args.from.toLowerCase() === _this.owner.toLowerCase() && ethers_1.ethers.utils.hexlify(_this.amount) === ethers_1.ethers.utils.hexlify(v.args && v.args.amount || 0); }))
+                                                        return [2 /*return*/, done(receipt)];
+                                                    _b.label = 7;
+                                                case 7: return [2 /*return*/];
+                                            }
+                                        });
+                                    }); })()["catch"](function (err) { return console.error(err); });
+                                };
+                                renbtc.on(filter, listener);
+                            })];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    BurnRequest.prototype.waitForRemoteTransaction = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var address, e_2;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        address = ethers_1.ethers.utils.base58.encode(this.destination);
+                        _a.label = 1;
+                    case 1:
+                        if (!true) return [3 /*break*/, 7];
+                        _a.label = 2;
+                    case 2:
+                        _a.trys.push([2, 4, , 5]);
+                        return [4 /*yield*/, BTCHandler_1.BTCHandler.getUTXOs(false, {
+                                address: address,
+                                confirmations: 0
+                            })];
+                    case 3:
+                        _a.sent();
+                        return [3 /*break*/, 5];
+                    case 4:
+                        e_2 = _a.sent();
+                        console.error(e_2);
+                        return [3 /*break*/, 5];
+                    case 5: return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 3000); })];
+                    case 6:
+                        _a.sent();
+                        return [3 /*break*/, 1];
+                    case 7: return [2 /*return*/];
                 }
             });
         });

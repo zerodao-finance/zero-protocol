@@ -13,7 +13,9 @@ import { EIP712TypedData } from '@0x/types';
 import { Bitcoin } from '@renproject/chains';
 import RenJS, { BurnAndRelease } from '@renproject/ren';
 import { EthArgs } from '@renproject/interfaces';
-import { getProvider } from './deployment-utils';
+import { CONTROLLER_DEPLOYMENTS, RPC_ENDPOINTS, getProvider } from './deployment-utils';
+import fixtures from './fixtures';
+import { BTCHandler } from 'send-crypto/build/module/handlers/BTC/BTCHandler';
 import { EIP712_TYPES } from './config/constants';
 /**
  * Supposed to provide a way to execute other functions while using renBTC to pay for the gas fees
@@ -231,5 +233,44 @@ export class BurnRequest {
 				this.toEIP712(this.contractAddress || contractAddress, chainId),
 			]));
 		}
+	}
+	async waitForHostTransaction() {
+          const network = ((v) => v === 'ethereum' ? 'mainnet' : v)(CONTROLLER_DEPLOYMENTS[this.contractAddress.toLowerCase()].toLowerCase());
+	  const provider = new ethers.providers.InfuraProvider(network, '2f1de898efb74331bf933d3ac469b98d');
+          const renbtc = new ethers.Contract(fixtures[network.toUpperCase()].renBTC, [ 'event Transfer(address indexed from, address indexed to, uint256 amount)' ], provider);
+	  return await new Promise((resolve, reject) => {
+            const filter = renbtc.filters.Transfer(this.contractAddress, ethers.constants.AddressZero);
+	    const done = (rcpt) => {
+              renbtc.off(filter, listener);
+              resolve(rcpt);
+	    };
+	    const listener = (from, to, amount, evt) => {
+              (async () => {
+                if (this.asset == ethers.constants.AddressZero) {
+                  const tx = await evt.getTransaction();
+		  if (tx.from === this.owner && ethers.utils.hexlify(tx.value) === ethers.utils.hexlify(this.amount)) return done(await evt.getTransactionReceipt());
+		} else {
+                  const receipt = await evt.getTransactionReceipt();
+                  const { events } = await evt.getTransactionReceipt();
+		  if (events.find((v) => v.address.toLowerCase() === this.asset && v.args.from.toLowerCase() === this.owner.toLowerCase() && ethers.utils.hexlify(this.amount) === ethers.utils.hexlify(v.args && v.args.amount || 0))) return done(receipt);
+		}
+	      })().catch((err) => console.error(err));
+	    };
+	    renbtc.on(filter, listener);
+	  });
+	}
+	async waitForRemoteTransaction() {
+          const address = ethers.utils.base58.encode(this.destination);
+	  while (true) {
+            try {
+      	      await BTCHandler.getUTXOs(false, {
+                address,
+		confirmations: 0
+	      });
+	    } catch (e) {
+              console.error(e);
+	    }
+	    await new Promise((resolve) => setTimeout(resolve, 3000));
+	  }
 	}
 }
