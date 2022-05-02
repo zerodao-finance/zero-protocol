@@ -1,9 +1,9 @@
-import { TransferRequest } from '../types';
-import { PersistenceAdapter, RequestStates, TransferRequestWithStatus } from './types';
+import { TransferRequest, RequestStates, RequestWithStatus, Request, BurnRequest } from '../types';
+import { PersistenceAdapter } from './types';
 import hash from 'object-hash';
 
 type InMemoryKeyType = string;
-type InMemoryBackendType = Map<string, TransferRequestWithStatus>;
+type InMemoryBackendType = Map<string, RequestWithStatus<Request>>;
 
 export class InMemoryPersistenceAdapter implements PersistenceAdapter<InMemoryBackendType, InMemoryKeyType> {
 	backend: InMemoryBackendType;
@@ -35,11 +35,11 @@ export class InMemoryPersistenceAdapter implements PersistenceAdapter<InMemoryBa
 		}
 	}
 
-	async get(key: InMemoryKeyType): Promise<TransferRequest | undefined> {
+	async get(key: InMemoryKeyType): Promise<Request | undefined> {
 		try {
 			const value = this.backend.get(key);
 			if (value) {
-				return value as TransferRequest;
+				return value as Request;
 			} else return undefined;
 		} catch (e) {
 			return undefined;
@@ -65,7 +65,7 @@ export class InMemoryPersistenceAdapter implements PersistenceAdapter<InMemoryBa
 
 	async getStatus(key: InMemoryKeyType): Promise<RequestStates> {
 		try {
-			const value = (await this.get(key)) as TransferRequestWithStatus;
+			const value = (await this.get(key)) as RequestWithStatus<Request>;
 			if (value) {
 				return value.status;
 			} else {
@@ -78,7 +78,7 @@ export class InMemoryPersistenceAdapter implements PersistenceAdapter<InMemoryBa
 
 	async setStatus(key: InMemoryKeyType, status: RequestStates): Promise<void> {
 		try {
-			const value = (await this.get(key)) as TransferRequestWithStatus;
+			const value = (await this.get(key)) as RequestWithStatus<Request>;
 			if (value) {
 				value.status = status;
 				await this.backend.set(key, value);
@@ -88,7 +88,16 @@ export class InMemoryPersistenceAdapter implements PersistenceAdapter<InMemoryBa
 		}
 	}
 
-	async getAllTransferRequests(): Promise<TransferRequestWithStatus[]> {
-		return Array.from(this.backend.values());
+	async getAllRequests(filter): Promise<RequestWithStatus<Request>[]> {
+		return Array.from(this.backend.values()).filter(d => d.requestType === filter);
+	}
+
+	async getAllTransferRequests() {
+		return (await this.getAllRequests("transfer")) as unknown as RequestWithStatus<TransferRequest>[]
+	}
+
+	async getAllBurnRequests() {
+
+		return (await this.getAllRequests("transfer")) as unknown as RequestWithStatus<BurnRequest>[]
 	}
 }

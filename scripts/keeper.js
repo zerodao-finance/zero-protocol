@@ -240,8 +240,13 @@ const run = async () => {
 	if (!process.env.ZERO_PERSISTENCE_DB) process.env.ZERO_PERSISTENCE_DB = path.join(process.env.HOME, '.keeper.db');
 	keeper.setPersistence(new LevelDBPersistenceAdapter());
 	await keeper.setTxDispatcher((...args) => {
-		console.log(args[0]);
-		handleRequest(...args);
+		if (args[2]) {
+			console.error('Error: ', args[2]);
+			console.error('Ignored request details:');
+			console.error(args[0]);
+		} else {
+			handleRequest(...args);
+		}
 	});
 	await keeper.conn.start();
 	await keeper.advertiseAsKeeper();

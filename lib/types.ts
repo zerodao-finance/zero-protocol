@@ -57,7 +57,14 @@ export declare function createZeroConnection(address: string): Promise<ZeroConne
 export declare function createZeroKeeper(connection: ZeroConnection): ZeroKeeper;
 export declare function createZeroUser(connection: ZeroConnection, persistence?: PersistenceAdapter<any, any>): ZeroUser;
 
-export interface TransferRequest {
+export interface Request {
+	requestType: "burn" | "transfer" | "meta"
+	signature: string
+	contractAddress: string
+	[property: string]: any
+}
+
+export interface TransferRequest extends Request {
 	module: string;
 	to: string;
 	underwriter: string;
@@ -66,4 +73,25 @@ export interface TransferRequest {
 	pNonce: BigNumberish;
 	amount: BigNumberish;
 	data: string;
+}
+
+export interface BurnRequest extends Request {
+	asset: string;
+	underwriter: string;
+	owner: string
+	deadline: string
+	destination: any
+	nonce: BigNumberish
+	pNonce: BigNumberish
+
+}
+
+export interface MetaRequest extends Request {
+
+}
+
+export type RequestStates = "pending" | "failed" | "succeeded"
+
+export type RequestWithStatus<T = Record<string, any>> = T & {
+	status: RequestStates
 }
