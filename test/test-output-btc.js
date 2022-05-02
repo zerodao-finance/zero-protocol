@@ -6,7 +6,7 @@ const fixtures = require('../dist/lib/fixtures');
 
 (async () => {
   console.log(await badger.computeOutputBTC({
-    amount: ethers.utils.parseUnits('1000', 6),
-    asset: fixtures.ETHEREUM.USDC
+    amount: ethers.utils.parseEther('1'),
+    asset: ethers.constants.AddressZero
   }));
 })().catch(console.error);

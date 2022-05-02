@@ -1,3 +1,4 @@
+"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -34,7 +35,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var _this = this;
+exports.__esModule = true;
 require('@nomiclabs/hardhat-ethers');
 require('hardhat-deploy');
 require('hardhat-deploy-ethers');
@@ -44,7 +45,8 @@ require('@nomiclabs/hardhat-etherscan');
 require('dotenv').config();
 require('./tasks/multisig');
 require('./tasks/init-multisig');
-var ethers = require('ethers');
+var ethers_1 = require("ethers");
+var fs_1 = require("fs");
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'ARBITRUM')
     process.env.CHAIN_ID = '42161';
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'MATIC')
@@ -57,11 +59,10 @@ var RPC_ENDPOINTS = {
     ETHEREUM: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2'
 };
 var deployParameters = require('./lib/fixtures');
-extendEnvironment(function (hre) { return __awaiter(_this, void 0, void 0, function () {
-    var _this = this;
+extendEnvironment(function (hre) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         if (process.argv.slice(1).includes('node')) {
-            (function () { return __awaiter(_this, void 0, void 0, function () {
+            (function () { return __awaiter(void 0, void 0, void 0, function () {
                 var artifact;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
@@ -81,9 +82,13 @@ extendEnvironment(function (hre) { return __awaiter(_this, void 0, void 0, funct
         return [2 /*return*/];
     });
 }); });
+var wallet = process.env.WALLET;
+if (process.env.SIGNER_PATH && process.env.PASSWORD) {
+    wallet = ethers_1.ethers.Wallet.fromEncryptedJsonSync((0, fs_1.readFileSync)(process.env.SIGNER_PATH).toString(), process.env.PASSWORD)._signingKey().privateKey;
+}
 var accounts = [
-    process.env.WALLET || ethers.Wallet.createRandom().privateKey,
-    process.env.UNDERWRITER || ethers.Wallet.createRandom().privateKey,
+    wallet || ethers_1.ethers.Wallet.createRandom().privateKey,
+    process.env.UNDERWRITER || ethers_1.ethers.Wallet.createRandom().privateKey,
 ];
 process.env.ETHEREUM_MAINNET_URL =
     process.env.ETHEREUM_MAINNET_URL || 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2';

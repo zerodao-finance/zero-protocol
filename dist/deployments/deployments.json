@@ -402,7 +402,7 @@
             "chainId": "1",
             "contracts": {
                 "ZeroUnderwriterLockBytecodeLib": {
-                    "address": "0x70bDA08DBe07363968e9EE53d899dFE48560605B",
+                    "address": "0xAD523115cd35a8d4E60B3C0953E0E0ac10418309",
                     "abi": [
                         {
                             "inputs": [],
@@ -420,7 +420,7 @@
                     ]
                 },
                 "BadgerBridgeZeroController": {
-                    "address": "0x5D42EBdBBa61412295D7b0302d6F50aC449Ddb4F",
+                    "address": "0x413b1AfCa96a3df5A686d8BFBF93d30688a7f7D9",
                     "abi": [
                         {
                             "inputs": [],
@@ -446,6 +446,19 @@
                                 }
                             ],
                             "stateMutability": "view",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "bool",
+                                    "name": "lock",
+                                    "type": "bool"
+                                }
+                            ],
+                            "name": "approveUpgrade",
+                            "outputs": [],
+                            "stateMutability": "nonpayable",
                             "type": "function"
                         },
                         {
@@ -490,6 +503,25 @@
                                 }
                             ],
                             "stateMutability": "nonpayable",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "bytes",
+                                    "name": "destination",
+                                    "type": "bytes"
+                                }
+                            ],
+                            "name": "burnETH",
+                            "outputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "amountToBurn",
+                                    "type": "uint256"
+                                }
+                            ],
+                            "stateMutability": "payable",
                             "type": "function"
                         },
                         {
@@ -784,7 +816,7 @@
                     ]
                 },
                 "ZERO": {
-                    "address": "0xddE78e6202518FF4936b5302cC2891ec180E8bFf",
+                    "address": "0x02df3a3F960393F5B349E40A599FEda91a7cc1A7",
                     "abi": [
                         {
                             "anonymous": false,
@@ -1385,7 +1417,7 @@
                     ]
                 },
                 "ZeroDistributor": {
-                    "address": "0xB06c856C8eaBd1d8321b687E188204C1018BC4E5",
+                    "address": "0x821f3361D454cc98b7555221A06Be563a7E2E0A6",
                     "abi": [
                         {
                             "inputs": [

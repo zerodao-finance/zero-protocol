@@ -240,53 +240,58 @@ var BurnRequest = /** @class */ (function () {
     };
     BurnRequest.prototype.sign = function (signer, contractAddress) {
         return __awaiter(this, void 0, void 0, function () {
-            var provider, chainId, token, _a, _b, _c, _d, _e, _f, _g, payload, _h, e_1, _j, _k, _l, _m;
-            return __generator(this, function (_o) {
-                switch (_o.label) {
+            var provider, chainId, token, _a, _b, _c, _d, _e, _f, _g, payload, sig, e_1, _h, _j, _k, _l;
+            return __generator(this, function (_m) {
+                switch (_m.label) {
                     case 0:
                         provider = signer.provider;
                         return [4 /*yield*/, signer.provider.getNetwork()];
                     case 1:
-                        chainId = (_o.sent()).chainId;
+                        chainId = (_m.sent()).chainId;
                         console.log(chainId);
-                        token = new ethers_1.ethers.Contract(this.asset, ['function DOMAIN_SEPARATOR() view returns (bytes32)', 'function name() view returns (string)', 'function nonces(address) view returns (uint256)'], signer.provider);
+                        token = new ethers_1.ethers.Contract(this.asset, [
+                            'function DOMAIN_SEPARATOR() view returns (bytes32)',
+                            'function name() view returns (string)',
+                            'function nonces(address) view returns (uint256)',
+                        ], signer.provider);
                         _b = (_a = console).log;
                         _c = ['domain'];
                         return [4 /*yield*/, token.DOMAIN_SEPARATOR()];
                     case 2:
-                        _b.apply(_a, _c.concat([_o.sent()]));
+                        _b.apply(_a, _c.concat([_m.sent()]));
                         _d = this;
                         return [4 /*yield*/, token.name()];
                     case 3:
-                        _d.assetName = _o.sent();
+                        _d.assetName = _m.sent();
                         _e = this;
                         _g = (_f = token).nonces;
                         return [4 /*yield*/, signer.getAddress()];
-                    case 4: return [4 /*yield*/, _g.apply(_f, [_o.sent()])];
+                    case 4: return [4 /*yield*/, _g.apply(_f, [_m.sent()])];
                     case 5:
-                        _e.tokenNonce = (_o.sent()).toString();
+                        _e.tokenNonce = (_m.sent()).toString();
                         console.log(this.assetName, this.tokenNonce);
-                        _o.label = 6;
+                        _m.label = 6;
                     case 6:
-                        _o.trys.push([6, 8, , 11]);
+                        _m.trys.push([6, 8, , 11]);
                         payload = this.toEIP712(contractAddress, chainId);
                         console.log(payload);
                         delete payload.types.EIP712Domain;
-                        _h = this;
                         return [4 /*yield*/, signer._signTypedData(payload.domain, payload.types, payload.message)];
-                    case 7: return [2 /*return*/, (_h.signature = _o.sent())];
+                    case 7:
+                        sig = _m.sent();
+                        return [2 /*return*/, (this.signature = ethers_1.ethers.utils.joinSignature(ethers_1.ethers.utils.splitSignature(sig)))];
                     case 8:
-                        e_1 = _o.sent();
+                        e_1 = _m.sent();
                         console.error(e_1);
-                        _j = this;
-                        _l = (_k = provider).send;
-                        _m = ['eth_signTypedData_v4'];
+                        _h = this;
+                        _k = (_j = provider).send;
+                        _l = ['eth_signTypedData_v4'];
                         return [4 /*yield*/, signer.getAddress()];
-                    case 9: return [4 /*yield*/, _l.apply(_k, _m.concat([[
-                                _o.sent(),
+                    case 9: return [4 /*yield*/, _k.apply(_j, _l.concat([[
+                                _m.sent(),
                                 this.toEIP712(this.contractAddress || contractAddress, chainId)
                             ]]))];
-                    case 10: return [2 /*return*/, (_j.signature = _o.sent())];
+                    case 10: return [2 /*return*/, (_h.signature = _m.sent())];
                     case 11: return [2 /*return*/];
                 }
             });

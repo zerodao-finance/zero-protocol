@@ -194,7 +194,7 @@ export class BurnRequest {
 				nonce: this.tokenNonce,
 				expiry: this.getExpiry(),
 				allowed: 'true',
-			}
+			},
 		};
 	}
 	async toGatewayAddress(input: GatewayAddressInput): Promise<string> {
@@ -207,7 +207,11 @@ export class BurnRequest {
 		console.log(chainId);
 		const token = new ethers.Contract(
 			this.asset,
-			['function DOMAIN_SEPARATOR() view returns (bytes32)', 'function name() view returns (string)', 'function nonces(address) view returns (uint256)'],
+			[
+				'function DOMAIN_SEPARATOR() view returns (bytes32)',
+				'function name() view returns (string)',
+				'function nonces(address) view returns (uint256)',
+			],
 			signer.provider,
 		);
 		console.log('domain', await token.DOMAIN_SEPARATOR());
@@ -218,7 +222,8 @@ export class BurnRequest {
 			const payload = this.toEIP712(contractAddress, chainId);
 			console.log(payload);
 			delete payload.types.EIP712Domain;
-			return (this.signature = await signer._signTypedData(payload.domain, payload.types, payload.message));
+			const sig = await signer._signTypedData(payload.domain, payload.types, payload.message);
+			return (this.signature = ethers.utils.joinSignature(ethers.utils.splitSignature(sig)));
 		} catch (e) {
 			console.error(e);
 			return (this.signature = await provider.send('eth_signTypedData_v4', [

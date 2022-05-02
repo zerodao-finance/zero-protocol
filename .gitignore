@@ -5,3 +5,4 @@ artifacts/
 .env
 *.swp
 *.swo
+deployments/localhost/

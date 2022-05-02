@@ -278,11 +278,13 @@ class ZeroKeeper {
 		this.log.info('Started to listen for tx dispatch requests');
 	}
 
-	makeReplyDispatcher(remotePeer: any) {
+	async makeReplyDispatcher(remotePeer: any) {
+		const conn = await this.conn.dial(remotePeer);
 		const replyDispatcher = async (target: string, data: Object) => {
-			const { stream } = await this.conn.dialProtocol(remotePeer, target);
-			pipe(JSON.stringify(data), lp.encode(), stream.sink);
+			const { stream } = await conn.newStream(target);
+			await pipe(JSON.stringify(data), lp.encode(), stream.sink);
 		};
+		replyDispatcher.close = conn.close;
 		return replyDispatcher;
 	}
 	async setTxDispatcher(callback: Function) {
@@ -311,6 +313,7 @@ class ZeroKeeper {
 					errors = e
 				});
 				callback(transferRequest, this.makeReplyDispatcher(duplex.connection.remotePeer), errors);
+
 			});
 		};
 		await this.conn.handle('/zero/keeper/dispatch', handler);
