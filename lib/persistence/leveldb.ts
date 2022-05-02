@@ -118,14 +118,14 @@ export class LevelDBPersistenceAdapter implements PersistenceAdapter<LocalStorag
 		transferRequest.status = value;
 		await this.set(transferRequest);
 	}
-	async getAllRequests(filter) {
+	async getAllRequests(filter?: string) {
 		const length = await this.length();
 		const result = [];
 		for (let i = 0; i < length; i++) {
 			const key = await this.getKeyFromIndex(i);
 			const request = (await this.get(key)) as RequestWithStatus<Request>;
 			request.status = request.status || 'pending';
-			if (request && (filter && request.requestType === filter)) {
+			if (request && (!filter || request.requestType === filter)) {
 				result.push(request);
 			}
 		}

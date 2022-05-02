@@ -83,7 +83,8 @@ describe('leveldb', () => {
 		await burnRequest.sign(signer, ethers.constants.AddressZero);
 		await persistence.set(burnRequest);
 		let requests = await persistence.getAllTransferRequests();
-		expect(requests.length).to.eql(2);
+		expect(requests.length).to.eql(0);
+		expect((await persistence.getAllBurnRequests()).length).to.eql(2)
 
 		const transferRequest = new TransferRequest({
 			to: await signer.getAddress(),
@@ -99,7 +100,7 @@ describe('leveldb', () => {
 		});
 		await transferRequest.sign(signer);
 		await persistence.set(transferRequest)
-		requests = await persistence.getAllTransferRequests();
+		requests = await persistence.getAllRequests();
 		expect(requests.length).to.eql(3)
 		expect(requests.map(d => d.requestType)).to.include.members(['transfer', 'burn'])
 	});
