@@ -188,7 +188,7 @@ const handleBurnRequest = async (message, replyDispatcher) => {
 		});
 		const [signer] = await ethers.getSigners();
 		const wallet = new ethers.Wallet(process.env.WALLET, signer.provider);
-		const tx = await burnRequest.burn(signer, { gasLimit: 500000 });
+		const tx = await burnRequest.burn(signer, { gasLimit: 800000 });
 
 		try {
 			await replyDispatcher('/zero/user/update', {
