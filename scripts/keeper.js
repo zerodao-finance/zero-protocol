@@ -2,6 +2,8 @@ const { network, ethers } = require('hardhat');
 const path = require('path');
 const { UnderwriterTransferRequest, UnderwriterBurnRequest } = require('../lib/zero');
 const { createZeroConnection, createZeroKeeper } = require('../lib/zero');
+const Queue = require('async/queue');
+const Retry = require('async/retry');
 
 const pipe = require('it-pipe');
 const lp = require('it-length-prefixed');
@@ -159,11 +161,11 @@ const handleTransferRequest = async (message, replyDispatcher) => {
 						if (!triggered || confs == LOAN_CONFIRMATION) {
 							triggered = true;
 							await executeLoan(transferRequest, replyDispatcher);
-			await replyDispatcher('/zero/user/update', {
-				request: request.signature,
-				data: loan,
-			});
-//							await replyDispatcher.close();
+							await replyDispatcher('/zero/user/update', {
+								request: request.signature,
+								data: loan,
+							});
+							//							await replyDispatcher.close();
 						}
 					});
 
@@ -238,9 +240,45 @@ const handler = {
 const handleRequest = (...args) =>
 	handler[args[0].requestType ? args[0].requestType : args[0].destination ? 'burn' : 'transfer'](...args);
 
+function createMutexLock() {
+	let lock = false;
+	return {
+		lock: () => {
+			lock = true;
+		},
+		isLocked: () => lock,
+		unlock: () => {
+			lock = false;
+		},
+	};
+}
+
 const run = async () => {
 	// Initialize the keeper
+	const { lock, unlock, isLocked } = createMutexLock();
 	const keeper = createZeroKeeper(await createZeroConnection(KEEPER_URL));
+	const queue = Queue(
+		Retry(
+			{ interval: process.env.KEEPER_RETRY_INTERVAL || 5000 },
+			async (...args) => {
+				handleRequest(...args);
+			},
+			(err) => {
+				//TODO: write out proper error type handling inside keeper
+				// TODO: check if calling queue methods from inside is unsafe
+				if (err.type === 'OUT_OF_BALANCE' && !isLocked()) {
+					lock();
+					queue.pause();
+					//resume in 5 minutes
+					setTimeout(() => {
+						unlock();
+						queue.resume();
+					}, 300000);
+				}
+			},
+		),
+		process.env.KEEPER_WORKERS || 5,
+	);
 	if (!process.env.ZERO_PERSISTENCE_DB) process.env.ZERO_PERSISTENCE_DB = path.join(process.env.HOME, '.keeper.db');
 	keeper.setPersistence(new LevelDBPersistenceAdapter());
 	await keeper.setTxDispatcher((...args) => {
@@ -249,7 +287,7 @@ const run = async () => {
 			console.error('Ignored request details:');
 			console.error(args[0]);
 		} else {
-			handleRequest(...args);
+			queue.push(...args);
 		}
 	});
 	await keeper.conn.start();
