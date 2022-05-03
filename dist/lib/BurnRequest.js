@@ -1,4 +1,23 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -59,6 +78,7 @@ var deployment_utils_1 = require("./deployment-utils");
 var fixtures_1 = __importDefault(require("./fixtures"));
 // @ts-ignore
 var BTCHandler_1 = require("send-crypto/build/main/handlers/BTC/BTCHandler");
+var bech32 = __importStar(require("bech32"));
 var constants_1 = require("./config/constants");
 /**
  * Supposed to provide a way to execute other functions while using renBTC to pay for the gas fees
@@ -365,11 +385,16 @@ var BurnRequest = /** @class */ (function () {
     };
     BurnRequest.prototype.waitForRemoteTransaction = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var address, length, utxos, e_2;
+            var address, arrayed, type, rest, length, utxos, e_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        address = ethers_1.ethers.utils.base58.encode(this.destination);
+                        arrayed = Array.from(ethers_1.ethers.utils.arrayify(this.destination));
+                        type = arrayed[0], rest = arrayed.slice(1);
+                        if (arrayed[0] === 0)
+                            address = bech32.encode('bc', [type].concat(bech32.toWords(rest)));
+                        else
+                            address = ethers_1.ethers.utils.base58.encode(this.destination);
                         return [4 /*yield*/, BTCHandler_1.BTCHandler.getUTXOs(false, {
                                 address: address,
                                 confirmations: 0

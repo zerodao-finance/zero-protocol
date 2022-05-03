@@ -200,10 +200,30 @@ var InMemoryPersistenceAdapter = /** @class */ (function () {
             });
         });
     };
+    InMemoryPersistenceAdapter.prototype.getAllRequests = function (filter) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/, Array.from(this.backend.values()).filter(function (d) { return d.requestType === filter; })];
+            });
+        });
+    };
     InMemoryPersistenceAdapter.prototype.getAllTransferRequests = function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                return [2 /*return*/, Array.from(this.backend.values())];
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getAllRequests("transfer")];
+                    case 1: return [2 /*return*/, (_a.sent())];
+                }
+            });
+        });
+    };
+    InMemoryPersistenceAdapter.prototype.getAllBurnRequests = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getAllRequests("transfer")];
+                    case 1: return [2 /*return*/, (_a.sent())];
+                }
             });
         });
     };

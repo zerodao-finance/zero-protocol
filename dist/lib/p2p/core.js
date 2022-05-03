@@ -498,36 +498,37 @@ var ZeroKeeper = /** @class */ (function () {
                             return __generator(this, function (_a) {
                                 stream = duplex.stream;
                                 (0, it_pipe_1["default"])(stream.source, it_length_prefixed_1["default"].decode(), function (rawData) { var rawData_2, rawData_2_1; return __awaiter(_this, void 0, void 0, function () {
-                                    var string, msg, e_6_1, transferRequest, _a, _b;
-                                    var e_6, _c;
-                                    return __generator(this, function (_d) {
-                                        switch (_d.label) {
+                                    var errors, string, msg, e_6_1, transferRequest;
+                                    var _this = this;
+                                    var e_6, _a;
+                                    return __generator(this, function (_b) {
+                                        switch (_b.label) {
                                             case 0:
                                                 string = [];
-                                                _d.label = 1;
+                                                _b.label = 1;
                                             case 1:
-                                                _d.trys.push([1, 6, 7, 12]);
+                                                _b.trys.push([1, 6, 7, 12]);
                                                 rawData_2 = __asyncValues(rawData);
-                                                _d.label = 2;
+                                                _b.label = 2;
                                             case 2: return [4 /*yield*/, rawData_2.next()];
                                             case 3:
-                                                if (!(rawData_2_1 = _d.sent(), !rawData_2_1.done)) return [3 /*break*/, 5];
+                                                if (!(rawData_2_1 = _b.sent(), !rawData_2_1.done)) return [3 /*break*/, 5];
                                                 msg = rawData_2_1.value;
                                                 string.push(msg.toString());
-                                                _d.label = 4;
+                                                _b.label = 4;
                                             case 4: return [3 /*break*/, 2];
                                             case 5: return [3 /*break*/, 12];
                                             case 6:
-                                                e_6_1 = _d.sent();
+                                                e_6_1 = _b.sent();
                                                 e_6 = { error: e_6_1 };
                                                 return [3 /*break*/, 12];
                                             case 7:
-                                                _d.trys.push([7, , 10, 11]);
-                                                if (!(rawData_2_1 && !rawData_2_1.done && (_c = rawData_2["return"]))) return [3 /*break*/, 9];
-                                                return [4 /*yield*/, _c.call(rawData_2)];
+                                                _b.trys.push([7, , 10, 11]);
+                                                if (!(rawData_2_1 && !rawData_2_1.done && (_a = rawData_2["return"]))) return [3 /*break*/, 9];
+                                                return [4 /*yield*/, _a.call(rawData_2)];
                                             case 8:
-                                                _d.sent();
-                                                _d.label = 9;
+                                                _b.sent();
+                                                _b.label = 9;
                                             case 9: return [3 /*break*/, 11];
                                             case 10:
                                                 if (e_6) throw e_6.error;
@@ -543,14 +544,13 @@ var ZeroKeeper = /** @class */ (function () {
                                                                 });
                                                             });
                                                         }
-                                                    }).set(transferRequest)];
+                                                    }).set(transferRequest)["catch"](function (e) {
+                                                        _this.log.error(e.toString());
+                                                        errors = e;
+                                                    })];
                                             case 13:
-                                                _d.sent();
-                                                _a = callback;
-                                                _b = [transferRequest];
-                                                return [4 /*yield*/, this.makeReplyDispatcher(duplex.connection.remotePeer)];
-                                            case 14:
-                                                _a.apply(void 0, _b.concat([_d.sent()]));
+                                                _b.sent();
+                                                callback(transferRequest, this.makeReplyDispatcher(duplex.connection.remotePeer), errors);
                                                 return [2 /*return*/];
                                         }
                                     });

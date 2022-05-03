@@ -254,9 +254,9 @@ var LevelDBPersistenceAdapter = /** @class */ (function () {
             });
         });
     };
-    LevelDBPersistenceAdapter.prototype.getAllTransferRequests = function () {
+    LevelDBPersistenceAdapter.prototype.getAllRequests = function (filter) {
         return __awaiter(this, void 0, void 0, function () {
-            var length, result, i, key, transferRequest;
+            var length, result, i, key, request;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.length()];
@@ -272,16 +272,36 @@ var LevelDBPersistenceAdapter = /** @class */ (function () {
                         key = _a.sent();
                         return [4 /*yield*/, this.get(key)];
                     case 4:
-                        transferRequest = (_a.sent());
-                        transferRequest.status = transferRequest.status || 'pending';
-                        if (transferRequest) {
-                            result.push(transferRequest);
+                        request = (_a.sent());
+                        request.status = request.status || 'pending';
+                        if (request && (!filter || request.requestType === filter)) {
+                            result.push(request);
                         }
                         _a.label = 5;
                     case 5:
                         i++;
                         return [3 /*break*/, 2];
                     case 6: return [2 /*return*/, result];
+                }
+            });
+        });
+    };
+    LevelDBPersistenceAdapter.prototype.getAllTransferRequests = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getAllRequests("transfer")];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    LevelDBPersistenceAdapter.prototype.getAllBurnRequests = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getAllRequests("burn")];
+                    case 1: return [2 /*return*/, _a.sent()];
                 }
             });
         });

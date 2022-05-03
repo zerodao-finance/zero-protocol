@@ -189,28 +189,49 @@ var LocalStoragePersistenceAdapter = /** @class */ (function () {
             });
         });
     };
-    LocalStoragePersistenceAdapter.prototype.getAllTransferRequests = function () {
+    LocalStoragePersistenceAdapter.prototype.getAllRequests = function (filter) {
         return __awaiter(this, void 0, void 0, function () {
-            var keys, returnArr, _i, keys_1, key, _a, _b;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var keys, returnArr, _i, keys_1, key, request;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         keys = Object.keys(this.backend).filter(function (v) { return v.startsWith('request:'); });
                         returnArr = [];
                         _i = 0, keys_1 = keys;
-                        _c.label = 1;
+                        _a.label = 1;
                     case 1:
                         if (!(_i < keys_1.length)) return [3 /*break*/, 4];
                         key = keys_1[_i];
-                        _b = (_a = returnArr).push;
                         return [4 /*yield*/, this.get(key)];
                     case 2:
-                        _b.apply(_a, [(_c.sent())]);
-                        _c.label = 3;
+                        request = (_a.sent());
+                        if (!filter || request.requestType === filter)
+                            returnArr.push(request);
+                        _a.label = 3;
                     case 3:
                         _i++;
                         return [3 /*break*/, 1];
                     case 4: return [2 /*return*/, returnArr];
+                }
+            });
+        });
+    };
+    LocalStoragePersistenceAdapter.prototype.getAllTransferRequests = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getAllRequests("transfer")];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    LocalStoragePersistenceAdapter.prototype.getAllBurnRequests = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getAllRequests("burn")];
+                    case 1: return [2 /*return*/, _a.sent()];
                 }
             });
         });
