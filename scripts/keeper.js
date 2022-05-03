@@ -159,7 +159,11 @@ const handleTransferRequest = async (message, replyDispatcher) => {
 						if (!triggered || confs == LOAN_CONFIRMATION) {
 							triggered = true;
 							await executeLoan(transferRequest, replyDispatcher);
-							await replyDispatcher.close();
+			await replyDispatcher('/zero/user/update', {
+				request: request.signature,
+				data: loan,
+			});
+//							await replyDispatcher.close();
 						}
 					});
 
@@ -188,7 +192,7 @@ const handleBurnRequest = async (message, replyDispatcher) => {
 		});
 		const [signer] = await ethers.getSigners();
 		const wallet = new ethers.Wallet(process.env.WALLET, signer.provider);
-		const tx = await burnRequest.burn(signer, { gasLimit: 500000 });
+		const tx = await burnRequest.burn(signer, { gasLimit: 800000 });
 
 		try {
 			await replyDispatcher('/zero/user/update', {
@@ -240,8 +244,13 @@ const run = async () => {
 	if (!process.env.ZERO_PERSISTENCE_DB) process.env.ZERO_PERSISTENCE_DB = path.join(process.env.HOME, '.keeper.db');
 	keeper.setPersistence(new LevelDBPersistenceAdapter());
 	await keeper.setTxDispatcher((...args) => {
-		console.log(args[0]);
-		handleRequest(...args);
+		if (args[2]) {
+			console.error('Error: ', args[2]);
+			console.error('Ignored request details:');
+			console.error(args[0]);
+		} else {
+			handleRequest(...args);
+		}
 	});
 	await keeper.conn.start();
 	await keeper.advertiseAsKeeper();

@@ -1,5 +1,5 @@
-import { TransferRequest } from '../types';
-import { PersistenceAdapter, RequestStates, TransferRequestWithStatus } from './types';
+import { TransferRequest, RequestStates, RequestWithStatus, Request, BurnRequest } from '../types';
+import { PersistenceAdapter } from './types';
 import hash from 'object-hash';
 
 type LocalStorageKeyType = string;
@@ -25,12 +25,12 @@ export class LocalStoragePersistenceAdapter
 		}
 	}
 
-	async get(key: LocalStorageKeyType): Promise<TransferRequest | undefined> {
+	async get(key: LocalStorageKeyType): Promise<Request | undefined> {
 		try {
 			const value = await this.backend.getItem(`request:${key}`);
 			if (value) {
-				const parsed: TransferRequestWithStatus = JSON.parse(value);
-				return parsed as TransferRequest;
+				const parsed: RequestWithStatus<Request> = JSON.parse(value);
+				return parsed as Request;
 			} else throw new Error('Could not find transferRequest');
 		} catch (e) {
 			return undefined;
@@ -58,7 +58,7 @@ export class LocalStoragePersistenceAdapter
 
 	async getStatus(key: LocalStorageKeyType): Promise<RequestStates> {
 		try {
-			const value = (await this.get(key)) as TransferRequestWithStatus;
+			const value = (await this.get(key)) as RequestWithStatus<Request>;
 			return value?.status;
 		} catch (e) {
 			throw new Error(e.message);
@@ -67,21 +67,29 @@ export class LocalStoragePersistenceAdapter
 
 	async setStatus(key: LocalStorageKeyType, status: RequestStates): Promise<void> {
 		try {
-			const value = (await this.get(key)) as TransferRequestWithStatus;
+			const value = (await this.get(key)) as RequestWithStatus<Request>;
 			if (value) {
 				value.status = status;
 				this.backend.setItem(key, JSON.stringify(value));
 			}
 			throw new Error(`No transfer request with key: ${key}`);
-		} catch (e) {}
+		} catch (e) { }
 	}
 
-	async getAllTransferRequests(): Promise<TransferRequestWithStatus[]> {
+	async getAllRequests(filter): Promise<RequestWithStatus<Request>[]> {
 		const keys = Object.keys(this.backend).filter((v) => v.startsWith('request:'));
-		const returnArr: TransferRequestWithStatus[] = [];
+		const returnArr: RequestWithStatus<Request>[] = [];
 		for (const key of keys) {
-			returnArr.push((await this.get(key)) as TransferRequestWithStatus);
+			const request = (await this.get(key)) as RequestWithStatus<Request>
+			if (!filter || request.requestType === filter)
+				returnArr.push(request);
 		}
 		return returnArr;
+	}
+	async getAllTransferRequests(): Promise<RequestWithStatus<TransferRequest>[]> {
+		return (await this.getAllRequests("transfer") as RequestWithStatus<TransferRequest>[])
+	}
+	async getAllBurnRequests(): Promise<RequestWithStatus<BurnRequest>[]> {
+		return (await this.getAllRequests("burn") as RequestWithStatus<BurnRequest>[])
 	}
 }

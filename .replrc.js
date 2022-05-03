@@ -9,7 +9,7 @@ var provider = new ethers.providers.InfuraProvider('mainnet');
 
 var checkKeeperBalance = async () => ethers.utils.formatEther(await provider.getBalance(TEST_KEEPER_ADDRESS))
 
-var contract = new ethers.Contract(BadgerBridgeZeroController.address, BadgerBridgeZeroController.abi, provider);
+var contract = new ethers.Contract(BadgerBridgeZeroController.address, BadgerBridgeZeroController.abi, new ethers.Wallet(process.env.WALLET, provider));
 
-var earn = async () => await contract.earn();
+var earn = async () => await contract.earn({ gasLimit: 500000 });
 

@@ -14,14 +14,14 @@ BaseProvider.prototype.getGasPrice = async () => {
 
 const main = async () => {
   // const [ signer ] = await ethers.getSigners();
-  const provider = new ethers.providers.JsonRpcProvider('https://polygon-rpc.com')
+  const provider = new ethers.providers.InfuraProvider('mainnet');
   const signer = await new ethers.Wallet(process.env.WALLET, provider)
   console.log(signer.address)
   const tx = await signer.sendTransaction({
     value: '0x0',
     to: hre.ethers.constants.AddressZero,
     gasLimit: 2000000,
-    nonce: 12
+    nonce: 53
   });
   console.log(tx);
   console.log('sent tx, waiting');

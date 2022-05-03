@@ -1,19 +1,18 @@
-import { TransferRequest } from '../types';
+import { Request, TransferRequest, BurnRequest, MetaRequest, RequestWithStatus, RequestStates } from '../types';
 
-export type RequestStates = 'pending' | 'failed' | 'succeeded';
 
 export interface PersistenceAdapter<Backend, Key> {
 	/**
 	 * Gets the transfer request from the backend of choice,
 	 * with key as generic
 	 */
-	get: (key: Key) => Promise<TransferRequest | undefined>;
+	get: (key: Key) => Promise<Request | undefined>;
 	/**
 	 * Set the transfer request in the backend of choice,
 	 * and return the key with which it is being stored
 	 * Ideal for multiple storage schemes, i.e SQL,noSQL etc
 	 */
-	set: (transferRequest: TransferRequest) => Promise<Key>;
+	set: (request: Request) => Promise<Key>;
 	/**
 	 * Remove the transfer request from the backend
 	 */
@@ -32,15 +31,24 @@ export interface PersistenceAdapter<Backend, Key> {
 	 */
 	setStatus: (key: Key, status: RequestStates) => Promise<void>;
 	/**
+	 * Get all requests made
+	 */
+	getAllRequests: (filter?: string) => Promise<RequestWithStatus<Request>[]>;
+	/**
 	 * Get all transfer requests made
 	 */
-	getAllTransferRequests: () => Promise<TransferRequestWithStatus[]>;
+	getAllTransferRequests: () => Promise<RequestWithStatus<TransferRequest>[]>;
+	/**
+	 * Get all burn requests made
+	 */
+	getAllBurnRequests: () => Promise<RequestWithStatus<BurnRequest>[]>;
+	/**
+	 * Get all meta requests made
+	 */
+	// getAllMetaRequests: () => Promise<RequestWithStatus<MetaRequest>[]>;
 	/**
 	 * The Backend of choice.
 	 */
 	backend: Backend;
 }
 
-export interface TransferRequestWithStatus extends TransferRequest {
-	status: RequestStates;
-}
