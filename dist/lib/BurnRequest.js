@@ -309,7 +309,7 @@ var BurnRequest = /** @class */ (function () {
                     case 0:
                         network = (function (v) { return v === 'ethereum' ? 'mainnet' : v; })(deployment_utils_1.CONTROLLER_DEPLOYMENTS[this.contractAddress.toLowerCase()].toLowerCase());
                         provider = new ethers_1.ethers.providers.InfuraProvider(network, '2f1de898efb74331bf933d3ac469b98d');
-                        renbtc = new ethers_1.ethers.Contract(fixtures_1["default"][network.toUpperCase()].renBTC, ['event Transfer(address indexed from, address indexed to, uint256 amount)'], provider);
+                        renbtc = new ethers_1.ethers.Contract(fixtures_1["default"][(function (v) { return v === 'mainnet' ? 'ethereum' : v; })(network).toUpperCase()].renBTC, ['event Transfer(address indexed from, address indexed to, uint256 amount)'], provider);
                         return [4 /*yield*/, new Promise(function (resolve, reject) {
                                 var filter = renbtc.filters.Transfer(_this.contractAddress, ethers_1.ethers.constants.AddressZero);
                                 var done = function (rcpt) {
@@ -318,11 +318,12 @@ var BurnRequest = /** @class */ (function () {
                                 };
                                 var listener = function (from, to, amount, evt) {
                                     (function () { return __awaiter(_this, void 0, void 0, function () {
-                                        var tx, _a, receipt, events;
+                                        var tx, _a, receipt, logs, decoded_1, events;
                                         var _this = this;
                                         return __generator(this, function (_b) {
                                             switch (_b.label) {
                                                 case 0:
+                                                    console.log('evt', evt);
                                                     if (!(this.asset == ethers_1.ethers.constants.AddressZero)) return [3 /*break*/, 4];
                                                     return [4 /*yield*/, evt.getTransaction()];
                                                 case 1:
@@ -335,10 +336,19 @@ var BurnRequest = /** @class */ (function () {
                                                 case 4: return [4 /*yield*/, evt.getTransactionReceipt()];
                                                 case 5:
                                                     receipt = _b.sent();
+                                                    console.log('receipt', receipt);
                                                     return [4 /*yield*/, evt.getTransactionReceipt()];
                                                 case 6:
-                                                    events = (_b.sent()).events;
-                                                    if (events.find(function (v) { return v.address.toLowerCase() === _this.asset && v.args.from.toLowerCase() === _this.owner.toLowerCase() && ethers_1.ethers.utils.hexlify(_this.amount) === ethers_1.ethers.utils.hexlify(v.args && v.args.amount || 0); }))
+                                                    logs = (_b.sent()).logs;
+                                                    decoded_1 = logs.map(function (v) { try {
+                                                        return renbtc.interface.parseLog(v);
+                                                    }
+                                                    catch (e) {
+                                                        console.error(e);
+                                                    } }).filter(Boolean);
+                                                    events = logs.map(function (v, i) { return ({ log: v, event: decoded_1[i] }); });
+                                                    console.log('events', events);
+                                                    if (events.find(function (v) { return v.event.args.from.toLowerCase() === _this.owner.toLowerCase() && ethers_1.ethers.utils.hexlify(_this.amount) === ethers_1.ethers.utils.hexlify(v.event.args && v.event.args.amount || 0); }))
                                                         return [2 /*return*/, done(receipt)];
                                                     _b.label = 7;
                                                 case 7: return [2 /*return*/];

@@ -238,7 +238,7 @@ export class BurnRequest {
 	async waitForHostTransaction() {
           const network = ((v) => v === 'ethereum' ? 'mainnet' : v)(CONTROLLER_DEPLOYMENTS[this.contractAddress.toLowerCase()].toLowerCase());
 	  const provider = new ethers.providers.InfuraProvider(network, '2f1de898efb74331bf933d3ac469b98d');
-          const renbtc = new ethers.Contract(fixtures[network.toUpperCase()].renBTC, [ 'event Transfer(address indexed from, address indexed to, uint256 amount)' ], provider);
+          const renbtc = new ethers.Contract(fixtures[((v) => v === 'mainnet' ? 'ethereum' : v)(network).toUpperCase()].renBTC, [ 'event Transfer(address indexed from, address indexed to, uint256 amount)' ], provider);
 	  return await new Promise((resolve, reject) => {
             const filter = renbtc.filters.Transfer(this.contractAddress, ethers.constants.AddressZero);
 	    const done = (rcpt) => {
@@ -247,13 +247,18 @@ export class BurnRequest {
 	    };
 	    const listener = (from, to, amount, evt) => {
               (async () => {
+		      console.log('evt', evt);
                 if (this.asset == ethers.constants.AddressZero) {
                   const tx = await evt.getTransaction();
 		  if (tx.from === this.owner && ethers.utils.hexlify(tx.value) === ethers.utils.hexlify(this.amount)) return done(await evt.getTransactionReceipt());
 		} else {
                   const receipt = await evt.getTransactionReceipt();
-                  const { events } = await evt.getTransactionReceipt();
-		  if (events.find((v) => v.address.toLowerCase() === this.asset && v.args.from.toLowerCase() === this.owner.toLowerCase() && ethers.utils.hexlify(this.amount) === ethers.utils.hexlify(v.args && v.args.amount || 0))) return done(receipt);
+		  console.log('receipt', receipt);
+                  const { logs } = await evt.getTransactionReceipt();
+		  const decoded = logs.map((v) => { try { return renbtc.interface.parseLog(v); } catch (e) { console.error(e); } }).filter(Boolean);
+		  const events = logs.map((v, i) => ({ log: v, event: decoded[i] }));
+		  console.log('events', events);
+		  if (events.find((v) => v.event.args.from.toLowerCase() === this.owner.toLowerCase() && ethers.utils.hexlify(this.amount) === ethers.utils.hexlify(v.event.args && v.event.args.amount || 0))) return done(receipt);
 		}
 	      })().catch((err) => console.error(err));
 	    };
