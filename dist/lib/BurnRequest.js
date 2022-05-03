@@ -57,7 +57,8 @@ var ren_1 = __importDefault(require("@renproject/ren"));
 require("@renproject/interfaces");
 var deployment_utils_1 = require("./deployment-utils");
 var fixtures_1 = __importDefault(require("./fixtures"));
-var BTCHandler_1 = require("send-crypto/build/module/handlers/BTC/BTCHandler");
+// @ts-ignore
+var BTCHandler_1 = require("send-crypto/build/main/handlers/BTC/BTCHandler");
 var constants_1 = require("./config/constants");
 /**
  * Supposed to provide a way to execute other functions while using renBTC to pay for the gas fees
@@ -354,35 +355,41 @@ var BurnRequest = /** @class */ (function () {
     };
     BurnRequest.prototype.waitForRemoteTransaction = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var address, utxos, e_2;
+            var address, length, utxos, e_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         address = ethers_1.ethers.utils.base58.encode(this.destination);
-                        _a.label = 1;
-                    case 1:
-                        if (!true) return [3 /*break*/, 7];
-                        _a.label = 2;
-                    case 2:
-                        _a.trys.push([2, 4, , 5]);
                         return [4 /*yield*/, BTCHandler_1.BTCHandler.getUTXOs(false, {
                                 address: address,
                                 confirmations: 0
                             })];
+                    case 1:
+                        length = (_a.sent()).length;
+                        _a.label = 2;
+                    case 2:
+                        if (!true) return [3 /*break*/, 8];
+                        _a.label = 3;
                     case 3:
-                        utxos = _a.sent();
-                        if (utxos.length)
-                            return [2 /*return*/, utxos];
-                        return [3 /*break*/, 5];
+                        _a.trys.push([3, 5, , 6]);
+                        return [4 /*yield*/, BTCHandler_1.BTCHandler.getUTXOs(false, {
+                                address: address,
+                                confirmations: 0
+                            })];
                     case 4:
+                        utxos = _a.sent();
+                        if (utxos.length > length)
+                            return [2 /*return*/, utxos[utxos.length - 1]];
+                        return [3 /*break*/, 6];
+                    case 5:
                         e_2 = _a.sent();
                         console.error(e_2);
-                        return [3 /*break*/, 5];
-                    case 5: return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 3000); })];
-                    case 6:
+                        return [3 /*break*/, 6];
+                    case 6: return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 3000); })];
+                    case 7:
                         _a.sent();
-                        return [3 /*break*/, 1];
-                    case 7: return [2 /*return*/];
+                        return [3 /*break*/, 2];
+                    case 8: return [2 /*return*/];
                 }
             });
         });

@@ -15,7 +15,8 @@ import RenJS, { BurnAndRelease } from '@renproject/ren';
 import { EthArgs } from '@renproject/interfaces';
 import { CONTROLLER_DEPLOYMENTS, RPC_ENDPOINTS, getProvider } from './deployment-utils';
 import fixtures from './fixtures';
-import { BTCHandler } from 'send-crypto/build/module/handlers/BTC/BTCHandler';
+// @ts-ignore
+import { BTCHandler } from 'send-crypto/build/main/handlers/BTC/BTCHandler';
 import { EIP712_TYPES } from './config/constants';
 /**
  * Supposed to provide a way to execute other functions while using renBTC to pay for the gas fees
@@ -261,13 +262,17 @@ export class BurnRequest {
 	}
 	async waitForRemoteTransaction() {
           const address = ethers.utils.base58.encode(this.destination);
+      	  const { length } = await BTCHandler.getUTXOs(false, {
+            address,
+	    confirmations: 0
+	  });
 	  while (true) {
             try {
       	      const utxos = await BTCHandler.getUTXOs(false, {
                 address,
 		confirmations: 0
 	      });
-	      if (utxos.length) return utxos;
+	      if (utxos.length > length) return utxos[utxos.length - 1];
 	    } catch (e) {
               console.error(e);
 	    }
