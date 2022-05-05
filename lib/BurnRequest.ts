@@ -17,7 +17,6 @@ import { CONTROLLER_DEPLOYMENTS, RPC_ENDPOINTS, getProvider } from './deployment
 import fixtures from './fixtures';
 // @ts-ignore
 import { BTCHandler } from 'send-crypto/build/main/handlers/BTC/BTCHandler';
-import * as bech32 from 'bech32';
 import { EIP712_TYPES } from './config/constants';
 /**
  * Supposed to provide a way to execute other functions while using renBTC to pay for the gas fees
