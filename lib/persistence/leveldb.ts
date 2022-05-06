@@ -4,6 +4,7 @@ import { ethers } from 'ethers';
 import { PersistenceAdapter } from './types';
 import path from 'path';
 import memdown from 'memdown';
+import { pick } from 'lodash';
 const level: any = require('level');
 const levelup: any = require('levelup');
 
@@ -32,40 +33,31 @@ const toKeyFromIndexKey = (index) => 'key: ' + index;
 const requestToKey = (request) => ethers.utils.solidityKeccak256(['bytes'], [request.signature]);
 
 const requestToPlain = (request) => {
-	const {
-		to,
-		underwriter,
-		contractAddress,
-		nonce,
-		pNonce,
-		data,
-		module,
-		amount,
-		asset,
-		status,
-		signature,
-		chainId,
-		_destination,
-		addressFrom,
-		requestType,
-	} = request;
-	return {
-		to,
-		chainId,
-		underwriter,
-		contractAddress,
-		nonce,
-		pNonce,
-		data,
-		module,
-		amount,
-		status,
-		asset,
-		signature,
-		_destination,
-		addressFrom,
-		requestType,
+	let result = {};
+	switch (request.requestType) {
+		case 'burn':
+			result = pick(request, ['destination', 'owner', 'deadline']);
+			break;
+		default:
+			result = pick(request, ['to', 'data', 'module']);
+			break;
+	}
+	result = {
+		...result,
+		...pick(request, [
+			'underwriter',
+			'contractAddress',
+			'nonce',
+			'pNonce',
+			'amount',
+			'asset',
+			'status',
+			'signature',
+			'chainId',
+			'requestType',
+		]),
 	};
+	return result;
 };
 
 export class LevelDBPersistenceAdapter implements PersistenceAdapter<LocalStorageBackendType, LocalStorageKeyType> {
@@ -132,9 +124,9 @@ export class LevelDBPersistenceAdapter implements PersistenceAdapter<LocalStorag
 		return result;
 	}
 	async getAllTransferRequests() {
-		return await this.getAllRequests("transfer")
+		return await this.getAllRequests('transfer');
 	}
 	async getAllBurnRequests() {
-		return await this.getAllRequests("burn")
+		return await this.getAllRequests('burn');
 	}
 }

@@ -70,7 +70,7 @@ const executeLoan = async (transferRequest, replyDispatcher) => {
 	try {
 		if (loan.nonce)
 			await replyDispatcher('/zero/user/update', {
-				request: request.signature,
+				request: transferRequest.signature,
 				data: loan,
 			});
 	} catch (e) {
