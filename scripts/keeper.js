@@ -258,22 +258,21 @@ const run = async () => {
 	keeper.setPersistence(new LevelDBPersistenceAdapter());
 	await keeper.setTxDispatcher((...args) => {
 		if (args[2]) {
-			console.error('Error: ', args[2]);
-			console.error('Ignored request details:');
+			console.error('Error: processin requests', args[2]);
+			console.error('request details:');
 			console.error(args[0]);
-		} else {
-			const retryHandler = async () => {
-				try {
-					await handleRequest(...args);
-				} catch (e) {
-					console.error(e);
-					setTimeout(async () => {
-						await retryHandler();
-					}, process.env.RETRY_TIMEOUT || 300000);
-				}
-			};
-			await retryHandler();
 		}
+		const retryHandler = async () => {
+			try {
+				await handleRequest(...args);
+			} catch (e) {
+				console.error(e);
+				setTimeout(async () => {
+					await retryHandler();
+				}, process.env.RETRY_TIMEOUT || 300000);
+			}
+		};
+		await retryHandler();
 	});
 	await keeper.conn.start();
 	await keeper.advertiseAsKeeper();
