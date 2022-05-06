@@ -256,7 +256,7 @@ const run = async () => {
 	const keeper = createZeroKeeper(await createZeroConnection(KEEPER_URL));
 	if (!process.env.ZERO_PERSISTENCE_DB) process.env.ZERO_PERSISTENCE_DB = path.join(process.env.HOME, '.keeper.db');
 	keeper.setPersistence(new LevelDBPersistenceAdapter());
-	await keeper.setTxDispatcher((...args) => {
+	await keeper.setTxDispatcher(async (...args) => {
 		if (args[2]) {
 			console.error('Error: processin requests', args[2]);
 			console.error('request details:');
