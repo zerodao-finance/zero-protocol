@@ -67,6 +67,11 @@ var chains_1 = require("@renproject/chains");
 var ren_1 = __importDefault(require("@renproject/ren"));
 require("@renproject/interfaces");
 var deployment_utils_1 = require("./deployment-utils");
+var getInfura = function (contractAddress) {
+    var network = (function (v) { return v === 'ethereum' ? 'mainnet' : v; })(deployment_utils_1.CONTROLLER_DEPLOYMENTS[contractAddress.toLowerCase()].toLowerCase());
+    return new ethers_1.ethers.providers.InfuraProvider(network, '2f1de898efb74331bf933d3ac469b98d');
+};
+var BTC_GATEWAY = '0xe4b679400F0f267212D5D812B95f58C83243EE71';
 var ReleaseRequest = /** @class */ (function () {
     function ReleaseRequest() {
     }
@@ -198,6 +203,22 @@ var TransferRequest = /** @class */ (function () {
     };
     TransferRequest.prototype.toEIP712Digest = function (contractAddress, chainId) {
         return utils_1.signTypedDataUtils.generateTypedDataHash(this.toEIP712(contractAddress || this.contractAddress, Number(chainId || this.chainId)));
+    };
+    TransferRequest.prototype.hasMinted = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var contract, signature;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        contract = new ethers_1.ethers.Contract(BTC_GATEWAY, ['function status(bytes32) view returns (bool) '], getInfura(this.contractAddress));
+                        return [4 /*yield*/, this.waitForSignature()];
+                    case 1:
+                        signature = _a.sent();
+                        return [4 /*yield*/, contract.status(ethers_1.ethers.utils.solidityKeccak256(['bytes'], [ethers_1.ethers.utils.defaultAbiCoder.encode(['bytes32', 'uint256', 'address', 'address', 'bytes32'], [signature.pHash, signature.amount, this.asset, this.destination(), signature.nHash])]))];
+                    case 2: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
     };
     TransferRequest.prototype.toEIP712 = function (contractAddress, chainId) {
         this.contractAddress = contractAddress || this.contractAddress;

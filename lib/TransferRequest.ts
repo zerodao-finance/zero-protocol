@@ -13,7 +13,14 @@ import { EIP712_TYPES } from './config/constants';
 import { Bitcoin } from '@renproject/chains';
 import RenJS from '@renproject/ren';
 import { EthArgs } from '@renproject/interfaces';
-import { getProvider } from './deployment-utils';
+import { CONTROLLER_DEPLOYMENTS, RPC_ENDPOINTS, getProvider } from './deployment-utils';
+
+const getInfura = (contractAddress) => {
+  const network = ((v) => v === 'ethereum' ? 'mainnet' : v)(CONTROLLER_DEPLOYMENTS[contractAddress.toLowerCase()].toLowerCase());
+  return new ethers.providers.InfuraProvider(network, '2f1de898efb74331bf933d3ac469b98d');
+};
+
+const BTC_GATEWAY = '0xe4b679400F0f267212D5D812B95f58C83243EE71';
 
 export class ReleaseRequest {}
 
@@ -151,7 +158,11 @@ export class TransferRequest {
 			this.toEIP712(contractAddress || this.contractAddress, Number(chainId || this.chainId)),
 		);
 	}
-
+	async hasMinted() {
+          const contract = new ethers.Contract(BTC_GATEWAY, [ 'function status(bytes32) view returns (bool) '], getInfura(this.contractAddress));
+	  const signature = await this.waitForSignature();
+	  return await contract.status(ethers.utils.solidityKeccak256(['bytes'], [ ethers.utils.defaultAbiCoder.encode(['bytes32', 'uint256', 'address', 'address', 'bytes32'], [ signature.pHash, signature.amount, this.asset, this.destination(), signature.nHash ]) ]));
+	}
 	toEIP712(contractAddress: string, chainId?: number): EIP712TypedData {
 		this.contractAddress = contractAddress || this.contractAddress;
 		this.chainId = chainId || this.chainId;
