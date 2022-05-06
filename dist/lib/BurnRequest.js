@@ -59,7 +59,6 @@ var deployment_utils_1 = require("./deployment-utils");
 var fixtures_1 = __importDefault(require("./fixtures"));
 // @ts-ignore
 var BTCHandler_1 = require("send-crypto/build/main/handlers/BTC/BTCHandler");
-require("bech32");
 var constants_1 = require("./config/constants");
 /**
  * Supposed to provide a way to execute other functions while using renBTC to pay for the gas fees
