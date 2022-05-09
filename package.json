@@ -129,5 +129,8 @@
 		"tslint-config-prettier": "^1.18.0",
 		"winston": "^3.3.3",
 		"wrtc": "^0.4.7"
+	}, 
+	"peerDependenceis": {
+		"react": "^18.1.0"
 	}
 }
