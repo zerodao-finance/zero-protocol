@@ -160,7 +160,7 @@ const handleTransferRequest = async (message, replyDispatcher) => {
 							triggered = true;
 							await executeLoan(transferRequest, replyDispatcher);
 							await replyDispatcher('/zero/user/update', {
-								request: request.signature,
+								request: transferRequest.signature,
 								data: loan,
 							});
 							//							await replyDispatcher.close();
