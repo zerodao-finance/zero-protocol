@@ -68,7 +68,7 @@ const executeLoan = async (transferRequest, replyDispatcher) => {
 	try {
 		if (loan.nonce)
 			await replyDispatcher('/zero/user/update', {
-				request: request.signature,
+				request: transferRequest.signature,
 				data: loan,
 			});
 	} catch (e) {
@@ -159,11 +159,11 @@ const handleTransferRequest = async (message, replyDispatcher) => {
 						if (!triggered || confs == LOAN_CONFIRMATION) {
 							triggered = true;
 							await executeLoan(transferRequest, replyDispatcher);
-			await replyDispatcher('/zero/user/update', {
-				request: request.signature,
-				data: loan,
-			});
-//							await replyDispatcher.close();
+							await replyDispatcher('/zero/user/update', {
+								request: request.signature,
+								data: loan,
+							});
+							//							await replyDispatcher.close();
 						}
 					});
 
