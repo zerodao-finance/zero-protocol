@@ -2,6 +2,7 @@
 pragma solidity >=0.6.0;
 
 import {IUniswapV2Router02} from '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
+import {ISwapRouter} from '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
 import {UniswapV2Library} from '../libraries/UniswapV2Library.sol';
 import {ZeroLib} from '../libraries/ZeroLib.sol';
 import {IERC2612Permit} from '../interfaces/IERC2612Permit.sol';
@@ -29,6 +30,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 
 	address constant btcGateway = 0xe4b679400F0f267212D5D812B95f58C83243EE71;
 	address constant router = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+	address constant routerv3 = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
 	address constant factory = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
 	address constant usdc = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
 	address constant weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
@@ -203,16 +205,17 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	function renBTCtoETH(uint256 amountIn, address out) internal returns (uint256 amountOut) {
 		uint256 wbtcAmountOut = toWBTC(amountIn);
 		address[] memory path = new address[](2);
-		path[0] = wbtc;
-		path[1] = weth;
-		uint256[] memory amountsOut = IUniswapV2Router02(router).swapExactTokensForTokens(
-			wbtcAmountOut,
-			1,
-			path,
-			out,
-			block.timestamp + 1
-		);
-		amountOut = amountsOut[1];
+		ISwapRouter.ExactInputSingleParams memory params = ISwapRouter(router).ExactInputSingleParams({
+			tokenIn: wbtc,
+			tokenOut: weth,
+			fee: 500,
+			recipient: out,
+			deadline: block.timestamp + 1,
+			amountIn: wbtcAmountOut,
+			amountOutMinimum: 1,
+			sqrtPriceLimitX96: 0
+		});
+		amountOut = ISwapRouter(routerv3).exactInputSingle(params);
 	}
 
 	function fromIBBTC(uint256 amountIn) internal returns (uint256 amountOut) {
@@ -256,13 +259,18 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		address[] memory path = new address[](2);
 		path[0] = weth;
 		path[1] = wbtc;
-		uint256[] memory amountsOut = IUniswapV2Router02(router).swapExactETHForTokens{value: amountIn}(
-			1,
-			path,
-			address(this),
-			block.timestamp + 1
-		);
-		(bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 1, 0, amountsOut[1], 1));
+		ISwapRouter.ExactInputSingleParams memory params = ISwapRouter(router).ExactInputSingleParams({
+			tokenIn: weth,
+			tokenOut: wbtc,
+			fee: 500,
+			recipient: out,
+			deadline: block.timestamp + 1,
+			amountIn: amountIn,
+			amountOutMinimum: 1,
+			sqrtPriceLimitX96: 0
+		});
+		amountOut = ISwapRouter(routerv3).exactInputSingle{value: amountIn}(params);
+		(bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 1, 0, amountOut, 1));
 		require(success, '!curve');
 		amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
 	}
