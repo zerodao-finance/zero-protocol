@@ -21,7 +21,6 @@ import {SafeMath} from '@openzeppelin/contracts/math/SafeMath.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import {ECDSA} from '@openzeppelin/contracts/cryptography/ECDSA.sol';
 import {EIP712Upgradeable} from '@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol';
-import 'hardhat/console.sol';
 
 contract BadgerBridgeZeroController is EIP712Upgradeable {
 	using SafeERC20 for IERC20;
@@ -597,7 +596,6 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 				);
 			}
 			{
-				console.log(IERC20(params.asset).balanceOf(params.to));
 				IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
 			}
 			amountToBurn = deductBurnFee(fromUSDC(params.minOut, params.amount), 1);
