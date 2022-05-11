@@ -58,6 +58,7 @@ export class BurnRequest {
 		amount: string;
 		deadline: number;
 		destination: string;
+		data?: string;
 		nonce?: BigNumberish;
 		pNonce?: BigNumberish;
 		contractAddress?: string;
@@ -69,6 +70,7 @@ export class BurnRequest {
 		this.owner = params.owner;
 		this.underwriter = params.underwriter;
 		this.asset = params.asset;
+		this.data = params.data || '0x';
 		console.log('params.nonce', params.nonce);
 		this.nonce = params.nonce ? hexlify(params.nonce) : hexlify(randomBytes(32));
 		this.pNonce = params.pNonce ? hexlify(params.pNonce) : hexlify(randomBytes(32));
@@ -149,10 +151,10 @@ export class BurnRequest {
 	}
 	getExpiry(nonce?: string | number) {
 		nonce = nonce || this.tokenNonce;
-		console.log([this.asset, this.amount, this.deadline, nonce, this.destination]);
+		console.log([this.asset, this.amount, this.deadline, nonce, this.data, this.destination]);
 		return ethers.utils.solidityKeccak256(
-			['address', 'uint256', 'uint256', 'uint256', 'bytes'],
-			[this.asset, this.amount, this.deadline, nonce, this.destination],
+			['address', 'uint256', 'uint256', 'uint256', 'bytes', 'bytes'],
+			[this.asset, this.amount, this.deadline, nonce, this.data, this.destination],
 		);
 	}
 	toEIP712(contractAddress: string, chainId?: number): EIP712TypedData {

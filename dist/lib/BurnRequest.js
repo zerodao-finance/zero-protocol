@@ -74,6 +74,7 @@ var BurnRequest = /** @class */ (function () {
         this.owner = params.owner;
         this.underwriter = params.underwriter;
         this.asset = params.asset;
+        this.data = params.data || '0x';
         console.log('params.nonce', params.nonce);
         this.nonce = params.nonce ? (0, bytes_1.hexlify)(params.nonce) : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
         this.pNonce = params.pNonce ? (0, bytes_1.hexlify)(params.pNonce) : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
@@ -180,8 +181,8 @@ var BurnRequest = /** @class */ (function () {
     };
     BurnRequest.prototype.getExpiry = function (nonce) {
         nonce = nonce || this.tokenNonce;
-        console.log([this.asset, this.amount, this.deadline, nonce, this.destination]);
-        return ethers_1.ethers.utils.solidityKeccak256(['address', 'uint256', 'uint256', 'uint256', 'bytes'], [this.asset, this.amount, this.deadline, nonce, this.destination]);
+        console.log([this.asset, this.amount, this.deadline, nonce, this.data, this.destination]);
+        return ethers_1.ethers.utils.solidityKeccak256(['address', 'uint256', 'uint256', 'uint256', 'bytes', 'bytes'], [this.asset, this.amount, this.deadline, nonce, this.data, this.destination]);
     };
     BurnRequest.prototype.toEIP712 = function (contractAddress, chainId) {
         this.contractAddress = contractAddress || this.contractAddress;

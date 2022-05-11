@@ -189,6 +189,7 @@ const handleBurnRequest = async (message, replyDispatcher) => {
 			chainId: message.chainId,
 			contractAddress: message.contractAddress,
 			signature: message.signature,
+			data: message.data,
 		});
 		const [signer] = await ethers.getSigners();
 		const wallet = new ethers.Wallet(process.env.WALLET, signer.provider);
