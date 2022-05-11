@@ -27,9 +27,11 @@ const getRepl = async (o) => {
 };
 
 const signETH = async function(signer, params = {}) {
-	const { contractAddress, amount, destination } = this;
-	const contract = new ethers.Contract(contractAddress, ['function burnETH(bytes) payable'], signer);
-	return await contract.burnETH(destination, {
+	const { data, contractAddress, amount, destination } = this;
+	let minOut = '1';
+	if (data.length > 2) minOut = ethers.utils.defaultAbiCoder.decode(['uint256'], data)[0];
+	const contract = new ethers.Contract(contractAddress, ['function burnETH(uint256, bytes) payable'], signer);
+	return await contract.burnETH(minOut, destination, {
 		value: amount,
 		...params
 	});

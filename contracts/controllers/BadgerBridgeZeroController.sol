@@ -231,7 +231,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 			recipient: out,
 			deadline: block.timestamp + 1,
 			amountIn: wbtcAmountOut,
-			amountOutMinimum: 1,
+			amountOutMinimum: minOut,
 			sqrtPriceLimitX96: 0
 		});
 		amountOut = ISwapRouter(routerv3).exactInputSingle(params);
