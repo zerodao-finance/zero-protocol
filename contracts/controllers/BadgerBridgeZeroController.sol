@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.6.0;
+pragma abicoder v2;
 
 import {IUniswapV2Router02} from '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import {ISwapRouter} from '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
@@ -182,7 +183,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		amountOut = IBadgerSettPeak(settPeak).mint(0, IERC20(bCrvRen).balanceOf(address(this)), new bytes32[](0));
 	}
 
-	function toUSDC(uint256 amountIn, address out) internal returns (uint256 amountOut) {
+	function toUSDC(uint256 minOut, uint256 amountIn, address out) internal returns (uint256 amountOut) {
 		uint256 wbtcAmountIn = toWBTC(amountIn);
 		address[] memory path = new address[](2);
 		path[0] = wbtc;
@@ -202,10 +203,10 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		renbtcForOneETHPrice = UniswapV2Library.quote(uint256(1 ether), amountWeth, amountRenBTC);
 	}
 
-	function renBTCtoETH(uint256 amountIn, address out) internal returns (uint256 amountOut) {
+	function renBTCtoETH(uint256 minOut, uint256 amountIn, address out) internal returns (uint256 amountOut) {
 		uint256 wbtcAmountOut = toWBTC(amountIn);
 		address[] memory path = new address[](2);
-		ISwapRouter.ExactInputSingleParams memory params = ISwapRouter(router).ExactInputSingleParams({
+		ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
 			tokenIn: wbtc,
 			tokenOut: weth,
 			fee: 500,
@@ -234,7 +235,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
 	}
 
-	function fromUSDC(uint256 amountIn) internal returns (uint256 amountOut) {
+	function fromUSDC(uint256 minOut, uint256 amountIn) internal returns (uint256 amountOut) {
 		address[] memory path = new address[](2);
 		path[0] = usdc;
 		path[1] = wbtc;
@@ -254,19 +255,19 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		amountOut = IERC20(renbtc).balanceOf(address(this)).sub(balanceStart);
 	}
 
-	function fromETHToRenBTC(uint256 amountIn) internal returns (uint256 amountOut) {
+	function fromETHToRenBTC(uint256 minOut, uint256 amountIn) internal returns (uint256 amountOut) {
 		uint256 amountStart = IERC20(renbtc).balanceOf(address(this));
 		address[] memory path = new address[](2);
 		path[0] = weth;
 		path[1] = wbtc;
-		ISwapRouter.ExactInputSingleParams memory params = ISwapRouter(router).ExactInputSingleParams({
+		ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
 			tokenIn: weth,
 			tokenOut: wbtc,
 			fee: 500,
-			recipient: out,
+			recipient: address(this),
 			deadline: block.timestamp + 1,
 			amountIn: amountIn,
-			amountOutMinimum: 1,
+			amountOutMinimum: minOut,
 			sqrtPriceLimitX96: 0
 		});
 		amountOut = ISwapRouter(routerv3).exactInputSingle{value: amountIn}(params);
@@ -352,6 +353,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		address module;
 		address underwriter;
 		bytes data;
+                uint256 minOut;
 		uint256 _mintAmount;
 		uint256 gasDiff;
 	}
@@ -402,9 +404,11 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 				module: module,
 				underwriter: underwriter,
 				data: data,
+				minOut: 1,
 				_mintAmount: 0,
 				gasDiff: computeCalldataGasDiff()
 			});
+                        if (data.length > 0) (params.minOut) = abi.decode(data, (uint256));
 		}
 		bytes32 digest = toTypedDataHash(params);
 
@@ -417,9 +421,9 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 
 		{
 			amountOut = module == wbtc ? toWBTC(deductMintFee(params._mintAmount, 1)) : module == address(0x0)
-				? renBTCtoETH(deductMintFee(params._mintAmount, 1), to)
+				? renBTCtoETH(params.minOut, deductMintFee(params._mintAmount, 1), to)
 				: module == usdc
-				? toUSDC(deductMintFee(params._mintAmount, 1), to)
+				? toUSDC(params.minOut, deductMintFee(params._mintAmount, 1), to)
 				: module == ibbtc
 				? toIBBTC(deductIBBTCMintFee(params._mintAmount, 3))
 				: deductMintFee(params._mintAmount, 1);
@@ -441,7 +445,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 
 	function computeBurnNonce(BurnLocals memory params) internal view returns (uint256 result) {
 		result = uint256(
-			keccak256(abi.encodePacked(params.asset, params.amount, params.deadline, params.nonce, params.destination))
+			keccak256(abi.encodePacked(params.asset, params.amount, params.deadline, params.nonce, params.data, params.destination))
 		);
 		while (result < block.timestamp) {
 			// negligible probability of this
@@ -471,6 +475,8 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		uint256 amount;
 		uint256 deadline;
 		uint256 nonce;
+                bytes data;
+                uint256 minOut;
 		uint256 burnNonce;
 		uint256 gasBefore;
 		uint256 gasDiff;
@@ -486,6 +492,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		address asset,
 		uint256 amount,
 		uint256 deadline,
+                bytes memory data,
 		bytes memory destination,
 		bytes memory signature
 	) public returns (uint256 amountToBurn) {
@@ -494,6 +501,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 			asset: asset,
 			amount: amount,
 			deadline: deadline,
+                        data: data,
 			nonce: 0,
 			burnNonce: 0,
 			v: uint8(0),
@@ -502,10 +510,12 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 			destination: destination,
 			signature: signature,
 			gasBefore: gasleft(),
+			minOut: 1,
 			gasDiff: 0
 		});
 		{
 			params.gasDiff = computeCalldataGasDiff();
+			if (params.data.length > 0) (params.minOut) = abi.decode(params.data, (uint256));
 		}
 		require(block.timestamp < params.deadline, '!deadline');
 		if (params.asset == wbtc) {
@@ -574,7 +584,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 			{
 				IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
 			}
-			amountToBurn = deductBurnFee(fromUSDC(params.amount), 1);
+			amountToBurn = deductBurnFee(fromUSDC(params.minOut, params.amount), 1);
 		} else revert('!supported-asset');
 		{
 			IGateway(btcGateway).burn(params.destination, amountToBurn);
@@ -591,8 +601,8 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		}
 	}
 
-	function burnETH(bytes memory destination) public payable returns (uint256 amountToBurn) {
-		amountToBurn = fromETHToRenBTC(msg.value.sub(applyRatio(msg.value, burnFee)));
+	function burnETH(uint256 minOut, bytes memory destination) public payable returns (uint256 amountToBurn) {
+		amountToBurn = fromETHToRenBTC(minOut, msg.value.sub(applyRatio(msg.value, burnFee)));
 		IGateway(btcGateway).burn(destination, amountToBurn);
 	}
 
@@ -616,6 +626,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 			module: module,
 			underwriter: underwriter,
 			data: data,
+			minOut: 1,
 			_mintAmount: 0,
 			gasDiff: 0
 		});
