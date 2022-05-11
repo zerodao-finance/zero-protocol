@@ -34,7 +34,6 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	address constant routerv3 = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
 	address constant factory = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
 	address constant usdc = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-	address constant usdt = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
 	address constant weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 	address constant wbtc = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
 	address constant renbtc = 0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D;
@@ -45,6 +44,8 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	address constant bCrvRen = 0x6dEf55d2e18486B9dDfaA075bc4e4EE0B28c1545;
 	address constant settPeak = 0x41671BA1abcbA387b9b2B752c205e22e916BE6e3;
 	address constant ibbtc = 0xc4E15973E6fF2A35cC804c2CF9D2a1b817a8b40F;
+	uint24 constant wethWbtcFee = 500;
+	uint24 constant usdcWethFee = 500;
 	uint256 public governanceFee;
 	bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
 	bytes32 constant LOCK_SLOT = keccak256('upgrade-lock');
@@ -164,23 +165,27 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		result = v.mul(n).div(uint256(1 ether));
 	}
 
-	function toTricrypto(
-		address token,
-		uint256 index,
-		uint256 amount
-	) internal returns (uint256 amountOut) {
-		uint256 amountStart = IERC20(token).balanceOf(address(this));
-		(bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 0, index, amount));
-		amountOut = IERC20(token).balanceOf(address(this)).sub(amountStart);
+	function toWBTC(uint256 amount) internal returns (uint256 amountOut) {
+		uint256 amountStart = IERC20(wbtc).balanceOf(address(this));
+		(bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 0, 1, amount));
+		amountOut = IERC20(wbtc).balanceOf(address(this)).sub(amountStart);
 	}
 
-	function fromTricrypto(
-		address token,
-		uint256 index,
-		uint256 amount
-	) internal returns (uint256 amountOut) {
+	function fromWBTC(uint256 amount) internal returns (uint256 amountOut) {
 		uint256 amountStart = IERC20(renbtc).balanceOf(address(this));
-		(bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, index, 0, amount));
+		(bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 1, 0, amount));
+		amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
+	}
+
+	function toUSDT(uint256 amount) internal returns (uint256 amountOut) {
+		uint256 amountStart = IERC20(wbtc).balanceOf(address(this));
+		(bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 0, 2, amount));
+		amountOut = IERC20(wbtc).balanceOf(address(this)).sub(amountStart);
+	}
+
+	function fromUSDT(uint256 amount) internal returns (uint256 amountOut) {
+		uint256 amountStart = IERC20(renbtc).balanceOf(address(this));
+		(bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 2, 0, amount));
 		amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
 	}
 
@@ -198,18 +203,16 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		uint256 amountIn,
 		address out
 	) internal returns (uint256 amountOut) {
-		uint256 usdtAmountIn = toTricrypto(usdt, 2, amountIn);
-		ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
-			tokenIn: usdt,
-			tokenOut: usdc,
-			fee: 100,
+		uint256 wbtcAmountIn = toWBTC(amountIn);
+		bytes memory path = abi.encodePacked(wbtc, wethWbtcFee, weth, usdcWethFee, usdc);
+		ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
 			recipient: address(this),
 			deadline: block.timestamp + 1,
-			amountIn: usdtAmountIn,
+			amountIn: wbtcAmountIn,
 			amountOutMinimum: minOut,
-			sqrtPriceLimitX96: 0
+			path: path
 		});
-		amountOut = ISwapRouter(routerv3).exactInputSingle(params);
+		amountOut = ISwapRouter(routerv3).exactInput(params);
 	}
 
 	function quote() internal {
@@ -222,12 +225,11 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		uint256 amountIn,
 		address out
 	) internal returns (uint256 amountOut) {
-		uint256 wbtcAmountOut = toTricrypto(wbtc, 1, amountIn);
-		address[] memory path = new address[](2);
+		uint256 wbtcAmountOut = toWBTC(amountIn);
 		ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
 			tokenIn: wbtc,
 			tokenOut: weth,
-			fee: 500,
+			fee: wethWbtcFee,
 			recipient: out,
 			deadline: block.timestamp + 1,
 			amountIn: wbtcAmountOut,
@@ -254,19 +256,16 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	}
 
 	function fromUSDC(uint256 minOut, uint256 amountIn) internal returns (uint256 amountOut) {
-		address[] memory path = new address[](2);
-		ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
-			tokenIn: usdc,
-			tokenOut: usdt,
-			fee: 100,
+		bytes memory path = abi.encodePacked(usdc, usdcWethFee, weth, wethWbtcFee, wbtc);
+		ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
 			recipient: address(this),
 			deadline: block.timestamp + 1,
 			amountIn: amountIn,
 			amountOutMinimum: minOut,
-			sqrtPriceLimitX96: 0
+			path: path
 		});
-		amountOut = ISwapRouter(routerv3).exactInputSingle(params);
-		amountOut = fromTricrypto(usdt, 2, amountOut);
+		amountOut = ISwapRouter(routerv3).exactInput(params);
+		amountOut = fromWBTC(amountOut);
 	}
 
 	function toRenBTC(uint256 amountIn) internal returns (uint256 amountOut) {
@@ -283,7 +282,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
 			tokenIn: weth,
 			tokenOut: wbtc,
-			fee: 500,
+			fee: wethWbtcFee,
 			recipient: address(this),
 			deadline: block.timestamp + 1,
 			amountIn: amountIn,
@@ -312,7 +311,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 
 	function earn() public {
 		quote();
-		toTricrypto(wbtc, 1, IERC20(renbtc).balanceOf(address(this)));
+		toWBTC(IERC20(renbtc).balanceOf(address(this)));
 		toETH();
 		uint256 balance = address(this).balance;
 		if (balance > ETH_RESERVE) {
@@ -440,9 +439,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		);
 
 		{
-			amountOut = module == wbtc
-				? toTricrypto(wbtc, 1, deductMintFee(params._mintAmount, 1))
-				: module == address(0x0)
+			amountOut = module == wbtc ? toWBTC(deductMintFee(params._mintAmount, 1)) : module == address(0x0)
 				? renBTCtoETH(params.minOut, deductMintFee(params._mintAmount, 1), to)
 				: module == usdc
 				? toUSDC(params.minOut, deductMintFee(params._mintAmount, 1), to)
