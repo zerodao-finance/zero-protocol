@@ -255,7 +255,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 
 	function fromUSDC(uint256 minOut, uint256 amountIn) internal returns (uint256 amountOut) {
 		address[] memory path = new address[](2);
-		ISwapRouter.ExactInputSingleParams memory params = ISwapRouter(router).ExactInputSingleParams({
+		ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
 			tokenIn: usdc,
 			tokenOut: usdt,
 			fee: 100,
