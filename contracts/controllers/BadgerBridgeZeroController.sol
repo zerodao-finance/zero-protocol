@@ -48,7 +48,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 	uint24 constant usdcWethFee = 500;
 	uint256 public governanceFee;
 	bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
-	bytes32 constant LOCK_SLOT = keccak256('upgrade-lock');
+	bytes32 constant LOCK_SLOT = keccak256('upgrade-lock-v2');
 	uint256 constant GAS_COST = uint256(37e4);
 	uint256 constant IBBTC_GAS_COST = uint256(7e5);
 	uint256 constant ETH_RESERVE = uint256(5 ether);
@@ -83,7 +83,8 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 			sstore(lock_slot, lock)
 		}
 
-		IERC20(wbtc).safeApprove(router, ~uint256(0) >> 2);
+		IERC20(wbtc).safeApprove(routerv3, ~uint256(0) >> 2);
+		IERC20(usdc).safeApprove(routerv3, ~uint256(0) >> 2);
 	}
 
 	function computeCalldataGasDiff() internal pure returns (uint256 diff) {
@@ -177,18 +178,6 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 		amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
 	}
 
-	function toUSDT(uint256 amount) internal returns (uint256 amountOut) {
-		uint256 amountStart = IERC20(wbtc).balanceOf(address(this));
-		(bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 0, 2, amount));
-		amountOut = IERC20(wbtc).balanceOf(address(this)).sub(amountStart);
-	}
-
-	function fromUSDT(uint256 amount) internal returns (uint256 amountOut) {
-		uint256 amountStart = IERC20(renbtc).balanceOf(address(this));
-		(bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 2, 0, amount));
-		amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
-	}
-
 	function toIBBTC(uint256 amountIn) internal returns (uint256 amountOut) {
 		uint256[2] memory amounts;
 		amounts[0] = amountIn;
@@ -276,9 +265,6 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 
 	function fromETHToRenBTC(uint256 minOut, uint256 amountIn) internal returns (uint256 amountOut) {
 		uint256 amountStart = IERC20(renbtc).balanceOf(address(this));
-		address[] memory path = new address[](2);
-		path[0] = weth;
-		path[1] = wbtc;
 		ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
 			tokenIn: weth,
 			tokenOut: wbtc,

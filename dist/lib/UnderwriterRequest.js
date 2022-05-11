@@ -99,8 +99,9 @@ var UnderwriterTransferRequest = /** @class */ (function (_super) {
         };
         return _this;
     }
-    UnderwriterTransferRequest.prototype.repayAbi = function () { return 'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)'; };
-    ;
+    UnderwriterTransferRequest.prototype.repayAbi = function () {
+        return 'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)';
+    };
     UnderwriterTransferRequest.prototype.getController = function (signer) {
         return __awaiter(this, void 0, void 0, function () {
             var underwriter, _a;
@@ -142,10 +143,10 @@ var UnderwriterTransferRequest = /** @class */ (function (_super) {
     UnderwriterTransferRequest.prototype.getUnderwriter = function (signer) {
         return new contracts_1.Contract(this.underwriter, [
             'function controller() view returns (address)',
-            (this.repayAbi && this.repayAbi()),
+            this.repayAbi && this.repayAbi(),
             'function loan(address, address, uint256, uint256, address, bytes, bytes)',
             'function meta(address, address, address, uint256, bytes, bytes)',
-            'function burn(address, address, uint256, uint256, bytes, bytes)'
+            'function burn(address, address, uint256, uint256, bytes, bytes, bytes)',
         ].filter(Boolean), signer);
     };
     UnderwriterTransferRequest.prototype.loan = function (signer, params) {
@@ -163,15 +164,7 @@ var UnderwriterTransferRequest = /** @class */ (function (_super) {
         });
     };
     UnderwriterTransferRequest.prototype.getParams = function () {
-        return [
-            this.destination(),
-            this.asset,
-            this.amount,
-            this.pNonce,
-            this.module,
-            this.data,
-            this.signature,
-        ];
+        return [this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature];
     };
     /*
         switch (func) {
@@ -184,7 +177,9 @@ var UnderwriterTransferRequest = /** @class */ (function (_super) {
         }
     }
        */
-    UnderwriterTransferRequest.prototype.getExecutionFunction = function () { return 'loan'; };
+    UnderwriterTransferRequest.prototype.getExecutionFunction = function () {
+        return 'loan';
+    };
     UnderwriterTransferRequest.prototype.dry = function (signer, params) {
         if (params === void 0) { params = {}; }
         return __awaiter(this, void 0, void 0, function () {
@@ -195,7 +190,9 @@ var UnderwriterTransferRequest = /** @class */ (function (_super) {
                     case 0:
                         underwriter = this.getUnderwriter(signer);
                         console.log('about to callstatic');
-                        return [4 /*yield*/, (_a = underwriter.connect(signer.provider).callStatic)[this.getExecutionFunction()].apply(_a, __spreadArray(__spreadArray([], this.getParams(), false), [Object.assign({}, params, { from: mock_1.TEST_KEEPER_ADDRESS })], false))];
+                        return [4 /*yield*/, (_a = underwriter
+                                .connect(signer.provider)
+                                .callStatic)[this.getExecutionFunction()].apply(_a, __spreadArray(__spreadArray([], this.getParams(), false), [Object.assign({}, params, { from: mock_1.TEST_KEEPER_ADDRESS })], false))];
                     case 1: return [2 /*return*/, _b.sent()];
                 }
             });
@@ -212,7 +209,10 @@ var UnderwriterTransferRequest = /** @class */ (function (_super) {
                         return [4 /*yield*/, this.waitForSignature()];
                     case 1:
                         _a = _b.sent(), actualAmount = _a.amount, nHash = _a.nHash, signature = _a.signature;
-                        return [4 /*yield*/, underwriter.repay.apply(underwriter, (function (v) { console.log(v); return v; })([
+                        return [4 /*yield*/, underwriter.repay.apply(underwriter, (function (v) {
+                                console.log(v);
+                                return v;
+                            })([
                                 this.underwriter,
                                 this.destination(),
                                 this.asset,
@@ -238,7 +238,9 @@ var UnderwriterMetaRequest = /** @class */ (function (_super) {
     function UnderwriterMetaRequest() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    UnderwriterMetaRequest.prototype.getExecutionFunction = function () { return 'meta'; };
+    UnderwriterMetaRequest.prototype.getExecutionFunction = function () {
+        return 'meta';
+    };
     UnderwriterMetaRequest.prototype.getParams = function () {
         var params = [];
         for (var _i = 0; _i < arguments.length; _i++) {
@@ -291,9 +293,11 @@ var UnderwriterBurnRequest = /** @class */ (function (_super) {
     function UnderwriterBurnRequest() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    UnderwriterBurnRequest.prototype.getExecutionFunction = function () { return 'burn'; };
+    UnderwriterBurnRequest.prototype.getExecutionFunction = function () {
+        return 'burn';
+    };
     UnderwriterBurnRequest.prototype.getParams = function () {
-        return [this.owner, this.asset, this.amount, this.deadline, this.destination, this.signature];
+        return [this.owner, this.asset, this.amount, this.deadline, this.data, this.destination, this.signature];
     };
     UnderwriterBurnRequest.prototype.dry = function () {
         var params = [];

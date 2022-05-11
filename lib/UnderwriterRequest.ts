@@ -1,26 +1,34 @@
 import { TransferRequest } from './TransferRequest';
-import {splitSignature} from '@ethersproject/bytes'
+import { splitSignature } from '@ethersproject/bytes';
 import { BurnRequest } from './BurnRequest';
 import { MetaRequest } from './MetaRequest';
 import { Contract } from '@ethersproject/contracts';
-import {TEST_KEEPER_ADDRESS} from './mock';
+import { TEST_KEEPER_ADDRESS } from './mock';
 
 export class UnderwriterTransferRequest extends TransferRequest {
 	public callStatic: any;
-        repayAbi() { return 'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)' };
+	repayAbi() {
+		return 'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)';
+	}
 	constructor(o: any) {
-          super(o);
-	  const self = this;
-	  this.callStatic = {
-            async repay(signer: any) {
-              return await self.repay.apply(Object.setPrototypeOf({
-                ...self,
-		getUnderwriter(o: any) {
-			return self.getUnderwriter(o).callStatic;
-		}
-	      }, Object.getPrototypeOf(self)), [ signer ]);
-	    }
-	  };
+		super(o);
+		const self = this;
+		this.callStatic = {
+			async repay(signer: any) {
+				return await self.repay.apply(
+					Object.setPrototypeOf(
+						{
+							...self,
+							getUnderwriter(o: any) {
+								return self.getUnderwriter(o).callStatic;
+							},
+						},
+						Object.getPrototypeOf(self),
+					),
+					[signer],
+				);
+			},
+		};
 	}
 	async getController(signer) {
 		console.log('getting controller');
@@ -57,10 +65,10 @@ export class UnderwriterTransferRequest extends TransferRequest {
 			this.underwriter,
 			[
 				'function controller() view returns (address)',
-				(this.repayAbi && this.repayAbi()),
+				this.repayAbi && this.repayAbi(),
 				'function loan(address, address, uint256, uint256, address, bytes, bytes)',
 				'function meta(address, address, address, uint256, bytes, bytes)',
-				'function burn(address, address, uint256, uint256, bytes, bytes)'
+				'function burn(address, address, uint256, uint256, bytes, bytes, bytes)',
 			].filter(Boolean),
 			signer,
 		);
@@ -71,15 +79,7 @@ export class UnderwriterTransferRequest extends TransferRequest {
 	}
 
 	getParams() {
-		return [
-	        	this.destination(),
-			this.asset,
-			this.amount,
-			this.pNonce,
-			this.module,
-			this.data,
-			this.signature,
-		];
+		return [this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature];
 	}
 	/*
 		switch (func) {
@@ -92,38 +92,52 @@ export class UnderwriterTransferRequest extends TransferRequest {
 		}
 	}
        */
-        getExecutionFunction() { return 'loan'; }
+	getExecutionFunction() {
+		return 'loan';
+	}
 	async dry(signer, params = {}) {
 		const underwriter = this.getUnderwriter(signer);
 		console.log('about to callstatic');
-		return await underwriter.connect(signer.provider).callStatic[this.getExecutionFunction()](...this.getParams(), Object.assign({}, params, { from: TEST_KEEPER_ADDRESS }));
+		return await underwriter
+			.connect(signer.provider)
+			.callStatic[this.getExecutionFunction()](
+				...this.getParams(),
+				Object.assign({}, params, { from: TEST_KEEPER_ADDRESS }),
+			);
 	}
 	async repay(signer, params = {}) {
 		const underwriter = this.getUnderwriter(signer);
 		const { amount: actualAmount, nHash, signature } = await this.waitForSignature();
-		return await underwriter.repay(...((v) => { console.log(v); return v; })([
-			this.underwriter,
-			this.destination(),
-			this.asset,
-			this.amount,
-			actualAmount,
-			this.pNonce,
-			this.module,
-			nHash,
-			this.data,
-			signature,
-			params,
-		]));
+		return await underwriter.repay(
+			...((v) => {
+				console.log(v);
+				return v;
+			})([
+				this.underwriter,
+				this.destination(),
+				this.asset,
+				this.amount,
+				actualAmount,
+				this.pNonce,
+				this.module,
+				nHash,
+				this.data,
+				signature,
+				params,
+			]),
+		);
 	}
 }
 
 export class UnderwriterMetaRequest extends MetaRequest {
-	getExecutionFunction() { return 'meta'; }
+	getExecutionFunction() {
+		return 'meta';
+	}
 	getParams(...params: any) {
-	        return [this.addressFrom, this.asset, this.module, this.pNonce, this.data, this.signature];
+		return [this.addressFrom, this.asset, this.module, this.pNonce, this.data, this.signature];
 	}
 	dry(...params: any) {
-return [];//		return UnderwriterTransferRequest.prototype.dry.call(this, ...params);
+		return []; //		return UnderwriterTransferRequest.prototype.dry.call(this, ...params);
 	}
 	getController(...params: any) {
 		return UnderwriterTransferRequest.prototype.getController.call(this, ...params);
@@ -138,9 +152,11 @@ return [];//		return UnderwriterTransferRequest.prototype.dry.call(this, ...para
 }
 
 export class UnderwriterBurnRequest extends BurnRequest {
-	getExecutionFunction() { return 'burn'; }
+	getExecutionFunction() {
+		return 'burn';
+	}
 	getParams() {
-		return [ this.owner, this.asset, this.amount, this.deadline, this.destination, this.signature ];
+		return [this.owner, this.asset, this.amount, this.deadline, this.data, this.destination, this.signature];
 	}
 	dry(...params: any) {
 		return []; //return UnderwriterTransferRequest.prototype.dry.call(this, ...params);

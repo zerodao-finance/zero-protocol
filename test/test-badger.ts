@@ -1,4 +1,4 @@
-import { ethers, BigNumber, utils } from 'ethers'
+import { ethers, BigNumber, utils } from 'ethers';
 const hre = require('hardhat');
 const { deployments } = hre;
 const { UnderwriterTransferRequest, UnderwriterBurnRequest } = require('../');
@@ -8,7 +8,7 @@ var deployParameters = require('../lib/fixtures');
 var deploymentUtils = require('../dist/lib/deployment-utils');
 
 enableGlobalMockRuntime();
-UnderwriterTransferRequest.prototype.waitForSignature = async function() {
+UnderwriterTransferRequest.prototype.waitForSignature = async function () {
 	await new Promise((resolve) => setTimeout(resolve, 500));
 	return {
 		//@ts-ignore
@@ -23,21 +23,21 @@ UnderwriterTransferRequest.prototype.waitForSignature = async function() {
 const getRepl = async (o) => {
 	const r = require('repl').start('> ');
 	Object.assign(r.context, o || {});
-	await new Promise(() => { });
+	await new Promise(() => {});
 };
 
-const signETH = async function(signer, params = {}) {
+const signETH = async function (signer, params = {}) {
 	const { data, contractAddress, amount, destination } = this;
 	let minOut = '1';
-	if (data.length > 2) minOut = ethers.utils.defaultAbiCoder.decode(['uint256'], data)[0];
+	if (data && data.length > 2) minOut = ethers.utils.defaultAbiCoder.decode(['uint256'], data)[0];
 	const contract = new ethers.Contract(contractAddress, ['function burnETH(uint256, bytes) payable'], signer);
 	return await contract.burnETH(minOut, destination, {
 		value: amount,
-		...params
+		...params,
 	});
 };
 
-const toEIP712USDC = function(contractAddress, chainId) {
+const toEIP712USDC = function (contractAddress, chainId) {
 	this.contractAddress = contractAddress || this.contractAddress;
 	this.chainId = chainId || this.chainId;
 	return {
@@ -153,7 +153,7 @@ describe('BadgerBridgeZeroController', () => {
 			amount: utils.hexlify(utils.parseUnits('0.005', 8)),
 			asset: deployParameters[process.env.CHAIN].WBTC,
 			chainId,
-			data: '0x',
+			data: utils.defaultAbiCoder.encode(['uint256'], ['1']),
 			underwriter: contractAddress,
 		});
 		transferRequest.requestType = 'TRANSFER';
@@ -177,10 +177,11 @@ describe('BadgerBridgeZeroController', () => {
 			underwriter: contractAddress,
 			deadline: Math.floor((+new Date() + 1000 * 60 * 60 * 24) / 1000),
 			destination: utils.hexlify(utils.randomBytes(64)),
+			data: utils.defaultAbiCoder.encode(['uint256'], ['1']),
 		});
 		console.log(transferRequest);
 		const { sign, toEIP712 } = transferRequest;
-		transferRequest.sign = async function(signer, contractAddress) {
+		transferRequest.sign = async function (signer, contractAddress) {
 			const asset = this.asset;
 			this.asset = deployParameters[process.env.CHAIN].renBTC;
 			const tokenNonce = String(
@@ -191,7 +192,7 @@ describe('BadgerBridgeZeroController', () => {
 				).nonces(await signer.getAddress()),
 			);
 			this.contractAddress = contractAddress;
-			transferRequest.toEIP712 = function(...args: any[]) {
+			transferRequest.toEIP712 = function (...args: any[]) {
 				this.asset = asset;
 				this.tokenNonce = tokenNonce;
 				this.assetName = 'WBTC';
@@ -226,6 +227,7 @@ describe('BadgerBridgeZeroController', () => {
 			underwriter: contractAddress,
 			deadline: Math.floor((+new Date() + 1000 * 60 * 60 * 24) / 1000),
 			destination: utils.hexlify(utils.randomBytes(64)),
+			data: utils.defaultAbiCoder.encode(['uint256'], ['1']),
 		});
 		console.log(transferRequest);
 		const { sign, toEIP712 } = transferRequest;
@@ -249,7 +251,7 @@ describe('BadgerBridgeZeroController', () => {
 			amount: utils.hexlify(utils.parseUnits('0.5', 8)),
 			asset: deployParameters[process.env.CHAIN].WBTC,
 			chainId,
-			data: '0x',
+			data: utils.defaultAbiCoder.encode(['uint256'], ['1']),
 			underwriter: contractAddress,
 		});
 		transferRequest.requestType = 'TRANSFER';
@@ -272,7 +274,7 @@ describe('BadgerBridgeZeroController', () => {
 			amount: utils.hexlify(utils.parseUnits('0.5', 8)),
 			asset: deployParameters[process.env.CHAIN].WBTC,
 			chainId,
-			data: '0x',
+			data: utils.defaultAbiCoder.encode(['uint256'], ['1']),
 			underwriter: contractAddress,
 		});
 		transferRequest.requestType = 'TRANSFER';
@@ -295,7 +297,7 @@ describe('BadgerBridgeZeroController', () => {
 			amount: utils.hexlify(utils.parseUnits('0.5', 8)),
 			asset: deployParameters[process.env.CHAIN].WBTC,
 			chainId,
-			data: '0x',
+			data: utils.defaultAbiCoder.encode(['uint256'], ['1']),
 			underwriter: contractAddress,
 		});
 		transferRequest.requestType = 'TRANSFER';
@@ -319,6 +321,7 @@ describe('BadgerBridgeZeroController', () => {
 			underwriter: contractAddress,
 			deadline: Math.floor((+new Date() + 1000 * 60 * 60 * 24) / 1000),
 			destination: utils.hexlify(utils.randomBytes(64)),
+			data: utils.defaultAbiCoder.encode(['uint256'], ['1']),
 		});
 		transferRequest.toEIP712 = toEIP712USDC;
 		transferRequest.requestType = 'BURN';
@@ -342,7 +345,9 @@ describe('BadgerBridgeZeroController', () => {
 			underwriter: contractAddress,
 			deadline: Math.floor((+new Date() + 1000 * 60 * 60 * 24) / 1000),
 			destination: ethers.utils.hexlify(utils.randomBytes(64)).toString(),
+			data: utils.defaultAbiCoder.encode(['uint256'], ['1']),
 		});
+		console.log(transferRequest.data);
 		transferRequest.sign = signETH;
 		transferRequest.requestType = 'BURN';
 		const tx = await transferRequest.sign(signer);
@@ -368,9 +373,10 @@ describe('BadgerBridgeZeroController', () => {
 			underwriter: contractAddress,
 			deadline: Math.floor((+new Date() + 1000 * 60 * 60 * 24) / 1000),
 			destination: utils.hexlify(utils.randomBytes(64)),
+			data: utils.defaultAbiCoder.encode(['uint256'], ['1']),
 		});
 		const { sign, toEIP712 } = transferRequest;
-		transferRequest.sign = async function(signer, contractAddress) {
+		transferRequest.sign = async function (signer, contractAddress) {
 			const asset = this.asset;
 			this.asset = deployParameters[process.env.CHAIN].renBTC;
 			const tokenNonce = String(
@@ -381,7 +387,7 @@ describe('BadgerBridgeZeroController', () => {
 				).nonces(await signer.getAddress()),
 			);
 			this.contractAddress = contractAddress;
-			transferRequest.toEIP712 = function(...args: any[]) {
+			transferRequest.toEIP712 = function (...args: any[]) {
 				this.asset = asset;
 				this.tokenNonce = tokenNonce;
 				this.assetName = 'ibBTC';
