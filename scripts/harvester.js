@@ -9,7 +9,7 @@ const renbtc = new hre.ethers.Contract(fixtures.ETHEREUM.renBTC, ['function bala
 const harvest = async (vault) => {
   console.log('earn() exec');
   try {
-    const tx = await vault.earn();
+    const tx = await vault.earn({ gasLimit: 8e5 });
     const receipt = await tx.wait();
     console.log('gasUsed', receipt.gasUsed);
   } catch (e) {

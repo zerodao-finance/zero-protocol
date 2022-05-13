@@ -159,11 +159,6 @@ const handleTransferRequest = async (message, replyDispatcher) => {
 						if (!triggered || confs == LOAN_CONFIRMATION) {
 							triggered = true;
 							await executeLoan(transferRequest, replyDispatcher);
-							await replyDispatcher('/zero/user/update', {
-								request: transferRequest.signature,
-								data: loan,
-							});
-							//							await replyDispatcher.close();
 						}
 					});
 
