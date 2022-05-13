@@ -40,6 +40,10 @@ var fixtures = require('./fixtures');
 var UNISWAP = require('@uniswap/sdk');
 var Route = require('@uniswap/sdk').Route;
 var provider = new ethers.providers.InfuraProvider('mainnet', '816df2901a454b18b7df259e61f92cd2');
+var quoter = new ethers.Contract('0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6', [
+    'function quoteExactInputSingle(address tokenIn, address tokenOut, uint24 fee, uint256 amountIn, uint160 sqrtPriceLimitX96) public view returns (uint256 amountOut)',
+    'function quoteExactInput(bytes path, uint256 amountIn) public view returns (uint256 amountOut)',
+], provider);
 var getRenBTCForOneETHPrice = function () { return __awaiter(void 0, void 0, void 0, function () {
     var renBTC, pair, route, renBTCForOneEth;
     return __generator(this, function (_a) {
@@ -134,54 +138,51 @@ var applyRenVMMintFee = (exports.applyRenVMMintFee = function (input) {
     return result;
 });
 var fromUSDC = function (amount) { return __awaiter(void 0, void 0, void 0, function () {
-    var USDC, WBTC, route, _a, _b, trade, result;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
+    var WETH, output, e_1, result;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
             case 0:
-                USDC = new UNISWAP.Token(UNISWAP.ChainId.MAINNET, fixtures.ETHEREUM.USDC, 6);
-                WBTC = new UNISWAP.Token(UNISWAP.ChainId.MAINNET, fixtures.ETHEREUM.WBTC, 8);
-                _b = (_a = UNISWAP.Route).bind;
-                return [4 /*yield*/, UNISWAP.Fetcher.fetchPairData(USDC, WBTC, provider)];
+                WETH = UNISWAP.WETH;
+                output = null;
+                _a.label = 1;
             case 1:
-                route = new (_b.apply(_a, [void 0, [_c.sent()], USDC]))();
-                trade = null;
-                try {
-                    trade = new UNISWAP.Trade(route, new UNISWAP.TokenAmount(USDC, ethers.BigNumber.from(amount).toString()), UNISWAP.TradeType.EXACT_INPUT);
-                }
-                catch (e) {
-                    console.error('Insufficient USDC amount for price fetch');
-                    return [2 /*return*/, 0];
-                }
-                return [4 /*yield*/, renBTCFromWBTC(ethers.BigNumber.from(trade.outputAmount.raw.toString(10)))];
+                _a.trys.push([1, 3, , 4]);
+                return [4 /*yield*/, quoter.quoteExactInput(ethers.utils.solidityPack(['address', 'uint24', 'address', 'uint24', 'address'], [fixtures.ETHEREUM.USDC, 500, WETH.address, 500, fixtures.ETHEREUM.WBTC]), amount)];
             case 2:
-                result = _c.sent();
+                output = _a.sent();
+                return [3 /*break*/, 4];
+            case 3:
+                e_1 = _a.sent();
+                console.error('Insufficient USDC amount for price fetch');
+                return [2 /*return*/, 0];
+            case 4: return [4 /*yield*/, renBTCFromWBTC(output)];
+            case 5:
+                result = _a.sent();
                 return [2 /*return*/, result];
         }
     });
 }); };
 var toUSDC = (exports.toUSDC = function (amount) { return __awaiter(void 0, void 0, void 0, function () {
-    var wbtcOut, USDC, WBTC, route, _a, _b, trade, result, e_1;
+    var wbtcOut, WETH, route, _a, _b, e_2;
     return __generator(this, function (_c) {
         switch (_c.label) {
             case 0:
-                _c.trys.push([0, 3, , 4]);
+                _c.trys.push([0, 4, , 5]);
                 return [4 /*yield*/, WBTCFromRenBTC(amount)];
             case 1:
                 wbtcOut = _c.sent();
-                USDC = new UNISWAP.Token(UNISWAP.ChainId.MAINNET, fixtures.ETHEREUM.USDC, 6);
-                WBTC = new UNISWAP.Token(UNISWAP.ChainId.MAINNET, fixtures.ETHEREUM.WBTC, 8);
+                WETH = UNISWAP.WETH;
                 _b = (_a = UNISWAP.Route).bind;
                 return [4 /*yield*/, UNISWAP.Fetcher.fetchPairData(WBTC, USDC, provider)];
             case 2:
                 route = new (_b.apply(_a, [void 0, [_c.sent()], WBTC]))();
-                trade = new UNISWAP.Trade(route, new UNISWAP.TokenAmount(WBTC, ethers.BigNumber.from(wbtcOut).toString()), UNISWAP.TradeType.EXACT_INPUT);
-                result = ethers.BigNumber.from(trade.outputAmount.raw.toString(10));
-                return [2 /*return*/, result];
-            case 3:
-                e_1 = _c.sent();
-                console.error(e_1);
+                return [4 /*yield*/, quoter.quoteExactInput(ethers.utils.solidityPack(['address', 'uint24', 'address', 'uint24', 'address'], [fixtures.ETHEREUM.WBTC, 500, WETH.address, 500, fixtures.ETHEREUM.USDC]), wbtcOut)];
+            case 3: return [2 /*return*/, _c.sent()];
+            case 4:
+                e_2 = _c.sent();
+                console.error(e_2);
                 return [2 /*return*/, 0];
-            case 4: return [2 /*return*/];
+            case 5: return [2 /*return*/];
         }
     });
 }); });
@@ -239,40 +240,31 @@ var WBTCFromRenBTC = function (amount) { return __awaiter(void 0, void 0, void 0
     });
 }); };
 var WBTCFromETH = function (amount) { return __awaiter(void 0, void 0, void 0, function () {
-    var WETH, WBTC, route, _a, _b, trade, result;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
+    var WETH, output, result;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
             case 0:
                 WETH = UNISWAP.WETH[UNISWAP.ChainId.MAINNET];
-                WBTC = new UNISWAP.Token(UNISWAP.ChainId.MAINNET, fixtures.ETHEREUM.WBTC, 8);
-                _b = (_a = UNISWAP.Route).bind;
-                return [4 /*yield*/, UNISWAP.Fetcher.fetchPairData(WETH, WBTC, provider)];
+                return [4 /*yield*/, quoter.quoteExactInputSingle(WETH.address, fixtures.ETHEREUM.WBTC, 500, amount, 0)];
             case 1:
-                route = new (_b.apply(_a, [void 0, [_c.sent()], WETH]))();
-                trade = new UNISWAP.Trade(route, new UNISWAP.TokenAmount(WETH, ethers.BigNumber.from(amount).toString()), UNISWAP.TradeType.EXACT_INPUT);
-                return [4 /*yield*/, renBTCFromWBTC(ethers.BigNumber.from(trade.outputAmount.raw.toString(10)))];
+                output = _a.sent();
+                return [4 /*yield*/, renBTCFromWBTC(output)];
             case 2:
-                result = _c.sent();
+                result = _a.sent();
                 return [2 /*return*/, result];
         }
     });
 }); };
 var renBTCToETH = (exports.renBTCToETH = function (amount) { return __awaiter(void 0, void 0, void 0, function () {
-    var wbtcOut, WETH, WBTC, route, _a, _b, trade, result;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
+    var wbtcOut, WETH;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
             case 0: return [4 /*yield*/, WBTCFromRenBTC(amount)];
             case 1:
-                wbtcOut = _c.sent();
+                wbtcOut = _a.sent();
                 WETH = UNISWAP.WETH[UNISWAP.ChainId.MAINNET];
-                WBTC = new UNISWAP.Token(UNISWAP.ChainId.MAINNET, fixtures.ETHEREUM.WBTC, 8);
-                _b = (_a = UNISWAP.Route).bind;
-                return [4 /*yield*/, UNISWAP.Fetcher.fetchPairData(WBTC, WETH, provider)];
-            case 2:
-                route = new (_b.apply(_a, [void 0, [_c.sent()], WBTC]))();
-                trade = new UNISWAP.Trade(route, new UNISWAP.TokenAmount(WBTC, ethers.BigNumber.from(wbtcOut).toString()), UNISWAP.TradeType.EXACT_INPUT);
-                result = ethers.BigNumber.from(trade.outputAmount.raw.toString(10));
-                return [2 /*return*/, result];
+                return [4 /*yield*/, quoter.quoteExactInputSingle(fixtures.ETHEREUM.WBTC, WETH.address, 500, wbtcOut, 0)];
+            case 2: return [2 /*return*/, _a.sent()];
         }
     });
 }); });
