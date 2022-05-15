@@ -46,7 +46,6 @@ export class TransferRequest {
     asset: string;
     amount: BigNumberish;
     data: string;
-    collaterization: string;
     nonce?: BigNumberish;
     pNonce?: BigNumberish;
     contractAddress?: string;
@@ -65,6 +64,10 @@ export class TransferRequest {
         : params.amount
     );
     this.data = params.data;
+    const [, ratio] = ethers.utils.defaultAbiCoder.decode(
+      ["uint256", "uint256"],
+      this.data
+    );
     console.log("params.nonce", params.nonce);
     this.nonce = params.nonce
       ? hexlify(params.nonce)
@@ -75,7 +78,10 @@ export class TransferRequest {
     this.chainId = params.chainId;
     this.contractAddress = params.contractAddress;
     this.signature = params.signature;
-    this.collaterization = params.collaterization;
+    this.collaterization = ethers.utils.defaultAbiCoder.encode(
+      ["uint256"],
+      [ratio]
+    );
     //this._config =
     this._ren = new (RenJS as any)("mainnet", { loadCompletedDeposits: true });
     this._contractFn = "zeroCall";

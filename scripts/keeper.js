@@ -129,7 +129,6 @@ const handleTransferRequest = async (message, replyDispatcher) => {
       contractAddress: message.contractAddress,
       chainId: message.chainId,
       signature: message.signature,
-      collaterization: message.collaterization,
     });
     if (
       transferRequest.contractAddress === BadgerBridgeZeroController.address
