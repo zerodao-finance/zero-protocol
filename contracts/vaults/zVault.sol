@@ -42,11 +42,12 @@ contract zVault is ERC20Upgradeable {
   }
 
   function addToWhitelist(address[] calldata entries) external onlyGovernance {
+    zVaultLib.Isolate storage isolate = zVaultLib.toIsolate(ISOLATE);
     for (uint256 i = 0; i < entries.length; i++) {
       address entry = entries[i];
       require(entry != address(0));
 
-      whitelist[entry] = true;
+      isolate.whitelist[entry] = true;
     }
   }
 
@@ -54,9 +55,10 @@ contract zVault is ERC20Upgradeable {
     external
     onlyGovernance
   {
+    zVaultLib.Isolate storage isolate = zVaultLib.toIsolate(ISOLATE);
     for (uint256 i = 0; i < entries.length; i++) {
       address entry = entries[i];
-      whitelist[entry] = false;
+      isolate.whitelist[entry] = false;
     }
   }
 
@@ -68,7 +70,7 @@ contract zVault is ERC20Upgradeable {
   ) public initializer {
     __ERC20_init_unchained(_name, _symbol);
     token = IERC20(_token);
-    zVaultLib.Isolate storage isolate = toIsolate(ISOLATE);
+    zVaultLib.Isolate storage isolate = zVaultLib.toIsolate(ISOLATE);
     isolate.governance = msg.sender;
     isolate.controller = _controller;
   }
@@ -78,7 +80,7 @@ contract zVault is ERC20Upgradeable {
   }
 
   function balance() public view returns (uint256) {
-    zVaultLib.Isolate storage isolate = toIsolate(ISOLATE);
+    zVaultLib.Isolate storage isolate = zVaultLib.toIsolate(ISOLATE);
     return
       token.balanceOf(address(this)).add(
         IController(isolate.controller).balanceOf(address(token))
@@ -90,11 +92,13 @@ contract zVault is ERC20Upgradeable {
   }
 
   function setGovernance(address _governance) public onlyGovernance {
-    governance = _governance;
+    zVaultLib.Isolate storage isolate = zVaultLib.toIsolate(ISOLATE);
+    isolate.governance = _governance;
   }
 
   function setController(address _controller) public onlyGovernance {
-    controller = _controller;
+    zVaultLib.Isolate storage isolate = zVaultLib.toIsolate(ISOLATE);
+    isolate.controller = _controller;
   }
 
   // Custom logic in here for how much the vault allows to be borrowed
@@ -103,9 +107,9 @@ contract zVault is ERC20Upgradeable {
     return token.balanceOf(address(this)).mul(min).div(max);
   }
 
-  function earn() public {
+  function earn() public onlyGovernance {
+    zVaultLib.Isolate storage isolate = zVaultLib.toIsolate(ISOLATE);
     uint256 _bal = available();
-    require(msg.sender == governance, "!governance");
     token.safeTransfer(isolate.controller, _bal);
     IController(isolate.controller).earn(address(token), _bal);
   }
@@ -135,12 +139,14 @@ contract zVault is ERC20Upgradeable {
 
   // Used to swap any borrowed reserve over the debt limit to liquidate to 'token'
   function harvest(address reserve, uint256 amount) external onlyController {
+    zVaultLib.Isolate storage isolate = zVaultLib.toIsolate(ISOLATE);
     require(reserve != address(token), "token");
-    IERC20(reserve).safeTransfer(controller, amount);
+    IERC20(reserve).safeTransfer(isolate.controller, amount);
   }
 
   // No rebalance implementation for lower fees and faster swaps
   function withdraw(uint256 _shares) public {
+    zVaultLib.Isolate storage isolate = zVaultLib.toIsolate(ISOLATE);
     uint256 r = (balance().mul(_shares)).div(totalSupply());
     _burn(msg.sender, _shares);
 
@@ -148,7 +154,7 @@ contract zVault is ERC20Upgradeable {
     uint256 b = token.balanceOf(address(this));
     if (b < r) {
       uint256 _withdraw = r.sub(b);
-      IController(controller).withdraw(address(token), _withdraw);
+      IController(isolate.controller).withdraw(address(token), _withdraw);
       uint256 _after = token.balanceOf(address(this));
       uint256 _diff = _after.sub(b);
       if (_diff < _withdraw) {

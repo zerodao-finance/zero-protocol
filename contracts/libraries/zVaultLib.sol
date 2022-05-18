@@ -16,7 +16,7 @@ library zVaultLib {
     returns (Isolate storage isolate)
   {
     assembly {
-      isolate_slot := key
+      isolate.slot := slot
     }
   }
 }
