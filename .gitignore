@@ -6,3 +6,4 @@ artifacts/
 *.swp
 *.swo
 deployments/localhost/
+dist/deployments/localhost/
