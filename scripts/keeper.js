@@ -139,7 +139,7 @@ const handleTransferRequest = async (message, replyDispatcher) => {
 		console.log('Submitting to renVM...');
 		const mint = await transferRequest.submitToRenVM();
 		console.log('Successfully submitted to renVM.');
-		console.log('Gateway address is', await transferRequest.toGatewayAddress());
+		console.log('Gateway address is', mint.gatewayAddress);
 		console.log('RECEIVED MESSAGE', message);
 		console.log('RECEIVED TRANSFER REQUEST', transferRequest);
 		await new Promise((resolve, reject) =>
