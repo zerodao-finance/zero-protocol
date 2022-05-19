@@ -1,14 +1,14 @@
-import { TransferRequest } from './TransferRequest';
-import { splitSignature } from '@ethersproject/bytes';
-import { BurnRequest } from './BurnRequest';
-import { MetaRequest } from './MetaRequest';
-import { Contract } from '@ethersproject/contracts';
-import { TEST_KEEPER_ADDRESS } from './mock';
+import { TransferRequest } from "./TransferRequest";
+import { splitSignature } from "@ethersproject/bytes";
+import { BurnRequest } from "./BurnRequest";
+import { MetaRequest } from "./MetaRequest";
+import { Contract } from "@ethersproject/contracts";
+import { TEST_KEEPER_ADDRESS } from "./mock";
 
 export class UnderwriterTransferRequest extends TransferRequest {
 	public callStatic: any;
 	repayAbi() {
-		return 'function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)';
+		return "function repay(address, address, address, uint256, uint256, uint256, address, bytes32, bytes, bytes)";
 	}
 	constructor(o: any) {
 		super(o);
@@ -21,25 +21,25 @@ export class UnderwriterTransferRequest extends TransferRequest {
 							...self,
 							getUnderwriter(o: any) {
 								return self.getUnderwriter(o).callStatic;
-							},
+							}
 						},
-						Object.getPrototypeOf(self),
+						Object.getPrototypeOf(self)
 					),
-					[signer],
+					[signer]
 				);
-			},
+			}
 		};
 	}
 	async getController(signer) {
-		console.log('getting controller');
+		console.log("getting controller");
 		const underwriter = this.getUnderwriter(signer);
-		console.log('got underwriter');
+		console.log("got underwriter");
 		return new Contract(
 			await underwriter.controller(),
 			[
-				'function fallbackMint(address underwriter, address to, address asset, uint256 amount, uint256 actualAmount, uint256 nonce, address module, bytes32 nHash, bytes data, bytes signature)',
+				"function fallbackMint(address underwriter, address to, address asset, uint256 amount, uint256 actualAmount, uint256 nonce, address module, bytes32 nHash, bytes data, bytes signature)"
 			],
-			signer,
+			signer
 		);
 	}
 	async fallbackMint(signer, params = {}) {
@@ -57,20 +57,20 @@ export class UnderwriterTransferRequest extends TransferRequest {
 			queryTxResult.nHash,
 			this.data,
 			queryTxResult.signature,
-			params,
+			params
 		);
 	}
 	getUnderwriter(signer) {
 		return new Contract(
 			this.underwriter,
 			[
-				'function controller() view returns (address)',
+				"function controller() view returns (address)",
 				this.repayAbi && this.repayAbi(),
-				'function loan(address, address, uint256, uint256, address, bytes, bytes)',
-				'function meta(address, address, address, uint256, bytes, bytes)',
-				'function burn(address, address, uint256, uint256, bytes, bytes, bytes)',
+				"function loan(address, address, uint256, uint256, address, bytes, bytes)",
+				"function meta(address, address, address, uint256, bytes, bytes)",
+				"function burn(address, address, uint256, uint256, bytes, bytes, bytes)"
 			].filter(Boolean),
-			signer,
+			signer
 		);
 	}
 	async loan(signer, params = {}) {
@@ -79,7 +79,15 @@ export class UnderwriterTransferRequest extends TransferRequest {
 	}
 
 	getParams() {
-		return [this.destination(), this.asset, this.amount, this.pNonce, this.module, this.data, this.signature];
+		return [
+			this.destination(),
+			this.asset,
+			this.amount,
+			this.pNonce,
+			this.module,
+			this.data,
+			this.signature
+		];
 	}
 	/*
 		switch (func) {
@@ -93,23 +101,27 @@ export class UnderwriterTransferRequest extends TransferRequest {
 	}
        */
 	getExecutionFunction() {
-		return 'loan';
+		return "loan";
 	}
 	async dry(signer, params = {}) {
 		const underwriter = this.getUnderwriter(signer);
-		console.log('about to callstatic');
+		console.log("about to callstatic");
 		return await underwriter
 			.connect(signer.provider)
 			.callStatic[this.getExecutionFunction()](
 				...this.getParams(),
-				Object.assign({}, params, { from: TEST_KEEPER_ADDRESS }),
+				Object.assign({}, params, { from: TEST_KEEPER_ADDRESS })
 			);
 	}
 	async repay(signer, params = {}) {
 		const underwriter = this.getUnderwriter(signer);
-		const { amount: actualAmount, nHash, signature } = await this.waitForSignature();
+		const {
+			amount: actualAmount,
+			nHash,
+			signature
+		} = await this.waitForSignature();
 		return await underwriter.repay(
-			...((v) => {
+			...(v => {
 				console.log(v);
 				return v;
 			})([
@@ -123,27 +135,66 @@ export class UnderwriterTransferRequest extends TransferRequest {
 				nHash,
 				this.data,
 				signature,
-				params,
-			]),
+				params
+			])
+		);
+	}
+	async repayStatic(signer, params = {}) {
+		const underwriter = this.getUnderwriter(signer);
+		const {
+			amount: actualAmount,
+			nHash,
+			signature
+		} = await this.waitForSignature();
+		return await underwriter.callStatic.repay(
+			...(v => {
+				console.log(v);
+				return v;
+			})([
+				this.underwriter,
+				this.destination(),
+				this.asset,
+				this.amount,
+				actualAmount,
+				this.pNonce,
+				this.module,
+				nHash,
+				this.data,
+				signature,
+				params
+			])
 		);
 	}
 }
 
 export class UnderwriterMetaRequest extends MetaRequest {
 	getExecutionFunction() {
-		return 'meta';
+		return "meta";
 	}
 	getParams(...params: any) {
-		return [this.addressFrom, this.asset, this.module, this.pNonce, this.data, this.signature];
+		return [
+			this.addressFrom,
+			this.asset,
+			this.module,
+			this.pNonce,
+			this.data,
+			this.signature
+		];
 	}
 	dry(...params: any) {
 		return []; //		return UnderwriterTransferRequest.prototype.dry.call(this, ...params);
 	}
 	getController(...params: any) {
-		return UnderwriterTransferRequest.prototype.getController.call(this, ...params);
+		return UnderwriterTransferRequest.prototype.getController.call(
+			this,
+			...params
+		);
 	}
 	getUnderwriter(...params: any) {
-		return UnderwriterTransferRequest.prototype.getUnderwriter.call(this, ...params);
+		return UnderwriterTransferRequest.prototype.getUnderwriter.call(
+			this,
+			...params
+		);
 	}
 	async meta(signer, params = {}) {
 		const underwriter = this.getUnderwriter(signer);
@@ -153,22 +204,39 @@ export class UnderwriterMetaRequest extends MetaRequest {
 
 export class UnderwriterBurnRequest extends BurnRequest {
 	getExecutionFunction() {
-		return 'burn';
+		return "burn";
 	}
 	getParams() {
-		return [this.owner, this.asset, this.amount, this.deadline, this.data, this.destination, this.signature];
+		return [
+			this.owner,
+			this.asset,
+			this.amount,
+			this.deadline,
+			this.data,
+			this.destination,
+			this.signature
+		];
 	}
 	dry(...params: any) {
 		return []; //return UnderwriterTransferRequest.prototype.dry.call(this, ...params);
 	}
 	getController(...params: any) {
-		return UnderwriterTransferRequest.prototype.getController.call(this, ...params);
+		return UnderwriterTransferRequest.prototype.getController.call(
+			this,
+			...params
+		);
 	}
 	getUnderwriter(...params: any) {
-		return UnderwriterTransferRequest.prototype.getUnderwriter.call(this, ...params);
+		return UnderwriterTransferRequest.prototype.getUnderwriter.call(
+			this,
+			...params
+		);
 	}
 	async burn(signer, params = {}) {
 		const underwriter = this.getUnderwriter(signer);
-		return await underwriter[this.getExecutionFunction()](...this.getParams(), params);
+		return await underwriter[this.getExecutionFunction()](
+			...this.getParams(),
+			params
+		);
 	}
 }
