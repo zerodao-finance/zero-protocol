@@ -11,10 +11,15 @@ process.env.ZERO_PERSISTENCE_DB = path.join(process.env.HOME, ".keeper.db");
     const key = await storage.getKeyFromIndex(i);
     const request = await storage.get(key);
     const transferRequest = new UnderwriterTransferRequest(request);
+    console.log(transferRequest);
     if (request.status !== "succeeded") {
       console.log("currently executing:", i);
       try {
-        await transferRequest.repayStatic((await hre.ethers.getSigners())[0]);
+        await transferRequest.callStatic.repay(
+          (
+            await hre.ethers.getSigners()
+          )[0]
+        );
         const tx = await transferRequest.repay(
           (
             await hre.ethers.getSigners()
@@ -27,7 +32,15 @@ process.env.ZERO_PERSISTENCE_DB = path.join(process.env.HOME, ".keeper.db");
         console.error(e);
       }
     }
-    await execute(i - 1);
   };
-  await execute();
+
+  const size = new Array(process.env.BATCH_SIZE || 20);
+  const batchExecute = async (batch) => {
+    const payload = Array.from(size).map(async (d, i) => {
+      await execute(batch - i);
+    });
+    await Promise.all(payload);
+    await batchExecute(batch - size);
+  };
+  await batchExecute(142);
 })().catch((err) => console.error(err));
