@@ -113,6 +113,7 @@ class ZeroUser extends EventEmitter {
 				}
 			}
 		});
+		// this.log.info()
 		this.conn.pubsub.subscribe('zero.keepers');
 		this.log.info('Subscribed to keeper broadcasts');
 	}

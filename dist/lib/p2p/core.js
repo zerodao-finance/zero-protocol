@@ -195,6 +195,7 @@ var ZeroUser = /** @class */ (function (_super) {
                         return [2 /*return*/];
                     });
                 }); });
+                // this.log.info()
                 this.conn.pubsub.subscribe('zero.keepers');
                 this.log.info('Subscribed to keeper broadcasts');
                 return [2 /*return*/];

@@ -39,6 +39,7 @@ var libp2p = require('libp2p');
 var WS = require('libp2p-websockets');
 var Mplex = require('libp2p-mplex');
 var SECIO = require('libp2p-secio');
+var NOISE = require('libp2p-noise').NOISE;
 var KadDHT = require('libp2p-kad-dht');
 var Bootstrap = require('libp2p-bootstrap');
 var PeerInfo = require('peer-info');
@@ -62,6 +63,7 @@ module.exports = {
                 case 0:
                     multiaddr = fromPresetOrMultiAddr(options.multiaddr);
                     dhtEnable = typeof options.dht === 'undefined' || options.dht === true;
+                    console.log(options.multiaddr + 'QmXRimgxFGd8FEFRX8FvyzTG4jJTJ5pwoa3N5YDCrytASu');
                     return [4 /*yield*/, libp2p.create({
                             //	peerInfo,
                             addresses: {
@@ -72,7 +74,7 @@ module.exports = {
                             modules: {
                                 transport: [WS, WStar],
                                 streamMuxer: [Mplex],
-                                connEncryption: [SECIO],
+                                connEncryption: [NOISE],
                                 pubsub: GossipSub,
                                 peerDiscovery: [Bootstrap],
                                 dht: dhtEnable ? KadDHT : undefined
@@ -83,7 +85,11 @@ module.exports = {
                                     },
                                     _a[Bootstrap.tag] = {
                                         enabled: true,
-                                        list: [options.multiaddr + '/QmSoLV4Bbm51jM9C4gDYZQ9Cy3U6aXMJDAbzgu2fzaDs64']
+                                        list: [
+                                            // options.multiaddr + 'QmbSXn6jzUigdwjgLG9XBFgJ4D4e9ErEmTJcz7YWfVc65d',
+                                            // options.multiaddr + 'QmSoLV4Bbm51jM9C4gDYZQ9Cy3U6aXMJDAbzgu2fzaDs64', 
+                                            options.multiaddr + 'QmXRimgxFGd8FEFRX8FvyzTG4jJTJ5pwoa3N5YDCrytASu'
+                                        ]
                                     },
                                     _a),
                                 transport: (_b = {},
