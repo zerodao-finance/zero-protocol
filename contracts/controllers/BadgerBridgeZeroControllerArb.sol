@@ -22,7 +22,7 @@ import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import {ECDSA} from '@openzeppelin/contracts/cryptography/ECDSA.sol';
 import {EIP712Upgradeable} from '@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol';
 
-contract BadgerBridgeZeroController is EIP712Upgradeable {
+contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   using SafeERC20 for IERC20;
   using SafeMath for *;
   uint256 public fee;
@@ -32,10 +32,10 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
   address constant btcGateway = 0x05Cadbf3128BcB7f2b89F3dD55E5B0a036a49e20;
   address constant routerv3 = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
   address constant factory = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
-  address constant usdc = 0xff970a61a04b1ca14834a43f5de4533ebddb5cc8;
+  address constant usdc = 0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8;
   address constant weth = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
-  address constant wbtc = 0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f;
-  address constant renbtc = 0xdbf31df14b66535af65aac99c32e9ea844e14501;
+  address constant wbtc = 0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f;
+  address constant renbtc = 0xDBf31dF14B66535aF65AaC99C32e9eA844e14501;
   address constant renCrv = 0x3E01dD8a5E1fb3481F0F589056b428Fc308AF0Fb;
   address constant threepool = 0x7f90122BF0700F9E7e1F688fe926940E8839F353;
   address constant tricrypto = 0x960ea3e3C7FB317332d990873d354E18d7645590;
@@ -137,19 +137,19 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     governance = _governance;
     strategist = _strategist;
     keeperReward = uint256(1 ether).div(1000);
-    IERC20(renbtc).safeApprove(btcGateway, ~uint256(0) >> 2);
+    //IERC20(renbtc).safeApprove(btcGateway, ~uint256(0) >> 2);
     IERC20(renbtc).safeApprove(renCrv, ~uint256(0) >> 2);
     IERC20(wbtc).safeApprove(renCrv, ~uint256(0) >> 2);
     IERC20(wbtc).safeApprove(tricrypto, ~uint256(0) >> 2);
     IERC20(renCrvLp).safeApprove(bCrvRen, ~uint256(0) >> 2);
-    IERC20(bCrvRen).safeApprove(settPeak, ~uint256(0) >> 2);
+    //IERC20(bCrvRen).safeApprove(settPeak, ~uint256(0) >> 2);
     PERMIT_DOMAIN_SEPARATOR_WBTC = keccak256(
       abi.encode(
         keccak256(
           'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
         ),
         keccak256('WBTC'),
-        keccak256('1'),
+        keccak256('42161'),
         getChainId(),
         wbtc
       )
@@ -160,7 +160,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
           'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
         ),
         keccak256('ibBTC'),
-        keccak256('1'),
+        keccak256('42161'),
         getChainId(),
         ibbtc
       )
