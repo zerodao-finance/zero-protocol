@@ -35,6 +35,7 @@ task('multisig', 'sends out a multisig proposal')
 				? 'https://safe-transaction.gnosis.io'
 				: `https://safe-transaction.${networkName}.gnosis.io`;
 		})();
+		// fetch contract address
 		const contract = await getContract(to, ethers);
 		const signer = await getSigner(ethers);
 		const owner = new EthersAdapter({
@@ -42,7 +43,6 @@ task('multisig', 'sends out a multisig proposal')
 			signer,
 		});
 		const safeService = new SafeServiceClient({txServiceUrl: serviceUrl, ethAdapter: owner});
-		// fetch contract address
 		console.log(await signer.getAddress());
 		// init gnosis safe sdk
 		const safeSdk = await Safe.create({ safeAddress: safe, ethAdapter: owner });
