@@ -402,7 +402,7 @@
             "chainId": "1",
             "contracts": {
                 "ZeroUnderwriterLockBytecodeLib": {
-                    "address": "0x045857BDEAE7C1c7252d611eB24eB55564198b4C",
+                    "address": "0x5133BBdfCCa3Eb4F739D599ee4eC45cBCD0E16c5",
                     "abi": [
                         {
                             "inputs": [],
@@ -420,7 +420,7 @@
                     ]
                 },
                 "BadgerBridgeZeroController": {
-                    "address": "0x02df3a3F960393F5B349E40A599FEda91a7cc1A7",
+                    "address": "0xC66AB83418C20A65C3f8e83B3d11c8C3a6097b6F",
                     "abi": [
                         {
                             "inputs": [],
@@ -485,6 +485,11 @@
                                 },
                                 {
                                     "internalType": "bytes",
+                                    "name": "data",
+                                    "type": "bytes"
+                                },
+                                {
+                                    "internalType": "bytes",
                                     "name": "destination",
                                     "type": "bytes"
                                 },
@@ -507,6 +512,11 @@
                         },
                         {
                             "inputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "minOut",
+                                    "type": "uint256"
+                                },
                                 {
                                     "internalType": "bytes",
                                     "name": "destination",
@@ -816,7 +826,7 @@
                     ]
                 },
                 "ZERO": {
-                    "address": "0x821f3361D454cc98b7555221A06Be563a7E2E0A6",
+                    "address": "0xeF31027350Be2c7439C1b0BE022d49421488b72C",
                     "abi": [
                         {
                             "anonymous": false,
@@ -1417,7 +1427,7 @@
                     ]
                 },
                 "ZeroDistributor": {
-                    "address": "0x1780bCf4103D3F501463AD3414c7f4b654bb7aFd",
+                    "address": "0x12Bcb546bC60fF39F1Adfc7cE4605d5Bd6a6A876",
                     "abi": [
                         {
                             "inputs": [
