@@ -177,6 +177,7 @@ describe('BadgerBridgeZeroController', () => {
     deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
     const [signer] = await hre.ethers.getSigners();
     const { chainId } = await signer.provider.getNetwork();
+    console.log(chainId);
     const transferRequest = new UnderwriterTransferRequest({
       contractAddress,
       nonce: utils.hexlify(utils.randomBytes(32)),
@@ -195,6 +196,41 @@ describe('BadgerBridgeZeroController', () => {
     const tx = await transferRequest.repay(signer);
     console.log('Gas Used:', (await tx.wait()).gasUsed.toString());
   });
+  it('should do a transfer of wbtc', async () => {
+    const contractAddress = (await getController()).address;
+    deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
+    const [signer] = await hre.ethers.getSigners();
+    const { chainId } = await signer.provider.getNetwork();
+    console.log(chainId);
+    const transferRequest = new UnderwriterTransferRequest({
+      contractAddress,
+      nonce: utils.hexlify(utils.randomBytes(32)),
+      to: await signer.getAddress(),
+      pNonce: utils.hexlify(utils.randomBytes(32)),
+      module: deployParameters[process.env.CHAIN].WBTC,
+      amount: utils.hexlify(utils.parseUnits('0.005', 8)),
+      asset: deployParameters[process.env.CHAIN].WBTC,
+      chainId,
+      data: utils.defaultAbiCoder.encode(['uint256'], ['1']),
+      underwriter: contractAddress,
+    });
+    transferRequest.requestType = 'TRANSFER';
+    await transferRequest.sign(signer);
+    console.log('signed', transferRequest.signature);
+    const tx = await transferRequest.repay(signer);
+    const wbtc = new ethers.Contract(
+      deployParameters[process.env.CHAIN].WBTC,
+      [
+        'function approve(address, uint256)',
+        'function balanceOf(address) view returns (uint256)',
+      ],
+      signer
+    );
+
+    console.log(await wbtc.balanceOf(await signer.getAddress()));
+    console.log('Gas Used:', (await tx.wait()).gasUsed.toString());
+  });
+
   it('should do a wbtc burn', async () => {
     const contractAddress = (await getController()).address;
     deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
