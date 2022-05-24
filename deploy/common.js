@@ -62,7 +62,6 @@ exports.deployFixedAddress = async (...args) => {
 
 exports.deployProxyFixedAddress = async (...args) => {
   console.log('Deploying proxy');
-  console.log(args[0]);
   //const [signer] = await ethers.getSigners();
   //hijackSigner(signer);
   const result = await upgrades.deployProxy(...args);
