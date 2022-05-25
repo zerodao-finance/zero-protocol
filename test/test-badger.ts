@@ -208,7 +208,7 @@ describe('BadgerBridgeZeroController', () => {
       to: await signer.getAddress(),
       pNonce: utils.hexlify(utils.randomBytes(32)),
       module: deployParameters[process.env.CHAIN].WBTC,
-      amount: utils.hexlify(utils.parseUnits('0.005', 8)),
+      amount: utils.hexlify(utils.parseUnits('0.05', 8)),
       asset: deployParameters[process.env.CHAIN].WBTC,
       chainId,
       data: utils.defaultAbiCoder.encode(['uint256'], ['1']),
@@ -236,11 +236,20 @@ describe('BadgerBridgeZeroController', () => {
     deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
     const [signer] = await hre.ethers.getSigners();
     const { chainId } = await signer.provider.getNetwork();
-    console.log(chainId);
+    const wbtc = new ethers.Contract(
+      deployParameters[process.env.CHAIN].WBTC,
+      [
+        'function approve(address, uint256)',
+        'function balanceOf(address) view returns (uint256)',
+      ],
+      signer
+    );
+
+    console.log(await wbtc.balanceOf(await signer.getAddress()));
     const transferRequest = new UnderwriterBurnRequest({
       contractAddress,
       owner: await signer.getAddress(),
-      amount: utils.hexlify(utils.parseUnits('0.005', 8)),
+      amount: utils.hexlify(utils.parseUnits('0.01', 8)),
       asset: deployParameters[process.env.CHAIN].WBTC,
       chainId,
       underwriter: contractAddress,
@@ -272,11 +281,6 @@ describe('BadgerBridgeZeroController', () => {
     transferRequest.requestType = 'BURN';
     await transferRequest.sign(signer, contractAddress);
     console.log('signed', transferRequest.signature);
-    const wbtc = new ethers.Contract(
-      deployParameters[process.env.CHAIN].WBTC,
-      ['function approve(address, uint256)'],
-      signer
-    );
     await wbtc.approve(
       transferRequest.contractAddress,
       ethers.constants.MaxUint256
