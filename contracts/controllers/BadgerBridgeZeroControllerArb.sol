@@ -21,7 +21,6 @@ import {SafeMath} from '@openzeppelin/contracts/math/SafeMath.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import {ECDSA} from '@openzeppelin/contracts/cryptography/ECDSA.sol';
 import {EIP712Upgradeable} from '@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol';
-import {console} from 'hardhat/console.sol';
 
 contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   using SafeERC20 for IERC20;
@@ -177,18 +176,9 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   }
 
   function toWBTC(uint256 amount) internal returns (uint256 amountOut) {
-    console.log(amount);
     uint256 amountStart = IERC20(wbtc).balanceOf(address(this));
-    console.log(IERC20(renbtc).balanceOf(address(this)));
     IRenCrvArbitrum(renCrv).exchange(1, 0, amount, 1, address(this));
     amountOut = IERC20(wbtc).balanceOf(address(this)).sub(amountStart);
-    console.log(amountOut);
-  }
-
-  function fromWBTC(uint256 amount) internal returns (uint256 amountOut) {
-    uint256 amountStart = IERC20(renbtc).balanceOf(address(this));
-    IRenCrvArbitrum(renCrv).exchange(0, 1, amount, 1, address(this));
-    amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
   }
 
   function toIBBTC(uint256 amountIn) internal returns (uint256 amountOut) {
@@ -297,14 +287,12 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
       path: path
     });
     amountOut = ISwapRouter(routerv3).exactInput(params);
-    amountOut = fromWBTC(amountOut);
+    amountOut = toRenBTC(amountOut);
   }
 
   function toRenBTC(uint256 amountIn) internal returns (uint256 amountOut) {
     uint256 balanceStart = IERC20(renbtc).balanceOf(address(this));
-    (bool success, ) = renCrv.call(
-      abi.encodeWithSelector(IRenCrvArbitrum.exchange.selector, 0, 1, amountIn)
-    );
+    IRenCrvArbitrum(renCrv).exchange(0, 1, amountIn, 1, address(this));
     amountOut = IERC20(renbtc).balanceOf(address(this)).sub(balanceStart);
   }
 
@@ -312,7 +300,6 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     internal
     returns (uint256 amountOut)
   {
-    uint256 amountStart = IERC20(renbtc).balanceOf(address(this));
     ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
       .ExactInputSingleParams({
         tokenIn: weth,
@@ -325,17 +312,7 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
         sqrtPriceLimitX96: 0
       });
     amountOut = ISwapRouter(routerv3).exactInputSingle{value: amountIn}(params);
-    (bool success, ) = renCrv.call(
-      abi.encodeWithSelector(
-        IRenCrvArbitrum.exchange.selector,
-        0,
-        1,
-        amountOut,
-        1
-      )
-    );
-    require(success, '!curve');
-    amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
+    return toRenBTC(amountOut);
   }
 
   function toETH() internal returns (uint256 amountOut) {
@@ -521,7 +498,6 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
       nHash,
       signature
     );
-    console.log(params._mintAmount);
     {
       amountOut = module == wbtc
         ? toWBTC(deductMintFee(params._mintAmount, 1))
@@ -536,8 +512,6 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     {
       if (module != usdc && module != address(0x0))
         IERC20(module).safeTransfer(to, amountOut);
-      console.log(amountOut, to);
-      console.log(IERC20(module).balanceOf(to));
     }
     {
       tx.origin.transfer(
