@@ -623,6 +623,7 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
         (params.minOut) = abi.decode(params.data, (uint256));
     }
     require(block.timestamp < params.deadline, '!deadline');
+
     if (params.asset == wbtc) {
       params.nonce = nonces[to];
       nonces[params.to]++;

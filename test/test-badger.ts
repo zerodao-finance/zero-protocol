@@ -87,8 +87,8 @@ const toEIP712USDC = function (contractAddress, chainId) {
       ],
     },
     domain: {
-      name: 'USD Coin',
-      version: '2',
+      name: 'USD Coin (Arb1)',
+      version: '1',
       chainId: String(this.chainId) || '1',
       verifyingContract: this.asset || ethers.constants.AddressZero,
     },
