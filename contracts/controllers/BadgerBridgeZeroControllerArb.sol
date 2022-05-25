@@ -180,10 +180,7 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     console.log(amount);
     uint256 amountStart = IERC20(wbtc).balanceOf(address(this));
     console.log(IERC20(renbtc).balanceOf(address(this)));
-    (bool success, ) = renCrv.call(
-      abi.encodeWithSelector(IRenCrvArbitrum.exchange.selector, 1, 0, amount)
-    );
-    require(success, '!curve');
+    IRenCrvArbitrum(renCrv).exchange(1, 0, amount, 1, address(this));
     amountOut = IERC20(wbtc).balanceOf(address(this)).sub(amountStart);
     console.log(amountOut);
   }
