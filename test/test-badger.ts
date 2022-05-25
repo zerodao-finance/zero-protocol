@@ -60,6 +60,7 @@ const signETH = async function (signer, params = {}) {
 const toEIP712USDC = function (contractAddress, chainId) {
   this.contractAddress = contractAddress || this.contractAddress;
   this.chainId = chainId || this.chainId;
+  console.log(this.chainId);
   return {
     types: {
       Permit: [
@@ -87,7 +88,7 @@ const toEIP712USDC = function (contractAddress, chainId) {
     },
     domain: {
       name: 'USD Coin',
-      version: '1',
+      version: '2',
       chainId: String(this.chainId) || '1',
       verifyingContract: this.asset || ethers.constants.AddressZero,
     },
