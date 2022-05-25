@@ -87,7 +87,7 @@ const toEIP712USDC = function (contractAddress, chainId) {
     },
     domain: {
       name: 'USD Coin',
-      version: '2',
+      version: '1',
       chainId: String(this.chainId) || '1',
       verifyingContract: this.asset || ethers.constants.AddressZero,
     },
@@ -351,7 +351,7 @@ describe('BadgerBridgeZeroController', () => {
       nonce: utils.hexlify(utils.randomBytes(32)),
       to: await signer.getAddress(),
       pNonce: utils.hexlify(utils.randomBytes(32)),
-      module: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+      module: deployParameters[process.env.CHAIN].USDC,
       amount: utils.hexlify(utils.parseUnits('0.5', 8)),
       asset: deployParameters[process.env.CHAIN].USDC,
       chainId,
@@ -417,7 +417,6 @@ describe('BadgerBridgeZeroController', () => {
     deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
     const [signer] = await hre.ethers.getSigners();
     const { chainId } = await signer.provider.getNetwork();
-    console.log(chainId);
     const transferRequest = new UnderwriterBurnRequest({
       contractAddress,
       owner: await signer.getAddress(),
