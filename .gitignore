@@ -7,3 +7,4 @@ artifacts/
 *.swo
 deployments/localhost/
 dist/deployments/localhost/
+**/.DS_Store
