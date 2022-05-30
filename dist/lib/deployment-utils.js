@@ -26,7 +26,7 @@ exports.RENVM_PROVIDERS = {
 var getProvider = function (transferRequest) {
     if (Object.keys(exports.CONTROLLER_DEPLOYMENTS).includes(transferRequest.contractAddress)) {
         var chain_key = exports.CONTROLLER_DEPLOYMENTS[transferRequest.contractAddress];
-        return exports.RENVM_PROVIDERS[chain_key](new ethers_1.ethers.providers.JsonRpcProvider(exports.RPC_ENDPOINTS[chain_key]), 'any');
+        return exports.RENVM_PROVIDERS[chain_key](new ethers_1.ethers.providers.JsonRpcProvider(exports.RPC_ENDPOINTS[chain_key]));
     }
     else {
         throw new Error('Not a contract currently deployed');
