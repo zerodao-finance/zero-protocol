@@ -23,14 +23,22 @@ export const RENVM_PROVIDERS = {
 	Ethereum,
 };
 
-export const getProvider = (transferRequest) => {
-	if (Object.keys(CONTROLLER_DEPLOYMENTS).includes(transferRequest.contractAddress)) {
-		const chain_key = CONTROLLER_DEPLOYMENTS[transferRequest.contractAddress];
-		return RENVM_PROVIDERS[chain_key](new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]), 'any');
+export const getVanillaProvider = (transferRequest) => {
+	const checkSummedContractAddr = ethers.utils.getAddress(transferRequest.contractAddress);
+	if (Object.keys(CONTROLLER_DEPLOYMENTS).includes(checkSummedContractAddr)) {
+		const chain_key = CONTROLLER_DEPLOYMENTS[checkSummedContractAddr];
+		return new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]);
 	} else {
 		throw new Error('Not a contract currently deployed');
 	}
 };
+
+export const getProvider = (transferRequest) => {
+	const checkSummedContractAddr = ethers.utils.getAddress(transferRequest.contractAddress);
+	const ethersProvider = getVanillaProvider(transferRequest);
+	const chain_key = CONTROLLER_DEPLOYMENTS[checkSummedContractAddr];
+	return RENVM_PROVIDERS[chain_key](ethersProvider);
+}
 
 export const logger = {
 	debug(v) {

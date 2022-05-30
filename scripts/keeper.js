@@ -2,6 +2,7 @@ const { network, ethers } = require('hardhat');
 const path = require('path');
 const { UnderwriterTransferRequest, UnderwriterBurnRequest } = require('../lib/zero');
 const { createZeroConnection, createZeroKeeper } = require('../lib/zero');
+import { getVanillaProvider } from '../lib/deployment-utils';
 
 const gasnow = require('ethers-gasnow');
 if (network.name === 'mainnet') ethers.providers.BaseProvider.prototype.getGasPrice = gasnow.createGetGasPrice('rapid'); //TODO: Arbitrum Gas Price
@@ -17,14 +18,12 @@ const { LevelDBPersistenceAdapter } = require('../lib/persistence/leveldb');
 // The number of confirmations at which to execute the loan
 const LOAN_CONFIRMATION = 1;
 
-// Address of RenBTC. Used for balance check.
-const MAX_AMOUNT = 50000000;
-
 // URL of P2P network to use. DON'T MODIFY unless you know what you're doing...
 const KEEPER_URL = '/dns4/p2p.zerodao.com/tcp/443/wss/p2p-webrtc-star/';
 
 const executeLoan = async (transferRequest, replyDispatcher) => {
 	const [signer] = await ethers.getSigners();
+	signer.connect(getVanillaProvider(transferRequest));
 	console.log(await signer.provider.getNetwork());
 	global.signer = signer;
 	global.provider = signer.provider;
@@ -89,6 +88,7 @@ const handleTransferRequest = async (message, replyDispatcher) => {
 		});
 
 		const [signer] = await ethers.getSigners();
+		signer.connect(getVanillaProvider(transferRequest));
 		transferRequest.setProvider(signer.provider);
 		console.log('Submitting to renVM...');
 		const mint = await transferRequest.submitToRenVM();
@@ -141,6 +141,7 @@ const handleBurnRequest = async (message, replyDispatcher) => {
 			data: message.data,
 		});
 		const [signer] = await ethers.getSigners();
+		signer.connect(getVanillaProvider(transferRequest));
 		const wallet = new ethers.Wallet(process.env.WALLET, signer.provider);
 		const tx = await burnRequest.burn(signer, { gasLimit: 800000 });
 
