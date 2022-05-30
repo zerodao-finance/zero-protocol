@@ -14,7 +14,6 @@ import { Bitcoin } from '@renproject/chains';
 import RenJS from '@renproject/ren';
 import { EthArgs } from '@renproject/interfaces';
 import { getProvider } from './deployment-utils';
-import { network } from 'hardhat';
 
 export class ReleaseRequest {}
 

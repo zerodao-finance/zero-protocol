@@ -67,7 +67,6 @@ var chains_1 = require("@renproject/chains");
 var ren_1 = __importDefault(require("@renproject/ren"));
 require("@renproject/interfaces");
 var deployment_utils_1 = require("./deployment-utils");
-require("hardhat");
 var ReleaseRequest = /** @class */ (function () {
     function ReleaseRequest() {
     }
