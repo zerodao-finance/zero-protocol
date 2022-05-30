@@ -24,8 +24,9 @@ export const RENVM_PROVIDERS = {
 };
 
 export const getVanillaProvider = (transferRequest) => {
-	if (Object.keys(CONTROLLER_DEPLOYMENTS).includes(transferRequest.contractAddress)) {
-		const chain_key = CONTROLLER_DEPLOYMENTS[transferRequest.contractAddress];
+	const checkSummedContractAddr = ethers.utils.getAddress(transferRequest.contractAddress);
+	if (Object.keys(CONTROLLER_DEPLOYMENTS).includes(checkSummedContractAddr)) {
+		const chain_key = CONTROLLER_DEPLOYMENTS[checkSummedContractAddr];
 		return new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]);
 	} else {
 		throw new Error('Not a contract currently deployed');
@@ -33,8 +34,9 @@ export const getVanillaProvider = (transferRequest) => {
 };
 
 export const getProvider = (transferRequest) => {
+	const checkSummedContractAddr = ethers.utils.getAddress(transferRequest.contractAddress);
 	const ethersProvider = getVanillaProvider(transferRequest);
-	const chain_key = CONTROLLER_DEPLOYMENTS[transferRequest.contractAddress];
+	const chain_key = CONTROLLER_DEPLOYMENTS[checkSummedContractAddr];
 	return RENVM_PROVIDERS[chain_key](ethersProvider);
 }
 
