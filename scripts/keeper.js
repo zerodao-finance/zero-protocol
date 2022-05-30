@@ -109,25 +109,23 @@ const handleTransferRequest = async (message, replyDispatcher) => {
       chainId: message.chainId,
       signature: message.signature,
     });
-    if (
-      transferRequest.contractAddress === BadgerBridgeZeroController.address
-    ) {
-      transferRequest.dry = async () => [];
-      transferRequest.loan = async () => ({
-        async wait() {
-          return {};
-        },
-      });
-    }
+
+    transferRequest.dry = async () => [];
+    transferRequest.loan = async () => ({
+      async wait() {
+        return {};
+      },
+    });
+
     const [signer] = await ethers.getSigners();
     transferRequest.setProvider(signer.provider);
-    //if (!(hasEnough(transferRequest))) return;
     console.log("Submitting to renVM...");
     const mint = await transferRequest.submitToRenVM();
     console.log("Successfully submitted to renVM.");
     console.log("Gateway address is", mint.gatewayAddress);
     console.log("RECEIVED MESSAGE", message);
     console.log("RECEIVED TRANSFER REQUEST", transferRequest);
+
     await new Promise((resolve, reject) =>
       mint.on("deposit", async (deposit) => {
         console.log("Deposit received.");

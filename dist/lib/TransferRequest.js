@@ -67,6 +67,7 @@ var chains_1 = require("@renproject/chains");
 var ren_1 = __importDefault(require("@renproject/ren"));
 require("@renproject/interfaces");
 var deployment_utils_1 = require("./deployment-utils");
+require("hardhat");
 var ReleaseRequest = /** @class */ (function () {
     function ReleaseRequest() {
     }
@@ -92,8 +93,8 @@ var TransferRequest = /** @class */ (function () {
         this.chainId = params.chainId;
         this.contractAddress = params.contractAddress;
         this.signature = params.signature;
-        //this._config =
-        this._ren = new ren_1["default"]('mainnet', { loadCompletedDeposits: true });
+        var networkName = this.chainId == '42161' ? 'arbitrum' : 'mainnet';
+        this._ren = new ren_1["default"](networkName, { loadCompletedDeposits: true });
         this._contractFn = 'zeroCall';
         this._contractParams = [
             {
@@ -130,7 +131,7 @@ var TransferRequest = /** @class */ (function () {
         this.provider = provider;
         return this;
     };
-    TransferRequest.prototype.submitToRenVM = function (isTest) {
+    TransferRequest.prototype.submitToRenVM = function () {
         return __awaiter(this, void 0, void 0, function () {
             var result, _a;
             return __generator(this, function (_b) {
@@ -166,7 +167,7 @@ var TransferRequest = /** @class */ (function () {
                     case 0:
                         if (this._queryTxResult)
                             return [2 /*return*/, this._queryTxResult];
-                        return [4 /*yield*/, this.submitToRenVM(false)];
+                        return [4 /*yield*/, this.submitToRenVM()];
                     case 1:
                         mint = _b.sent();
                         return [4 /*yield*/, new Promise(function (resolve, reject) {
@@ -226,7 +227,7 @@ var TransferRequest = /** @class */ (function () {
             var mint;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.submitToRenVM(false)];
+                    case 0: return [4 /*yield*/, this.submitToRenVM()];
                     case 1:
                         mint = _a.sent();
                         return [2 /*return*/, mint.gatewayAddress];

@@ -402,7 +402,7 @@
             "chainId": "1",
             "contracts": {
                 "ZeroUnderwriterLockBytecodeLib": {
-                    "address": "0x5133BBdfCCa3Eb4F739D599ee4eC45cBCD0E16c5",
+                    "address": "0xC66AB83418C20A65C3f8e83B3d11c8C3a6097b6F",
                     "abi": [
                         {
                             "inputs": [],
@@ -420,7 +420,7 @@
                     ]
                 },
                 "BadgerBridgeZeroController": {
-                    "address": "0xC66AB83418C20A65C3f8e83B3d11c8C3a6097b6F",
+                    "address": "0xaC47e91215fb80462139756f43438402998E4A3a",
                     "abi": [
                         {
                             "inputs": [],
@@ -826,7 +826,7 @@
                     ]
                 },
                 "ZERO": {
-                    "address": "0xeF31027350Be2c7439C1b0BE022d49421488b72C",
+                    "address": "0x9BcC604D4381C5b0Ad12Ff3Bf32bEdE063416BC7",
                     "abi": [
                         {
                             "anonymous": false,
@@ -1427,7 +1427,7 @@
                     ]
                 },
                 "ZeroDistributor": {
-                    "address": "0x12Bcb546bC60fF39F1Adfc7cE4605d5Bd6a6A876",
+                    "address": "0x63fea6E447F120B8Faf85B53cdaD8348e645D80E",
                     "abi": [
                         {
                             "inputs": [
