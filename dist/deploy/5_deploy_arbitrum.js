@@ -43,8 +43,11 @@ module.exports = function () { return __awaiter(_this, void 0, void 0, function 
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                if (!(process.env.CHAIN === 'ARBITRUM' && process.env.DEPLOYARBITRUMQUICKCONVERT)) return [3 /*break*/, 2];
-                zeroControllerAddress = "0x53f38bEA30fE6919e0475Fe57C2629f3D3754d1E";
+                console.log(!process.env.BADGER);
+                if (!(process.env.CHAIN === 'ARBITRUM' &&
+                    process.env.DEPLOYARBITRUMQUICKCONVERT &&
+                    !process.env.BADGER)) return [3 /*break*/, 2];
+                zeroControllerAddress = '0x53f38bEA30fE6919e0475Fe57C2629f3D3754d1E';
                 return [4 /*yield*/, deployFixedAddress('ArbitrumConvertQuick', {
                         args: [zeroControllerAddress, ethers.utils.parseUnits('15', 8), '100000'],
                         contractName: 'ArbitrumConvertQuick',
