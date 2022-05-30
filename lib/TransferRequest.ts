@@ -27,7 +27,7 @@ export class TransferRequest {
 	public amount: string;
 	public data: string;
 	public contractAddress: string;
-	public chainId: number | string;
+	public chainId: string | number;
 	public signature: string;
 	private _destination: string;
 	private _contractFn: string;
@@ -48,7 +48,7 @@ export class TransferRequest {
 		nonce?: BigNumberish;
 		pNonce?: BigNumberish;
 		contractAddress?: string;
-		chainId?: number;
+		chainId?: string | number;
 		signature?: string;
 	}) {
 		this.module = params.module;
@@ -69,8 +69,8 @@ export class TransferRequest {
 		this.chainId = params.chainId;
 		this.contractAddress = params.contractAddress;
 		this.signature = params.signature;
-		//this._config =
-		this._ren = new (RenJS as any)('mainnet', { loadCompletedDeposits: true });
+		const networkName = this.chainId == '42161' ? 'arbitrum' : 'mainnet';
+		this._ren = new (RenJS as any)(networkName, { loadCompletedDeposits: true });
 		this._contractFn = 'zeroCall';
 		this._contractParams = [
 			{
@@ -103,11 +103,13 @@ export class TransferRequest {
 		const digest = _TypedDataEncoder.hash(payload.domain, payload.types, payload.message);
 		return (this._destination = recoverAddress(digest, signature || this.signature));
 	}
+
 	setProvider(provider) {
 		this.provider = provider;
 		return this;
 	}
-	async submitToRenVM(isTest) {
+
+	async submitToRenVM() {
 		console.log('submitToRenVM this.nonce', this.nonce);
 		if (this._mint) return this._mint;
 		const result = (this._mint = await this._ren.lockAndMint({
@@ -123,9 +125,10 @@ export class TransferRequest {
 		//    result.params.nonce = this.nonce;
 		return result;
 	}
+
 	async waitForSignature() {
 		if (this._queryTxResult) return this._queryTxResult;
-		const mint = await this.submitToRenVM(false);
+		const mint = await this.submitToRenVM();
 		const deposit: any = await new Promise((resolve, reject) => {
 			mint.on('deposit', resolve);
 			(mint as any).on('error', reject);
@@ -140,6 +143,7 @@ export class TransferRequest {
 		});
 		return result;
 	}
+
 	setUnderwriter(underwriter: string): boolean {
 		if (!ethers.utils.isAddress(underwriter)) return false;
 		this.underwriter = ethers.utils.getAddress(underwriter);
@@ -174,10 +178,12 @@ export class TransferRequest {
 			primaryType: 'TransferRequest',
 		};
 	}
+
 	async toGatewayAddress(input: GatewayAddressInput): Promise<string> {
-		const mint = await this.submitToRenVM(false);
+		const mint = await this.submitToRenVM();
 		return mint.gatewayAddress;
 	}
+
 	async sign(signer: Wallet & Signer, contractAddress?: string): Promise<string> {
 		const provider = signer.provider as ethers.providers.JsonRpcProvider;
 		const { chainId } = await signer.provider.getNetwork();

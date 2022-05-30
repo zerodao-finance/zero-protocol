@@ -3,20 +3,10 @@ const path = require('path');
 const { UnderwriterTransferRequest, UnderwriterBurnRequest } = require('../lib/zero');
 const { createZeroConnection, createZeroKeeper } = require('../lib/zero');
 
-const pipe = require('it-pipe');
-const lp = require('it-length-prefixed');
-
 const gasnow = require('ethers-gasnow');
-if (network.name === 'mainnet') ethers.providers.BaseProvider.prototype.getGasPrice = gasnow.createGetGasPrice('rapid');
+if (network.name === 'mainnet') ethers.providers.BaseProvider.prototype.getGasPrice = gasnow.createGetGasPrice('rapid'); //TODO: Arbitrum Gas Price
 
 const { LevelDBPersistenceAdapter } = require('../lib/persistence/leveldb');
-const Underwriter = require('../deployments/arbitrum/DelegateUnderwriter');
-const BadgerBridgeZeroController = require('../deployments/mainnet/BadgerBridgeZeroController');
-const trivial = new ethers.Contract(
-	Underwriter.address,
-	Underwriter.abi,
-	new ethers.providers.InfuraProvider('mainnet'),
-);
 
 /*--------------------------- ENVIRONMENT VARIABLES -------------------------*/
 
@@ -32,26 +22,6 @@ const MAX_AMOUNT = 50000000;
 
 // URL of P2P network to use. DON'T MODIFY unless you know what you're doing...
 const KEEPER_URL = '/dns4/p2p.zerodao.com/tcp/443/wss/p2p-webrtc-star/';
-
-//-----------------------------------------------------------------------------
-/*
-const _getSigners = ethers.getSigners;
-const getSigner = async () => {
-	const [signer] = await _getSigners.call(ethers);
-	return new ethers.Wallet(
-		process.env.WALLET,
-		process.env.FORKING
-			? signer.provider
-			: new ethers.providers.JsonRpcProvider(
-					'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
-			  ),
-	);
-};
-
-ethers.getSigners = async () => {
-	return [await getSigner()];
-};
-*/
 
 const executeLoan = async (transferRequest, replyDispatcher) => {
 	const [signer] = await ethers.getSigners();
@@ -92,21 +62,6 @@ const executeLoan = async (transferRequest, replyDispatcher) => {
 	console.log(repayTx);
 };
 
-const hasEnough = async (transferRequest) => {
-	const [signer] = await ethers.getSigners();
-	global.signer = signer;
-	global.provider = signer.provider;
-	transferRequest.setProvider(signer.provider);
-	const wallet = new ethers.Wallet(process.env.WALLET, signer);
-
-	const balance = await new Contract(
-		await underwriter.controller(),
-		['function balanceOf(address _owner) returns (uint256 balance)'],
-		signer,
-	).balanceOf(wallet.address);
-	return balance > transferRequest.amount;
-};
-
 let triggered = false;
 
 const handleTransferRequest = async (message, replyDispatcher) => {
@@ -125,17 +80,16 @@ const handleTransferRequest = async (message, replyDispatcher) => {
 			chainId: message.chainId,
 			signature: message.signature,
 		});
-		if (transferRequest.contractAddress === BadgerBridgeZeroController.address) {
-			transferRequest.dry = async () => [];
-			transferRequest.loan = async () => ({
-				async wait() {
-					return {};
-				},
-			});
-		}
+
+		transferRequest.dry = async () => [];
+		transferRequest.loan = async () => ({
+			async wait() {
+				return {};
+			},
+		});
+
 		const [signer] = await ethers.getSigners();
 		transferRequest.setProvider(signer.provider);
-		//if (!(hasEnough(transferRequest))) return;
 		console.log('Submitting to renVM...');
 		const mint = await transferRequest.submitToRenVM();
 		console.log('Successfully submitted to renVM.');
@@ -204,26 +158,6 @@ const handleBurnRequest = async (message, replyDispatcher) => {
 	} catch (e) {
 		console.error(e);
 	}
-	/*
-		const [signer] = await ethers.getSigners();
-		burnRequest.setProvider(signer.provider);
-		//if (!(hasEnough(transferRequest))) return;
-		console.log('Submitting to renVM...');
-		const burnAndRelease = await burnRequest.submitToRenVM();
-		console.log('Successfully submitted to renVM.');
-		console.log('Gateway address is', await burnRequest.toGatewayAddress());
-		console.log('RECEIVED MESSAGE', message);
-		console.log('RECEIVED TRANSFER REQUEST', burnRequest);
-		const burn = await burnAndRelease.burn();
-		const tx = await burnRequest.waitForTxNonce(burn);
-		await burnAndRelease
-			.release()
-			.on('status', (status) => (status === 'confirming' ? console.log('confirming') : console.log(status)))
-			.on('txHash', console.log);
-	} catch (e) {
-		throw e;
-	}
-	*/
 };
 
 const handler = {

@@ -154,7 +154,7 @@ export const enableGlobalMockRuntime = () => {
 		}
 		return (pending[burnRequest.signature] = new EventEmitter());
 	};
-	UnderwriterTransferRequest.prototype.submitToRenVM = async function (flag) {
+	UnderwriterTransferRequest.prototype.submitToRenVM = async function () {
 		const confirmed = new EventEmitter();
 		const gatewayAddress = '39WeCoGbNNk5gVNPx9j4mSrw3tvf1WfRz7';
 		let _signed;

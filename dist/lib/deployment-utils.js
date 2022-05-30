@@ -9,7 +9,7 @@ require("@ethersproject/hash");
 var ethers_1 = require("ethers");
 var chains_1 = require("@renproject/chains");
 exports.CONTROLLER_DEPLOYMENTS = (_a = {},
-    _a[require('../deployments/arbitrum/ZeroController').address] = 'Arbitrum',
+    _a[require('../deployments/arbitrum/BadgerBridgeZeroController.json').address] = 'Arbitrum',
     _a[require('../deployments/matic/ZeroController').address] = 'Polygon',
     _a[require('../deployments/mainnet/BadgerBridgeZeroController.json').address] = 'Ethereum',
     _a);
@@ -26,7 +26,7 @@ exports.RENVM_PROVIDERS = {
 var getProvider = function (transferRequest) {
     if (Object.keys(exports.CONTROLLER_DEPLOYMENTS).includes(transferRequest.contractAddress)) {
         var chain_key = exports.CONTROLLER_DEPLOYMENTS[transferRequest.contractAddress];
-        return exports.RENVM_PROVIDERS[chain_key](new ethers_1.ethers.providers.JsonRpcProvider(exports.RPC_ENDPOINTS[chain_key]), 'mainnet');
+        return exports.RENVM_PROVIDERS[chain_key](new ethers_1.ethers.providers.JsonRpcProvider(exports.RPC_ENDPOINTS[chain_key]), 'any');
     }
     else {
         throw new Error('Not a contract currently deployed');
