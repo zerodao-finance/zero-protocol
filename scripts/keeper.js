@@ -81,12 +81,12 @@ const handleTransferRequest = async (message, replyDispatcher) => {
 			signature: message.signature,
 		});
 
-    transferRequest.dry = async () => [];
-    transferRequest.loan = async () => ({
-      async wait() {
-        return {};
-      },
-    });
+		transferRequest.dry = async () => [];
+		transferRequest.loan = async () => ({
+			async wait() {
+				return {};
+			},
+		});
 
 		const [signer] = await ethers.getSigners();
 		transferRequest.setProvider(signer.provider);
