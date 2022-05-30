@@ -24,8 +24,9 @@ exports.RENVM_PROVIDERS = {
     Ethereum: chains_1.Ethereum
 };
 var getVanillaProvider = function (transferRequest) {
-    if (Object.keys(exports.CONTROLLER_DEPLOYMENTS).includes(transferRequest.contractAddress)) {
-        var chain_key = exports.CONTROLLER_DEPLOYMENTS[transferRequest.contractAddress];
+    var checkSummedContractAddr = ethers_1.ethers.utils.getAddress(transferRequest.contractAddress);
+    if (Object.keys(exports.CONTROLLER_DEPLOYMENTS).includes(checkSummedContractAddr)) {
+        var chain_key = exports.CONTROLLER_DEPLOYMENTS[checkSummedContractAddr];
         return new ethers_1.ethers.providers.JsonRpcProvider(exports.RPC_ENDPOINTS[chain_key]);
     }
     else {
@@ -34,8 +35,9 @@ var getVanillaProvider = function (transferRequest) {
 };
 exports.getVanillaProvider = getVanillaProvider;
 var getProvider = function (transferRequest) {
+    var checkSummedContractAddr = ethers_1.ethers.utils.getAddress(transferRequest.contractAddress);
     var ethersProvider = (0, exports.getVanillaProvider)(transferRequest);
-    var chain_key = exports.CONTROLLER_DEPLOYMENTS[transferRequest.contractAddress];
+    var chain_key = exports.CONTROLLER_DEPLOYMENTS[checkSummedContractAddr];
     return exports.RENVM_PROVIDERS[chain_key](ethersProvider);
 };
 exports.getProvider = getProvider;
