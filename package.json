@@ -16,7 +16,9 @@
     "test:external": "hardhat test --network localhost",
     "test:sdk:unit": "NODE_ENV=test yarn mocha -r ts-node/register lib/test/sdk.test.ts",
     "script:e2e": "NODE_ENV=development hardhat run scripts/e2eTransaction.js",
-    "test:badger": "CHAIN=ETHEREUM DEPLOYARBITRUMQUICKCONVERT=true DEPLOYMENT_NUMBER=1 yarn hardhat test test/test-badger.ts --network localhost",
+    "test:badger": "DEPLOYARBITRUMQUICKCONVERT=true DEPLOYMENT_NUMBER=1 yarn hardhat test test/test-badger.ts --network localhost",
+    "test:badger:ethereum": "CHAIN=ETHEREUM yarn test:badger",
+    "test:badger:arbitrum": "BADGER=true CHAIN=ARBITRUM yarn test:badger",
     "script:keeper": "hardhat run scripts/keeper.js",
     "start": "hardhat node",
     "lint": "prettier --check \"lib/**/*.{js,jsx,ts,tsx}\"",
@@ -24,10 +26,11 @@
     "node:arbitrum": "CHAIN=ARBITRUM CHAIN_ID=42161 FORKING=true hardhat node",
     "node:ethereum": "CHAIN=ETHEREUM CHAIN_ID=1 FORKING=true hardhat node --export-all  deployments/deployments.json",
     "node:badger:ethereum": "CHAIN=ETHEREUM CHAIN_ID=1 FORKING=true hardhat node",
+    "node:badger:arbitrum": "CHAIN=ARBITRUM DEPLOYARBITRUMQUICKCONVERT=true BADGER=true DEPLOYMENT_NUMBER=1 CHAIN_ID=42161 FORKING=true hardhat node",
     "deploy:arbitrum": "DEPLOYARBITRUMQUICKCONVERT=true CHAIN=ARBITRUM hardhat deploy --network arbitrum",
     "node:polygon": "CHAIN=MATIC CHAIN_ID=137 FORKING=true hardhat node --no-deploy",
     "node:mainnet": "CHAIN=ETHEREUM CHAIN_ID=1 FORKING=true hardhat node",
-    "node:badger": "DEPLOYMENT_NUMBER=1 yarn node:ethereum",
+    "node:badger": " DEPLOYMENT_NUMBER=1 yarn node:ethereum",
     "node:badger:local": "DEPLOYMENT_NUMBER=1 yarn node:badger:ethereum --export-all deployments/deployments.json",
     "script:harvester": "hardhat run scripts/harvester.js"
   },
@@ -131,6 +134,7 @@
     "wrtc": "^0.4.7"
   },
   "prettier": {
-    "tabWidth": 2
+    "tabWidth": 2,
+    "singleQuote": true
   }
 }
