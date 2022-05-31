@@ -9,9 +9,9 @@ require("@ethersproject/hash");
 var ethers_1 = require("ethers");
 var chains_1 = require("@renproject/chains");
 exports.CONTROLLER_DEPLOYMENTS = (_a = {},
-    _a[require('../deployments/arbitrum/BadgerBridgeZeroController.json').address] = 'Arbitrum',
-    _a[require('../deployments/matic/ZeroController').address] = 'Polygon',
-    _a[require('../deployments/mainnet/BadgerBridgeZeroController.json').address] = 'Ethereum',
+    _a[ethers_1.ethers.utils.getAddress(require('../deployments/arbitrum/BadgerBridgeZeroController.json').address)] = 'Arbitrum',
+    _a[ethers_1.ethers.utils.getAddress(require('../deployments/matic/ZeroController').address)] = 'Polygon',
+    _a[ethers_1.ethers.utils.getAddress(require('../deployments/mainnet/BadgerBridgeZeroController.json').address)] = 'Ethereum',
     _a);
 exports.RPC_ENDPOINTS = {
     Arbitrum: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
