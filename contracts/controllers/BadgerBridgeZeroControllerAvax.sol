@@ -12,7 +12,7 @@ import {SplitSignatureLib} from '../libraries/SplitSignatureLib.sol';
 import {IBadgerSettPeak} from '../interfaces/IBadgerSettPeak.sol';
 import {ICurveFi} from '../interfaces/ICurveFi.sol';
 import {IGateway} from '../interfaces/IGateway.sol';
-import {ICurveETHUInt256} from '../interfaces/CurvePools/ICurveETHUInt256.sol';
+import {ICurveUInt256} from '../interfaces/CurvePools/ICurveETHUInt256.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IyVault} from '../interfaces/IyVault.sol';
 import {ISett} from '../interfaces/ISett.sol';
@@ -30,16 +30,16 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   address public strategist;
 
   address constant btcGateway = 0x05Cadbf3128BcB7f2b89F3dD55E5B0a036a49e20;
-  address constant routerv3 = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
   address constant factory = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
-  address constant usdc = 0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8;
+  address constant crvUsd = 0x7f90122BF0700F9E7e1F688fe926940E8839F353;
+  address constant usdc = 0x46A51127C3ce23fb7AB1DE06226147F446e4a857;
   address constant weth = 0x53f7c5869a859F0AeC3D334ee8B4Cf01E3492f21;
   address constant wbtc = 0x686bEF2417b6Dc32C50a3cBfbCC3bb60E1e9a15D;
   address constant renbtc = 0xDBf31dF14B66535aF65AaC99C32e9eA844e14501;
   address constant renCrv = 0x16a7DA911A4DD1d83F3fF066fE28F3C792C50d90;
-  address constant threepool = 0x7f90122BF0700F9E7e1F688fe926940E8839F353;
   address constant tricrypto = 0xB755B949C126C04e0348DD881a5cF55d424742B2;
   address constant renCrvLp = 0xC2b1DF84112619D190193E48148000e3990Bf627;
+  address constant pangolinRouter = 0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106;
   address constant bCrvRen = 0x6dEf55d2e18486B9dDfaA075bc4e4EE0B28c1545;
   address constant settPeak = 0x41671BA1abcbA387b9b2B752c205e22e916BE6e3;
   address constant ibbtc = 0xc4E15973E6fF2A35cC804c2CF9D2a1b817a8b40F;
