@@ -165,7 +165,7 @@ class ZeroUser extends EventEmitter {
 				if (ackReceived !== true) {
 					try {
 						const peer = await peerId.createFromB58String(keeper);
-						const { stream } = await this.conn.dialProtocol(peer, '/zero/keeper/dispatch');
+						const { stream } = await this.conn.dialProtocol(peer, '/zero/1.1.0/dispatch');
 						pipe(JSON.stringify(requestFromTemplate), lp.encode(), stream.sink);
 						this.log.info(`Published transfer request to ${keeper}. Waiting for keeper confirmation.`);
 					} catch (e: any) {
@@ -316,7 +316,7 @@ class ZeroKeeper {
 
 			});
 		};
-		await this.conn.handle('/zero/keeper/dispatch', handler);
+		await this.conn.handle('/zero/1.1.0/dispatch', handler);
 		this.log.info('Set the tx dispatcher');
 	}
 

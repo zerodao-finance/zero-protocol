@@ -9,6 +9,9 @@ export async function createZeroConnection(address?: string): Promise<ZeroConnec
 		case 'mainnet':
 			connOptions = { multiaddr: '/dns4/p2p.zerodao.com/tcp/443/wss/p2p-webrtc-star/' };
 			break;
+		case 'dev-mainnet': 
+			connOptions = { multiaddr: '/dns4/devp2p.zerodao.com/tcp/443/wss/p2p-webrtc-star/'}
+			break;
 		default:
 			connOptions = { multiaddr: address };
 	}
