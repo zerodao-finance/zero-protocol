@@ -21,7 +21,8 @@
     "test:badger:arbitrum": "BADGER=true CHAIN=ARBITRUM yarn test:badger",
     "script:keeper": "hardhat run scripts/keeper.js",
     "start": "hardhat node",
-    "lint": "prettier --check \"lib/**/*.{js,jsx,ts,tsx}\"",
+    "lint:check": "prettier --check **.sol && prettier --check **.js && prettier --check **.ts && hardhat compile --config ./hardhat.config.ts && npx solhint --config ./config/.solhint.json --ignore-path ./config/.solhintignore 'contracts/**/*.sol'",
+    "lint:fix": "prettier --write **.sol && prettier --write **.js && prettier --write **.ts",
     "build": "tsc -p ./tsconfig.json",
     "node:arbitrum": "CHAIN=ARBITRUM CHAIN_ID=42161 FORKING=true hardhat node",
     "node:ethereum": "CHAIN=ETHEREUM CHAIN_ID=1 FORKING=true hardhat node --export-all  deployments/deployments.json",
@@ -134,7 +135,15 @@
     "wrtc": "^0.4.7"
   },
   "prettier": {
-    "tabWidth": 2,
-    "singleQuote": true
+    "overrides": [
+      {
+        "files": "*.sol",
+        "options": {
+          "tabWidth": 2,
+          "printWidth": 120,
+          "bracketSpacing": true
+        }
+      }
+    ]
   }
 }
