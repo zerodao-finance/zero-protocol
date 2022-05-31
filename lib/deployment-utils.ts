@@ -7,9 +7,9 @@ import { ethers } from 'ethers';
 import { Polygon, Ethereum, Arbitrum } from '@renproject/chains';
 
 export const CONTROLLER_DEPLOYMENTS = {
-	[require('../deployments/arbitrum/BadgerBridgeZeroController.json').address]: 'Arbitrum',
-	[require('../deployments/matic/ZeroController').address]: 'Polygon',
-	[require('../deployments/mainnet/BadgerBridgeZeroController.json').address]: 'Ethereum',
+	[ethers.utils.getAddress(require('../deployments/arbitrum/BadgerBridgeZeroController.json').address)]: 'Arbitrum',
+	[ethers.utils.getAddress(require('../deployments/matic/ZeroController').address)]: 'Polygon',
+	[ethers.utils.getAddress(require('../deployments/mainnet/BadgerBridgeZeroController.json').address)]: 'Ethereum',
 };
 export const RPC_ENDPOINTS = {
 	Arbitrum: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
