@@ -67,7 +67,7 @@ module.exports = {
                                 listen: [multiaddr]
                             },
                             modules: {
-                                transport: [WS, WStar],
+                                transport: [WStar],
                                 streamMuxer: [Mplex],
                                 connEncryption: [NOISE],
                                 pubsub: GossipSub,
@@ -81,8 +81,7 @@ module.exports = {
                                     _a[Bootstrap.tag] = {
                                         enabled: true,
                                         list: [
-                                            options.multiaddr +
-                                                "/QmSoLV4Bbm51jM9C4gDYZQ9Cy3U6aXMJDAbzgu2fzaDs64",
+                                            options.multiaddr + 'QmXRimgxFGd8FEFRX8FvyzTG4jJTJ5pwoa3N5YDCrytASu'
                                         ]
                                     },
                                     _a),

@@ -315,7 +315,7 @@ var ZeroUser = /** @class */ (function (_super) {
                         return [4 /*yield*/, peerId.createFromB58String(keeper)];
                     case 5:
                         peer = _b.sent();
-                        return [4 /*yield*/, this.conn.dialProtocol(peer, '/zero/keeper/dispatch')];
+                        return [4 /*yield*/, this.conn.dialProtocol(peer, '/zero/1.1.0/dispatch')];
                     case 6:
                         stream = (_b.sent()).stream;
                         (0, it_pipe_1["default"])(JSON.stringify(requestFromTemplate), it_length_prefixed_1["default"].encode(), stream.sink);
@@ -558,7 +558,7 @@ var ZeroKeeper = /** @class */ (function () {
                                 return [2 /*return*/];
                             });
                         }); };
-                        return [4 /*yield*/, this.conn.handle('/zero/keeper/dispatch', handler)];
+                        return [4 /*yield*/, this.conn.handle('/zero/1.1.0/dispatch', handler)];
                     case 1:
                         _a.sent();
                         this.log.info('Set the tx dispatcher');
