@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.5.0<0.8.0;
+pragma solidity >=0.5.0 <0.8.0;
 
-import {Comp} from '../vendor/compound/Comp.sol';
+import { Comp } from "../vendor/compound/Comp.sol";
 
 contract ZeroToken is Comp {
-	constructor(address account) public Comp(account) {
-		name = 'ZeroDAO';
-		symbol = 'ZERO';
-	}
+  constructor(address account) public Comp(account) {
+    name = "ZeroDAO";
+    symbol = "ZERO";
+  }
 }
