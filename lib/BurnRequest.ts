@@ -210,7 +210,6 @@ export class BurnRequest {
 		const provider = signer.provider as ethers.providers.JsonRpcProvider;
 		const { chainId } = await signer.provider.getNetwork();
 		console.log(chainId);
-		console.log("ASSET: " + this.asset);
 		const token = new ethers.Contract(
 			this.asset,
 			[
