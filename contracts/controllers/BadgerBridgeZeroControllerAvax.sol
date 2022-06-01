@@ -7,12 +7,12 @@ import {ISwapRouter} from '@uniswap/v3-periphery/contracts/interfaces/ISwapRoute
 import {UniswapV2Library} from '../libraries/UniswapV2Library.sol';
 import {ZeroLib} from '../libraries/ZeroLib.sol';
 import {IERC2612Permit} from '../interfaces/IERC2612Permit.sol';
-import {IRenCrvArbitrum} from '../interfaces/CurvePools/IRenCrvArbitrum.sol';
+import {IRenCrv} from '../interfaces/CurvePools/IRenCrv.sol';
 import {SplitSignatureLib} from '../libraries/SplitSignatureLib.sol';
 import {IBadgerSettPeak} from '../interfaces/IBadgerSettPeak.sol';
-import {ICurveFi} from '../interfaces/ICurveFi.sol';
+import {ICurveFi} from '../interfaces/ICurveFiAvax.sol';
 import {IGateway} from '../interfaces/IGateway.sol';
-import {ICurveUInt256} from '../interfaces/CurvePools/ICurveETHUInt256.sol';
+import {ICurveUInt256} from '../interfaces/CurvePools/ICurveUInt256.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IyVault} from '../interfaces/IyVault.sol';
 import {ISett} from '../interfaces/ISett.sol';
@@ -21,6 +21,7 @@ import {SafeMath} from '@openzeppelin/contracts/math/SafeMath.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import {ECDSA} from '@openzeppelin/contracts/cryptography/ECDSA.sol';
 import {EIP712Upgradeable} from '@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol';
+import {ICurveFi as ICurveFiRen} from '../interfaces/ICurveFi.sol';
 
 contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   using SafeERC20 for IERC20;
@@ -32,8 +33,9 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   address constant btcGateway = 0x05Cadbf3128BcB7f2b89F3dD55E5B0a036a49e20;
   address constant factory = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
   address constant crvUsd = 0x7f90122BF0700F9E7e1F688fe926940E8839F353;
-  address constant usdc = 0x46A51127C3ce23fb7AB1DE06226147F446e4a857;
-  address constant weth = 0x53f7c5869a859F0AeC3D334ee8B4Cf01E3492f21;
+  address constant av3Crv = 0x1337BedC9D22ecbe766dF105c9623922A27963EC;
+  address constant usdc = 0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664;
+  address constant wavax = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
   address constant wbtc = 0x686bEF2417b6Dc32C50a3cBfbCC3bb60E1e9a15D;
   address constant renbtc = 0xDBf31dF14B66535aF65AaC99C32e9eA844e14501;
   address constant renCrv = 0x16a7DA911A4DD1d83F3fF066fE28F3C792C50d90;
@@ -43,8 +45,6 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   address constant bCrvRen = 0x6dEf55d2e18486B9dDfaA075bc4e4EE0B28c1545;
   address constant settPeak = 0x41671BA1abcbA387b9b2B752c205e22e916BE6e3;
   address constant ibbtc = 0xc4E15973E6fF2A35cC804c2CF9D2a1b817a8b40F;
-  uint24 constant wethWbtcFee = 500;
-  uint24 constant usdcWethFee = 500;
   uint256 public governanceFee;
   bytes32 constant PERMIT_TYPEHASH =
     0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
@@ -82,9 +82,6 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     assembly {
       sstore(lock_slot, lock)
     }
-
-    IERC20(wbtc).safeApprove(routerv3, ~uint256(0) >> 2);
-    IERC20(usdc).safeApprove(routerv3, ~uint256(0) >> 2);
   }
 
   function computeCalldataGasDiff() internal pure returns (uint256 diff) {
@@ -177,17 +174,14 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
 
   function toWBTC(uint256 amount) internal returns (uint256 amountOut) {
     uint256 amountStart = IERC20(wbtc).balanceOf(address(this));
-    IRenCrvArbitrum(renCrv).exchange(1, 0, amount, 1, address(this));
+    IRenCrv(renCrv).exchange(1, 0, amount, 1);
     amountOut = IERC20(wbtc).balanceOf(address(this)).sub(amountStart);
   }
 
   function toIBBTC(uint256 amountIn) internal returns (uint256 amountOut) {
     uint256[2] memory amounts;
     amounts[0] = amountIn;
-    (bool success, ) = renCrv.call(
-      abi.encodeWithSelector(ICurveFi.add_liquidity.selector, amounts, 0)
-    );
-    require(success, '!curve');
+    ICurveFiRen(renCrv).add_liquidity(amounts, 0);
     ISett(bCrvRen).deposit(IERC20(renCrvLp).balanceOf(address(this)));
     amountOut = IBadgerSettPeak(settPeak).mint(
       0,
@@ -201,28 +195,23 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     uint256 amountIn,
     address out
   ) internal returns (uint256 amountOut) {
-    uint256 wbtcAmountIn = toWBTC(amountIn);
-    bytes memory path = abi.encodePacked(
-      wbtc,
-      wethWbtcFee,
-      weth,
-      usdcWethFee,
-      usdc
+    uint256 usdAmount = IERC20(av3Crv).balanceOf(address(this));
+    uint256 wbtcAmount = toWBTC(amountIn);
+    ICurveUInt256(tricrypto).exchange(1, 0, wbtcAmount, 1);
+    usdAmount = usdAmount.sub(IERC20(av3Crv).balanceOf(address(this)));
+    amountOut = ICurveFi(crvUsd).remove_liquidity_one_coin(
+      usdAmount,
+      1,
+      1,
+      true
     );
-    ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
-      recipient: out,
-      deadline: block.timestamp + 1,
-      amountIn: wbtcAmountIn,
-      amountOutMinimum: minOut,
-      path: path
-    });
-    amountOut = ISwapRouter(routerv3).exactInput(params);
   }
 
   function quote() internal {
+    //TODO: rewrite this
     (uint256 amountWeth, uint256 amountRenBTC) = UniswapV2Library.getReserves(
       factory,
-      weth,
+      wavax,
       renbtc
     );
     renbtcForOneETHPrice = UniswapV2Library.quote(
@@ -237,34 +226,18 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     uint256 amountIn,
     address out
   ) internal returns (uint256 amountOut) {
-    uint256 wbtcAmountOut = toWBTC(amountIn);
-    ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
-      .ExactInputSingleParams({
-        tokenIn: wbtc,
-        tokenOut: weth,
-        fee: wethWbtcFee,
-        recipient: out,
-        deadline: block.timestamp + 1,
-        amountIn: wbtcAmountOut,
-        amountOutMinimum: minOut,
-        sqrtPriceLimitX96: 0
-      });
-    amountOut = ISwapRouter(routerv3).exactInputSingle(params);
+    //TODO: rewrite this
   }
 
   function fromIBBTC(uint256 amountIn) internal returns (uint256 amountOut) {
     uint256 amountStart = IERC20(renbtc).balanceOf(address(this));
     IBadgerSettPeak(settPeak).redeem(0, amountIn);
     ISett(bCrvRen).withdraw(IERC20(bCrvRen).balanceOf(address(this)));
-    (bool success, ) = renCrv.call(
-      abi.encodeWithSelector(
-        ICurveFi.remove_liquidity_one_coin.selector,
-        IERC20(renCrvLp).balanceOf(address(this)),
-        0,
-        0
-      )
+    ICurveFiRen(renCrv).remove_liquidity_one_coin(
+      IERC20(renCrvLp).balanceOf(address(this)),
+      0,
+      0
     );
-    require(success, '!curve');
     amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
   }
 
@@ -272,27 +245,18 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     internal
     returns (uint256 amountOut)
   {
-    bytes memory path = abi.encodePacked(
-      usdc,
-      usdcWethFee,
-      weth,
-      wethWbtcFee,
-      wbtc
-    );
-    ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
-      recipient: address(this),
-      deadline: block.timestamp + 1,
-      amountIn: amountIn,
-      amountOutMinimum: minOut,
-      path: path
-    });
-    amountOut = ISwapRouter(routerv3).exactInput(params);
-    amountOut = toRenBTC(amountOut);
+    uint256 wbtcAmount = IERC20(wbtc).balanceOf(address(this));
+    uint256[3] memory amounts;
+    amounts[1] = amountIn;
+    amountOut = ICurveFi(crvUsd).add_liquidity(amounts, 1, true);
+    ICurveUInt256(tricrypto).exchange(0, 1, amountOut, 1);
+    wbtcAmount = wbtcAmount.sub(IERC20(wbtc).balanceOf(address(this)));
+    amountOut = toRenBTC(wbtcAmount);
   }
 
   function toRenBTC(uint256 amountIn) internal returns (uint256 amountOut) {
     uint256 balanceStart = IERC20(renbtc).balanceOf(address(this));
-    IRenCrvArbitrum(renCrv).exchange(0, 1, amountIn, 1, address(this));
+    IRenCrv(renCrv).exchange(0, 1, amountIn, 1);
     amountOut = IERC20(renbtc).balanceOf(address(this)).sub(balanceStart);
   }
 
@@ -300,36 +264,11 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     internal
     returns (uint256 amountOut)
   {
-    ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
-      .ExactInputSingleParams({
-        tokenIn: weth,
-        tokenOut: wbtc,
-        fee: wethWbtcFee,
-        recipient: address(this),
-        deadline: block.timestamp + 1,
-        amountIn: amountIn,
-        amountOutMinimum: minOut,
-        sqrtPriceLimitX96: 0
-      });
-    amountOut = ISwapRouter(routerv3).exactInputSingle{value: amountIn}(params);
-    return toRenBTC(amountOut);
+    //TODO: rewrite this
   }
 
   function toETH() internal returns (uint256 amountOut) {
-    uint256 wbtcStart = IERC20(wbtc).balanceOf(address(this));
-
-    uint256 amountStart = address(this).balance;
-    (bool success, ) = tricrypto.call(
-      abi.encodeWithSelector(
-        ICurveETHUInt256.exchange.selector,
-        1,
-        2,
-        wbtcStart,
-        0,
-        true
-      )
-    );
-    amountOut = address(this).balance.sub(amountStart);
+    //TODO: rewrite this
   }
 
   receive() external payable {
