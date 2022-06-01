@@ -210,6 +210,7 @@ export class BurnRequest {
 		const provider = signer.provider as ethers.providers.JsonRpcProvider;
 		const { chainId } = await signer.provider.getNetwork();
 		console.log(chainId);
+		console.log("ASSET: " + this.asset);
 		const token = new ethers.Contract(
 			this.asset,
 			[
@@ -219,7 +220,6 @@ export class BurnRequest {
 			],
 			signer.provider,
 		);
-		console.log('domain', await token.DOMAIN_SEPARATOR());
 		this.assetName = await token.name();
 		this.tokenNonce = (await token.nonces(await signer.getAddress())).toString();
 		console.log(this.assetName, this.tokenNonce);
@@ -238,7 +238,7 @@ export class BurnRequest {
 		}
 	}
 	async waitForHostTransaction() {
-          const network = ((v) => v === 'ethereum' ? 'mainnet' : v)(CONTROLLER_DEPLOYMENTS[this.contractAddress.toLowerCase()].toLowerCase());
+          const network = ((v) => v === 'ethereum' ? 'mainnet' : v)(CONTROLLER_DEPLOYMENTS[ethers.utils.getAddress(this.contractAddress)].toLowerCase());
 	  const provider = new ethers.providers.InfuraProvider(network, '2f1de898efb74331bf933d3ac469b98d');
           const renbtc = new ethers.Contract(fixtures[((v) => v === 'mainnet' ? 'ethereum' : v)(network).toUpperCase()].renBTC, [ 'event Transfer(address indexed from, address indexed to, uint256 amount)' ], provider);
 	  return await new Promise((resolve, reject) => {
