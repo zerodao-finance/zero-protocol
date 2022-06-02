@@ -69,7 +69,7 @@ export class TransferRequest {
 		this.chainId = params.chainId;
 		this.contractAddress = params.contractAddress;
 		this.signature = params.signature;
-		const networkName = this.chainId == '42161' ? 'arbitrum' : 'mainnet';
+		const networkName = "mainnet";
 		this._ren = new (RenJS as any)(networkName, { loadCompletedDeposits: true });
 		this._contractFn = 'zeroCall';
 		this._contractParams = [

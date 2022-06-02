@@ -92,7 +92,7 @@ var TransferRequest = /** @class */ (function () {
         this.chainId = params.chainId;
         this.contractAddress = params.contractAddress;
         this.signature = params.signature;
-        var networkName = this.chainId == '42161' ? 'arbitrum' : 'mainnet';
+        var networkName = "mainnet";
         this._ren = new ren_1["default"](networkName, { loadCompletedDeposits: true });
         this._contractFn = 'zeroCall';
         this._contractParams = [
