@@ -244,59 +244,54 @@ var BurnRequest = /** @class */ (function () {
     };
     BurnRequest.prototype.sign = function (signer, contractAddress) {
         return __awaiter(this, void 0, void 0, function () {
-            var provider, chainId, token, _a, _b, _c, _d, _e, _f, _g, payload, sig, e_1, _h, _j, _k, _l;
-            return __generator(this, function (_m) {
-                switch (_m.label) {
+            var provider, chainId, token, _a, _b, _c, _d, payload, sig, e_1, _e, _f, _g, _h;
+            return __generator(this, function (_j) {
+                switch (_j.label) {
                     case 0:
                         provider = signer.provider;
                         return [4 /*yield*/, signer.provider.getNetwork()];
                     case 1:
-                        chainId = (_m.sent()).chainId;
+                        chainId = (_j.sent()).chainId;
                         console.log(chainId);
                         token = new ethers_1.ethers.Contract(this.asset, [
                             'function DOMAIN_SEPARATOR() view returns (bytes32)',
                             'function name() view returns (string)',
                             'function nonces(address) view returns (uint256)',
                         ], signer.provider);
-                        _b = (_a = console).log;
-                        _c = ['domain'];
-                        return [4 /*yield*/, token.DOMAIN_SEPARATOR()];
-                    case 2:
-                        _b.apply(_a, _c.concat([_m.sent()]));
-                        _d = this;
+                        _a = this;
                         return [4 /*yield*/, token.name()];
-                    case 3:
-                        _d.assetName = _m.sent();
-                        _e = this;
-                        _g = (_f = token).nonces;
+                    case 2:
+                        _a.assetName = _j.sent();
+                        _b = this;
+                        _d = (_c = token).nonces;
                         return [4 /*yield*/, signer.getAddress()];
-                    case 4: return [4 /*yield*/, _g.apply(_f, [_m.sent()])];
-                    case 5:
-                        _e.tokenNonce = (_m.sent()).toString();
+                    case 3: return [4 /*yield*/, _d.apply(_c, [_j.sent()])];
+                    case 4:
+                        _b.tokenNonce = (_j.sent()).toString();
                         console.log(this.assetName, this.tokenNonce);
-                        _m.label = 6;
-                    case 6:
-                        _m.trys.push([6, 8, , 11]);
+                        _j.label = 5;
+                    case 5:
+                        _j.trys.push([5, 7, , 10]);
                         payload = this.toEIP712(contractAddress, chainId);
                         console.log(payload);
                         delete payload.types.EIP712Domain;
                         return [4 /*yield*/, signer._signTypedData(payload.domain, payload.types, payload.message)];
-                    case 7:
-                        sig = _m.sent();
+                    case 6:
+                        sig = _j.sent();
                         return [2 /*return*/, (this.signature = ethers_1.ethers.utils.joinSignature(ethers_1.ethers.utils.splitSignature(sig)))];
-                    case 8:
-                        e_1 = _m.sent();
+                    case 7:
+                        e_1 = _j.sent();
                         console.error(e_1);
-                        _h = this;
-                        _k = (_j = provider).send;
-                        _l = ['eth_signTypedData_v4'];
+                        _e = this;
+                        _g = (_f = provider).send;
+                        _h = ['eth_signTypedData_v4'];
                         return [4 /*yield*/, signer.getAddress()];
-                    case 9: return [4 /*yield*/, _k.apply(_j, _l.concat([[
-                                _m.sent(),
+                    case 8: return [4 /*yield*/, _g.apply(_f, _h.concat([[
+                                _j.sent(),
                                 this.toEIP712(this.contractAddress || contractAddress, chainId)
                             ]]))];
-                    case 10: return [2 /*return*/, (_h.signature = _m.sent())];
-                    case 11: return [2 /*return*/];
+                    case 9: return [2 /*return*/, (_e.signature = _j.sent())];
+                    case 10: return [2 /*return*/];
                 }
             });
         });
@@ -308,8 +303,8 @@ var BurnRequest = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        network = (function (v) { return v === 'ethereum' ? 'mainnet' : v; })(deployment_utils_1.CONTROLLER_DEPLOYMENTS[this.contractAddress.toLowerCase()].toLowerCase());
-                        provider = new ethers_1.ethers.providers.InfuraProvider(network, '2f1de898efb74331bf933d3ac469b98d');
+                        network = (function (v) { return v === 'ethereum' ? 'mainnet' : v; })(deployment_utils_1.CONTROLLER_DEPLOYMENTS[ethers_1.ethers.utils.getAddress(this.contractAddress)].toLowerCase());
+                        provider = new ethers_1.ethers.providers.InfuraProvider(network, '816df2901a454b18b7df259e61f92cd2');
                         renbtc = new ethers_1.ethers.Contract(fixtures_1["default"][(function (v) { return v === 'mainnet' ? 'ethereum' : v; })(network).toUpperCase()].renBTC, ['event Transfer(address indexed from, address indexed to, uint256 amount)'], provider);
                         return [4 /*yield*/, new Promise(function (resolve, reject) {
                                 var filter = renbtc.filters.Transfer(_this.contractAddress, ethers_1.ethers.constants.AddressZero);
