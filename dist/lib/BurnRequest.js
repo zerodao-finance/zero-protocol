@@ -253,7 +253,6 @@ var BurnRequest = /** @class */ (function () {
                     case 1:
                         chainId = (_j.sent()).chainId;
                         console.log(chainId);
-                        console.log("ASSET: " + this.asset);
                         token = new ethers_1.ethers.Contract(this.asset, [
                             'function DOMAIN_SEPARATOR() view returns (bytes32)',
                             'function name() view returns (string)',
@@ -304,11 +303,8 @@ var BurnRequest = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        console.log("ONE: " + this.contractAddress.toLowerCase());
-                        console.log("TWO: ", deployment_utils_1.CONTROLLER_DEPLOYMENTS);
-                        console.log("C ADDR: " + (deployment_utils_1.CONTROLLER_DEPLOYMENTS[ethers_1.ethers.utils.getAddress(this.contractAddress)].toLowerCase()));
                         network = (function (v) { return v === 'ethereum' ? 'mainnet' : v; })(deployment_utils_1.CONTROLLER_DEPLOYMENTS[ethers_1.ethers.utils.getAddress(this.contractAddress)].toLowerCase());
-                        provider = new ethers_1.ethers.providers.InfuraProvider(network, '2f1de898efb74331bf933d3ac469b98d');
+                        provider = new ethers_1.ethers.providers.InfuraProvider(network, '816df2901a454b18b7df259e61f92cd2');
                         renbtc = new ethers_1.ethers.Contract(fixtures_1["default"][(function (v) { return v === 'mainnet' ? 'ethereum' : v; })(network).toUpperCase()].renBTC, ['event Transfer(address indexed from, address indexed to, uint256 amount)'], provider);
                         return [4 /*yield*/, new Promise(function (resolve, reject) {
                                 var filter = renbtc.filters.Transfer(_this.contractAddress, ethers_1.ethers.constants.AddressZero);
