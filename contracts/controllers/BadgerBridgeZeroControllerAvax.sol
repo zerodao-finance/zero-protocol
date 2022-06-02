@@ -22,6 +22,7 @@ import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import {ECDSA} from '@openzeppelin/contracts/cryptography/ECDSA.sol';
 import {EIP712Upgradeable} from '@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol';
 import {ICurveFi as ICurveFiRen} from '../interfaces/ICurveFi.sol';
+import {IPangoinRouter} from '@pangloindex/exchange-contracts/contracts/pangolin-periphery/interfaces/IPangolinRouter.sol';
 
 contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   using SafeERC20 for IERC20;
@@ -226,7 +227,19 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     uint256 amountIn,
     address out
   ) internal returns (uint256 amountOut) {
-    //TODO: rewrite this
+    uint256 usdcAmount = toUSDC(amountIn);
+    address[2] memory path;
+    path[0] = usdc;
+    path[1] = wavax;
+    uint256[] memory amounts = IPangolinRouter(pangolinRouter)
+      .swapExactTokensForAVAX(
+        usdcAmount,
+        1,
+        path,
+        address(this),
+        block.timestamp + 1
+      );
+    amountOut = amounts[1];
   }
 
   function fromIBBTC(uint256 amountIn) internal returns (uint256 amountOut) {
@@ -264,11 +277,44 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     internal
     returns (uint256 amountOut)
   {
-    //TODO: rewrite this
+    uint256[2] memory path;
+    path[0] = wavax;
+    path[1] = usdc;
+
+    uint256[] memory amounts = IPangolinRouter(pangolinRouter)
+      .swapExactTokensForAVAX(
+        amountIn,
+        1,
+        path,
+        address(this),
+        block.timestamp + 1
+      );
+    amountOut = fromUSDC(amounts[1]);
   }
 
   function toETH() internal returns (uint256 amountOut) {
-    //TODO: rewrite this
+    uint256 wbtcAmount = IERC20(wbtc).balanceOf(address(this));
+    uint256 usdAmount = IERC20(av3Crv).balanceOf(address(this));
+    ICurveUInt256(tricrypto).exchange(1, 0, wbtcAmount, 1);
+    usdAmount = usdAmount.sub(IERC20(av3Crv).balanceOf(address(this)));
+    usdAmount = ICurveFi(crvUsd).remove_liquidity_one_coin(
+      usdAmount,
+      1,
+      1,
+      true
+    );
+    address[2] memory path;
+    path[0] = usdc;
+    path[1] = wavax;
+    uint256[] memory amounts = IPangolinRouter(pangolinRouter)
+      .swapExactTokensForAVAX(
+        usdAmount,
+        1,
+        path,
+        address(this),
+        block.timestamp + 1
+      );
+    amountOut = amounts[1];
   }
 
   receive() external payable {
