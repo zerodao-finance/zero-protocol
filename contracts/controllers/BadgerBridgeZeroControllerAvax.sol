@@ -39,7 +39,9 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
   address constant av3Crv = 0x1337BedC9D22ecbe766dF105c9623922A27963EC;
   address constant usdc = 0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664;
   address constant wavax = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
-  address constant wbtc = 0x686bEF2417b6Dc32C50a3cBfbCC3bb60E1e9a15D;
+  address constant weth = 0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB;
+  address constant wbtc = 0x50b7545627a5162F82A992c33b87aDc75187B218;
+  address constant avWbtc = 0x686bEF2417b6Dc32C50a3cBfbCC3bb60E1e9a15D;
   address constant renbtc = 0xDBf31dF14B66535aF65AaC99C32e9eA844e14501;
   address constant renCrv = 0x16a7DA911A4DD1d83F3fF066fE28F3C792C50d90;
   address constant tricrypto = 0xB755B949C126C04e0348DD881a5cF55d424742B2;
@@ -127,9 +129,12 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     keeperReward = uint256(1 ether).div(1000);
     //IERC20(renbtc).safeApprove(btcGateway, ~uint256(0) >> 2);
     IERC20(renbtc).safeApprove(renCrv, ~uint256(0) >> 2);
+    IERC20(avWbtc).safeApprove(renCrv, ~uint256(0) >> 2);
     IERC20(wbtc).safeApprove(renCrv, ~uint256(0) >> 2);
-    IERC20(wbtc).safeApprove(tricrypto, ~uint256(0) >> 2);
+    IERC20(avWbtc).safeApprove(tricrypto, ~uint256(0) >> 2);
     IERC20(wbtc).safeApprove(joeRouter, ~uint256(0) >> 2);
+    IERC20(weth).safeApprove(tricrypto, ~uint256(0) >> 2);
+    IERC20(weth).safeApprove(joeRouter, ~uint256(0) >> 2);
     IERC20(wavax).safeApprove(joeRouter, ~uint256(0) >> 2);
     IERC20(av3Crv).safeApprove(crvUsd, ~uint256(0) >> 2);
     IERC20(av3Crv).safeApprove(tricrypto, ~uint256(0) >> 2);
@@ -179,10 +184,13 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     result = v.mul(n).div(uint256(1 ether));
   }
 
-  function toWBTC(uint256 amount) internal returns (uint256 amountOut) {
-    uint256 amountStart = IERC20(wbtc).balanceOf(address(this));
-    ICurveInt128(renCrv).exchange(1, 0, amount, 1);
-    amountOut = IERC20(wbtc).balanceOf(address(this)).sub(amountStart);
+  function toWBTC(uint256 amount, bool useUnderlying)
+    internal
+    returns (uint256 amountOut)
+  {
+    if (useUnderlying)
+      amountOut = ICurveInt128(renCrv).exchange_underlying(1, 0, amount, 1);
+    else amountOut = ICurveInt128(renCrv).exchange(1, 0, amount, 1);
   }
 
   function toIBBTC(uint256 amountIn) internal returns (uint256 amountOut) {
@@ -202,7 +210,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     returns (uint256 amountOut)
   {
     uint256 usdAmount = IERC20(av3Crv).balanceOf(address(this));
-    uint256 wbtcAmount = toWBTC(amountIn);
+    uint256 wbtcAmount = toWBTC(amountIn, false);
     ICurveUInt256(tricrypto).exchange(1, 0, wbtcAmount, 1);
     usdAmount = IERC20(av3Crv).balanceOf(address(this)).sub(usdAmount);
     amountOut = ICurveFi(crvUsd).remove_liquidity_one_coin(
@@ -223,12 +231,21 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     renbtcForOneETHPrice = JoeLibrary.quote(amount, amountWBTC, amountWavax);
   }
 
+  function toRenBTC(uint256 amountIn, bool useUnderlying)
+    internal
+    returns (uint256 amountOut)
+  {
+    if (useUnderlying)
+      amountOut = ICurveInt128(renCrv).exchange_underlying(0, 1, amountIn, 1);
+    else amountOut = ICurveInt128(renCrv).exchange(0, 1, amountIn, 1);
+  }
+
   function renBTCtoETH(
     uint256 minOut,
     uint256 amountIn,
     address out
   ) internal returns (uint256 amountOut) {
-    uint256 wbtcAmount = toWBTC(amountIn);
+    uint256 wbtcAmount = toWBTC(amountIn, true);
     address[] memory path = new address[](2);
     path[0] = wbtc;
     path[1] = wavax;
@@ -239,6 +256,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
       out,
       block.timestamp + 1
     );
+    console.log(amounts[1]);
     amountOut = amounts[1];
   }
 
@@ -258,19 +276,13 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     internal
     returns (uint256 amountOut)
   {
-    uint256 wbtcAmount = IERC20(wbtc).balanceOf(address(this));
+    uint256 wbtcAmount = IERC20(avWbtc).balanceOf(address(this));
     uint256[3] memory amounts;
     amounts[1] = amountIn;
     amountOut = ICurveFi(crvUsd).add_liquidity(amounts, 1, true);
     ICurveUInt256(tricrypto).exchange(0, 1, amountOut, 1);
-    wbtcAmount = IERC20(wbtc).balanceOf(address(this)).sub(wbtcAmount);
-    amountOut = toRenBTC(wbtcAmount);
-  }
-
-  function toRenBTC(uint256 amountIn) internal returns (uint256 amountOut) {
-    uint256 balanceStart = IERC20(renbtc).balanceOf(address(this));
-    ICurveInt128(renCrv).exchange(0, 1, amountIn, 1);
-    amountOut = IERC20(renbtc).balanceOf(address(this)).sub(balanceStart);
+    wbtcAmount = IERC20(avWbtc).balanceOf(address(this)).sub(wbtcAmount);
+    amountOut = toRenBTC(wbtcAmount, false);
   }
 
   function fromETHToRenBTC(uint256 minOut, uint256 amountIn)
@@ -284,7 +296,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     uint256[] memory amounts = IJoeRouter02(joeRouter).swapExactAVAXForTokens{
       value: amountIn
     }(minOut, path, address(this), block.timestamp + 1);
-    amountOut = toRenBTC(amounts[1]);
+    amountOut = toRenBTC(amounts[1], true);
   }
 
   function toETH() internal returns (uint256 amountOut) {
@@ -308,7 +320,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
 
   function earn() public {
     quote();
-    toWBTC(IERC20(renbtc).balanceOf(address(this)));
+    toWBTC(IERC20(renbtc).balanceOf(address(this)), true);
     toETH();
     uint256 balance = address(this).balance;
     if (balance > ETH_RESERVE) {
@@ -470,7 +482,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     );
     {
       amountOut = module == wbtc
-        ? toWBTC(deductMintFee(params._mintAmount, 1))
+        ? toWBTC(deductMintFee(params._mintAmount, 1), true)
         : module == address(0x0)
         ? renBTCtoETH(params.minOut, deductMintFee(params._mintAmount, 1), to)
         : module == usdc
@@ -610,7 +622,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
           address(this),
           params.amount
         );
-        amountToBurn = toRenBTC(deductBurnFee(params.amount, 1));
+        amountToBurn = toRenBTC(deductBurnFee(params.amount, 1), true);
       }
     } else if (asset == ibbtc) {
       params.nonce = nonces[to];
