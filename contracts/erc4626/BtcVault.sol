@@ -42,7 +42,7 @@ contract BtcVault is LendableSharesVault, GasAccounting {
 
     // Get estimated gas cost and collateralization ratio for a loan
     // from module.
-    uint256 estimatedGas = module.getLoanParams();
+    uint256 estimatedGas = module.estimateGas();
 
     // Get max allowable gas fee for the loan and convert to vault's
     // underlying asset.
