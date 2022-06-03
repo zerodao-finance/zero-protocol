@@ -2,13 +2,14 @@
 pragma solidity >=0.8.0;
 
 import { ERC20 } from "./ERC20.sol";
-import { SafeTransferLib } from "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
+import { SafeTransferLib } from "./SafeTransferLib.sol";
 import { FixedPointMathLib } from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
 
 /// @notice Minimal ERC4626 tokenized Vault implementation.
-/// @author Solmate (https://github.com/Rari-Capital/solmate/blob/main/src/mixins/ERC4626.sol)
+/// @author ZeroDAO
+/// @author Modified from Solmate (https://github.com/Rari-Capital/solmate/blob/main/src/mixins/ERC4626.sol)
 abstract contract ERC4626 is ERC20 {
-  using SafeTransferLib for ERC20;
+  using SafeTransferLib for address;
   using FixedPointMathLib for uint256;
 
   /*//////////////////////////////////////////////////////////////
@@ -29,15 +30,9 @@ abstract contract ERC4626 is ERC20 {
                                IMMUTABLES
     //////////////////////////////////////////////////////////////*/
 
-  ERC20 public asset;
+  address public asset;
 
-  function init(
-    ERC20 _asset,
-    string memory _name,
-    string memory _symbol,
-    uint8 _decimals
-  ) external {
-    super.init(_name, _symbol, _decimals);
+  constructor(address _asset, uint8 _decimals) ERC20(_decimals) {
     asset = _asset;
   }
 

@@ -2,8 +2,8 @@
 pragma solidity >=0.8.0;
 
 /// @notice Modern and gas efficient ERC20 + EIP-2612 implementation.
-/// @author Solmate (https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC20.sol)
-/// @author Modified from Uniswap (https://github.com/Uniswap/uniswap-v2-core/blob/master/contracts/UniswapV2ERC20.sol)
+/// @author Zero Protocol
+/// @author Modified from Solmate (https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC20.sol)
 /// @dev Do not manually set balances without updating totalSupply, as the sum of all user balances must not exceed it.
 abstract contract ERC20 {
   /*//////////////////////////////////////////////////////////////
@@ -18,8 +18,6 @@ abstract contract ERC20 {
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
 
-  error AlreadyInitialized();
-
   /*//////////////////////////////////////////////////////////////
                             METADATA STORAGE
     //////////////////////////////////////////////////////////////*/
@@ -28,7 +26,7 @@ abstract contract ERC20 {
 
   string public symbol;
 
-  uint8 public decimals;
+  uint8 public immutable decimals;
 
   /*//////////////////////////////////////////////////////////////
                               ERC20 STORAGE
@@ -54,24 +52,15 @@ abstract contract ERC20 {
                                CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
-  constructor() {
+  constructor(uint8 _decimals) {
     INITIAL_CHAIN_ID = block.chainid;
     INITIAL_DOMAIN_SEPARATOR = computeDomainSeparator();
-    // Do not allow implementation to be initialized.
-    decimals = 1;
+    decimals = _decimals;
   }
 
-  function init(
-    string memory _name,
-    string memory _symbol,
-    uint8 _decimals
-  ) internal {
-    if (decimals != 0) {
-      revert AlreadyInitialized();
-    }
+  function _init(string memory _name, string memory _symbol) internal {
     name = _name;
     symbol = _symbol;
-    decimals = _decimals;
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -188,7 +177,7 @@ abstract contract ERC20 {
   }
 
   /*//////////////////////////////////////////////////////////////
-                        INTERNAL MINT/BURN LOGIC
+                        INTERNAL TRANSFER/MINT/BURN LOGIC
     //////////////////////////////////////////////////////////////*/
 
   function _mint(address to, uint256 amount) internal virtual {
@@ -213,5 +202,21 @@ abstract contract ERC20 {
     }
 
     emit Transfer(from, address(0), amount);
+  }
+
+  function _transfer(
+    address from,
+    address to,
+    uint256 amount
+  ) internal virtual {
+    balanceOf[from] -= amount;
+
+    // Cannot overflow because the sum of all user
+    // balances can't exceed the max uint256 value.
+    unchecked {
+      balanceOf[to] += amount;
+    }
+
+    emit Transfer(from, to, amount);
   }
 }
