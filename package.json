@@ -28,7 +28,7 @@
     "node:arbitrum": "CHAIN=ARBITRUM CHAIN_ID=42161 FORKING=true hardhat node",
     "node:ethereum": "CHAIN=ETHEREUM CHAIN_ID=1 FORKING=true hardhat node --export-all  deployments/deployments.json",
     "node:badger:ethereum": "CHAIN=ETHEREUM CHAIN_ID=1 FORKING=true hardhat node",
-    "node:badger:avalanche": "CHAIN=AVALANCHE FORKING=true hardhat node",
+    "node:badger:avalanche": "BADGER=true CHAIN=AVALANCHE FORKING=true hardhat node",
     "node:badger:arbitrum": "CHAIN=ARBITRUM DEPLOYARBITRUMQUICKCONVERT=true BADGER=true DEPLOYMENT_NUMBER=1 CHAIN_ID=42161 FORKING=true hardhat node",
     "deploy:arbitrum": "DEPLOYARBITRUMQUICKCONVERT=true CHAIN=ARBITRUM hardhat deploy --network arbitrum",
     "node:polygon": "CHAIN=MATIC CHAIN_ID=137 FORKING=true hardhat node --no-deploy",

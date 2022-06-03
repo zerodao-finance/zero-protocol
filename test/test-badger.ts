@@ -32,6 +32,8 @@ const getContractName = () => {
   switch (process.env.CHAIN) {
     case "ARBITRUM":
       return "BadgerBridgeZeroControllerArb";
+    case "AVALANCHE":
+      return "BadgerBridgeZeroControllerAvax";
     default:
       return "BadgerBridgeZeroController";
   }
@@ -87,8 +89,8 @@ const toEIP712USDC = function (contractAddress, chainId) {
       ],
     },
     domain: {
-      name: "USD Coin (Arb1)",
-      version: "1",
+      name: process.env.CHAIN == "ARBITRUM" ? "USD Coin (Arb1)" : "USD Coin",
+      version: process.env.CHAIN == "ETHEREUM" ? "2" : "1",
       chainId: String(this.chainId) || "1",
       verifyingContract: this.asset || ethers.constants.AddressZero,
     },
@@ -171,7 +173,6 @@ describe("BadgerBridgeZeroController", () => {
       ["function approveContractAccess(address)"],
       settGovernanceSigner
     ).approveContractAccess((await getController()).address);
-    (await getController()).approveUpgrade(true);
   });
   it("should do a transfer", async () => {
     const contractAddress = (await getController()).address;
