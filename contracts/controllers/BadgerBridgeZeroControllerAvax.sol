@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.6.0;
+pragma solidity >=0.5.0;
 pragma abicoder v2;
 
 import {IUniswapV2Router02} from '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import {ISwapRouter} from '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
-import {UniswapV2Library} from '../libraries/UniswapV2Library.sol';
+import {JoeLibrary} from '../libraries/JoeLibrary.sol';
 import {ZeroLib} from '../libraries/ZeroLib.sol';
 import {IERC2612Permit} from '../interfaces/IERC2612Permit.sol';
 import {IRenCrv} from '../interfaces/CurvePools/IRenCrv.sol';
@@ -13,6 +13,7 @@ import {IBadgerSettPeak} from '../interfaces/IBadgerSettPeak.sol';
 import {ICurveFi} from '../interfaces/ICurveFiAvax.sol';
 import {IGateway} from '../interfaces/IGateway.sol';
 import {ICurveUInt256} from '../interfaces/CurvePools/ICurveUInt256.sol';
+import {ICurveUInt128} from '../interfaces/CurvePools/ICurveUInt128.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IyVault} from '../interfaces/IyVault.sol';
 import {ISett} from '../interfaces/ISett.sol';
@@ -22,7 +23,7 @@ import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import {ECDSA} from '@openzeppelin/contracts/cryptography/ECDSA.sol';
 import {EIP712Upgradeable} from '@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol';
 import {ICurveFi as ICurveFiRen} from '../interfaces/ICurveFi.sol';
-import {IPangoinRouter} from '@pangloindex/exchange-contracts/contracts/pangolin-periphery/interfaces/IPangolinRouter.sol';
+import {IJoeRouter02} from '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol';
 
 contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   using SafeERC20 for IERC20;
@@ -42,7 +43,7 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   address constant renCrv = 0x16a7DA911A4DD1d83F3fF066fE28F3C792C50d90;
   address constant tricrypto = 0xB755B949C126C04e0348DD881a5cF55d424742B2;
   address constant renCrvLp = 0xC2b1DF84112619D190193E48148000e3990Bf627;
-  address constant pangolinRouter = 0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106;
+  address constant joeRouter = 0x60aE616a2155Ee3d9A68541Ba4544862310933d4;
   address constant bCrvRen = 0x6dEf55d2e18486B9dDfaA075bc4e4EE0B28c1545;
   address constant settPeak = 0x41671BA1abcbA387b9b2B752c205e22e916BE6e3;
   address constant ibbtc = 0xc4E15973E6fF2A35cC804c2CF9D2a1b817a8b40F;
@@ -175,7 +176,7 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
 
   function toWBTC(uint256 amount) internal returns (uint256 amountOut) {
     uint256 amountStart = IERC20(wbtc).balanceOf(address(this));
-    IRenCrv(renCrv).exchange(1, 0, amount, 1);
+    ICurveUInt128(renCrv).exchange(1, 0, amount, 1);
     amountOut = IERC20(wbtc).balanceOf(address(this)).sub(amountStart);
   }
 
@@ -209,17 +210,13 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   }
 
   function quote() internal {
-    //TODO: rewrite this
-    (uint256 amountWeth, uint256 amountRenBTC) = UniswapV2Library.getReserves(
+    (uint256 amountWavax, uint256 amountWBTC) = JoeLibrary.getReserves(
       factory,
       wavax,
-      renbtc
+      wbtc
     );
-    renbtcForOneETHPrice = UniswapV2Library.quote(
-      uint256(1 ether),
-      amountWeth,
-      amountRenBTC
-    );
+    uint256 amount = ICurveUInt128(renCrv).get_dy(1, 0, uint256(1 ether));
+    renbtcForOneETHPrice = JoeLibrary.quote(amount, amountWBTC, amountWavax);
   }
 
   function renBTCtoETH(
@@ -227,18 +224,17 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     uint256 amountIn,
     address out
   ) internal returns (uint256 amountOut) {
-    uint256 usdcAmount = toUSDC(amountIn);
-    address[2] memory path;
-    path[0] = usdc;
+    uint256 wbtcAmount = toWBTC(amountIn);
+    address[] memory path = new address[](2);
+    path[0] = wbtc;
     path[1] = wavax;
-    uint256[] memory amounts = IPangolinRouter(pangolinRouter)
-      .swapExactTokensForAVAX(
-        usdcAmount,
-        1,
-        path,
-        address(this),
-        block.timestamp + 1
-      );
+    uint256[] memory amounts = IJoeRouter02(joeRouter).swapExactTokensForAVAX(
+      wbtcAmount,
+      1,
+      path,
+      address(this),
+      block.timestamp + 1
+    );
     amountOut = amounts[1];
   }
 
@@ -269,7 +265,7 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
 
   function toRenBTC(uint256 amountIn) internal returns (uint256 amountOut) {
     uint256 balanceStart = IERC20(renbtc).balanceOf(address(this));
-    IRenCrv(renCrv).exchange(0, 1, amountIn, 1);
+    ICurveUInt128(renCrv).exchange(0, 1, amountIn, 1);
     amountOut = IERC20(renbtc).balanceOf(address(this)).sub(balanceStart);
   }
 
@@ -277,43 +273,28 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     internal
     returns (uint256 amountOut)
   {
-    uint256[2] memory path;
+    address[] memory path = new address[](2);
     path[0] = wavax;
-    path[1] = usdc;
+    path[1] = wbtc;
 
-    uint256[] memory amounts = IPangolinRouter(pangolinRouter)
-      .swapExactTokensForAVAX(
-        amountIn,
-        1,
-        path,
-        address(this),
-        block.timestamp + 1
-      );
-    amountOut = fromUSDC(amounts[1]);
+    uint256[] memory amounts = IJoeRouter02(joeRouter).swapExactAVAXForTokens{
+      value: amountIn
+    }(minOut, path, address(this), block.timestamp + 1);
+    amountOut = toRenBTC(amounts[1]);
   }
 
   function toETH() internal returns (uint256 amountOut) {
     uint256 wbtcAmount = IERC20(wbtc).balanceOf(address(this));
-    uint256 usdAmount = IERC20(av3Crv).balanceOf(address(this));
-    ICurveUInt256(tricrypto).exchange(1, 0, wbtcAmount, 1);
-    usdAmount = usdAmount.sub(IERC20(av3Crv).balanceOf(address(this)));
-    usdAmount = ICurveFi(crvUsd).remove_liquidity_one_coin(
-      usdAmount,
-      1,
-      1,
-      true
-    );
-    address[2] memory path;
-    path[0] = usdc;
+    address[] memory path = new address[](2);
+    path[0] = wbtc;
     path[1] = wavax;
-    uint256[] memory amounts = IPangolinRouter(pangolinRouter)
-      .swapExactTokensForAVAX(
-        usdAmount,
-        1,
-        path,
-        address(this),
-        block.timestamp + 1
-      );
+    uint256[] memory amounts = IJoeRouter02(joeRouter).swapExactTokensForAVAX(
+      wbtcAmount,
+      1,
+      path,
+      address(this),
+      block.timestamp + 1
+    );
     amountOut = amounts[1];
   }
 
