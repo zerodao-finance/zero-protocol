@@ -60,8 +60,10 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
   uint256 public constant REPAY_GAS_DIFF = 41510;
   uint256 public constant BURN_GAS_DIFF = 41118;
   mapping(address => uint256) public nonces;
+  mapping(address => uint256) public noncesUsdc;
   bytes32 internal PERMIT_DOMAIN_SEPARATOR_WBTC;
   bytes32 internal PERMIT_DOMAIN_SEPARATOR_IBBTC;
+  bytes32 internal PERMIT_DOMAIN_SEPARATOR_USDC;
 
   function setStrategist(address _strategist) public {
     require(msg.sender == governance, '!governance');
@@ -142,6 +144,17 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
         keccak256('1'),
         getChainId(),
         wbtc
+      )
+    );
+    PERMIT_DOMAIN_SEPARATOR_USDC = keccak256(
+      abi.encode(
+        keccak256(
+          'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
+        ),
+        keccak256('USD Coin'),
+        keccak256('1'),
+        getChainId(),
+        usdc
       )
     );
     PERMIT_DOMAIN_SEPARATOR_IBBTC = keccak256(
@@ -649,24 +662,16 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
       }
       amountToBurn = deductBurnFee(params.amount, 1);
     } else if (params.asset == usdc) {
-      {
-        params.nonce = IERC2612Permit(params.asset).nonces(params.to);
-        params.burnNonce = computeBurnNonce(params);
-      }
-      {
-        (params.v, params.r, params.s) = SplitSignatureLib.splitSignature(
-          params.signature
-        );
-        IERC2612Permit(params.asset).permit(
-          params.to,
-          address(this),
-          params.amount,
-          params.burnNonce,
-          params.v,
-          params.r,
-          params.s
-        );
-      }
+      params.nonce = noncesUsdc[to];
+      noncesUsdc[params.to]++;
+      require(
+        params.to ==
+          ECDSA.recover(
+            computeERC20PermitDigest(PERMIT_DOMAIN_SEPARATOR_USDC, params),
+            params.signature
+          ),
+        '!signature'
+      ); //  usdc.e does not implement ERC20Permit
       {
         IERC20(params.asset).transferFrom(
           params.to,
