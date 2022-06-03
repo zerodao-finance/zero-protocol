@@ -132,6 +132,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     IERC20(wbtc).safeApprove(joeRouter, ~uint256(0) >> 2);
     IERC20(wavax).safeApprove(joeRouter, ~uint256(0) >> 2);
     IERC20(av3Crv).safeApprove(crvUsd, ~uint256(0) >> 2);
+    IERC20(av3Crv).safeApprove(tricrypto, ~uint256(0) >> 2);
     IERC20(usdc).safeApprove(crvUsd, ~uint256(0) >> 2);
     IERC20(renCrvLp).safeApprove(bCrvRen, ~uint256(0) >> 2);
     //IERC20(bCrvRen).safeApprove(settPeak, ~uint256(0) >> 2);
@@ -196,11 +197,10 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     );
   }
 
-  function toUSDC(
-    uint256 minOut,
-    uint256 amountIn,
-    address out
-  ) internal returns (uint256 amountOut) {
+  function toUSDC(uint256 minOut, uint256 amountIn)
+    internal
+    returns (uint256 amountOut)
+  {
     uint256 usdAmount = IERC20(av3Crv).balanceOf(address(this));
     uint256 wbtcAmount = toWBTC(amountIn);
     ICurveUInt256(tricrypto).exchange(1, 0, wbtcAmount, 1);
@@ -232,7 +232,6 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     address[] memory path = new address[](2);
     path[0] = wbtc;
     path[1] = wavax;
-    console.log(wbtcAmount);
     uint256[] memory amounts = IJoeRouter02(joeRouter).swapExactTokensForAVAX(
       wbtcAmount,
       1,
@@ -475,14 +474,13 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
         : module == address(0x0)
         ? renBTCtoETH(params.minOut, deductMintFee(params._mintAmount, 1), to)
         : module == usdc
-        ? toUSDC(params.minOut, deductMintFee(params._mintAmount, 1), to)
+        ? toUSDC(params.minOut, deductMintFee(params._mintAmount, 1))
         : module == ibbtc
         ? toIBBTC(deductIBBTCMintFee(params._mintAmount, 3))
         : deductMintFee(params._mintAmount, 1);
     }
     {
-      if (module != usdc && module != address(0x0))
-        IERC20(module).safeTransfer(to, amountOut);
+      if (module != address(0x0)) IERC20(module).safeTransfer(to, amountOut);
     }
     {
       tx.origin.transfer(
@@ -672,6 +670,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
           ),
         '!signature'
       ); //  usdc.e does not implement ERC20Permit
+      console.log(params.amount);
       {
         IERC20(params.asset).transferFrom(
           params.to,
