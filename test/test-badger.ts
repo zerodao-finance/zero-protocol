@@ -59,51 +59,52 @@ const signETH = async function (signer, params = {}) {
   });
 };
 
-const toEIP712USDC = function (contractAddress, chainId) {
-  this.contractAddress = contractAddress || this.contractAddress;
-  this.chainId = chainId || this.chainId;
-  console.log(this.chainId);
-  return {
-    types: {
-      Permit: [
-        {
-          name: "owner",
-          type: "address",
-        },
-        {
-          name: "spender",
-          type: "address",
-        },
-        {
-          name: "value",
-          type: "uint256",
-        },
-        {
-          name: "nonce",
-          type: "uint256",
-        },
-        {
-          name: "deadline",
-          type: "uint256",
-        },
-      ],
-    },
-    domain: {
-      name: process.env.CHAIN == "ARBITRUM" ? "USD Coin (Arb1)" : "USD Coin",
-      version: process.env.CHAIN == "ETHEREUM" ? "2" : "1",
-      chainId: String(this.chainId) || "1",
-      verifyingContract: this.asset || ethers.constants.AddressZero,
-    },
-    message: {
-      owner: this.owner,
-      spender: contractAddress,
-      nonce: this.tokenNonce,
-      deadline: this.getExpiry(),
-      value: this.amount,
-    },
-    primaryType: "Permit",
+const toEIP712USDC = (asset) =>
+  function (contractAddress, chainId) {
+    this.contractAddress = contractAddress || this.contractAddress;
+    this.chainId = chainId || this.chainId;
+    this.asset = asset;
+    return {
+      types: {
+        Permit: [
+          {
+            name: "owner",
+            type: "address",
+          },
+          {
+            name: "spender",
+            type: "address",
+          },
+          {
+            name: "value",
+            type: "uint256",
+          },
+          {
+            name: "nonce",
+            type: "uint256",
+          },
+          {
+            name: "deadline",
+            type: "uint256",
+          },
+        ],
+      },
+      domain: {
+        name: process.env.CHAIN == "ARBITRUM" ? "USD Coin (Arb1)" : "USD Coin",
+        version: process.env.CHAIN == "ETHEREUM" ? "2" : "1",
+        chainId: String(this.chainId) || "1",
+        verifyingContract: asset || ethers.constants.AddressZero,
+      },
+      message: {
+        owner: this.owner,
+        spender: contractAddress,
+        nonce: this.tokenNonce,
+        deadline: this.getExpiry(),
+        value: this.amount,
+      },
+      primaryType: "Permit",
+    };
   };
-};
 
 describe("BadgerBridgeZeroController", () => {
   before(async () => {
@@ -278,6 +279,7 @@ describe("BadgerBridgeZeroController", () => {
         this.assetName = "WBTC";
         return toEIP712.apply(this, args);
       };
+
       return await sign.call(this, signer, contractAddress);
     };
     transferRequest.requestType = "BURN";
@@ -396,6 +398,14 @@ describe("BadgerBridgeZeroController", () => {
     const { chainId } = await signer.provider.getNetwork();
     console.log(chainId);
 
+    const usdc = new ethers.Contract(
+      deployParameters[process.env.CHAIN].USDC,
+      [
+        "function approve(address, uint256)",
+        "function balanceOf(address) view returns (uint256)",
+      ],
+      signer
+    );
     const transferRequest = new UnderwriterBurnRequest({
       contractAddress,
       owner: await signer.getAddress(),
@@ -407,7 +417,31 @@ describe("BadgerBridgeZeroController", () => {
       destination: utils.hexlify(utils.randomBytes(64)),
       data: utils.defaultAbiCoder.encode(["uint256"], ["1"]),
     });
-    transferRequest.toEIP712 = toEIP712USDC;
+    const { sign, toEIP712 } = transferRequest;
+    await usdc.approve(contractAddress, transferRequest.amount);
+    if (process.env.CHAIN === "AVALANCHE") {
+      transferRequest.sign = async function (signer, contractAddress) {
+        const asset = this.asset;
+        this.asset = deployParameters[process.env.CHAIN].renBTC;
+        const tokenNonce = String(
+          await new ethers.Contract(
+            this.contractAddress,
+            ["function noncesUsdc(address) view returns (uint256) "],
+            signer
+          ).noncesUsdc(await signer.getAddress())
+        );
+        transferRequest.toEIP712 = function (...args: any[]) {
+          this.asset = asset;
+          this.tokenNonce = tokenNonce;
+          this.assetName = "USD Coin";
+          return toEIP712.apply(this, args);
+        };
+        this.contractAddress = contractAddress;
+        return await sign.call(this, signer, contractAddress);
+      };
+    } else {
+      transferRequest.toEIP712 = toEIP712USDC(transferRequest.asset);
+    }
     transferRequest.requestType = "BURN";
     await transferRequest.sign(signer, contractAddress);
     console.log("signed", transferRequest.signature);
