@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -35,24 +35,23 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var libp2p = require('libp2p');
-var WS = require('libp2p-websockets');
-var Mplex = require('libp2p-mplex');
-var SECIO = require('libp2p-secio');
-var KadDHT = require('libp2p-kad-dht');
-var Bootstrap = require('libp2p-bootstrap');
-var PeerInfo = require('peer-info');
-var GossipSub = require('libp2p-gossipsub');
-var WStar = require('libp2p-webrtc-star');
-var isBrowser = require('is-browser');
+var libp2p = require("libp2p");
+var WS = require("libp2p-websockets");
+var Mplex = require("libp2p-mplex");
+var NOISE = require("libp2p-noise").NOISE;
+var KadDHT = require("libp2p-kad-dht");
+var Bootstrap = require("libp2p-bootstrap");
+var GossipSub = require("libp2p-gossipsub");
+var WStar = require("libp2p-webrtc-star");
+var isBrowser = require("is-browser");
 var returnOp = function (v) { return v; };
-var ln = function (v) { return ((console.log(v)), v); };
+var ln = function (v) { return (console.log(v), v); };
 var presets = {
-    lendnet: '/dns4/lendnet.0confirmation.com/tcp/443/wss/p2p-webrtc-star/',
-    zeronet: '/dns4/zeronet.0confirmation.com/tcp/443/wss/p2p-webrtc-star/'
+    lendnet: "/dns4/lendnet.0confirmation.com/tcp/443/wss/p2p-webrtc-star/",
+    zeronet: "/dns4/zeronet.0confirmation.com/tcp/443/wss/p2p-webrtc-star/"
 };
 var fromPresetOrMultiAddr = function (multiaddr) { return presets[multiaddr] || multiaddr; };
-var wrtc = require('wrtc');
+var wrtc = require("wrtc");
 module.exports = {
     createNode: function (options) { return __awaiter(void 0, void 0, void 0, function () {
         var multiaddr, dhtEnable, socket;
@@ -61,18 +60,16 @@ module.exports = {
             switch (_c.label) {
                 case 0:
                     multiaddr = fromPresetOrMultiAddr(options.multiaddr);
-                    dhtEnable = typeof options.dht === 'undefined' || options.dht === true;
+                    dhtEnable = typeof options.dht === "undefined" || options.dht === true;
                     return [4 /*yield*/, libp2p.create({
                             //	peerInfo,
                             addresses: {
-                                listen: [
-                                    multiaddr
-                                ]
+                                listen: [multiaddr]
                             },
                             modules: {
-                                transport: [WS, WStar],
+                                transport: [WStar],
                                 streamMuxer: [Mplex],
-                                connEncryption: [SECIO],
+                                connEncryption: [NOISE],
                                 pubsub: GossipSub,
                                 peerDiscovery: [Bootstrap],
                                 dht: dhtEnable ? KadDHT : undefined
@@ -83,7 +80,9 @@ module.exports = {
                                     },
                                     _a[Bootstrap.tag] = {
                                         enabled: true,
-                                        list: [options.multiaddr + '/QmSoLV4Bbm51jM9C4gDYZQ9Cy3U6aXMJDAbzgu2fzaDs64']
+                                        list: [
+                                            options.multiaddr + 'QmXRimgxFGd8FEFRX8FvyzTG4jJTJ5pwoa3N5YDCrytASu'
+                                        ]
                                     },
                                     _a),
                                 transport: (_b = {},

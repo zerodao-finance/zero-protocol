@@ -7,9 +7,9 @@ import { ethers } from 'ethers';
 import { Polygon, Ethereum, Arbitrum } from '@renproject/chains';
 
 export const CONTROLLER_DEPLOYMENTS = {
-	[require('../deployments/arbitrum/ZeroController').address]: 'Arbitrum',
-	[require('../deployments/matic/ZeroController').address]: 'Polygon',
-	[require('../deployments/mainnet/BadgerBridgeZeroController.json').address]: 'Ethereum',
+	[ethers.utils.getAddress(require('../deployments/arbitrum/BadgerBridgeZeroController.json').address)]: 'Arbitrum',
+	[ethers.utils.getAddress(require('../deployments/matic/ZeroController').address)]: 'Polygon',
+	[ethers.utils.getAddress(require('../deployments/mainnet/BadgerBridgeZeroController.json').address)]: 'Ethereum',
 };
 export const RPC_ENDPOINTS = {
 	Arbitrum: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
@@ -23,14 +23,22 @@ export const RENVM_PROVIDERS = {
 	Ethereum,
 };
 
-export const getProvider = (transferRequest) => {
-	if (Object.keys(CONTROLLER_DEPLOYMENTS).includes(transferRequest.contractAddress)) {
-		const chain_key = CONTROLLER_DEPLOYMENTS[transferRequest.contractAddress];
-		return RENVM_PROVIDERS[chain_key](new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]), 'mainnet');
+export const getVanillaProvider = (transferRequest) => {
+	const checkSummedContractAddr = ethers.utils.getAddress(transferRequest.contractAddress);
+	if (Object.keys(CONTROLLER_DEPLOYMENTS).includes(checkSummedContractAddr)) {
+		const chain_key = CONTROLLER_DEPLOYMENTS[checkSummedContractAddr];
+		return new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]);
 	} else {
 		throw new Error('Not a contract currently deployed');
 	}
 };
+
+export const getProvider = (transferRequest) => {
+	const checkSummedContractAddr = ethers.utils.getAddress(transferRequest.contractAddress);
+	const ethersProvider = getVanillaProvider(transferRequest);
+	const chain_key = CONTROLLER_DEPLOYMENTS[checkSummedContractAddr];
+	return RENVM_PROVIDERS[chain_key](ethersProvider);
+}
 
 export const logger = {
 	debug(v) {

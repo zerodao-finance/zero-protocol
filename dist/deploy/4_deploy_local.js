@@ -59,8 +59,11 @@ module.exports = function (_a) {
         return __generator(this, function (_d) {
             switch (_d.label) {
                 case 0:
-                    if (!process.env.FORKING || process.env.CHAIN === 'ETHEREUM' || process.env.DEPLOYARBITRUMQUICKCONVERT)
+                    if (!process.env.FORKING ||
+                        process.env.CHAIN === 'ETHEREUM' ||
+                        process.env.DEPLOYARBITRUMQUICKCONVERT)
                         return [2 /*return*/];
+                    console.log('here');
                     arbitraryTokens = ethers.utils.parseUnits('8', 8).toString();
                     return [4 /*yield*/, hre.ethers.getSigners()];
                 case 1:
@@ -82,7 +85,16 @@ module.exports = function (_a) {
                     return [4 /*yield*/, deployerSigner.getAddress()];
                 case 5:
                     deployer = _d.sent();
-                    return [4 /*yield*/, deployments.deploy('ZeroDistributor', { contractName: 'ZeroDistributor', args: [ethers.constants.AddressZero, ethers.constants.AddressZero, ethers.utils.hexlify(ethers.utils.randomBytes(32))], libraries: {}, from: deployer })];
+                    return [4 /*yield*/, deployments.deploy('ZeroDistributor', {
+                            contractName: 'ZeroDistributor',
+                            args: [
+                                ethers.constants.AddressZero,
+                                ethers.constants.AddressZero,
+                                ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+                            ],
+                            libraries: {},
+                            from: deployer
+                        })];
                 case 6:
                     _d.sent();
                     if (!(process.env.CHAIN === 'ARBITRUM')) return [3 /*break*/, 19];
@@ -115,19 +127,28 @@ module.exports = function (_a) {
                 case 12: return [4 /*yield*/, _c.apply(void 0, [_d.sent()])];
                 case 13:
                     _d.sent();
-                    return [4 /*yield*/, controller.connect(governanceSigner).approveModule(meta.address, true)];
+                    return [4 /*yield*/, controller
+                            .connect(governanceSigner)
+                            .approveModule(meta.address, true)];
                 case 14:
                     _d.sent();
                     return [4 /*yield*/, deployerSigner.provider.getCode(controller.address)];
                 case 15:
                     code = _d.sent();
-                    return [4 /*yield*/, hre.network.provider.send('hardhat_setCode', [controller.address, ((require('../artifacts/contracts/test/ZeroControllerTest.sol/ZeroControllerTest').deployedBytecode))])];
+                    return [4 /*yield*/, hre.network.provider.send('hardhat_setCode', [
+                            controller.address,
+                            require('../artifacts/contracts/test/ZeroControllerTest.sol/ZeroControllerTest')
+                                .deployedBytecode,
+                        ])];
                 case 16:
                     _d.sent();
                     return [4 /*yield*/, controller.approveModule(quick.address, true)];
                 case 17:
                     _d.sent();
-                    return [4 /*yield*/, hre.network.provider.send('hardhat_setCode', [controller.address, code])];
+                    return [4 /*yield*/, hre.network.provider.send('hardhat_setCode', [
+                            controller.address,
+                            code,
+                        ])];
                 case 18:
                     _d.sent();
                     console.log('approved');

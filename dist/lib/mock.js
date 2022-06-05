@@ -314,7 +314,7 @@ var enableGlobalMockRuntime = function () {
             });
         });
     };
-    zero_1.UnderwriterTransferRequest.prototype.submitToRenVM = function (flag) {
+    zero_1.UnderwriterTransferRequest.prototype.submitToRenVM = function () {
         return __awaiter(this, void 0, void 0, function () {
             var confirmed, gatewayAddress, _signed, target, timeout, txHash, mint, deposit;
             var _this = this;

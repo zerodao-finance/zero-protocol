@@ -402,7 +402,7 @@
             "chainId": "1",
             "contracts": {
                 "ZeroUnderwriterLockBytecodeLib": {
-                    "address": "0x045857BDEAE7C1c7252d611eB24eB55564198b4C",
+                    "address": "0xC66AB83418C20A65C3f8e83B3d11c8C3a6097b6F",
                     "abi": [
                         {
                             "inputs": [],
@@ -420,7 +420,7 @@
                     ]
                 },
                 "BadgerBridgeZeroController": {
-                    "address": "0x02df3a3F960393F5B349E40A599FEda91a7cc1A7",
+                    "address": "0xaC47e91215fb80462139756f43438402998E4A3a",
                     "abi": [
                         {
                             "inputs": [],
@@ -485,6 +485,11 @@
                                 },
                                 {
                                     "internalType": "bytes",
+                                    "name": "data",
+                                    "type": "bytes"
+                                },
+                                {
+                                    "internalType": "bytes",
                                     "name": "destination",
                                     "type": "bytes"
                                 },
@@ -507,6 +512,11 @@
                         },
                         {
                             "inputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "minOut",
+                                    "type": "uint256"
+                                },
                                 {
                                     "internalType": "bytes",
                                     "name": "destination",
@@ -816,7 +826,7 @@
                     ]
                 },
                 "ZERO": {
-                    "address": "0x821f3361D454cc98b7555221A06Be563a7E2E0A6",
+                    "address": "0x9BcC604D4381C5b0Ad12Ff3Bf32bEdE063416BC7",
                     "abi": [
                         {
                             "anonymous": false,
@@ -1417,7 +1427,7 @@
                     ]
                 },
                 "ZeroDistributor": {
-                    "address": "0x1780bCf4103D3F501463AD3414c7f4b654bb7aFd",
+                    "address": "0x63fea6E447F120B8Faf85B53cdaD8348e645D80E",
                     "abi": [
                         {
                             "inputs": [
@@ -6839,6 +6849,412 @@
             "name": "arbitrum",
             "chainId": "42161",
             "contracts": {
+                "BadgerBridgeZeroController": {
+                    "address": "0x9880fCd5d42e8F4c2148f2c1187Df050BE3Dbd17",
+                    "abi": [
+                        {
+                            "inputs": [],
+                            "name": "BURN_GAS_DIFF",
+                            "outputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "",
+                                    "type": "uint256"
+                                }
+                            ],
+                            "stateMutability": "view",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [],
+                            "name": "REPAY_GAS_DIFF",
+                            "outputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "",
+                                    "type": "uint256"
+                                }
+                            ],
+                            "stateMutability": "view",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "bool",
+                                    "name": "lock",
+                                    "type": "bool"
+                                }
+                            ],
+                            "name": "approveUpgrade",
+                            "outputs": [],
+                            "stateMutability": "nonpayable",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "address",
+                                    "name": "to",
+                                    "type": "address"
+                                },
+                                {
+                                    "internalType": "address",
+                                    "name": "asset",
+                                    "type": "address"
+                                },
+                                {
+                                    "internalType": "uint256",
+                                    "name": "amount",
+                                    "type": "uint256"
+                                },
+                                {
+                                    "internalType": "uint256",
+                                    "name": "deadline",
+                                    "type": "uint256"
+                                },
+                                {
+                                    "internalType": "bytes",
+                                    "name": "data",
+                                    "type": "bytes"
+                                },
+                                {
+                                    "internalType": "bytes",
+                                    "name": "destination",
+                                    "type": "bytes"
+                                },
+                                {
+                                    "internalType": "bytes",
+                                    "name": "signature",
+                                    "type": "bytes"
+                                }
+                            ],
+                            "name": "burn",
+                            "outputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "amountToBurn",
+                                    "type": "uint256"
+                                }
+                            ],
+                            "stateMutability": "nonpayable",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "minOut",
+                                    "type": "uint256"
+                                },
+                                {
+                                    "internalType": "bytes",
+                                    "name": "destination",
+                                    "type": "bytes"
+                                }
+                            ],
+                            "name": "burnETH",
+                            "outputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "amountToBurn",
+                                    "type": "uint256"
+                                }
+                            ],
+                            "stateMutability": "payable",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [],
+                            "name": "earn",
+                            "outputs": [],
+                            "stateMutability": "nonpayable",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "address",
+                                    "name": "underwriter",
+                                    "type": "address"
+                                },
+                                {
+                                    "internalType": "address",
+                                    "name": "to",
+                                    "type": "address"
+                                },
+                                {
+                                    "internalType": "address",
+                                    "name": "asset",
+                                    "type": "address"
+                                },
+                                {
+                                    "internalType": "uint256",
+                                    "name": "amount",
+                                    "type": "uint256"
+                                },
+                                {
+                                    "internalType": "uint256",
+                                    "name": "actualAmount",
+                                    "type": "uint256"
+                                },
+                                {
+                                    "internalType": "uint256",
+                                    "name": "nonce",
+                                    "type": "uint256"
+                                },
+                                {
+                                    "internalType": "address",
+                                    "name": "module",
+                                    "type": "address"
+                                },
+                                {
+                                    "internalType": "bytes32",
+                                    "name": "nHash",
+                                    "type": "bytes32"
+                                },
+                                {
+                                    "internalType": "bytes",
+                                    "name": "data",
+                                    "type": "bytes"
+                                },
+                                {
+                                    "internalType": "bytes",
+                                    "name": "signature",
+                                    "type": "bytes"
+                                }
+                            ],
+                            "name": "fallbackMint",
+                            "outputs": [],
+                            "stateMutability": "nonpayable",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [],
+                            "name": "fee",
+                            "outputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "",
+                                    "type": "uint256"
+                                }
+                            ],
+                            "stateMutability": "view",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [],
+                            "name": "governance",
+                            "outputs": [
+                                {
+                                    "internalType": "address",
+                                    "name": "",
+                                    "type": "address"
+                                }
+                            ],
+                            "stateMutability": "view",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [],
+                            "name": "governanceFee",
+                            "outputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "",
+                                    "type": "uint256"
+                                }
+                            ],
+                            "stateMutability": "view",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "address",
+                                    "name": "_governance",
+                                    "type": "address"
+                                },
+                                {
+                                    "internalType": "address",
+                                    "name": "_strategist",
+                                    "type": "address"
+                                }
+                            ],
+                            "name": "initialize",
+                            "outputs": [],
+                            "stateMutability": "nonpayable",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [],
+                            "name": "keeperReward",
+                            "outputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "",
+                                    "type": "uint256"
+                                }
+                            ],
+                            "stateMutability": "view",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "address",
+                                    "name": "",
+                                    "type": "address"
+                                }
+                            ],
+                            "name": "nonces",
+                            "outputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "",
+                                    "type": "uint256"
+                                }
+                            ],
+                            "stateMutability": "view",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "address",
+                                    "name": "underwriter",
+                                    "type": "address"
+                                },
+                                {
+                                    "internalType": "address",
+                                    "name": "to",
+                                    "type": "address"
+                                },
+                                {
+                                    "internalType": "address",
+                                    "name": "asset",
+                                    "type": "address"
+                                },
+                                {
+                                    "internalType": "uint256",
+                                    "name": "amount",
+                                    "type": "uint256"
+                                },
+                                {
+                                    "internalType": "uint256",
+                                    "name": "actualAmount",
+                                    "type": "uint256"
+                                },
+                                {
+                                    "internalType": "uint256",
+                                    "name": "nonce",
+                                    "type": "uint256"
+                                },
+                                {
+                                    "internalType": "address",
+                                    "name": "module",
+                                    "type": "address"
+                                },
+                                {
+                                    "internalType": "bytes32",
+                                    "name": "nHash",
+                                    "type": "bytes32"
+                                },
+                                {
+                                    "internalType": "bytes",
+                                    "name": "data",
+                                    "type": "bytes"
+                                },
+                                {
+                                    "internalType": "bytes",
+                                    "name": "signature",
+                                    "type": "bytes"
+                                }
+                            ],
+                            "name": "repay",
+                            "outputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "amountOut",
+                                    "type": "uint256"
+                                }
+                            ],
+                            "stateMutability": "nonpayable",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "address",
+                                    "name": "_governance",
+                                    "type": "address"
+                                }
+                            ],
+                            "name": "setGovernance",
+                            "outputs": [],
+                            "stateMutability": "nonpayable",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "_governanceFee",
+                                    "type": "uint256"
+                                },
+                                {
+                                    "internalType": "uint256",
+                                    "name": "_fee",
+                                    "type": "uint256"
+                                },
+                                {
+                                    "internalType": "uint256",
+                                    "name": "_burnFee",
+                                    "type": "uint256"
+                                },
+                                {
+                                    "internalType": "uint256",
+                                    "name": "_keeperReward",
+                                    "type": "uint256"
+                                }
+                            ],
+                            "name": "setParameters",
+                            "outputs": [],
+                            "stateMutability": "nonpayable",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "address",
+                                    "name": "_strategist",
+                                    "type": "address"
+                                }
+                            ],
+                            "name": "setStrategist",
+                            "outputs": [],
+                            "stateMutability": "nonpayable",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [],
+                            "name": "strategist",
+                            "outputs": [
+                                {
+                                    "internalType": "address",
+                                    "name": "",
+                                    "type": "address"
+                                }
+                            ],
+                            "stateMutability": "view",
+                            "type": "function"
+                        },
+                        {
+                            "stateMutability": "payable",
+                            "type": "receive"
+                        }
+                    ]
+                },
                 "ArbitrumConvert": {
                     "address": "0x6b9F827D9e0607098d5DdA6D84D2c2164e1B90A9",
                     "abi": [

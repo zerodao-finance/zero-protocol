@@ -43,7 +43,16 @@ var validate = require('@openzeppelin/upgrades-core/dist/validate/index');
 Object.defineProperty(validate, 'assertUpgradeSafe', {
     value: function () { }
 });
-var getControllerName = function () { return (process.env.CHAIN === 'ETHEREUM' ? 'BadgerBridgeZeroController' : 'ZeroController'); };
+var getControllerName = function () {
+    switch (process.env.CHAIN) {
+        case 'ARBITRUM':
+            return 'BadgerBridgeZeroControllerArb';
+        case 'ETHEREUM':
+            return 'BadgerBridgeZeroController';
+        default:
+            return 'ZeroController';
+    }
+};
 var Logger = require('@ethersproject/logger').Logger;
 var isLocalhost = !hre.network.config.live;
 var _throwError = Logger.prototype.throwError;
@@ -55,7 +64,9 @@ var JsonRpcProvider = ethers.providers.JsonRpcProvider;
 var _getSigner = JsonRpcProvider.prototype.getSigner;
 var SIGNER_ADDRESS = '0x0F4ee9631f4be0a63756515141281A3E2B293Bbe';
 var deployParameters = require('../lib/fixtures');
-var toAddress = function (contractOrAddress) { return (contractOrAddress || {}).address || contractOrAddress; };
+var toAddress = function (contractOrAddress) {
+    return (contractOrAddress || {}).address || contractOrAddress;
+};
 var getController = function () { return __awaiter(_this, void 0, void 0, function () {
     var name, controller;
     return __generator(this, function (_a) {
@@ -79,7 +90,12 @@ var setConverter = function (controller, source, target, converter) { return __a
                 return [4 /*yield*/, controller.setConverter(sourceAddress, targetAddress, toAddress(converter))];
             case 1:
                 tx = _b.sent();
-                console.log('setConverter(' + sourceAddress + ',' + targetAddress + ',' + toAddress(converter));
+                console.log('setConverter(' +
+                    sourceAddress +
+                    ',' +
+                    targetAddress +
+                    ',' +
+                    toAddress(converter));
                 return [2 /*return*/, tx];
         }
     });
@@ -169,7 +185,8 @@ module.exports = function (_a) {
                         })];
                 case 13:
                     zeroUnderwriterLockBytecodeLib = _q.sent();
-                    return [4 /*yield*/, hre.ethers.getContractFactory(getControllerName(), process.env.CHAIN === 'ETHEREUM'
+                    console.log('deploying controller');
+                    return [4 /*yield*/, hre.ethers.getContractFactory(getControllerName(), process.env.CHAIN !== 'MATIC'
                             ? {}
                             : {
                                 libraries: {
@@ -178,12 +195,18 @@ module.exports = function (_a) {
                             })];
                 case 14:
                     zeroControllerFactory = _q.sent();
-                    if (!(process.env.CHAIN === 'ETHEREUM')) return [3 /*break*/, 16];
-                    return [4 /*yield*/, deployProxyFixedAddress(zeroControllerFactory, [deployer, deployer])];
+                    if (!(process.env.CHAIN !== 'MATIC')) return [3 /*break*/, 16];
+                    return [4 /*yield*/, deployProxyFixedAddress(zeroControllerFactory, [
+                            deployer,
+                            deployer,
+                        ])];
                 case 15:
                     _e = _q.sent();
                     return [3 /*break*/, 18];
-                case 16: return [4 /*yield*/, deployProxyFixedAddress(zeroControllerFactory, ['0x0F4ee9631f4be0a63756515141281A3E2B293Bbe', deployParameters[network].gatewayRegistry], {
+                case 16: return [4 /*yield*/, deployProxyFixedAddress(zeroControllerFactory, [
+                        '0x0F4ee9631f4be0a63756515141281A3E2B293Bbe',
+                        deployParameters[network].gatewayRegistry,
+                    ], {
                         unsafeAllowLinkedLibraries: true
                     })];
                 case 17:
@@ -238,7 +261,12 @@ module.exports = function (_a) {
                     _q.sent();
                     return [4 /*yield*/, deployFixedAddress('DummyVault', {
                             contractName: 'DummyVault',
-                            args: [deployParameters[network]['WBTC'], zeroController.address, 'yearnBTC', 'yvWBTC'],
+                            args: [
+                                deployParameters[network]['WBTC'],
+                                zeroController.address,
+                                'yearnBTC',
+                                'yvWBTC',
+                            ],
                             from: deployer
                         })];
                 case 28:
@@ -278,9 +306,11 @@ module.exports = function (_a) {
                     controller = _q.sent();
                     console.log('got controller');
                     if (!isLocalhost) return [3 /*break*/, 38];
-                    return [4 /*yield*/, deployFixedAddress(process.env.CHAIN === 'ETHEREUM' ? 'MetaExecutorEthereum' : 'MetaExecutor', {
+                    return [4 /*yield*/, deployFixedAddress(process.env.CHAIN !== 'MATIC' ? 'MetaExecutorEthereum' : 'MetaExecutor', {
                             args: [controller.address, ethers.utils.parseUnits('15', 8), '100000'],
-                            contractName: process.env.CHAIN === 'ETHEREUM' ? 'MetaExecutorEthereum' : 'MetaExecutor',
+                            contractName: process.env.CHAIN !== 'MATIC'
+                                ? 'MetaExecutorEthereum'
+                                : 'MetaExecutor',
                             libraries: {},
                             from: deployer
                         })];
@@ -295,13 +325,21 @@ module.exports = function (_a) {
                     _q.sent();
                     console.log('GOT CONTROLLER');
                     if (!(process.env.CHAIN === 'ARBITRUM')) return [3 /*break*/, 41];
-                    return [4 /*yield*/, deployFixedAddress('ArbitrumConvert', {
+                    return [4 /*yield*/, deployFixedAddress('BadgerBridge', {
                             args: [zeroController.address],
-                            contractName: 'ArbitrumConvert',
+                            contractName: 'BadgerBridge',
                             from: deployer
-                        })];
+                        })]; /*await deployFixedAddress('ArbitrumConvert', {
+                                args: [zeroController.address],
+                                contractName: 'ArbitrumConvert',
+                                from: deployer,
+                          }) */
                 case 40:
-                    _j = _q.sent();
+                    _j = _q.sent(); /*await deployFixedAddress('ArbitrumConvert', {
+                                args: [zeroController.address],
+                                contractName: 'ArbitrumConvert',
+                                from: deployer,
+                          }) */
                     return [3 /*break*/, 46];
                 case 41:
                     if (!(process.env.CHAIN === 'MATIC')) return [3 /*break*/, 43];
@@ -438,11 +476,11 @@ module.exports = function (_a) {
                         });
                     }); };
                     /*
-                  let getWrapperAddress = async () => {
-                    getWrapperAddress = _getWrapperAddress;
-                    return '0x400779D2e22d4dec04f6043114E88820E115903A';
-                  };
-                  */
+                    let getWrapperAddress = async () => {
+                      getWrapperAddress = _getWrapperAddress;
+                      return '0x400779D2e22d4dec04f6043114E88820E115903A';
+                    };
+                    */
                     console.log('CONVERTERS');
                     _o = network;
                     switch (_o) {
@@ -516,7 +554,10 @@ module.exports = function (_a) {
                     return [4 /*yield*/, setConverter(controller, 'renBTC', 'WBTC', renBTCToWBTC)];
                 case 85:
                     _q.sent();
-                    return [4 /*yield*/, sushiFactory.createWrapper([deployParameters[network]['wNative'], deployParameters[network]['WBTC']], { gasLimit: 5e6 })];
+                    return [4 /*yield*/, sushiFactory.createWrapper([
+                            deployParameters[network]['wNative'],
+                            deployParameters[network]['WBTC'],
+                        ], { gasLimit: 5e6 })];
                 case 86:
                     wEthToWBTCTx = _q.sent();
                     return [4 /*yield*/, getWrapperAddress(wEthToWBTCTx)];
@@ -525,7 +566,10 @@ module.exports = function (_a) {
                     return [4 /*yield*/, setConverter(controller, 'wNative', 'WBTC', '0x7157d98368923a298C0882a503cF44353A847F37')];
                 case 88:
                     _q.sent();
-                    return [4 /*yield*/, sushiFactory.createWrapper([deployParameters[network]['WBTC'], deployParameters[network]['wNative']], { gasLimit: 5e6 })];
+                    return [4 /*yield*/, sushiFactory.createWrapper([
+                            deployParameters[network]['WBTC'],
+                            deployParameters[network]['wNative'],
+                        ], { gasLimit: 5e6 })];
                 case 89:
                     wBtcToWETHTx = _q.sent();
                     return [4 /*yield*/, getWrapperAddress(wBtcToWETHTx)];
