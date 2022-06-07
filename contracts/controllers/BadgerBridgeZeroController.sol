@@ -173,12 +173,6 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     amountOut = IERC20(wbtc).balanceOf(address(this)).sub(amountStart);
   }
 
-  function fromWBTC(uint256 amount) internal returns (uint256 amountOut) {
-    uint256 amountStart = IERC20(renbtc).balanceOf(address(this));
-    (bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 1, 0, amount));
-    amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
-  }
-
   function toIBBTC(uint256 amountIn) internal returns (uint256 amountOut) {
     uint256[2] memory amounts;
     amounts[0] = amountIn;
@@ -248,6 +242,12 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
   }
 
+  function toRenBTC(uint256 amountIn) internal returns (uint256 amountOut) {
+    uint256 balanceStart = IERC20(renbtc).balanceOf(address(this));
+    (bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 1, 0, amountIn));
+    amountOut = IERC20(renbtc).balanceOf(address(this)).sub(balanceStart);
+  }
+
   function fromUSDC(uint256 minOut, uint256 amountIn) internal returns (uint256 amountOut) {
     bytes memory path = abi.encodePacked(usdc, usdcWethFee, weth, wethWbtcFee, wbtc);
     ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
@@ -258,13 +258,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
       path: path
     });
     amountOut = ISwapRouter(routerv3).exactInput(params);
-    amountOut = fromWBTC(amountOut);
-  }
-
-  function toRenBTC(uint256 amountIn) internal returns (uint256 amountOut) {
-    uint256 balanceStart = IERC20(renbtc).balanceOf(address(this));
-    (bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 1, 0, amountIn));
-    amountOut = IERC20(renbtc).balanceOf(address(this)).sub(balanceStart);
+    amountOut = toRenBTC(amountOut);
   }
 
   function fromETHToRenBTC(uint256 minOut, uint256 amountIn) internal returns (uint256 amountOut) {
