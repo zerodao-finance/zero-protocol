@@ -10,6 +10,7 @@ import { IERC2612Permit } from "../interfaces/IERC2612Permit.sol";
 import { IRenCrv } from "../interfaces/CurvePools/IRenCrv.sol";
 import { SplitSignatureLib } from "../libraries/SplitSignatureLib.sol";
 import { IBadgerSettPeak } from "../interfaces/IBadgerSettPeak.sol";
+import { IWETH } from "../interfaces/IWETH.sol";
 import { ICurveFi } from "../interfaces/ICurveFi.sol";
 import { IGateway } from "../interfaces/IGateway.sol";
 import { ICurveETHUInt256 } from "../interfaces/CurvePools/ICurveETHUInt256.sol";
