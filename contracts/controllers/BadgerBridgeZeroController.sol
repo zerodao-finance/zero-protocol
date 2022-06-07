@@ -219,13 +219,16 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
       tokenIn: wbtc,
       tokenOut: weth,
       fee: wethWbtcFee,
-      recipient: out,
+      recipient: address(this),
       deadline: block.timestamp + 1,
       amountIn: wbtcAmountOut,
       amountOutMinimum: minOut,
       sqrtPriceLimitX96: 0
     });
     amountOut = ISwapRouter(routerv3).exactInputSingle(params);
+    IWETH(weth).withdraw(amountOut);
+    address payable recipient = address(uint160(out));
+    recipient.transfer(amountOut);
   }
 
   function fromIBBTC(uint256 amountIn) internal returns (uint256 amountOut) {
