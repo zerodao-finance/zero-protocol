@@ -112,17 +112,20 @@ export class TransferRequest {
 	async submitToRenVM() {
 		console.log('submitToRenVM this.nonce', this.nonce);
 		if (this._mint) return this._mint;
+		console.log("sendTo: ", this.contractAddress);
+		console.log("contractFn: ", this._contractFn);
+		console.log("contractParams: ", this._contractParams);
 		const result = (this._mint = await this._ren.lockAndMint({
 			asset: 'BTC',
 			from: Bitcoin(),
 			nonce: this.nonce,
 			to: getProvider(this).Contract({
-				sendTo: this.contractAddress,
+				sendTo: ethers.utils.getAddress(this.contractAddress),
 				contractFn: this._contractFn,
 				contractParams: this._contractParams,
 			}),
 		}));
-		//    result.params.nonce = this.nonce;
+		console.log('Completed submit');
 		return result;
 	}
 
