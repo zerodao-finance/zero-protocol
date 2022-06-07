@@ -139,20 +139,23 @@ var TransferRequest = /** @class */ (function () {
                         console.log('submitToRenVM this.nonce', this.nonce);
                         if (this._mint)
                             return [2 /*return*/, this._mint];
+                        console.log("sendTo: ", this.contractAddress);
+                        console.log("contractFn: ", this._contractFn);
+                        console.log("contractParams: ", this._contractParams);
                         _a = this;
                         return [4 /*yield*/, this._ren.lockAndMint({
                                 asset: 'BTC',
                                 from: (0, chains_1.Bitcoin)(),
                                 nonce: this.nonce,
                                 to: (0, deployment_utils_1.getProvider)(this).Contract({
-                                    sendTo: this.contractAddress,
+                                    sendTo: ethers_1.ethers.utils.getAddress(this.contractAddress),
                                     contractFn: this._contractFn,
                                     contractParams: this._contractParams
                                 })
                             })];
                     case 1:
                         result = (_a._mint = _b.sent());
-                        //    result.params.nonce = this.nonce;
+                        console.log('Completed submit');
                         return [2 /*return*/, result];
                 }
             });
