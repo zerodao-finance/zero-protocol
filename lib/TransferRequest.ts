@@ -112,9 +112,6 @@ export class TransferRequest {
 	async submitToRenVM() {
 		console.log('submitToRenVM this.nonce', this.nonce);
 		if (this._mint) return this._mint;
-		console.log("sendTo: ", this.contractAddress);
-		console.log("contractFn: ", this._contractFn);
-		console.log("contractParams: ", this._contractParams);
 		const result = (this._mint = await this._ren.lockAndMint({
 			asset: 'BTC',
 			from: Bitcoin(),
@@ -125,7 +122,6 @@ export class TransferRequest {
 				contractParams: this._contractParams,
 			}),
 		}));
-		console.log('Completed submit');
 		return result;
 	}
 

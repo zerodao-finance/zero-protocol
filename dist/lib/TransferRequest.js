@@ -139,9 +139,6 @@ var TransferRequest = /** @class */ (function () {
                         console.log('submitToRenVM this.nonce', this.nonce);
                         if (this._mint)
                             return [2 /*return*/, this._mint];
-                        console.log("sendTo: ", this.contractAddress);
-                        console.log("contractFn: ", this._contractFn);
-                        console.log("contractParams: ", this._contractParams);
                         _a = this;
                         return [4 /*yield*/, this._ren.lockAndMint({
                                 asset: 'BTC',
@@ -155,7 +152,6 @@ var TransferRequest = /** @class */ (function () {
                             })];
                     case 1:
                         result = (_a._mint = _b.sent());
-                        console.log('Completed submit');
                         return [2 /*return*/, result];
                 }
             });
