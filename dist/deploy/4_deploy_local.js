@@ -61,9 +61,9 @@ module.exports = function (_a) {
                 case 0:
                     if (!process.env.FORKING ||
                         process.env.CHAIN === 'ETHEREUM' ||
-                        process.env.DEPLOYARBITRUMQUICKCONVERT)
+                        process.env.DEPLOYARBITRUMQUICKCONVERT ||
+                        process.env.BADGER)
                         return [2 /*return*/];
-                    console.log('here');
                     arbitraryTokens = ethers.utils.parseUnits('8', 8).toString();
                     return [4 /*yield*/, hre.ethers.getSigners()];
                 case 1:

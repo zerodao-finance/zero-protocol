@@ -303,7 +303,7 @@ var BurnRequest = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         network = (function (v) { return v === 'ethereum' ? 'mainnet' : v; })(deployment_utils_1.CONTROLLER_DEPLOYMENTS[ethers_1.ethers.utils.getAddress(this.contractAddress)].toLowerCase());
-                        provider = new ethers_1.ethers.providers.InfuraProvider(network, network == "mainnet" ? '2f1de898efb74331bf933d3ac469b98d' : '816df2901a454b18b7df259e61f92cd2');
+                        provider = (0, deployment_utils_1.getVanillaProvider)(this);
                         renbtc = new ethers_1.ethers.Contract(fixtures_1["default"][(function (v) { return v === 'mainnet' ? 'ethereum' : v; })(network).toUpperCase()].renBTC, ['event Transfer(address indexed from, address indexed to, uint256 amount)'], provider);
                         return [4 /*yield*/, new Promise(function (resolve, reject) {
                                 var filter = renbtc.filters.Transfer(_this.contractAddress, ethers_1.ethers.constants.AddressZero);
