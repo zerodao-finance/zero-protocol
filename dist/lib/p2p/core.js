@@ -319,7 +319,7 @@ var ZeroUser = /** @class */ (function (_super) {
                     case 6:
                         stream = (_b.sent()).stream;
                         (0, it_pipe_1["default"])(JSON.stringify(requestFromTemplate), it_length_prefixed_1["default"].encode(), stream.sink);
-                        this.log.info("Published transfer request to " + keeper + ". Waiting for keeper confirmation.");
+                        this.log.info("Published " + requestType + " request to " + keeper + ". Waiting for keeper confirmation.");
                         return [3 /*break*/, 8];
                     case 7:
                         e_3 = _b.sent();
