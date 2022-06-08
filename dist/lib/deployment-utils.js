@@ -10,6 +10,7 @@ var ethers_1 = require("ethers");
 var chains_1 = require("@renproject/chains");
 exports.CONTROLLER_DEPLOYMENTS = (_a = {},
     _a[ethers_1.ethers.utils.getAddress(require('../deployments/arbitrum/BadgerBridgeZeroController.json').address)] = 'Arbitrum',
+    _a[ethers_1.ethers.utils.getAddress(require('../deployments/avalanche/BadgerBridgeZeroController.json').address)] = 'Avalanche',
     _a[ethers_1.ethers.utils.getAddress(require('../deployments/matic/ZeroController').address)] = 'Polygon',
     _a[ethers_1.ethers.utils.getAddress(require('../deployments/mainnet/BadgerBridgeZeroController.json').address)] = 'Ethereum',
     _a);
@@ -22,16 +23,29 @@ exports.RPC_ENDPOINTS = {
 exports.RENVM_PROVIDERS = {
     Arbitrum: chains_1.Arbitrum,
     Polygon: chains_1.Polygon,
-    Ethereum: chains_1.Ethereum
+    Ethereum: chains_1.Ethereum,
+    Avalanche: chains_1.Avalanche
 };
-var getVanillaProvider = function (transferRequest) {
-    var checkSummedContractAddr = ethers_1.ethers.utils.getAddress(transferRequest.contractAddress);
+var getVanillaProvider = function (request) {
+    var checkSummedContractAddr = ethers_1.ethers.utils.getAddress(request.contractAddress);
     if (Object.keys(exports.CONTROLLER_DEPLOYMENTS).includes(checkSummedContractAddr)) {
-        var chain_key = exports.CONTROLLER_DEPLOYMENTS[checkSummedContractAddr];
-        return new ethers_1.ethers.providers.JsonRpcProvider(exports.RPC_ENDPOINTS[chain_key]);
+        var chain_key_1 = exports.CONTROLLER_DEPLOYMENTS[checkSummedContractAddr];
+        var infuraKey = (function () {
+            switch (chain_key_1) {
+                case 'ethereum':
+                    return 'mainnet';
+                case 'polygon':
+                    return 'matic';
+                case 'arbitrum':
+                    return chain_key_1;
+            }
+        })();
+        if (infuraKey)
+            return new ethers_1.ethers.providers.InfuraProvider(infuraKey, '816df2901a454b18b7df259e61f92cd2');
+        return new ethers_1.ethers.providers.JsonRpcProvider(exports.RPC_ENDPOINTS[chain_key_1]);
     }
     else {
-        throw new Error('Not a contract currently deployed');
+        throw new Error('Not a contract currently deployed: ' + checkSummedContractAddr);
     }
 };
 exports.getVanillaProvider = getVanillaProvider;

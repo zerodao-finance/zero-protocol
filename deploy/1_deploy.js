@@ -12,6 +12,8 @@ const getControllerName = () => {
       return 'BadgerBridgeZeroControllerArb';
     case 'ETHEREUM':
       return 'BadgerBridgeZeroController';
+    case 'AVALANCHE':
+      return 'BadgerBridgeZeroControllerAvax';
     default:
       return 'ZeroController';
   }
@@ -225,7 +227,7 @@ module.exports = async ({
   console.log('GOT CONTROLLER');
 
   const module =
-    process.env.CHAIN === 'ARBITRUM'
+    process.env.CHAIN === 'ARBITRUM' || process.env.CHAIN === 'AVALANCHE'
       ? await deployFixedAddress('BadgerBridge', {
           args: [zeroController.address],
           contractName: 'BadgerBridge',

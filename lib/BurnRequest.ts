@@ -13,7 +13,7 @@ import { EIP712TypedData } from '@0x/types';
 import { Bitcoin } from '@renproject/chains';
 import RenJS, { BurnAndRelease } from '@renproject/ren';
 import { EthArgs } from '@renproject/interfaces';
-import { CONTROLLER_DEPLOYMENTS, RPC_ENDPOINTS, getProvider } from './deployment-utils';
+import { CONTROLLER_DEPLOYMENTS, getVanillaProvider, getProvider } from './deployment-utils';
 import fixtures from './fixtures';
 // @ts-ignore
 import { BTCHandler } from 'send-crypto/build/main/handlers/BTC/BTCHandler';
@@ -238,7 +238,7 @@ export class BurnRequest {
 	}
 	async waitForHostTransaction() {
 		const network = ((v) => v === 'ethereum' ? 'mainnet' : v)(CONTROLLER_DEPLOYMENTS[ethers.utils.getAddress(this.contractAddress)].toLowerCase());
-	  const provider = new ethers.providers.InfuraProvider(network, network == "mainnet" ? '2f1de898efb74331bf933d3ac469b98d' : '816df2901a454b18b7df259e61f92cd2');
+	  const provider = getVanillaProvider(this);
 		const renbtc = new ethers.Contract(fixtures[((v) => v === 'mainnet' ? 'ethereum' : v)(network).toUpperCase()].renBTC, [ 'event Transfer(address indexed from, address indexed to, uint256 amount)' ], provider);
 	  return await new Promise((resolve, reject) => {
             const filter = renbtc.filters.Transfer(this.contractAddress, ethers.constants.AddressZero);
