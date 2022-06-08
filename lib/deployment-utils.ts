@@ -31,6 +31,17 @@ export const getVanillaProvider = (request) => {
 	const checkSummedContractAddr = ethers.utils.getAddress(request.contractAddress);
 	if (Object.keys(CONTROLLER_DEPLOYMENTS).includes(checkSummedContractAddr)) {
 		const chain_key = CONTROLLER_DEPLOYMENTS[checkSummedContractAddr];
+		const infuraKey = (() => {
+	          switch (chain_key) {
+                    case 'ethereum':
+                      return 'mainnet';
+                    case 'polygon':
+                      return 'matic';
+                    case 'arbitrum':
+                      return chain_key;
+		  }
+		})();
+                if (infuraKey) return new ethers.providers.InfuraProvider(infuraKey, '816df2901a454b18b7df259e61f92cd2');
 		return new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]);
 	} else {
 		throw new Error('Not a contract currently deployed: ' + checkSummedContractAddr);
