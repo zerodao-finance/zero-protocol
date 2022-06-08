@@ -15,6 +15,7 @@ exports.CONTROLLER_DEPLOYMENTS = (_a = {},
     _a);
 exports.RPC_ENDPOINTS = {
     Arbitrum: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+    Avalanche: 'https://api.avax.network/ext/bc/C/rpc',
     Polygon: 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
     Ethereum: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2'
 };
