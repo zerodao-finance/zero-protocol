@@ -63,7 +63,6 @@ export class TransferRequest {
 				: params.amount,
 		);
 		this.data = params.data;
-		console.log('params.nonce', params.nonce);
 		this.nonce = params.nonce ? hexlify(params.nonce) : hexlify(randomBytes(32));
 		this.pNonce = params.pNonce ? hexlify(params.pNonce) : hexlify(randomBytes(32));
 		this.chainId = params.chainId;
@@ -110,7 +109,6 @@ export class TransferRequest {
 	}
 
 	async submitToRenVM() {
-		console.log('submitToRenVM this.nonce', this.nonce);
 		if (this._mint) return this._mint;
 		const result = (this._mint = await this._ren.lockAndMint({
 			asset: 'BTC',
@@ -190,7 +188,6 @@ export class TransferRequest {
 		try {
 			const payload = this.toEIP712(contractAddress, chainId);
 			delete payload.types.EIP712Domain;
-			console.log('signing');
 			const sig = await signer._signTypedData(payload.domain, payload.types, payload.message);
 			return (this.signature = ethers.utils.joinSignature(ethers.utils.splitSignature(sig)));
 		} catch (e) {
