@@ -2640,6 +2640,11 @@
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-2.0.0.tgz#f544a148d3ab35801c1f633a7441fd87c2e484bf"
   integrity sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==
 
+"@traderjoe-xyz/core@^2.4.6":
+  version "2.4.6"
+  resolved "https://registry.yarnpkg.com/@traderjoe-xyz/core/-/core-2.4.6.tgz#d7657530cab4c5e10e6ba09bf955be76b918fa77"
+  integrity sha512-YmDEkxa8avXRlILFNT3p87vkXrQ1ONK/Hb3XJiUZxGktTPf4gaAHjAPtETn1LwDBAqLvs2ZhiZDSgHSdDivhNw==
+
 "@tsconfig/node10@^1.0.7":
   version "1.0.8"
   resolved "https://registry.yarnpkg.com/@tsconfig/node10/-/node10-1.0.8.tgz#c1e4e80d6f964fbecb3359c43bd48b40f7cadad9"

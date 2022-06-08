@@ -30,10 +30,10 @@ module.exports = async ({
   if (
     !process.env.FORKING ||
     process.env.CHAIN === 'ETHEREUM' ||
-    process.env.DEPLOYARBITRUMQUICKCONVERT
+    process.env.DEPLOYARBITRUMQUICKCONVERT ||
+    process.env.BADGER
   )
     return;
-  console.log('here');
 
   // set an arbitrary amount of tokens to send
   // get abi
