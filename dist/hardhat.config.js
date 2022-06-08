@@ -53,9 +53,12 @@ if (!process.env.CHAIN_ID && process.env.CHAIN === 'MATIC')
     process.env.CHAIN_ID = '137';
 if (!process.env.CHAIN_ID && process.env.CHAIN === 'ETHEREUM')
     process.env.CHAIN_ID = '1';
+if (!process.env.CHAIN_ID && process.env.CHAIN === 'AVALANCHE')
+    process.env.CHAIN_ID = '43114';
 var RPC_ENDPOINTS = {
     ARBITRUM: 'https://arb1.arbitrum.io/rpc',
     MATIC: 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
+    AVALANCHE: 'https://api.avax.network/ext/bc/C/rpc',
     ETHEREUM: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2'
 };
 var deployParameters = require('./lib/fixtures');
@@ -91,13 +94,15 @@ var accounts = [
     process.env.UNDERWRITER || ethers_1.ethers.Wallet.createRandom().privateKey,
 ];
 process.env.ETHEREUM_MAINNET_URL =
-    process.env.ETHEREUM_MAINNET_URL || 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2';
+    process.env.ETHEREUM_MAINNET_URL ||
+        'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2';
 var ETHERSCAN_API_KEYS = {
     ARBITRUM: '7PW6SPNBFYV1EM5E5NT36JW7ARMS1FB4HW',
     MATIC: 'I13U9EN9YQ9931GYK9CJYQS9ZF51D5Z1F9',
     ETHEREUM: '34W9GX5VZDJKJKVV6YEAMQ3TDP7R8SR633'
 };
-var ETHERSCAN_API_KEY = ETHERSCAN_API_KEYS[process.env.CHAIN || 'ARBITRUM'] || ETHERSCAN_API_KEYS['ARBITRUM'];
+var ETHERSCAN_API_KEY = ETHERSCAN_API_KEYS[process.env.CHAIN || 'ARBITRUM'] ||
+    ETHERSCAN_API_KEYS['ARBITRUM'];
 module.exports = {
     defaultNetwork: 'hardhat',
     abiExporter: {
@@ -132,7 +137,7 @@ module.exports = {
             }
         },
         avalanche: {
-            url: 'https://api.avax.network/ext/bc/C/rpc',
+            url: RPC_ENDPOINTS.AVALANCHE,
             accounts: accounts,
             chainId: 43114,
             live: true,

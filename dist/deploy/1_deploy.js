@@ -49,6 +49,8 @@ var getControllerName = function () {
             return 'BadgerBridgeZeroControllerArb';
         case 'ETHEREUM':
             return 'BadgerBridgeZeroController';
+        case 'AVALANCHE':
+            return 'BadgerBridgeZeroControllerAvax';
         default:
             return 'ZeroController';
     }
@@ -324,7 +326,7 @@ module.exports = function (_a) {
                 case 39:
                     _q.sent();
                     console.log('GOT CONTROLLER');
-                    if (!(process.env.CHAIN === 'ARBITRUM')) return [3 /*break*/, 41];
+                    if (!(process.env.CHAIN === 'ARBITRUM' || process.env.CHAIN === 'AVALANCHE')) return [3 /*break*/, 41];
                     return [4 /*yield*/, deployFixedAddress('BadgerBridge', {
                             args: [zeroController.address],
                             contractName: 'BadgerBridge',
