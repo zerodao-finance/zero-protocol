@@ -167,7 +167,7 @@ class ZeroUser extends EventEmitter {
 						const peer = await peerId.createFromB58String(keeper);
 						const { stream } = await this.conn.dialProtocol(peer, '/zero/1.1.0/dispatch');
 						pipe(JSON.stringify(requestFromTemplate), lp.encode(), stream.sink);
-						this.log.info(`Published transfer request to ${keeper}. Waiting for keeper confirmation.`);
+						this.log.info(`Published ${requestType} request to ${keeper}. Waiting for keeper confirmation.`);
 					} catch (e: any) {
 						this.log.error(`Failed dialing keeper: ${keeper} for txDispatch`);
 						this.log.error(e.stack);

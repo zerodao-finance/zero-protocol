@@ -86,7 +86,6 @@ var TransferRequest = /** @class */ (function () {
                 ? ethers_1.ethers.BigNumber.from(params.amount)
                 : params.amount);
         this.data = params.data;
-        console.log('params.nonce', params.nonce);
         this.nonce = params.nonce ? (0, bytes_1.hexlify)(params.nonce) : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
         this.pNonce = params.pNonce ? (0, bytes_1.hexlify)(params.pNonce) : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
         this.chainId = params.chainId;
@@ -136,7 +135,6 @@ var TransferRequest = /** @class */ (function () {
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        console.log('submitToRenVM this.nonce', this.nonce);
                         if (this._mint)
                             return [2 /*return*/, this._mint];
                         _a = this;
@@ -249,7 +247,6 @@ var TransferRequest = /** @class */ (function () {
                         _e.trys.push([2, 4, , 7]);
                         payload = this.toEIP712(contractAddress, chainId);
                         delete payload.types.EIP712Domain;
-                        console.log('signing');
                         return [4 /*yield*/, signer._signTypedData(payload.domain, payload.types, payload.message)];
                     case 3:
                         sig = _e.sent();
