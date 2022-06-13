@@ -1,12 +1,18 @@
-'use strict';
+"use strict";
 
-const badger = require('../dist/lib/badger');
-const ethers = require('ethers');
-const fixtures = require('../dist/lib/fixtures');
+const Badger = require("../lib/badger");
+const ethers = require("ethers");
+const fixtures = require("../lib/fixtures");
 
 (async () => {
-  console.log(await badger.computeOutputBTC({
-    amount: ethers.utils.parseEther('1'),
-    asset: ethers.constants.AddressZero
-  }));
+  const badger = Badger.makeCompute("1");
+  console.log(
+    ethers.utils.formatUnits(
+      await badger.computeOutputBTC({
+        amount: ethers.utils.parseEther("1"),
+        asset: ethers.constants.AddressZero,
+      }),
+      8
+    )
+  );
 })().catch(console.error);

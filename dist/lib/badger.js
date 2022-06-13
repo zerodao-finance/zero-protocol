@@ -38,95 +38,16 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 var ethers = require("ethers");
 var fixtures = require("./fixtures");
 var UNISWAP = require("@uniswap/sdk");
+var Quotes = require("./quotes");
 var Route = require("@uniswap/sdk").Route;
-var provider = new ethers.providers.InfuraProvider("mainnet", "816df2901a454b18b7df259e61f92cd2");
-var quoter = new ethers.Contract("0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6", [
-    "function quoteExactInputSingle(address tokenIn, address tokenOut, uint24 fee, uint256 amountIn, uint160 sqrtPriceLimitX96) public view returns (uint256 amountOut)",
-    "function quoteExactInput(bytes path, uint256 amountIn) public view returns (uint256 amountOut)",
-], provider);
-var getRenBTCForOneETHPrice = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var renBTC, pair, route, renBTCForOneEth;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0:
-                renBTC = new UNISWAP.Token(UNISWAP.ChainId.MAINNET, fixtures.ETHEREUM.renBTC, 8);
-                return [4 /*yield*/, UNISWAP.Fetcher.fetchPairData(renBTC, UNISWAP.WETH[renBTC.chainId], provider)];
-            case 1:
-                pair = _a.sent();
-                route = new Route([pair], UNISWAP.WETH[renBTC.chainId]);
-                renBTCForOneEth = route.midPrice.toSignificant(7);
-                return [2 /*return*/, ethers.utils.parseUnits(renBTCForOneEth, 8)];
-        }
-    });
-}); };
-var computeRenBTCGasFee = function (gasCost, gasPrice) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, _b;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
-            case 0:
-                _b = (_a = gasCost
-                    .mul(gasPrice))
-                    .mul;
-                return [4 /*yield*/, getRenBTCForOneETHPrice()];
-            case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])
-                    .div(ethers.utils.parseEther("1"))];
-        }
-    });
-}); };
-var GAS_COST = ethers.BigNumber.from("370000");
 var keeperReward = ethers.utils.parseEther("0.001");
 var applyRatio = function (amount, ratio) {
     return ethers.BigNumber.from(amount)
         .mul(ratio)
         .div(ethers.utils.parseEther("1"));
 };
-var applyFee = (exports.applyFee = function (amountIn, fee, multiplier) { return __awaiter(void 0, void 0, void 0, function () {
-    var gasPrice, gasFee, opFee, totalFees;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0: return [4 /*yield*/, provider.getGasPrice()];
-            case 1:
-                gasPrice = _a.sent();
-                return [4 /*yield*/, computeRenBTCGasFee(GAS_COST.add(keeperReward.div(gasPrice)), gasPrice)];
-            case 2:
-                gasFee = _a.sent();
-                opFee = applyRatio(amountIn, fee);
-                totalFees = gasFee.add(opFee);
-                return [2 /*return*/, { gasFee: gasFee, opFee: opFee, totalFees: totalFees }];
-        }
-    });
-}); });
 var burnFee = (exports.burnFee = ethers.utils.parseEther("0.004"));
 var mintFee = (exports.mintFee = ethers.utils.parseEther("0.0025"));
-var deductBurnFee = function (amount, multiplier) { return __awaiter(void 0, void 0, void 0, function () {
-    var feeAmounts, amountAfterDeduction;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0:
-                amount = ethers.BigNumber.from(amount);
-                return [4 /*yield*/, applyFee(amount, burnFee, multiplier)];
-            case 1:
-                feeAmounts = _a.sent();
-                amountAfterDeduction = amount.sub(feeAmounts.totalFees);
-                return [2 /*return*/, amountAfterDeduction <= 0 ? 0 : amountAfterDeduction];
-        }
-    });
-}); };
-var deductMintFee = function (amount, multiplier) { return __awaiter(void 0, void 0, void 0, function () {
-    var feeAmounts, amountAfterDeduction;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0:
-                amount = ethers.BigNumber.from(amount);
-                return [4 /*yield*/, applyFee(amount, mintFee, multiplier)];
-            case 1:
-                feeAmounts = _a.sent();
-                amountAfterDeduction = amount.sub(feeAmounts.totalFees);
-                return [2 /*return*/, amountAfterDeduction <= 0 ? 0 : amountAfterDeduction];
-        }
-    });
-}); };
-var renCrv = (exports.renCrv = new ethers.Contract("0x93054188d876f558f4a66B2EF1d97d16eDf0895B", ["function get_dy(int128, int128, uint256) view returns (uint256)"], provider));
 var applyRenVMFee = (exports.applyRenVMFee = function (input) {
     input = ethers.BigNumber.from(input);
     return input
@@ -141,191 +62,174 @@ var applyRenVMMintFee = (exports.applyRenVMMintFee = function (input) {
         .sub(ethers.utils.parseUnits("0.001", 8));
     return result;
 });
-var fromUSDC = function (amount) { return __awaiter(void 0, void 0, void 0, function () {
-    var WETH, output, e_1, result;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0:
-                WETH = UNISWAP.WETH["1"];
-                output = null;
-                _a.label = 1;
-            case 1:
-                _a.trys.push([1, 3, , 4]);
-                return [4 /*yield*/, quoter.quoteExactInput(ethers.utils.solidityPack(["address", "uint24", "address", "uint24", "address"], [fixtures.ETHEREUM.USDC, 500, WETH.address, 500, fixtures.ETHEREUM.WBTC]), amount)];
-            case 2:
-                output = _a.sent();
-                return [3 /*break*/, 4];
-            case 3:
-                e_1 = _a.sent();
-                console.error(e_1);
-                console.error("Insufficient USDC amount for price fetch");
-                return [2 /*return*/, 0];
-            case 4: return [4 /*yield*/, renBTCFromWBTC(output)];
-            case 5:
-                result = _a.sent();
-                return [2 /*return*/, result];
+exports.makeCompute = function (CHAIN) {
+    var quotes = Quotes(CHAIN);
+    var GAS_COST = ethers.BigNumber.from((function () {
+        switch (CHAIN) {
+            case "ARBITRUM":
+                return "480000";
+            case "AVALANCHE":
+                return "124000";
+            default:
+                return "420000";
         }
-    });
-}); };
-var toUSDC = (exports.toUSDC = function (amount) { return __awaiter(void 0, void 0, void 0, function () {
-    var wbtcOut, WETH, e_2;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0:
-                _a.trys.push([0, 3, , 4]);
-                return [4 /*yield*/, WBTCFromRenBTC(amount)];
-            case 1:
-                wbtcOut = _a.sent();
-                WETH = UNISWAP.WETH["1"];
-                return [4 /*yield*/, quoter.quoteExactInput(ethers.utils.solidityPack(["address", "uint24", "address", "uint24", "address"], [fixtures.ETHEREUM.WBTC, 500, WETH.address, 500, fixtures.ETHEREUM.USDC]), wbtcOut)];
-            case 2: return [2 /*return*/, _a.sent()];
-            case 3:
-                e_2 = _a.sent();
-                console.error(e_2);
-                return [2 /*return*/, 0];
-            case 4: return [2 /*return*/];
-        }
-    });
-}); });
-var computeTransferOutput = (exports.computeTransferOutput = function (_a) {
-    var module = _a.module, amount = _a.amount;
-    return __awaiter(void 0, void 0, void 0, function () {
-        var _b, _c, _d, _e;
-        return __generator(this, function (_f) {
-            switch (_f.label) {
+    })());
+    var computeTransferOutput = function (_a) {
+        var module = _a.module, amount = _a.amount;
+        return __awaiter(void 0, void 0, void 0, function () {
+            var _b, _c, _d, _e, _f, _g;
+            return __generator(this, function (_h) {
+                switch (_h.label) {
+                    case 0:
+                        _b = module;
+                        switch (_b) {
+                            case fixtures[quotes.chain.name].USDC: return [3 /*break*/, 1];
+                            case fixtures[quotes.chain.name].WBTC: return [3 /*break*/, 4];
+                            case fixtures[quotes.chain.name].renBTC: return [3 /*break*/, 7];
+                            case ethers.constants.AddressZero: return [3 /*break*/, 9];
+                        }
+                        return [3 /*break*/, 12];
+                    case 1:
+                        _d = (_c = quotes).toUSDC;
+                        return [4 /*yield*/, deductMintFee(applyRenVMMintFee(amount))];
+                    case 2: return [4 /*yield*/, _d.apply(_c, [_h.sent()])];
+                    case 3: return [2 /*return*/, _h.sent()];
+                    case 4:
+                        _e = deductMintFee;
+                        return [4 /*yield*/, quotes.getWbtcQuote(true, applyRenVMMintFee(amount))];
+                    case 5: return [4 /*yield*/, _e.apply(void 0, [_h.sent(), 1])];
+                    case 6: return [2 /*return*/, _h.sent()];
+                    case 7: return [4 /*yield*/, deductMintFee(applyRenVMMintFee(amount))];
+                    case 8: return [2 /*return*/, _h.sent()];
+                    case 9:
+                        _g = (_f = quotes).renBTCToETH;
+                        return [4 /*yield*/, deductMintFee(applyRenVMMintFee(amount))];
+                    case 10: return [4 /*yield*/, _g.apply(_f, [_h.sent()])];
+                    case 11: return [2 /*return*/, _h.sent()];
+                    case 12: return [2 /*return*/, ethers.BigNumber.from("0")];
+                }
+            });
+        });
+    };
+    var computeRenBTCGasFee = function (gasCost, gasPrice) { return __awaiter(void 0, void 0, void 0, function () {
+        var _a, _b;
+        return __generator(this, function (_c) {
+            switch (_c.label) {
                 case 0:
-                    _b = module;
-                    switch (_b) {
-                        case fixtures.ETHEREUM.USDC: return [3 /*break*/, 1];
-                        case fixtures.ETHEREUM.WBTC: return [3 /*break*/, 4];
-                        case fixtures.ETHEREUM.renBTC: return [3 /*break*/, 7];
-                        case ethers.constants.AddressZero: return [3 /*break*/, 9];
-                    }
-                    return [3 /*break*/, 12];
-                case 1:
-                    _c = toUSDC;
-                    return [4 /*yield*/, deductMintFee(applyRenVMMintFee(amount))];
-                case 2: return [4 /*yield*/, _c.apply(void 0, [_f.sent()])];
-                case 3: return [2 /*return*/, _f.sent()];
-                case 4:
-                    _d = deductMintFee;
-                    return [4 /*yield*/, renCrv.get_dy(0, 1, applyRenVMMintFee(amount))];
-                case 5: return [4 /*yield*/, _d.apply(void 0, [_f.sent(), 1])];
-                case 6: return [2 /*return*/, _f.sent()];
-                case 7: return [4 /*yield*/, deductMintFee(applyRenVMMintFee(amount))];
-                case 8: return [2 /*return*/, _f.sent()];
-                case 9:
-                    _e = renBTCToETH;
-                    return [4 /*yield*/, deductMintFee(applyRenVMMintFee(amount))];
-                case 10: return [4 /*yield*/, _e.apply(void 0, [_f.sent()])];
-                case 11: return [2 /*return*/, _f.sent()];
-                case 12: return [2 /*return*/, ethers.BigNumber.from("0")];
+                    _b = (_a = gasCost
+                        .mul(gasPrice))
+                        .mul;
+                    return [4 /*yield*/, quotes.getRenBTCForOneETHPrice()];
+                case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])
+                        .div(ethers.utils.parseEther("1"))];
             }
         });
-    });
-});
-var renBTCFromWBTC = function (amount) { return __awaiter(void 0, void 0, void 0, function () {
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0: return [4 /*yield*/, renCrv.get_dy(1, 0, amount)];
-            case 1: return [2 /*return*/, _a.sent()];
-        }
-    });
-}); };
-var WBTCFromRenBTC = function (amount) { return __awaiter(void 0, void 0, void 0, function () {
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0: return [4 /*yield*/, renCrv.get_dy(0, 1, amount)];
-            case 1: return [2 /*return*/, _a.sent()];
-        }
-    });
-}); };
-var WBTCFromETH = function (amount) { return __awaiter(void 0, void 0, void 0, function () {
-    var WETH, output, result;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0:
-                WETH = UNISWAP.WETH[UNISWAP.ChainId.MAINNET];
-                return [4 /*yield*/, quoter.quoteExactInputSingle(WETH.address, fixtures.ETHEREUM.WBTC, 500, amount, 0)];
-            case 1:
-                output = _a.sent();
-                return [4 /*yield*/, renBTCFromWBTC(output)];
-            case 2:
-                result = _a.sent();
-                return [2 /*return*/, result];
-        }
-    });
-}); };
-var renBTCToETH = (exports.renBTCToETH = function (amount) { return __awaiter(void 0, void 0, void 0, function () {
-    var wbtcOut, WETH;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0: return [4 /*yield*/, WBTCFromRenBTC(amount)];
-            case 1:
-                wbtcOut = _a.sent();
-                WETH = UNISWAP.WETH[UNISWAP.ChainId.MAINNET];
-                return [4 /*yield*/, quoter.quoteExactInputSingle(fixtures.ETHEREUM.WBTC, WETH.address, 500, wbtcOut, 0)];
-            case 2: return [2 /*return*/, _a.sent()];
-        }
-    });
-}); });
-var getConvertedAmount = (exports.getConvertedAmount = function (asset, amount) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, _b;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
-            case 0:
-                _a = asset;
-                switch (_a) {
-                    case fixtures.ETHEREUM.WBTC: return [3 /*break*/, 1];
-                    case fixtures.ETHEREUM.renBTC: return [3 /*break*/, 3];
-                    case fixtures.ETHEREUM.USDC: return [3 /*break*/, 4];
-                    case ethers.constants.AddressZero: return [3 /*break*/, 6];
-                }
-                return [3 /*break*/, 9];
-            case 1: return [4 /*yield*/, renBTCFromWBTC(amount)];
-            case 2: return [2 /*return*/, _c.sent()];
-            case 3: return [2 /*return*/, amount];
-            case 4: return [4 /*yield*/, fromUSDC(amount)];
-            case 5: return [2 /*return*/, _c.sent()];
-            case 6:
-                _b = renBTCFromWBTC;
-                return [4 /*yield*/, WBTCFromETH(amount)];
-            case 7: return [4 /*yield*/, _b.apply(void 0, [_c.sent()])];
-            case 8: return [2 /*return*/, _c.sent()];
-            case 9:
-                console.error("no asset found for getConvertedAmount:" + asset);
-                return [2 /*return*/, amount];
-        }
-    });
-}); });
-var computeOutputBTC = (exports.computeOutputBTC = function (burnRequest) { return __awaiter(void 0, void 0, void 0, function () {
-    var asset, amount, convertedAmount, _a;
-    return __generator(this, function (_b) {
-        switch (_b.label) {
-            case 0:
-                asset = burnRequest.asset, amount = burnRequest.amount;
-                return [4 /*yield*/, getConvertedAmount(asset, amount)];
-            case 1:
-                convertedAmount = _b.sent();
-                _a = asset;
-                switch (_a) {
-                    case fixtures.ETHEREUM.WBTC: return [3 /*break*/, 2];
-                    case fixtures.ETHEREUM.renBTC: return [3 /*break*/, 4];
-                    case fixtures.ETHEREUM.USDC: return [3 /*break*/, 6];
-                    case ethers.constants.AddressZero: return [3 /*break*/, 8];
-                }
-                return [3 /*break*/, 10];
-            case 2: return [4 /*yield*/, deductBurnFee(applyRenVMFee(convertedAmount))];
-            case 3: return [2 /*return*/, _b.sent()];
-            case 4: return [4 /*yield*/, deductBurnFee(applyRenVMFee(convertedAmount))];
-            case 5: return [2 /*return*/, _b.sent()];
-            case 6: return [4 /*yield*/, deductBurnFee(applyRenVMFee(convertedAmount))];
-            case 7: return [2 /*return*/, _b.sent()];
-            case 8: return [4 /*yield*/, deductBurnFee(applyRenVMFee(convertedAmount))];
-            case 9: return [2 /*return*/, _b.sent()];
-            case 10:
-                console.error("no asset found for computeOutputBTC:" + asset);
-                return [2 /*return*/, burnRequest.amount];
-        }
-    });
-}); });
+    }); };
+    var deductBurnFee = function (amount, multiplier) { return __awaiter(void 0, void 0, void 0, function () {
+        var feeAmounts, amountAfterDeduction;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    amount = ethers.BigNumber.from(amount);
+                    return [4 /*yield*/, applyFee(amount, burnFee, multiplier)];
+                case 1:
+                    feeAmounts = _a.sent();
+                    amountAfterDeduction = amount.sub(feeAmounts.totalFees);
+                    return [2 /*return*/, amountAfterDeduction <= 0 ? 0 : amountAfterDeduction];
+            }
+        });
+    }); };
+    var deductMintFee = function (amount, multiplier) { return __awaiter(void 0, void 0, void 0, function () {
+        var feeAmounts, amountAfterDeduction;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    amount = ethers.BigNumber.from(amount);
+                    return [4 /*yield*/, applyFee(amount, mintFee, multiplier)];
+                case 1:
+                    feeAmounts = _a.sent();
+                    amountAfterDeduction = amount.sub(feeAmounts.totalFees);
+                    return [2 /*return*/, amountAfterDeduction <= 0 ? 0 : amountAfterDeduction];
+            }
+        });
+    }); };
+    var getConvertedAmount = (exports.getConvertedAmount = function (asset, amount) { return __awaiter(void 0, void 0, void 0, function () {
+        var _a;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    _a = asset;
+                    switch (_a) {
+                        case fixtures[quotes.chain.name].WBTC: return [3 /*break*/, 1];
+                        case fixtures[quotes.chain.name].renBTC: return [3 /*break*/, 3];
+                        case fixtures[quotes.chain.name].USDC: return [3 /*break*/, 4];
+                        case ethers.constants.AddressZero: return [3 /*break*/, 6];
+                    }
+                    return [3 /*break*/, 8];
+                case 1: return [4 /*yield*/, quotes.getWbtcQuote(false, amount)];
+                case 2: return [2 /*return*/, _b.sent()];
+                case 3: return [2 /*return*/, amount];
+                case 4: return [4 /*yield*/, quotes.fromUSDC(amount)];
+                case 5: return [2 /*return*/, _b.sent()];
+                case 6: return [4 /*yield*/, quotes.ETHtoRenBTC(amount)];
+                case 7: return [2 /*return*/, _b.sent()];
+                case 8:
+                    console.error("no asset found for getConvertedAmount:" + asset);
+                    return [2 /*return*/, amount];
+            }
+        });
+    }); });
+    var computeOutputBTC = function (burnRequest) { return __awaiter(void 0, void 0, void 0, function () {
+        var asset, amount, convertedAmount, _a;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    asset = burnRequest.asset, amount = burnRequest.amount;
+                    return [4 /*yield*/, getConvertedAmount(asset, amount)];
+                case 1:
+                    convertedAmount = _b.sent();
+                    _a = asset;
+                    switch (_a) {
+                        case fixtures[quotes.chain.name].WBTC: return [3 /*break*/, 2];
+                        case fixtures[quotes.chain.name].renBTC: return [3 /*break*/, 4];
+                        case fixtures[quotes.chain.name].USDC: return [3 /*break*/, 6];
+                        case ethers.constants.AddressZero: return [3 /*break*/, 8];
+                    }
+                    return [3 /*break*/, 10];
+                case 2: return [4 /*yield*/, deductBurnFee(applyRenVMFee(convertedAmount))];
+                case 3: return [2 /*return*/, _b.sent()];
+                case 4: return [4 /*yield*/, deductBurnFee(applyRenVMFee(convertedAmount))];
+                case 5: return [2 /*return*/, _b.sent()];
+                case 6: return [4 /*yield*/, deductBurnFee(applyRenVMFee(convertedAmount))];
+                case 7: return [2 /*return*/, _b.sent()];
+                case 8: return [4 /*yield*/, deductBurnFee(applyRenVMFee(convertedAmount))];
+                case 9: return [2 /*return*/, _b.sent()];
+                case 10:
+                    console.error("no asset found for computeOutputBTC:" + asset);
+                    return [2 /*return*/, burnRequest.amount];
+            }
+        });
+    }); };
+    var applyFee = function (amountIn, fee, multiplier) { return __awaiter(void 0, void 0, void 0, function () {
+        var gasPrice, gasFee, opFee, totalFees;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, quotes.chain.provider.getGasPrice()];
+                case 1:
+                    gasPrice = _a.sent();
+                    return [4 /*yield*/, computeRenBTCGasFee(GAS_COST.add(keeperReward.div(gasPrice)), gasPrice)];
+                case 2:
+                    gasFee = _a.sent();
+                    opFee = applyRatio(amountIn, fee);
+                    totalFees = gasFee.add(opFee);
+                    return [2 /*return*/, { gasFee: gasFee, opFee: opFee, totalFees: totalFees }];
+            }
+        });
+    }); };
+    return {
+        computeTransferOutput: computeTransferOutput,
+        computeOutputBTC: computeOutputBTC,
+        applyFee: applyFee,
+        computeRenBTCGasFee: computeRenBTCGasFee
+    };
+};
