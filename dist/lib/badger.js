@@ -55,7 +55,6 @@ var applyRenVMFee = (exports.applyRenVMFee = function (input) {
         .div(ethers.utils.parseEther("1"));
 });
 var applyRenVMMintFee = (exports.applyRenVMMintFee = function (input) {
-    input = ethers.BigNumber.from(input);
     var result = input
         .mul(ethers.utils.parseEther("0.9985"))
         .div(ethers.utils.parseEther("1"))
@@ -67,9 +66,9 @@ exports.makeCompute = function (CHAIN) {
     var quotes = Quotes(CHAIN);
     var GAS_COST = ethers.BigNumber.from((function () {
         switch (CHAIN) {
-            case "ARBITRUM":
+            case "42161":
                 return "480000";
-            case "AVALANCHE":
+            case "43114":
                 return "124000";
             default:
                 return "420000";

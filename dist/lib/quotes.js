@@ -49,32 +49,37 @@ var fixtures = require("./fixtures");
 var JOE = require("@traderjoe-xyz/sdk");
 var UNISWAP = require("@uniswap/sdk");
 var Route = require("@uniswap/sdk").Route;
-var returnChainDetails = function (CHAINID) {
+var returnChainDetails = function (CHAINID, _provider) {
+    var provider = function (chain) {
+        return _provider ||
+            new ethers.providers.InfuraProvider(chain, "816df2901a454b18b7df259e61f92cd2");
+    };
     switch (String(CHAINID)) {
         case "1":
             return {
                 name: "ETHEREUM",
-                provider: new ethers.providers.InfuraProvider("mainnet", "816df2901a454b18b7df259e61f92cd2"),
+                provider: provider("mainnet"),
                 uniswapName: "MAINNET"
             };
         case "42161":
             return {
                 name: "ARBITRUM",
-                provider: new ethers.providers.InfuraProvider("mainnet", "816df2901a454b18b7df259e61f92cd2"),
+                provider: provider("arbitrum"),
                 uniswapName: "ARBITRUM"
             };
         case "43114":
             return {
                 name: "AVALANCHE",
-                provider: new ethers.providers.JsonRpcProvider("https://api.avax.network/ext/bc/C/rpc"),
+                provider: _provider ||
+                    new ethers.providers.JsonRpcProvider("https://api.avax.network/ext/bc/C/rpc"),
                 uniswapName: ""
             };
     }
 };
-module.exports = function makeQuoter(CHAIN) {
+module.exports = function makeQuoter(CHAIN, provider) {
     var _this = this;
     if (CHAIN === void 0) { CHAIN = "1"; }
-    var chain = returnChainDetails(CHAIN);
+    var chain = returnChainDetails(CHAIN, provider);
     var renCrv = new ethers.Contract(fixtures[chain.name]["Curve_Ren"], [
         "function get_dy(int128, int128, uint256) view returns (uint256)",
         "function get_dy_underlying(int128, int128, uint256) view returns (uint256)",
@@ -90,21 +95,21 @@ module.exports = function makeQuoter(CHAIN) {
             switch (_a.label) {
                 case 0:
                     WBTC = new JOE.Token(JOE.ChainId.AVALANCHE, fixtures.AVALANCHE.WBTC, 8);
-                    return [4 /*yield*/, JOE.Fetcher.fetchPairData(WBTC, JOE.WAVAX[ChainId.AVALANCHE], chain.provider)];
+                    return [4 /*yield*/, JOE.Fetcher.fetchPairData(WBTC, JOE.WAVAX[JOE.ChainId.AVALANCHE], chain.provider)];
                 case 1:
                     pair = _a.sent();
                     if (!direction) return [3 /*break*/, 3];
-                    return [4 /*yield*/, getWbtcQuoteAVAX(true, amount)];
+                    return [4 /*yield*/, getWbtcQuote(true, amount)];
                 case 2:
                     wbtcAmount = _a.sent();
-                    route = new Route([pair], WBTC);
-                    trade = new Trade(route, new TokenAmount(WBTC_E, wbtcAmount), TradeType.EXACT_INPUT);
-                    price = trade.midPrice.toSignificant(17);
+                    route = new JOE.Route([pair], WBTC);
+                    trade = new JOE.Trade(route, new JOE.TokenAmount(WBTC, wbtcAmount), JOE.TradeType.EXACT_INPUT);
+                    price = trade.outputAmount.toExact();
                     return [2 /*return*/, ethers.utils.parseEther(price)];
                 case 3:
-                    route = new Route([pair], WAVAX[ChainId.AVALANCHE]);
-                    trade = new Trade(route, new TokenAmount(WAVAX[ChainId.AVALANCHE], amount), TradeType.EXACT_INPUT);
-                    return [4 /*yield*/, getWbtcQuoteAVAX(false, ethers.utils.parseUnits(trade.midPrice.toSignificant(7), 8))];
+                    route = new JOE.Route([pair], JOE.WAVAX[JOE.ChainId.AVALANCHE]);
+                    trade = new JOE.Trade(route, new JOE.TokenAmount(JOE.WAVAX[JOE.ChainId.AVALANCHE], amount), JOE.TradeType.EXACT_INPUT);
+                    return [4 /*yield*/, getWbtcQuote(false, ethers.utils.parseUnits(trade.outputAmount.toExact(), 8))];
                 case 4: return [2 /*return*/, _a.sent()];
             }
         });
@@ -115,12 +120,11 @@ module.exports = function makeQuoter(CHAIN) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    aTricrypto = createContract("0xB755B949C126C04e0348DD881a5cF55d424742B2", ["function get_dy(uint256, uint256, uint256) view returns (uint256)"]);
-                    crvUSD = createContract("0x7f90122BF0700F9E7e1F688fe926940E8839F353", [
+                    aTricrypto = new ethers.Contract("0xB755B949C126C04e0348DD881a5cF55d424742B2", ["function get_dy(uint256, uint256, uint256) view returns (uint256)"], chain.provider);
+                    crvUSD = new ethers.Contract("0x7f90122BF0700F9E7e1F688fe926940E8839F353", [
                         "function calc_token_amount(uint256[3] calldata, bool) view returns (uint256)",
-                    ], [
                         "function calc_withdraw_one_coin(uint256, int128) view returns (uint256)",
-                    ]);
+                    ], chain.provider);
                     renCrvPath = [0, 1];
                     path = [0, 1];
                     if (!direction) return [3 /*break*/, 4];
@@ -144,7 +148,7 @@ module.exports = function makeQuoter(CHAIN) {
         });
     }); };
     var getRenBTCForOneETHPrice = function () { return __awaiter(_this, void 0, void 0, function () {
-        var renBTC, pair, route, renBTCForOneEth, amt;
+        var renBTC, pair, route, renBTCForOneEth;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -160,11 +164,8 @@ module.exports = function makeQuoter(CHAIN) {
                     route = new Route([pair], UNISWAP.WETH[renBTC.chainId]);
                     renBTCForOneEth = route.midPrice.toSignificant(7);
                     return [2 /*return*/, ethers.utils.parseUnits(renBTCForOneEth, 8)];
-                case 4: return [4 /*yield*/, WBTCFromETH(parseEther("1"))];
-                case 5:
-                    amt = _a.sent();
-                    return [4 /*yield*/, getWbtcQuote(false, amt)];
-                case 6: return [2 /*return*/, _a.sent()];
+                case 4: return [4 /*yield*/, ETHtoRenBTC(ethers.utils.parseEther("1"))];
+                case 5: return [2 /*return*/, _a.sent()];
             }
         });
     }); };
@@ -184,7 +185,7 @@ module.exports = function makeQuoter(CHAIN) {
                     return [4 /*yield*/, quoter.quoteExactInput(ethers.utils.solidityPack(["address", "uint24", "address", "uint24", "address"], [
                             fixtures[chain.name].USDC,
                             500,
-                            fixtures[chain.name].WETH,
+                            fixtures[chain.name].wETH,
                             500,
                             fixtures[chain.name].WBTC,
                         ]), amount)];
@@ -196,7 +197,7 @@ module.exports = function makeQuoter(CHAIN) {
                     console.error(e_1);
                     console.error("Insufficient USDC amount for price fetch");
                     return [2 /*return*/, 0];
-                case 6: return [4 /*yield*/, renBTCFromWBTC(output)];
+                case 6: return [4 /*yield*/, getWbtcQuote(false, output)];
                 case 7:
                     result = _a.sent();
                     return [2 /*return*/, result];
@@ -218,7 +219,7 @@ module.exports = function makeQuoter(CHAIN) {
                     return [4 /*yield*/, quoter.quoteExactInput(ethers.utils.solidityPack(["address", "uint24", "address", "uint24", "address"], [
                             fixtures[chain.name].WBTC,
                             500,
-                            fixtures[chain.name].WETH,
+                            fixtures[chain.name].wETH,
                             500,
                             fixtures[chain.name].USDC,
                         ]), wbtcOut)];
@@ -251,9 +252,7 @@ module.exports = function makeQuoter(CHAIN) {
                 case 0:
                     if (!(chain.name === "AVALANCHE")) return [3 /*break*/, 2];
                     return [4 /*yield*/, getAVAXQuote(false, amount)];
-                case 1:
-                    _a.sent();
-                    return [3 /*break*/, 5];
+                case 1: return [2 /*return*/, _a.sent()];
                 case 2: return [4 /*yield*/, quoter.quoteExactInputSingle(fixtures[chain.name].wETH, fixtures[chain.name].WBTC, 500, amount, 0)];
                 case 3:
                     output = _a.sent();
@@ -261,7 +260,6 @@ module.exports = function makeQuoter(CHAIN) {
                 case 4:
                     result = _a.sent();
                     return [2 /*return*/, result];
-                case 5: return [2 /*return*/];
             }
         });
     }); };
@@ -270,13 +268,14 @@ module.exports = function makeQuoter(CHAIN) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    if (!(chain.name === "AVALANCHE")) return [3 /*break*/, 1];
-                    return [2 /*return*/, getAVAXQuote(true, amount)];
-                case 1: return [4 /*yield*/, getWbtcQuote(true, amount)];
-                case 2:
+                    if (!(chain.name === "AVALANCHE")) return [3 /*break*/, 2];
+                    return [4 /*yield*/, getAVAXQuote(true, amount)];
+                case 1: return [2 /*return*/, _a.sent()];
+                case 2: return [4 /*yield*/, getWbtcQuote(true, amount)];
+                case 3:
                     wbtcOut = _a.sent();
                     return [4 /*yield*/, quoter.quoteExactInputSingle(fixtures[chain.name].WBTC, fixtures[chain.name].WETH, 500, wbtcOut, 0)];
-                case 3: return [2 /*return*/, _a.sent()];
+                case 4: return [2 /*return*/, _a.sent()];
             }
         });
     }); };

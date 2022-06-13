@@ -17,6 +17,7 @@ module.exports = {
     },
     ARBITRUM: {
         renBTC: "0xdbf31df14b66535af65aac99c32e9ea844e14501",
+        wETH: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
         btcGateway: "0x05Cadbf3128BcB7f2b89F3dD55E5B0a036a49e20",
         wNative: "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
         USDC: "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8",

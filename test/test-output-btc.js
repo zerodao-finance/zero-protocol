@@ -5,14 +5,15 @@ const ethers = require("ethers");
 const fixtures = require("../lib/fixtures");
 
 (async () => {
-  const badger = Badger.makeCompute("1");
+  const badger = Badger.makeCompute("43114");
+  const f = fixtures.AVALANCHE;
   console.log(
     ethers.utils.formatUnits(
-      await badger.computeOutputBTC({
-        amount: ethers.utils.parseEther("1"),
-        asset: ethers.constants.AddressZero,
+      await badger.computeTransferOutput({
+        amount: ethers.utils.parseUnits("0.1", 8),
+        module: ethers.constants.AddressZero,
       }),
-      8
+      18
     )
   );
 })().catch(console.error);
