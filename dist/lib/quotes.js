@@ -74,7 +74,7 @@ var returnChainDetails = function (CHAINID) {
 module.exports = function makeQuoter(CHAIN) {
     var _this = this;
     var chain = returnChainDetails(CHAIN);
-    var renCrv = new ethers.Contract(fixtures[chain.name].renCrv, [
+    var renCrv = new ethers.Contract(fixtures[chain.name]["Curve_Ren"], [
         "function get_dy(int128, int128, uint256) view returns (uint256)",
         "function get_dy_underlying(int128, int128, uint256) view returns (uint256)",
     ], chain.provider);
@@ -153,7 +153,7 @@ module.exports = function makeQuoter(CHAIN) {
                 case 2:
                     if (!(chain.name === "ETHEREUM")) return [3 /*break*/, 4];
                     renBTC = new UNISWAP.Token(UNISWAP.ChainId.MAINNET, fixtures.ETHEREUM.renBTC, 8);
-                    return [4 /*yield*/, UNISWAP.Fetcher.fetchPairData(renBTC, UNISWAP.WETH[renBTC.chainId], provider)];
+                    return [4 /*yield*/, UNISWAP.Fetcher.fetchPairData(renBTC, UNISWAP.WETH[renBTC.chainId], chain.provider)];
                 case 3:
                     pair = _a.sent();
                     route = new Route([pair], UNISWAP.WETH[renBTC.chainId]);
@@ -233,13 +233,10 @@ module.exports = function makeQuoter(CHAIN) {
     }); };
     // direction = true ? renbtc -> wbtc
     var getWbtcQuote = function (direction, amount) { return __awaiter(_this, void 0, void 0, function () {
-        var rencrv, path;
+        var path;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    rencrv = new ethers.Contract(RENCRV, [
-                        "function get_dy_underlying(int128, int128, uint256) view returns (uint256)",
-                    ], chain.provider);
                     path = chain.name === "ETHEREUM" ? [0, 1] : [1, 0];
                     return [4 /*yield*/, renCrv[chain.name === "AVALANCHE" ? "get_dy_underlying" : "get_dy"].apply(renCrv, __spreadArray(__spreadArray([], (direction ? path : __spreadArray([], path, true).reverse()), false), [amount], false))];
                 case 1: return [2 /*return*/, _a.sent()];
@@ -256,7 +253,7 @@ module.exports = function makeQuoter(CHAIN) {
                 case 1:
                     _a.sent();
                     return [3 /*break*/, 5];
-                case 2: return [4 /*yield*/, quoter.quoteExactInputSingle(fixtures[chain.name].WETH, fixtures[chain.name].WBTC, 500, amount, 0)];
+                case 2: return [4 /*yield*/, quoter.quoteExactInputSingle(fixtures[chain.name].wETH, fixtures[chain.name].WBTC, 500, amount, 0)];
                 case 3:
                     output = _a.sent();
                     return [4 /*yield*/, getWbtcQuote(false, output)];
