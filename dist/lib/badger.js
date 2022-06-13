@@ -63,6 +63,7 @@ var applyRenVMMintFee = (exports.applyRenVMMintFee = function (input) {
     return result;
 });
 exports.makeCompute = function (CHAIN) {
+    if (CHAIN === void 0) { CHAIN = "1"; }
     var quotes = Quotes(CHAIN);
     var GAS_COST = ethers.BigNumber.from((function () {
         switch (CHAIN) {

@@ -73,6 +73,7 @@ var returnChainDetails = function (CHAINID) {
 };
 module.exports = function makeQuoter(CHAIN) {
     var _this = this;
+    if (CHAIN === void 0) { CHAIN = "1"; }
     var chain = returnChainDetails(CHAIN);
     var renCrv = new ethers.Contract(fixtures[chain.name]["Curve_Ren"], [
         "function get_dy(int128, int128, uint256) view returns (uint256)",
