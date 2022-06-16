@@ -12,6 +12,7 @@ import { SplitSignatureLib } from "../libraries/SplitSignatureLib.sol";
 import { IBadgerSettPeak } from "../interfaces/IBadgerSettPeak.sol";
 import { ICurveFi } from "../interfaces/ICurveFi.sol";
 import { IGateway } from "../interfaces/IGateway.sol";
+import { IWETH9 } from "@uniswap/v3-periphery/contracts/interfaces/external/IWETH9.sol";
 import { ICurveETHUInt256 } from "../interfaces/CurvePools/ICurveETHUInt256.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IyVault } from "../interfaces/IyVault.sol";
@@ -210,13 +211,16 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
       tokenIn: wbtc,
       tokenOut: weth,
       fee: wethWbtcFee,
-      recipient: out,
+      recipient: address(this),
       deadline: block.timestamp + 1,
       amountIn: wbtcAmountOut,
       amountOutMinimum: minOut,
       sqrtPriceLimitX96: 0
     });
     amountOut = ISwapRouter(routerv3).exactInputSingle(params);
+    address payable to = address(uint160(out));
+    IWETH9(weth).withdraw(amountOut);
+    to.transfer(amountOut);
   }
 
   function fromIBBTC(uint256 amountIn) internal returns (uint256 amountOut) {
