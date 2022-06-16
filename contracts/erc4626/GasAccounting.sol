@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
-import { Math } from "@openzeppelin/contracts/math/Math.sol";
+import { Math } from "@openzeppelin/contracts-new/utils/math/Math.sol";
 import "../interfaces/IChainlinkOracle.sol";
 import "../interfaces/IZeroModule.sol";
 import { Governable } from "./Governable.sol";
@@ -44,7 +44,7 @@ contract GasAccounting is Governable {
     uint256 maxGas
   ) private view returns (uint256) {
     uint256 reportedGasPrice = params.fastGasOracle.latestAnswer();
-    uint256 acceptableGasPrice = Math.min(reportedGasPrice * 2, tx.gasPrice);
+    uint256 acceptableGasPrice = Math.min(reportedGasPrice * 2, tx.gasprice);
     uint256 gasToRefund = Math.min(estimatedGas, maxGas);
     return gasToRefund * acceptableGasPrice;
   }

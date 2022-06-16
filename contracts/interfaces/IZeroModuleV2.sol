@@ -22,5 +22,5 @@ interface IZeroModule {
 
   function want() external view returns (address);
 
-  // function estimateGas() external view returns (uint256);
+  function estimateGas() external view returns (uint256);
 }

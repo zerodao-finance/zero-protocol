@@ -3,11 +3,12 @@ pragma solidity >=0.8.0;
 
 import { LendableSharesVault } from "./LendableSharesVault.sol";
 import { GasAccounting } from "./GasAccounting.sol";
-import "../interfaces/IZeroModule.sol";
+import { ERC4626 } from "./ERC4626.sol";
+import "../interfaces/IZeroModuleV2.sol";
 import "./IQuoter.sol";
 import { weth } from "./ConstantAddresses.sol";
 
-contract BtcVault is LendableSharesVault, GasAccounting {
+abstract contract BtcVault is LendableSharesVault, GasAccounting {
   error ModuleNotApproved();
   error AlreadyInitialized();
 
@@ -15,7 +16,11 @@ contract BtcVault is LendableSharesVault, GasAccounting {
 
   mapping(IZeroModule => bool) public approvedModules;
 
-  constructor(IQuoter _quoter) internal {
+  constructor(
+    IQuoter _quoter,
+    address asset,
+    uint8 decimals
+  ) {
     quoter = _quoter;
   }
 
@@ -33,12 +38,11 @@ contract BtcVault is LendableSharesVault, GasAccounting {
     bytes memory userSignature
   ) internal {
     // Check module is approved by governance.
-    if (!approvedModule[module]) {
+    if (!approvedModules[module]) {
       revert ModuleNotApproved();
     }
 
     // Increment total loans and get ID for this loan.
-    uint256 loanId = ++loansCount;
 
     // Get estimated gas cost and collateralization ratio for a loan
     // from module.
@@ -50,10 +54,10 @@ contract BtcVault is LendableSharesVault, GasAccounting {
 
     // Store loan information (underlying and shares locked for lender)
     // and transfer their shares to the vault.
-    _borrowFrom(msg.sender, loanId, amount - gasCostInAsset);
+    uint256 loanId = uint256(_borrowFrom(msg.sender, amount - gasCostInAsset));
 
     // Execute module interaction
-    IZeroModule(module).receiveLoan(borrower, token, amount - gasCostInAsset, nonce, data);
+    IZeroModule(module).receiveLoan(borrower, token, amount - gasCostInAsset, loanId, data);
     // @todo Handle gas repayment
   }
 }
