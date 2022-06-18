@@ -1,4 +1,7 @@
-import { FixedPointMathLib } from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
+// SPDX-License-Identifier: AGPL-3.0-only
+pragma solidity >=0.8.0;
+
+import { FixedPointMathLib } from "./utils/FixedPointMathLib.sol";
 
 /**
  * @notice Base contract that must be inherited by all modules.
