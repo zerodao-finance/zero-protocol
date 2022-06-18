@@ -135,11 +135,7 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, ModuleRegistry {
       revert ModuleNotApproved();
     }
 
-<<<<<<< HEAD
-    // Increment total loans and get ID for this loan.
-=======
     bytes32 loanId = verifyTransferRequestSignature(borrower, asset, borrowAmount, module, nonce, data, signature);
->>>>>>> be64f1d... Use base
 
     (uint256 checkpointSupply, uint256 checkpointTotalAssets) = checkpointWithdrawParams();
 
@@ -148,13 +144,6 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, ModuleRegistry {
 
     // Store loan information (underlying and shares locked for lender)
     // and transfer their shares to the vault.
-<<<<<<< HEAD
-    uint256 loanId = uint256(_borrowFrom(msg.sender, amount - gasCostInAsset));
-
-    // Execute module interaction
-    IZeroModule(module).receiveLoan(borrower, token, amount - gasCostInAsset, loanId, data);
-    // @todo Handle gas repayment
-=======
     _borrowAmount(uint256(loanId), msg.sender, collateralToLock, checkpointSupply, checkpointTotalAssets);
   }
 
@@ -178,6 +167,5 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, ModuleRegistry {
       data
     );
     _repayTo(lender, uint256(loanId), collateralToUnlock);
->>>>>>> be64f1d... Use base
   }
 }
