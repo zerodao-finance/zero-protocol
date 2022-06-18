@@ -1,33 +1,54 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import { LendableSharesVault } from "./loans/LendableSharesVault.sol";
+import "./loans/LendableSharesVault.sol";
 import { BtcVaultBase } from "./storage/BtcVaultBase.sol";
 import { IGateway } from "../interfaces/IGateway.sol";
 import { IGatewayRegistry } from "../interfaces/IGatewayRegistry.sol";
+import { EIP712 } from "./EIP712/EIP712.sol";
 import "./interfaces/IZeroModule.sol";
 import "./IQuoter.sol";
-import "./ModuleRegistry.sol";
+import "./Governable.sol";
 
 uint256 constant ReceiveLoanSelector = 0x332b578c00000000000000000000000000000000000000000000000000000000;
 uint256 constant ReceiveLoanErrorSelector = 0x83f44e2200000000000000000000000000000000000000000000000000000000;
 uint256 constant RepayLoanSelector = 0x2584dde800000000000000000000000000000000000000000000000000000000;
 uint256 constant RepayLoanErrorSelector = 0x0ccaea8800000000000000000000000000000000000000000000000000000000;
 
-contract BtcVault is BtcVaultBase, LendableSharesVault, ModuleRegistry {
+contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
   IGatewayRegistry public immutable gatewayRegistry;
+  string public constant version = "v0.1";
 
-  constructor(IQuoter _quoter, IGatewayRegistry _gatewayRegistry) internal {
-    quoter = _quoter;
+  constructor(IGatewayRegistry _gatewayRegistry, address _btcAddress)
+    ERC4626(_btcAddress)
+    ERC20Metadata("ZeroBTC", "ZBTC", 18)
+    ReentrancyGuard()
+    Governable()
+    EIP712("ZeroBTC", version)
+  {
+    // quoter = _quoter;
     gatewayRegistry = _gatewayRegistry;
     if (
-      IZeroModule.receiveLoan.selector != ReceiveLoanSelector ||
-      IZeroModule.repayLoan.selector != RepayLoanSelector ||
-      ReceiveLoanError.selector != ReceiveLoanErrorSelector ||
-      RepayLoanError.selector != RepayLoanErrorSelector
+      uint256(bytes32(IZeroModule.receiveLoan.selector)) != ReceiveLoanSelector ||
+      uint256(bytes32(IZeroModule.repayLoan.selector)) != RepayLoanSelector ||
+      uint256(bytes32(ReceiveLoanError.selector)) != ReceiveLoanErrorSelector ||
+      uint256(bytes32(RepayLoanError.selector)) != RepayLoanErrorSelector
     ) {
       revert InvalidSelector();
     }
+  }
+
+  function addModule(address module) external onlyGovernance {
+    if (IZeroModule(module).asset() != asset) {
+      revert ModuleAssetDoesNotMatch(module);
+    }
+    approvedModules[module] = true;
+    emit ModuleStatusUpdated(module, true);
+  }
+
+  function removeModule(address module) external onlyGovernance {
+    approvedModules[module] = false;
+    emit ModuleStatusUpdated(module, false);
   }
 
   function getGateway() internal view returns (IGateway gateway) {
@@ -120,7 +141,8 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, ModuleRegistry {
    * @param borrower Account to receive loan
    * @param borrowAmount Amount of vault's underlying asset to borrow
    * @param nonce Nonce for renvm deposit
-   * @param data
+   * @param data User provided data
+   * @param signature User's signatures
    */
   function loan(
     address module,
@@ -131,7 +153,7 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, ModuleRegistry {
     bytes memory signature
   ) external nonReentrant {
     // Check module is approved by governance.
-    if (!approvedModule[module]) {
+    if (!approvedModules[module]) {
       revert ModuleNotApproved();
     }
 
@@ -140,11 +162,11 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, ModuleRegistry {
     (uint256 checkpointSupply, uint256 checkpointTotalAssets) = checkpointWithdrawParams();
 
     // Execute module interaction
-    (uint256 collateralToLock, uint256 gasRefundEth) = executeReceiveLoan(module, uint256(loanId), data);
+    (uint256 collateralToLock, uint256 gasRefundEth) = executeReceiveLoan(module, loanId, data);
 
     // Store loan information (underlying and shares locked for lender)
     // and transfer their shares to the vault.
-    _borrowAmount(uint256(loanId), msg.sender, collateralToLock, checkpointSupply, checkpointTotalAssets);
+    _borrowFrom(uint256(loanId), msg.sender, borrower, collateralToLock, checkpointSupply, checkpointTotalAssets);
   }
 
   function repay(
@@ -157,15 +179,9 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, ModuleRegistry {
     bytes memory data,
     bytes memory signature
   ) external nonReentrant {
-    bytes32 loanId = digestTransferRequest(asset, amount, module, nonce, data);
+    bytes32 loanId = digestTransferRequest(asset, borrowAmount, module, nonce, data);
     uint256 mintAmount = getGateway().mint(loanId, borrowAmount, nHash, signature);
-    (uint256 collateralToUnlock, uint256 gasRefundEth) = executeRepayLoan(
-      module,
-      uint256(loanId),
-      borrower,
-      mintAmount,
-      data
-    );
+    (uint256 collateralToUnlock, uint256 gasRefundEth) = executeRepayLoan(module, loanId, borrower, mintAmount, data);
     _repayTo(lender, uint256(loanId), collateralToUnlock);
   }
 }
