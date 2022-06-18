@@ -1,0 +1,16 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+pragma solidity >=0.8.0;
+
+import "./GovernableBase.sol";
+
+contract ModuleRegistryBase is GovernableBase {
+  /*//////////////////////////////////////////////////////////////
+                                Storage
+  //////////////////////////////////////////////////////////////*/
+  mapping(address => bool) public approvedModules;
+
+  /*//////////////////////////////////////////////////////////////
+                                Events
+  //////////////////////////////////////////////////////////////*/
+  event ModuleStatusUpdated(address module, bool approved);
+}
