@@ -1,38 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import { ERC20 } from "./ERC20.sol";
-import { SafeTransferLib } from "./SafeTransferLib.sol";
-import { FixedPointMathLib } from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
+import { FixedPointMathLib } from "./utils/FixedPointMathLib.sol";
+import { SafeTransferLib } from "./utils/SafeTransferLib.sol";
+import { ReentrancyGuard } from "./ReentrancyGuard.sol";
+import { ERC20, ERC20Metadata } from "./ERC20/ERC20.sol";
+import { ERC4626Base } from "./storage/ERC4626Base.sol";
 
 /// @notice Minimal ERC4626 tokenized Vault implementation.
 /// @author ZeroDAO
 /// @author Modified from Solmate (https://github.com/Rari-Capital/solmate/blob/main/src/mixins/ERC4626.sol)
-abstract contract ERC4626 is ERC20 {
+/// All functions which can affect the ratio of shares to underlying assets must be nonreentrant
+abstract contract ERC4626 is ERC4626Base, ERC20, ReentrancyGuard {
   using SafeTransferLib for address;
   using FixedPointMathLib for uint256;
-
-  /*//////////////////////////////////////////////////////////////
-                                 EVENTS
-    //////////////////////////////////////////////////////////////*/
-
-  event Deposit(address indexed caller, address indexed owner, uint256 assets, uint256 shares);
-
-  event Withdraw(
-    address indexed caller,
-    address indexed receiver,
-    address indexed owner,
-    uint256 assets,
-    uint256 shares
-  );
 
   /*//////////////////////////////////////////////////////////////
                                IMMUTABLES
     //////////////////////////////////////////////////////////////*/
 
-  address public asset;
+  address public immutable asset;
 
-  constructor(address _asset, uint8 _decimals) ERC20(_decimals) {
+  constructor(address _asset) {
     asset = _asset;
   }
 
@@ -40,9 +29,11 @@ abstract contract ERC4626 is ERC20 {
                         DEPOSIT/WITHDRAWAL LOGIC
     //////////////////////////////////////////////////////////////*/
 
-  function deposit(uint256 assets, address receiver) public virtual returns (uint256 shares) {
+  function deposit(uint256 assets, address receiver) public virtual nonReentrant returns (uint256 shares) {
     // Check for rounding error since we round down in previewDeposit.
-    require((shares = previewDeposit(assets)) != 0, "ZERO_SHARES");
+    if ((shares = previewDeposit(assets)) == 0) {
+      revert ZeroShares();
+    }
 
     // Need to transfer before minting or ERC777s could reenter.
     asset.safeTransferFrom(msg.sender, address(this), assets);
@@ -54,7 +45,7 @@ abstract contract ERC4626 is ERC20 {
     afterDeposit(assets, shares);
   }
 
-  function mint(uint256 shares, address receiver) public virtual returns (uint256 assets) {
+  function mint(uint256 shares, address receiver) public virtual nonReentrant returns (uint256 assets) {
     assets = previewMint(shares); // No need to check for rounding error, previewMint rounds up.
 
     // Need to transfer before minting or ERC777s could reenter.
@@ -71,7 +62,7 @@ abstract contract ERC4626 is ERC20 {
     uint256 assets,
     address receiver,
     address owner
-  ) public virtual returns (uint256 shares) {
+  ) public virtual nonReentrant returns (uint256 shares) {
     shares = previewWithdraw(assets); // No need to check for rounding error, previewWithdraw rounds up.
 
     if (msg.sender != owner) {
@@ -93,15 +84,19 @@ abstract contract ERC4626 is ERC20 {
     uint256 shares,
     address receiver,
     address owner
-  ) public virtual returns (uint256 assets) {
+  ) public virtual nonReentrant returns (uint256 assets) {
     if (msg.sender != owner) {
       uint256 allowed = allowance[owner][msg.sender]; // Saves gas for limited approvals.
 
-      if (allowed != type(uint256).max) allowance[owner][msg.sender] = allowed - shares;
+      if (allowed != type(uint256).max) {
+        allowance[owner][msg.sender] = allowed - shares;
+      }
     }
 
     // Check for rounding error since we round down in previewRedeem.
-    require((assets = previewRedeem(shares)) != 0, "ZERO_ASSETS");
+    if ((assets = previewRedeem(shares)) == 0) {
+      revert ZeroShares();
+    }
 
     beforeWithdraw(assets, shares);
 
@@ -148,6 +143,19 @@ abstract contract ERC4626 is ERC20 {
 
   function previewRedeem(uint256 shares) public view virtual returns (uint256) {
     return convertToAssets(shares);
+  }
+
+  function previewWithdrawForCheckpoint(
+    uint256 assets,
+    uint256 checkpointSupply,
+    uint256 checkpointTotalAssets
+  ) internal pure virtual returns (uint256) {
+    return checkpointSupply == 0 ? assets : assets.mulDivUp(checkpointSupply, checkpointTotalAssets);
+  }
+
+  function checkpointWithdrawParams() internal view returns (uint256 checkpointSupply, uint256 checkpointTotalAssets) {
+    checkpointSupply = totalSupply;
+    checkpointTotalAssets = totalAssets();
   }
 
   /*//////////////////////////////////////////////////////////////
