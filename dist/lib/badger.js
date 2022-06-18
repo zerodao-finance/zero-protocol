@@ -46,21 +46,6 @@ var applyRatio = function (amount, ratio) {
         .mul(ratio)
         .div(ethers.utils.parseEther("1"));
 };
-var burnFee = (exports.burnFee = ethers.utils.parseEther("0.004"));
-var mintFee = (exports.mintFee = ethers.utils.parseEther("0.0025"));
-var applyRenVMFee = (exports.applyRenVMFee = function (input) {
-    input = ethers.BigNumber.from(input);
-    return input
-        .mul(ethers.utils.parseEther("0.9985"))
-        .div(ethers.utils.parseEther("1"));
-});
-var applyRenVMMintFee = (exports.applyRenVMMintFee = function (input) {
-    var result = input
-        .mul(ethers.utils.parseEther("0.9985"))
-        .div(ethers.utils.parseEther("1"))
-        .sub(ethers.utils.parseUnits("0.001", 8));
-    return result;
-});
 exports.makeCompute = function (CHAIN) {
     if (CHAIN === void 0) { CHAIN = "1"; }
     var quotes = Quotes(CHAIN);
@@ -91,19 +76,19 @@ exports.makeCompute = function (CHAIN) {
                         return [3 /*break*/, 12];
                     case 1:
                         _d = (_c = quotes).toUSDC;
-                        return [4 /*yield*/, deductMintFee(applyRenVMMintFee(amount))];
+                        return [4 /*yield*/, deductMintFee(amount)];
                     case 2: return [4 /*yield*/, _d.apply(_c, [_h.sent()])];
                     case 3: return [2 /*return*/, _h.sent()];
                     case 4:
                         _e = deductMintFee;
-                        return [4 /*yield*/, quotes.getWbtcQuote(true, applyRenVMMintFee(amount))];
+                        return [4 /*yield*/, quotes.getWbtcQuote(true, amount)];
                     case 5: return [4 /*yield*/, _e.apply(void 0, [_h.sent(), 1])];
                     case 6: return [2 /*return*/, _h.sent()];
-                    case 7: return [4 /*yield*/, deductMintFee(applyRenVMMintFee(amount))];
+                    case 7: return [4 /*yield*/, deductMintFee(amount)];
                     case 8: return [2 /*return*/, _h.sent()];
                     case 9:
                         _g = (_f = quotes).renBTCToETH;
-                        return [4 /*yield*/, deductMintFee(applyRenVMMintFee(amount))];
+                        return [4 /*yield*/, deductMintFee(amount)];
                     case 10: return [4 /*yield*/, _g.apply(_f, [_h.sent()])];
                     case 11: return [2 /*return*/, _h.sent()];
                     case 12: return [2 /*return*/, ethers.BigNumber.from("0")];
@@ -139,13 +124,13 @@ exports.makeCompute = function (CHAIN) {
             }
         });
     }); };
-    var deductMintFee = function (amount, multiplier) { return __awaiter(void 0, void 0, void 0, function () {
+    var deductMintFee = function (amount) { return __awaiter(void 0, void 0, void 0, function () {
         var feeAmounts, amountAfterDeduction;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     amount = ethers.BigNumber.from(amount);
-                    return [4 /*yield*/, applyFee(amount, mintFee, multiplier)];
+                    return [4 /*yield*/, applyFee(amount, mintFee)];
                 case 1:
                     feeAmounts = _a.sent();
                     amountAfterDeduction = amount.sub(feeAmounts.totalFees);
@@ -180,38 +165,21 @@ exports.makeCompute = function (CHAIN) {
         });
     }); });
     var computeOutputBTC = function (burnRequest) { return __awaiter(void 0, void 0, void 0, function () {
-        var asset, amount, convertedAmount, _a;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        var asset, amount, convertedAmount;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
                 case 0:
                     asset = burnRequest.asset, amount = burnRequest.amount;
                     return [4 /*yield*/, getConvertedAmount(asset, amount)];
                 case 1:
-                    convertedAmount = _b.sent();
-                    _a = asset;
-                    switch (_a) {
-                        case fixtures[quotes.chain.name].WBTC: return [3 /*break*/, 2];
-                        case fixtures[quotes.chain.name].renBTC: return [3 /*break*/, 4];
-                        case fixtures[quotes.chain.name].USDC: return [3 /*break*/, 6];
-                        case ethers.constants.AddressZero: return [3 /*break*/, 8];
-                    }
-                    return [3 /*break*/, 10];
-                case 2: return [4 /*yield*/, deductBurnFee(applyRenVMFee(convertedAmount))];
-                case 3: return [2 /*return*/, _b.sent()];
-                case 4: return [4 /*yield*/, deductBurnFee(applyRenVMFee(convertedAmount))];
-                case 5: return [2 /*return*/, _b.sent()];
-                case 6: return [4 /*yield*/, deductBurnFee(applyRenVMFee(convertedAmount))];
-                case 7: return [2 /*return*/, _b.sent()];
-                case 8: return [4 /*yield*/, deductBurnFee(applyRenVMFee(convertedAmount))];
-                case 9: return [2 /*return*/, _b.sent()];
-                case 10:
-                    console.error("no asset found for computeOutputBTC:" + asset);
-                    return [2 /*return*/, burnRequest.amount];
+                    convertedAmount = _a.sent();
+                    return [4 /*yield*/, deductBurnFee(convertedAmount)];
+                case 2: return [2 /*return*/, _a.sent()];
             }
         });
     }); };
-    var applyFee = function (amountIn, fee, multiplier) { return __awaiter(void 0, void 0, void 0, function () {
-        var gasPrice, gasFee, opFee, totalFees;
+    var applyFee = function (amountIn) { return __awaiter(void 0, void 0, void 0, function () {
+        var gasPrice, gasFee, zeroProtocolFeeAmt, renVmFeeAmt, opFee, totalFees;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, quotes.chain.provider.getGasPrice()];
@@ -220,16 +188,22 @@ exports.makeCompute = function (CHAIN) {
                     return [4 /*yield*/, computeRenBTCGasFee(GAS_COST.add(keeperReward.div(gasPrice)), gasPrice)];
                 case 2:
                     gasFee = _a.sent();
-                    opFee = applyRatio(amountIn, fee);
+                    zeroProtocolFeeAmt = applyRatio(amountIn, burnFee);
+                    renVmFeeAmt = applyRatio(amountIn, renVmFee);
+                    opFee = zeroProtocolFeeAmt.add(renVmFeeAmt);
                     totalFees = gasFee.add(opFee);
-                    return [2 /*return*/, { gasFee: gasFee, opFee: opFee, totalFees: totalFees }];
+                    return [2 /*return*/, { gasFee: gasFee, zeroProtocolFeeAmt: zeroProtocolFeeAmt, renVmFeeAmt: renVmFeeAmt, opFee: opFee, totalFees: totalFees }];
             }
         });
     }); };
+    var burnFee = (exports.burnFee = ethers.utils.parseEther("0.004"));
+    var mintFee = (exports.mintFee = ethers.utils.parseEther("0.0025"));
+    var renVmFee = (exports.mintFee = ethers.utils.parseEther("0.0015"));
     return {
         computeTransferOutput: computeTransferOutput,
         computeOutputBTC: computeOutputBTC,
         applyFee: applyFee,
-        computeRenBTCGasFee: computeRenBTCGasFee
+        computeRenBTCGasFee: computeRenBTCGasFee,
+        getConvertedAmount: getConvertedAmount
     };
 };

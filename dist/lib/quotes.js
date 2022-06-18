@@ -253,7 +253,7 @@ module.exports = function makeQuoter(CHAIN, provider) {
                     if (!(chain.name === "AVALANCHE")) return [3 /*break*/, 2];
                     return [4 /*yield*/, getAVAXQuote(false, amount)];
                 case 1: return [2 /*return*/, _a.sent()];
-                case 2: return [4 /*yield*/, quoter.quoteExactInputSingle(fixtures[chain.name].wETH, fixtures[chain.name].WBTC, 500, amount, 0)];
+                case 2: return [4 /*yield*/, quoter.quoteExactInput(ethers.utils.solidityPack(["address", "uint24", "address"], [fixtures[chain.name].wETH, 500, fixtures[chain.name].WBTC]), amount)];
                 case 3:
                     output = _a.sent();
                     return [4 /*yield*/, getWbtcQuote(false, output)];
@@ -264,7 +264,7 @@ module.exports = function makeQuoter(CHAIN, provider) {
         });
     }); };
     var renBTCToETH = function (amount) { return __awaiter(_this, void 0, void 0, function () {
-        var wbtcOut;
+        var wbtcOut, quote;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -274,8 +274,10 @@ module.exports = function makeQuoter(CHAIN, provider) {
                 case 2: return [4 /*yield*/, getWbtcQuote(true, amount)];
                 case 3:
                     wbtcOut = _a.sent();
-                    return [4 /*yield*/, quoter.quoteExactInputSingle(fixtures[chain.name].WBTC, fixtures[chain.name].WETH, 500, wbtcOut, 0)];
-                case 4: return [2 /*return*/, _a.sent()];
+                    return [4 /*yield*/, quoter.quoteExactInput(ethers.utils.solidityPack(["address", "uint24", "address"], [fixtures[chain.name].WBTC, 500, fixtures[chain.name].wETH]), wbtcOut)];
+                case 4:
+                    quote = _a.sent();
+                    return [2 /*return*/, quote];
             }
         });
     }); };
