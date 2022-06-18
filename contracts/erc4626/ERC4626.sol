@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity >=0.8.0;
+pragma solidity >=0.8.13;
 
 import { FixedPointMathLib } from "./utils/FixedPointMathLib.sol";
 import { SafeTransferLib } from "./utils/SafeTransferLib.sol";
 import { ReentrancyGuard } from "./ReentrancyGuard.sol";
 import { ERC20, ERC20Metadata } from "./ERC20/ERC20.sol";
 import { ERC4626Base } from "./storage/ERC4626Base.sol";
-import "./AssetHaver.sol";
 
 /// @notice Minimal ERC4626 tokenized Vault implementation.
 /// @author ZeroDAO

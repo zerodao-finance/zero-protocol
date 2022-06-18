@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.0;
+pragma solidity >=0.8.13;
 
 address constant btcGateway = 0xe4b679400F0f267212D5D812B95f58C83243EE71;
 address constant router = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
