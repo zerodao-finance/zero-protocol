@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import { ERC4626, ERC20 } from "../ERC4626.sol";
+import "../ERC4626.sol";
 import { EIP2612 } from "../EIP2612.sol";
 import { SafeCastLib } from "../utils/SafeCastLib.sol";
 import { FixedPointMathLib } from "../utils/FixedPointMathLib.sol";
@@ -60,7 +60,7 @@ abstract contract LendableSharesVault is LendableSharesVaultBase, ERC4626, EIP26
    */
   function _repayTo(
     address lender,
-    uint128 loanId,
+    uint256 loanId,
     uint256 assetsRepaid
   ) internal {
     // Put the record values on the stack to reduce memory access

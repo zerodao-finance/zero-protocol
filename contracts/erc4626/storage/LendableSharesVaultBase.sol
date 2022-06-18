@@ -21,7 +21,7 @@ contract LendableSharesVaultBase is ERC4626Base, EIP2612Base {
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
 
-  error LoanDoesNotExist(uint128 loanId);
+  error LoanDoesNotExist(uint256 loanId);
 
   /*//////////////////////////////////////////////////////////////
                                  EVENTS

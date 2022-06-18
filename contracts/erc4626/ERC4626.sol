@@ -6,6 +6,7 @@ import { SafeTransferLib } from "./utils/SafeTransferLib.sol";
 import { ReentrancyGuard } from "./ReentrancyGuard.sol";
 import { ERC20, ERC20Metadata } from "./ERC20/ERC20.sol";
 import { ERC4626Base } from "./storage/ERC4626Base.sol";
+import "./AssetHaver.sol";
 
 /// @notice Minimal ERC4626 tokenized Vault implementation.
 /// @author ZeroDAO
