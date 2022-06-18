@@ -2762,6 +2762,7 @@
   dependencies:
     "@octokit/openapi-types" "^11.2.0"
 
+<<<<<<< HEAD
 "@openzeppelin/cli@^2.8.2":
   version "2.8.2"
   resolved "https://registry.yarnpkg.com/@openzeppelin/cli/-/cli-2.8.2.tgz#b569c55f8c291ac4c7a16ca1b584ee2b4063a7f2"
@@ -2810,6 +2811,12 @@
   version "4.5.0"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.5.0.tgz#3fd75d57de172b3743cdfc1206883f56430409cc"
   integrity sha512-fdkzKPYMjrRiPK6K4y64e6GzULR7R7RwxSigHS8DDp7aWDeoReqsQI+cxHV1UuhAqX69L1lAaWDxenfP+xiqzA==
+=======
+"@openzeppelin/contracts-new@npm:@openzeppelin/contracts", "oz460@npm:@openzeppelin/contracts@4.6.0":
+  version "4.6.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.6.0.tgz#c91cf64bc27f573836dba4122758b4743418c1b3"
+  integrity sha512-8vi4d50NNya/bQqCmaVzvHNmwHvS0OBKb7HNtuNwEE3scXWrP31fKQoGxNMT+KbzmrNZzatE3QK5p2gFONI/hg==
+>>>>>>> 49447a6... Add OZ 4.6.0
 
 "@openzeppelin/contracts-upgradeable@3.4.1-solc-0.7-2":
   version "3.4.1-solc-0.7-2"
@@ -3710,9 +3717,15 @@
   integrity sha512-eZxlbI8GZscaGS7kkc/trHTT5xgrjH3/1n2JDwusC9iahPKWMRvRjJSAN5mCXviuTGQ/lHnhvv8Q1YTpnfz9gA==
 
 "@typechain/hardhat@^6.0.0":
+<<<<<<< HEAD
   version "6.1.0"
   resolved "https://registry.yarnpkg.com/@typechain/hardhat/-/hardhat-6.1.0.tgz#248e6512e9ef192499729dd90071ca0d77ea714a"
   integrity sha512-JoqQTLlVuAWdnIjyw5CVQ6hmZjtvckDtwCyx01suCcPPTYHKDgUYToVmsPnhoCX50oBe+yDmFyzJcKRUagUwvg==
+=======
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@typechain/hardhat/-/hardhat-6.0.0.tgz#5e305641de67276efbfaa8c37c78e38f22b22ef4"
+  integrity sha512-AnhwODKHxx3+st5uc1j2NQh79Lv2OuvDQe4dKn8ZxhqYsAsTPnHTLBeI8KPZ+mfdE7v13D2QYssRTIkkGhK35A==
+>>>>>>> 49447a6... Add OZ 4.6.0
   dependencies:
     fs-extra "^9.1.0"
     lodash "^4.17.15"
