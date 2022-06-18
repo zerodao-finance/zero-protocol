@@ -1,15 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
-contract Governable {
-  address public governance;
+import "./storage/GovernableBase.sol";
 
-  error NotGovernance();
-
-  // Does not check if already initialized,
-  // should be handled by inheriting contract.
-  function _init(address _governance) internal {
-    governance = _governance;
+contract Governable is GovernableBase {
+  constructor() {
+    governance = msg.sender;
   }
 
   modifier onlyGovernance() {
@@ -20,6 +16,7 @@ contract Governable {
   }
 
   function setGovernance(address _governance) public onlyGovernance {
+    emit GovernanceTransferred(governance, _governance);
     governance = _governance;
   }
 }
