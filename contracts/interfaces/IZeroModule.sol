@@ -21,6 +21,4 @@ interface IZeroModule {
   function computeReserveRequirement(uint256 _in) external view returns (uint256);
 
   function want() external view returns (address);
-
-  // function estimateGas() external view returns (uint256);
 }
