@@ -30,10 +30,10 @@ const getRepl = async (o) => {
 
 const getContractName = () => {
   switch (process.env.CHAIN) {
-    case 'ARBITRUM':
-      return 'BadgerBridgeZeroControllerArb';
-    case 'AVALANCHE':
-      return 'BadgerBridgeZeroControllerAvax';
+    case "ARBITRUM":
+      return "BadgerBridgeZeroControllerArb";
+    case "AVALANCHE":
+      return "BadgerBridgeZeroControllerAvax";
     default:
       return "BadgerBridgeZeroController";
   }
@@ -68,31 +68,31 @@ const toEIP712USDC = (asset) =>
       types: {
         Permit: [
           {
-            name: 'owner',
-            type: 'address',
+            name: "owner",
+            type: "address",
           },
           {
-            name: 'spender',
-            type: 'address',
+            name: "spender",
+            type: "address",
           },
           {
-            name: 'value',
-            type: 'uint256',
+            name: "value",
+            type: "uint256",
           },
           {
-            name: 'nonce',
-            type: 'uint256',
+            name: "nonce",
+            type: "uint256",
           },
           {
-            name: 'deadline',
-            type: 'uint256',
+            name: "deadline",
+            type: "uint256",
           },
         ],
       },
       domain: {
-        name: process.env.CHAIN == 'ARBITRUM' ? 'USD Coin (Arb1)' : 'USD Coin',
-        version: process.env.CHAIN == 'ETHEREUM' ? '2' : '1',
-        chainId: String(this.chainId) || '1',
+        name: process.env.CHAIN == "ARBITRUM" ? "USD Coin (Arb1)" : "USD Coin",
+        version: process.env.CHAIN == "ETHEREUM" ? "2" : "1",
+        chainId: String(this.chainId) || "1",
         verifyingContract: asset || ethers.constants.AddressZero,
       },
       message: {
@@ -102,7 +102,7 @@ const toEIP712USDC = (asset) =>
         deadline: this.getExpiry(),
         value: this.amount,
       },
-      primaryType: 'Permit',
+      primaryType: "Permit",
     };
   };
 
@@ -401,8 +401,8 @@ describe("BadgerBridgeZeroController", () => {
     const usdc = new ethers.Contract(
       deployParameters[process.env.CHAIN].USDC,
       [
-        'function approve(address, uint256)',
-        'function balanceOf(address) view returns (uint256)',
+        "function approve(address, uint256)",
+        "function balanceOf(address) view returns (uint256)",
       ],
       signer
     );
@@ -419,21 +419,21 @@ describe("BadgerBridgeZeroController", () => {
     });
     const { sign, toEIP712 } = transferRequest;
     await usdc.approve(contractAddress, transferRequest.amount);
-    if (process.env.CHAIN === 'AVALANCHE') {
+    if (process.env.CHAIN === "AVALANCHE") {
       transferRequest.sign = async function (signer, contractAddress) {
         const asset = this.asset;
         this.asset = deployParameters[process.env.CHAIN].renBTC;
         const tokenNonce = String(
           await new ethers.Contract(
             this.contractAddress,
-            ['function noncesUsdc(address) view returns (uint256) '],
+            ["function noncesUsdc(address) view returns (uint256) "],
             signer
           ).noncesUsdc(await signer.getAddress())
         );
         transferRequest.toEIP712 = function (...args: any[]) {
           this.asset = asset;
           this.tokenNonce = tokenNonce;
-          this.assetName = 'USD Coin';
+          this.assetName = "USD Coin";
           return toEIP712.apply(this, args);
         };
         this.contractAddress = contractAddress;
@@ -442,7 +442,7 @@ describe("BadgerBridgeZeroController", () => {
     } else {
       transferRequest.toEIP712 = toEIP712USDC(transferRequest.asset);
     }
-    transferRequest.requestType = 'BURN';
+    transferRequest.requestType = "BURN";
     await transferRequest.sign(signer, contractAddress);
     console.log("signed", transferRequest.signature);
     const tx = await transferRequest.burn(signer);

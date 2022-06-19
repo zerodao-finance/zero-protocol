@@ -47,9 +47,8 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   uint24 constant wethWbtcFee = 500;
   uint24 constant usdcWethFee = 500;
   uint256 public governanceFee;
-  bytes32 constant PERMIT_TYPEHASH =
-    0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
-  bytes32 constant LOCK_SLOT = keccak256('upgrade-lock-v2');
+  bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
+  bytes32 constant LOCK_SLOT = keccak256("upgrade-lock-v2");
   uint256 constant GAS_COST = uint256(48e4);
   uint256 constant IBBTC_GAS_COST = uint256(7e5);
   uint256 constant ETH_RESERVE = uint256(5 ether);
