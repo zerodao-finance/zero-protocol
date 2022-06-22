@@ -6,7 +6,7 @@ import { ISwapRouter } from "@uniswap/v3-periphery/contracts/interfaces/ISwapRou
 import { UniswapV2Library } from "../libraries/UniswapV2Library.sol";
 import { ZeroLib } from "../libraries/ZeroLib.sol";
 import { IERC2612Permit } from "../interfaces/IERC2612Permit.sol";
-import { IRenCrvArbitrum } from "../interfaces/CurvePools/IRenCrvArbitrum.sol";
+import { ICurveInt128 } from "../interfaces/CurvePools/ICurveInt128.sol";
 import { SplitSignatureLib } from "../libraries/SplitSignatureLib.sol";
 import { IBadgerSettPeak } from "../interfaces/IBadgerSettPeak.sol";
 import { ICurveFi } from "../interfaces/ICurveFi.sol";
@@ -40,6 +40,7 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   address constant wmatic = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
   address constant renCrvLp = 0xf8a57c1d3b9629b77b6726a042ca48990A84Fb49;
   uint24 constant wethWbtcFee = 500;
+  uint24 constant wethMaticFee = 500;
   uint24 constant usdcWethFee = 500;
   uint256 public governanceFee;
   bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
@@ -160,9 +161,7 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   }
 
   function toWBTC(uint256 amount) internal returns (uint256 amountOut) {
-    uint256 amountStart = IERC20(wbtc).balanceOf(address(this));
-    IRenCrvArbitrum(renCrv).exchange(1, 0, amount, 1, address(this));
-    amountOut = IERC20(wbtc).balanceOf(address(this)).sub(amountStart);
+    return ICurveInt128(renCrv).exchange_underlying(1, 0, amount, 1);
   }
 
   function toIBBTC(uint256 amountIn) internal returns (uint256 amountOut) {
@@ -202,19 +201,17 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     address out
   ) internal returns (uint256 amountOut) {
     uint256 wbtcAmountOut = toWBTC(amountIn);
-    ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
-      tokenIn: wbtc,
-      tokenOut: weth,
-      fee: wethWbtcFee,
+    bytes memory path = abi.encodePacked(wbtc, wethWbtcFee, weth, wethMaticFee, matic);
+    ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
       recipient: address(this),
       deadline: block.timestamp + 1,
       amountIn: wbtcAmountOut,
       amountOutMinimum: minOut,
-      sqrtPriceLimitX96: 0
+      path: path
     });
-    amountOut = ISwapRouter(routerv3).exactInputSingle(params);
+    amountOut = ISwapRouter(routerv3).exactInput(params);
     address payable to = address(uint160(out));
-    IWETH9(weth).withdraw(amountOut);
+    IWETH9(wmatic).withdraw(amountOut);
     to.transfer(amountOut);
   }
 
@@ -248,23 +245,19 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   }
 
   function toRenBTC(uint256 amountIn) internal returns (uint256 amountOut) {
-    uint256 balanceStart = IERC20(renbtc).balanceOf(address(this));
-    IRenCrvArbitrum(renCrv).exchange(0, 1, amountIn, 1, address(this));
-    amountOut = IERC20(renbtc).balanceOf(address(this)).sub(balanceStart);
+    return ICurveInt128(renCrv).exchange_underlying(0, 1, amountIn, 1);
   }
 
   function fromETHToRenBTC(uint256 minOut, uint256 amountIn) internal returns (uint256 amountOut) {
-    ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
-      tokenIn: weth,
-      tokenOut: wbtc,
-      fee: wethWbtcFee,
+    bytes memory path = abi.encodePacked(wmatic, wethMaticFee, weth, wethWbtcFee, wbtc);
+    ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
       recipient: address(this),
       deadline: block.timestamp + 1,
       amountIn: amountIn,
       amountOutMinimum: minOut,
-      sqrtPriceLimitX96: 0
+      path: path
     });
-    amountOut = ISwapRouter(routerv3).exactInputSingle{ value: amountIn }(params);
+    amountOut = ISwapRouter(routerv3).exactInput{ value: amountIn }(params);
     return toRenBTC(amountOut);
   }
 
