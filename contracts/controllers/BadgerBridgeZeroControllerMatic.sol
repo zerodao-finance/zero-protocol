@@ -22,7 +22,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import { ECDSA } from "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import { EIP712Upgradeable } from "@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol";
 
-contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
+contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
   using SafeERC20 for IERC20;
   using SafeMath for *;
   uint256 public fee;
@@ -63,22 +63,6 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   function setGovernance(address _governance) public {
     require(msg.sender == governance, "!governance");
     governance = _governance;
-  }
-
-  function approveUpgrade(bool lock) public {
-    bool isLocked;
-    bytes32 lock_slot = LOCK_SLOT;
-
-    assembly {
-      isLocked := sload(lock_slot)
-    }
-    require(!isLocked, "cannot run upgrade function");
-    assembly {
-      sstore(lock_slot, lock)
-    }
-
-    IERC20(wbtc).safeApprove(routerv3, ~uint256(0) >> 2);
-    IERC20(usdc).safeApprove(routerv3, ~uint256(0) >> 2);
   }
 
   function computeCalldataGasDiff() internal pure returns (uint256 diff) {
@@ -132,6 +116,8 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     IERC20(renbtc).safeApprove(renCrv, ~uint256(0) >> 2);
     IERC20(wbtc).safeApprove(renCrv, ~uint256(0) >> 2);
     IERC20(wbtc).safeApprove(tricrypto, ~uint256(0) >> 2);
+    IERC20(wbtc).safeApprove(routerv3, ~uint256(0) >> 2);
+    IERC20(usdc).safeApprove(routerv3, ~uint256(0) >> 2);
     PERMIT_DOMAIN_SEPARATOR_WBTC = keccak256(
       abi.encode(
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
@@ -461,9 +447,8 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
         IERC2612Permit(params.asset).permit(
           params.to,
           address(this),
-          params.nonce,
+          params.amount,
           params.burnNonce,
-          true,
           params.v,
           params.r,
           params.s

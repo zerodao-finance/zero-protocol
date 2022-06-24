@@ -8,6 +8,8 @@ Object.defineProperty(validate, "assertUpgradeSafe", {
 const { ethers, deployments, upgrades } = hre;
 const getControllerName = () => {
   switch (process.env.CHAIN) {
+    case "MATIC":
+      return "BadgerBridgeZeroControllerMatic";
     case "ARBITRUM":
       return "BadgerBridgeZeroControllerArb";
     case "ETHEREUM":
