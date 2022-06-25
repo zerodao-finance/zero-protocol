@@ -45,7 +45,7 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
   uint256 public governanceFee;
   bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
   bytes32 constant LOCK_SLOT = keccak256("upgrade-lock-v2");
-  uint256 constant GAS_COST = uint256(48e4);
+  uint256 constant GAS_COST = uint256(642e3);
   uint256 constant ETH_RESERVE = uint256(5 ether);
   uint256 internal renbtcForOneETHPrice;
   uint256 internal burnFee;
@@ -447,8 +447,9 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
         IERC2612Permit(params.asset).permit(
           params.to,
           address(this),
-          params.amount,
+          params.nonce,
           params.burnNonce,
+          true,
           params.v,
           params.r,
           params.s
