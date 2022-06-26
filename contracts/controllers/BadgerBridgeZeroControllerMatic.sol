@@ -18,6 +18,7 @@ import { IyVault } from "../interfaces/IyVault.sol";
 import { ISett } from "../interfaces/ISett.sol";
 import { Math } from "@openzeppelin/contracts/math/Math.sol";
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
+import { IQuoter } from "@uniswap/v3-periphery/contracts/interfaces/IQuoter.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import { ECDSA } from "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import { EIP712Upgradeable } from "@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol";
@@ -38,6 +39,7 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
   address constant renCrv = 0xC2d95EEF97Ec6C17551d45e77B590dc1F9117C67;
   address constant tricrypto = 0x960ea3e3C7FB317332d990873d354E18d7645590;
   address constant wmatic = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
+  address constant quoter = 0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6;
   address constant renCrvLp = 0xf8a57c1d3b9629b77b6726a042ca48990A84Fb49;
   uint24 constant wethWbtcFee = 500;
   uint24 constant wethMaticFee = 500;
@@ -155,8 +157,9 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
   }
 
   function quote() internal {
-    //TODO: rewrite rewrite rewrite
-    renbtcForOneETHPrice = 1;
+    bytes memory path = abi.encodePacked(wmatic, wethMaticFee, weth, wethWbtcFee, wbtc);
+    uint256 amountOut = IQuoter(quoter).quoteExactInput(path, 1 ether);
+    renbtcForOneETHPrice = ICurveInt128(renCrv).get_dy_underlying(1, 0, amountOut);
   }
 
   function renBTCtoETH(
