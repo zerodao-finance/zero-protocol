@@ -21,12 +21,21 @@ const main = async () => {
   const bbAbi = await artifacts.readArtifact("BadgerBridgeZeroControllerMatic");
   const ifaceP = new ethers.utils.Interface(proxyAbi.abi);
   const ifaceB = new ethers.utils.Interface(bbAbi.abi);
-  const data = ifaceP.encodeDeploy([
+  const args = [
     logic,
     proxyAdmin,
     ifaceB.encodeFunctionData("initialize", [governance, governance]),
-  ]);
+  ];
+  const data = ifaceP.encodeDeploy(args);
   console.log(data);
+  const deploy = await deployments.deploy("TransparentUpgradeableProxy", {
+    contract: "TransparentUpgradeableProxy",
+    from: await signer.getAddress(),
+    args: args,
+    skipIfAlreadyDeployed: false,
+    libraries: {},
+  });
+  console.log(deploy);
   // const newImpl = await deployments.deploy(
   //   "BadgerBridgeZeroControllerDeployer",
   //   {
