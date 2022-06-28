@@ -321,6 +321,7 @@ module.exports = function makeQuoter(CHAIN, provider) {
         getAVAXQuote: getAVAXQuote,
         getRenBTCForOneETHPrice: getRenBTCForOneETHPrice,
         getUsdcQuoteAVAX: getUsdcQuoteAVAX,
+        wNativeToUSDC: wNativeToUSDC,
         getWbtcQuote: getWbtcQuote,
         renBTCToETH: renBTCToETH,
         toUSDC: toUSDC,

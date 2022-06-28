@@ -37,9 +37,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var ethers = require("ethers");
 var fixtures = require("./fixtures");
-var UNISWAP = require("@uniswap/sdk");
 var Quotes = require("./quotes");
-var Route = require("@uniswap/sdk").Route;
 var keeperReward = ethers.utils.parseEther("0.001");
 var applyRatio = function (amount, ratio) {
     return ethers.BigNumber.from(amount)
