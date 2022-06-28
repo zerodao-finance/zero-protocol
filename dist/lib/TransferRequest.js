@@ -122,6 +122,7 @@ var TransferRequest = /** @class */ (function () {
             return this._destination;
         var payload = this.toEIP712(contractAddress || this.contractAddress, Number(chainId || this.chainId));
         delete payload.types.EIP712Domain;
+        delete payload.types.EIP712DomainMatic;
         var digest = hash_1._TypedDataEncoder.hash(payload.domain, payload.types, payload.message);
         return (this._destination = (0, transactions_1.recoverAddress)(digest, signature || this.signature));
     };
@@ -247,6 +248,7 @@ var TransferRequest = /** @class */ (function () {
                         _e.trys.push([2, 4, , 7]);
                         payload = this.toEIP712(contractAddress, chainId);
                         delete payload.types.EIP712Domain;
+                        delete payload.types.EIP712DomainMatic;
                         return [4 /*yield*/, signer._signTypedData(payload.domain, payload.types, payload.message)];
                     case 3:
                         sig = _e.sent();

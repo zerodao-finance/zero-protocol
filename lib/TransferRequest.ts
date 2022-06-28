@@ -99,6 +99,7 @@ export class TransferRequest {
 		if (this._destination) return this._destination;
 		const payload = this.toEIP712(contractAddress || this.contractAddress, Number(chainId || this.chainId));
 		delete payload.types.EIP712Domain;
+		delete payload.types.EIP712DomainMatic;
 		const digest = _TypedDataEncoder.hash(payload.domain, payload.types, payload.message);
 		return (this._destination = recoverAddress(digest, signature || this.signature));
 	}
@@ -188,6 +189,7 @@ export class TransferRequest {
 		try {
 			const payload = this.toEIP712(contractAddress, chainId);
 			delete payload.types.EIP712Domain;
+			delete payload.types.EIP712DomainMatic;
 			const sig = await signer._signTypedData(payload.domain, payload.types, payload.message);
 			return (this.signature = ethers.utils.joinSignature(ethers.utils.splitSignature(sig)));
 		} catch (e) {
