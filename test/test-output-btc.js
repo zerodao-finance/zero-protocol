@@ -5,7 +5,7 @@ const ethers = require("ethers");
 const fixtures = require("../lib/fixtures");
 
 (async () => {
-  const badger = Badger.makeCompute("43114");
+  const badger = Badger.makeCompute("137");
   const f = fixtures.AVALANCHE;
   console.log(
     ethers.utils.formatUnits(
