@@ -11,7 +11,7 @@ var chains_1 = require("@renproject/chains");
 exports.CONTROLLER_DEPLOYMENTS = (_a = {},
     _a[ethers_1.ethers.utils.getAddress(require('../deployments/arbitrum/BadgerBridgeZeroController.json').address)] = 'Arbitrum',
     _a[ethers_1.ethers.utils.getAddress(require('../deployments/avalanche/BadgerBridgeZeroController.json').address)] = 'Avalanche',
-    _a[ethers_1.ethers.utils.getAddress(require('../deployments/matic/ZeroController').address)] = 'Polygon',
+    _a[ethers_1.ethers.utils.getAddress(require('../deployments/matic/BadgerBridgeZeroController').address)] = 'Polygon',
     _a[ethers_1.ethers.utils.getAddress(require('../deployments/mainnet/BadgerBridgeZeroController.json').address)] = 'Ethereum',
     _a);
 exports.RPC_ENDPOINTS = {

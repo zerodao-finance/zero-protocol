@@ -36,42 +36,42 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-require('@nomiclabs/hardhat-ethers');
-require('hardhat-deploy');
-require('hardhat-deploy-ethers');
-require('hardhat-gas-reporter');
-require('@openzeppelin/hardhat-upgrades');
-require('@nomiclabs/hardhat-etherscan');
-require('dotenv').config();
-require('./tasks/multisig');
-require('./tasks/init-multisig');
+require("@nomiclabs/hardhat-ethers");
+require("hardhat-deploy");
+require("hardhat-deploy-ethers");
+require("hardhat-gas-reporter");
+require("@openzeppelin/hardhat-upgrades");
+require("@nomiclabs/hardhat-etherscan");
+require("dotenv").config();
+require("./tasks/multisig");
+require("./tasks/init-multisig");
 var ethers_1 = require("ethers");
 var fs_1 = require("fs");
-if (!process.env.CHAIN_ID && process.env.CHAIN === 'ARBITRUM')
-    process.env.CHAIN_ID = '42161';
-if (!process.env.CHAIN_ID && process.env.CHAIN === 'MATIC')
-    process.env.CHAIN_ID = '137';
-if (!process.env.CHAIN_ID && process.env.CHAIN === 'ETHEREUM')
-    process.env.CHAIN_ID = '1';
-if (!process.env.CHAIN_ID && process.env.CHAIN === 'AVALANCHE')
-    process.env.CHAIN_ID = '43114';
+if (!process.env.CHAIN_ID && process.env.CHAIN === "ARBITRUM")
+    process.env.CHAIN_ID = "42161";
+if (!process.env.CHAIN_ID && process.env.CHAIN === "MATIC")
+    process.env.CHAIN_ID = "137";
+if (!process.env.CHAIN_ID && process.env.CHAIN === "ETHEREUM")
+    process.env.CHAIN_ID = "1";
+if (!process.env.CHAIN_ID && process.env.CHAIN === "AVALANCHE")
+    process.env.CHAIN_ID = "43114";
 var RPC_ENDPOINTS = {
-    ARBITRUM: 'https://arb1.arbitrum.io/rpc',
-    MATIC: 'https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
-    AVALANCHE: 'https://api.avax.network/ext/bc/C/rpc',
-    ETHEREUM: 'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2'
+    ARBITRUM: "https://arb1.arbitrum.io/rpc",
+    MATIC: "https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2",
+    AVALANCHE: "https://api.avax.network/ext/bc/C/rpc",
+    ETHEREUM: "https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2"
 };
-var deployParameters = require('./lib/fixtures');
+var deployParameters = require("./lib/fixtures");
 extendEnvironment(function (hre) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
-        if (process.argv.slice(1).includes('node')) {
+        if (process.argv.slice(1).includes("node")) {
             (function () { return __awaiter(void 0, void 0, void 0, function () {
                 var artifact;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
-                            artifact = require('./artifacts/contracts/test/MockGatewayLogicV1.sol/MockGatewayLogicV1');
-                            return [4 /*yield*/, hre.network.provider.send('hardhat_setCode', [
+                            artifact = require("./artifacts/contracts/test/MockGatewayLogicV1.sol/MockGatewayLogicV1");
+                            return [4 /*yield*/, hre.network.provider.send("hardhat_setCode", [
                                     hre.ethers.utils.getAddress(deployParameters[process.env.CHAIN].btcGateway),
                                     artifact.deployedBytecode,
                                 ])];
@@ -95,18 +95,18 @@ var accounts = [
 ];
 process.env.ETHEREUM_MAINNET_URL =
     process.env.ETHEREUM_MAINNET_URL ||
-        'https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2';
+        "https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2";
 var ETHERSCAN_API_KEYS = {
-    ARBITRUM: '7PW6SPNBFYV1EM5E5NT36JW7ARMS1FB4HW',
-    MATIC: 'I13U9EN9YQ9931GYK9CJYQS9ZF51D5Z1F9',
-    ETHEREUM: '34W9GX5VZDJKJKVV6YEAMQ3TDP7R8SR633'
+    ARBITRUM: "7PW6SPNBFYV1EM5E5NT36JW7ARMS1FB4HW",
+    MATIC: "I13U9EN9YQ9931GYK9CJYQS9ZF51D5Z1F9",
+    ETHEREUM: "34W9GX5VZDJKJKVV6YEAMQ3TDP7R8SR633"
 };
-var ETHERSCAN_API_KEY = ETHERSCAN_API_KEYS[process.env.CHAIN || 'ARBITRUM'] ||
-    ETHERSCAN_API_KEYS['ARBITRUM'];
+var ETHERSCAN_API_KEY = ETHERSCAN_API_KEYS[process.env.CHAIN || "ARBITRUM"] ||
+    ETHERSCAN_API_KEYS["ARBITRUM"];
 module.exports = {
-    defaultNetwork: 'hardhat',
+    defaultNetwork: "hardhat",
     abiExporter: {
-        path: './abi',
+        path: "./abi",
         clear: false,
         flat: true
     },
@@ -124,16 +124,16 @@ module.exports = {
         localhost: {
             live: false,
             saveDeployments: true,
-            tags: ['local']
+            tags: ["local"]
         },
         hardhat: {
             live: false,
             saveDeployments: true,
-            tags: ['development', 'test'],
+            tags: ["development", "test"],
             chainId: process.env.CHAIN_ID && Number(process.env.CHAIN_ID),
             forking: {
-                enabled: process.env.FORKING === 'true',
-                url: RPC_ENDPOINTS[process.env.CHAIN || 'ETHEREUM']
+                enabled: process.env.FORKING === "true",
+                url: RPC_ENDPOINTS[process.env.CHAIN || "ETHEREUM"]
             }
         },
         avalanche: {
@@ -145,7 +145,7 @@ module.exports = {
             gasPrice: 470000000000
         },
         matic: {
-            url: 'https://rpc-mainnet.maticvigil.com',
+            url: "https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2",
             accounts: accounts,
             chainId: 137,
             live: true,
@@ -162,14 +162,14 @@ module.exports = {
     },
     gasReporter: {
         coinmarketcap: process.env.COINMARKETCAP_API_KEY,
-        currency: 'USD',
-        enabled: process.env.REPORT_GAS === 'true',
-        excludeContracts: ['contracts/libraries/']
+        currency: "USD",
+        enabled: process.env.REPORT_GAS === "true",
+        excludeContracts: ["contracts/libraries/"]
     },
     solidity: {
         compilers: [
             {
-                version: '0.5.16',
+                version: "0.5.16",
                 settings: {
                     optimizer: {
                         enabled: true,
@@ -178,7 +178,7 @@ module.exports = {
                 }
             },
             {
-                version: '0.6.12',
+                version: "0.6.12",
                 settings: {
                     optimizer: {
                         enabled: true,
@@ -187,7 +187,7 @@ module.exports = {
                 }
             },
             {
-                version: '0.7.6',
+                version: "0.7.6",
                 settings: {
                     optimizer: {
                         enabled: true,
@@ -196,7 +196,7 @@ module.exports = {
                 }
             },
             {
-                version: '0.8.4',
+                version: "0.8.4",
                 settings: {
                     optimizer: {
                         enabled: true,
