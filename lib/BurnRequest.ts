@@ -189,7 +189,24 @@ export class BurnRequest {
       types: {
         EIP712Domain:
           Number(this.chainId) == 137
-            ? EIP712_TYPES.EIP712DomainMatic
+            ? [
+                {
+                  name: "name",
+                  type: "string",
+                },
+                {
+                  name: "version",
+                  type: "string",
+                },
+                {
+                  name: "verifyingContract",
+                  type: "address",
+                },
+                {
+                  name: "salt",
+                  type: "bytes32",
+                },
+              ]
             : EIP712_TYPES.EIP712Domain,
         Permit: [
           {
