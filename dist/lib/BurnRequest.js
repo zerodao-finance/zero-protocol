@@ -207,8 +207,26 @@ var BurnRequest = /** @class */ (function () {
         this.chainId = chainId || this.chainId;
         return {
             types: {
-                EIP712Domain: Number(this.chainId) == 137
-                    ? constants_1.EIP712_TYPES.EIP712DomainMatic
+                EIP712Domain: Number(this.chainId) == 137 &&
+                    this.asset.toLowerCase() == fixtures_1["default"].MATIC.USDC.toLowerCase()
+                    ? [
+                        {
+                            name: "name",
+                            type: "string"
+                        },
+                        {
+                            name: "version",
+                            type: "string"
+                        },
+                        {
+                            name: "verifyingContract",
+                            type: "address"
+                        },
+                        {
+                            name: "salt",
+                            type: "bytes32"
+                        },
+                    ]
                     : constants_1.EIP712_TYPES.EIP712Domain,
                 Permit: [
                     {

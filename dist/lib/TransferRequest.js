@@ -75,44 +75,50 @@ var ReleaseRequest = /** @class */ (function () {
 exports.ReleaseRequest = ReleaseRequest;
 var TransferRequest = /** @class */ (function () {
     function TransferRequest(params) {
-        this.requestType = 'transfer';
+        this.requestType = "transfer";
         this.module = params.module;
         this.to = params.to;
         this.underwriter = params.underwriter;
         this.asset = params.asset;
-        this.amount = ethers_1.ethers.utils.hexlify(typeof params.amount === 'number'
+        this.amount = ethers_1.ethers.utils.hexlify(typeof params.amount === "number"
             ? params.amount
-            : typeof params.amount === 'string'
+            : typeof params.amount === "string"
                 ? ethers_1.ethers.BigNumber.from(params.amount)
                 : params.amount);
         this.data = params.data;
-        this.nonce = params.nonce ? (0, bytes_1.hexlify)(params.nonce) : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
-        this.pNonce = params.pNonce ? (0, bytes_1.hexlify)(params.pNonce) : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
+        this.nonce = params.nonce
+            ? (0, bytes_1.hexlify)(params.nonce)
+            : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
+        this.pNonce = params.pNonce
+            ? (0, bytes_1.hexlify)(params.pNonce)
+            : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
         this.chainId = params.chainId;
         this.contractAddress = params.contractAddress;
         this.signature = params.signature;
         var networkName = "mainnet";
-        this._ren = new ren_1["default"](networkName, { loadCompletedDeposits: true });
-        this._contractFn = 'zeroCall';
+        this._ren = new ren_1["default"](networkName, {
+            loadCompletedDeposits: true
+        });
+        this._contractFn = "zeroCall";
         this._contractParams = [
             {
-                name: 'to',
-                type: 'address',
+                name: "to",
+                type: "address",
                 value: this.to
             },
             {
-                name: 'pNonce',
-                type: 'uint256',
+                name: "pNonce",
+                type: "uint256",
                 value: this.pNonce
             },
             {
-                name: 'module',
-                type: 'address',
+                name: "module",
+                type: "address",
                 value: this.module
             },
             {
-                name: 'data',
-                type: 'bytes',
+                name: "data",
+                type: "bytes",
                 value: this.data
             },
         ];
@@ -139,7 +145,7 @@ var TransferRequest = /** @class */ (function () {
                             return [2 /*return*/, this._mint];
                         _a = this;
                         return [4 /*yield*/, this._ren.lockAndMint({
-                                asset: 'BTC',
+                                asset: "BTC",
                                 from: (0, chains_1.Bitcoin)(),
                                 nonce: this.nonce,
                                 to: (0, deployment_utils_1.getProvider)(this).Contract({
@@ -167,8 +173,8 @@ var TransferRequest = /** @class */ (function () {
                     case 1:
                         mint = _b.sent();
                         return [4 /*yield*/, new Promise(function (resolve, reject) {
-                                mint.on('deposit', resolve);
-                                mint.on('error', reject);
+                                mint.on("deposit", resolve);
+                                mint.on("error", reject);
                             })];
                     case 2:
                         deposit = _b.sent();
@@ -202,9 +208,9 @@ var TransferRequest = /** @class */ (function () {
         return {
             types: __assign({}, constants_1.EIP712_TYPES),
             domain: {
-                name: 'ZeroController',
-                version: '1',
-                chainId: String(this.chainId) || '1',
+                name: "ZeroController",
+                version: "1",
+                chainId: String(this.chainId) || "1",
                 verifyingContract: this.contractAddress || ethers_1.ethers.constants.AddressZero
             },
             message: {
@@ -215,7 +221,7 @@ var TransferRequest = /** @class */ (function () {
                 underwriter: this.underwriter,
                 nonce: this.pNonce
             },
-            primaryType: 'TransferRequest'
+            primaryType: "TransferRequest"
         };
     };
     TransferRequest.prototype.toGatewayAddress = function (input) {
@@ -247,6 +253,7 @@ var TransferRequest = /** @class */ (function () {
                         _e.trys.push([2, 4, , 7]);
                         payload = this.toEIP712(contractAddress, chainId);
                         delete payload.types.EIP712Domain;
+                        console.log(payload.types);
                         return [4 /*yield*/, signer._signTypedData(payload.domain, payload.types, payload.message)];
                     case 3:
                         sig = _e.sent();
@@ -256,7 +263,7 @@ var TransferRequest = /** @class */ (function () {
                         console.error(e_1);
                         _a = this;
                         _c = (_b = provider).send;
-                        _d = ['eth_signTypedData_v4'];
+                        _d = ["eth_signTypedData_v4"];
                         return [4 /*yield*/, signer.getAddress()];
                     case 5: return [4 /*yield*/, _c.apply(_b, _d.concat([[
                                 _e.sent(),

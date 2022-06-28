@@ -188,7 +188,8 @@ export class BurnRequest {
     return {
       types: {
         EIP712Domain:
-          Number(this.chainId) == 137
+          Number(this.chainId) == 137 &&
+          this.asset.toLowerCase() == fixtures.MATIC.USDC.toLowerCase()
             ? [
                 {
                   name: "name",
