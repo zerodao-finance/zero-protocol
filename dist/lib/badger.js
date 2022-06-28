@@ -53,8 +53,10 @@ exports.makeCompute = function (CHAIN) {
         switch (CHAIN) {
             case "42161":
                 return "480000";
+            case "137":
+                return "642000";
             case "43114":
-                return "124000";
+                return "1240000";
             default:
                 return "420000";
         }
