@@ -31,13 +31,13 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
 
   address constant btcGateway = 0x95De7b32e24B62c44A4C44521eFF4493f1d1fE13;
   address constant routerv2 = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
-  address constant usdc = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
+  address constant usdc = 0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d;
   address constant weth = 0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619;
   address constant wbtc = 0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c;
   address constant renbtc = 0xfCe146bF3146100cfe5dB4129cf6C82b0eF4Ad8c;
   address constant renCrv = 0x2477fB288c5b4118315714ad3c7Fd7CC69b00bf9;
   address constant tricrypto = 0x960ea3e3C7FB317332d990873d354E18d7645590;
-  address constant wmatic = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
+  address constant wbnb = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
   address constant quoter = 0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6;
   address constant renCrvLp = 0xf8a57c1d3b9629b77b6726a042ca48990A84Fb49;
   uint24 constant wethWbtcFee = 500;
@@ -54,6 +54,7 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
   uint256 public constant REPAY_GAS_DIFF = 41510;
   uint256 public constant BURN_GAS_DIFF = 41118;
   mapping(address => uint256) public nonces;
+  mapping(address => uint256) public noncesUsdc;
   bytes32 internal PERMIT_DOMAIN_SEPARATOR_WBTC;
 
   function setStrategist(address _strategist) public {
@@ -123,6 +124,15 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
       abi.encode(
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
         keccak256("WBTC"),
+        keccak256("1"),
+        getChainId(),
+        wbtc
+      )
+    );
+    PERMIT_DOMAIN_SEPARATOR_USDC = keccak256(
+      abi.encode(
+        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+        keccak256("USD Coin"),
         keccak256("1"),
         getChainId(),
         wbtc
@@ -462,22 +472,12 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
       }
       amountToBurn = deductBurnFee(params.amount, 1);
     } else if (params.asset == usdc) {
-      {
-        params.nonce = IERC2612Permit(params.asset).nonces(params.to);
-        params.burnNonce = computeBurnNonce(params);
-      }
-      {
-        (params.v, params.r, params.s) = SplitSignatureLib.splitSignature(params.signature);
-        IERC2612Permit(params.asset).permit(
-          params.to,
-          address(this),
-          params.amount,
-          params.burnNonce,
-          params.v,
-          params.r,
-          params.s
-        );
-      }
+      params.nonce = noncesUsdc[to];
+      noncesUsdc[params.to]++;
+      require(
+        params.to == ECDSA.recover(computeERC20PermitDigest(PERMIT_DOMAIN_SEPARATOR_USDC, params), params.signature),
+        "!signature"
+      ); //  wbtc does not implement ERC20Permit
       {
         IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
       }
