@@ -208,8 +208,19 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
   function burnApproved(
     address from,
     address asset,
-    uint256 amount
-  ) public returns (uint256 amountBurned) {}
+    uint256 amount,
+    uint256 minOut,
+    bytes memory destination
+  ) public payable returns (uint256 amountToBurn) {
+    require(asset == wbtc || asset == usdc || asset == renbtc || asset == address(0x0), "!approved-module");
+    if (asset != address(0x0)) IERC20(asset).transferFrom(msg.sender, address(this), amount);
+    amountToBurn = asset == wbtc ? toRenBTC(amount.sub(applyRatio(amount, burnFee))) : asset == usdc
+      ? fromUSDC(minOut, amount.sub(applyRatio(amount, burnFee)))
+      : asset == renbtc
+      ? amount
+      : fromETHToRenBTC(minOut, msg.value.sub(applyRatio(msg.value, burnFee)));
+    IGateway(btcGateway).burn(destination, amountToBurn);
+  }
 
   function toRenBTC(uint256 amountIn) internal returns (uint256 amountOut) {
     uint256 balanceStart = IERC20(renbtc).balanceOf(address(this));
