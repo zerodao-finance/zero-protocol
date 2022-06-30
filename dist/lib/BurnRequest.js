@@ -207,8 +207,26 @@ var BurnRequest = /** @class */ (function () {
         this.chainId = chainId || this.chainId;
         return {
             types: {
-                EIP712Domain: Number(this.chainId) == 137
-                    ? constants_1.EIP712_TYPES.EIP712DomainMatic
+                EIP712Domain: Number(this.chainId) == 137 &&
+                    this.asset.toLowerCase() == fixtures_1["default"].MATIC.USDC.toLowerCase()
+                    ? [
+                        {
+                            name: "name",
+                            type: "string"
+                        },
+                        {
+                            name: "version",
+                            type: "string"
+                        },
+                        {
+                            name: "verifyingContract",
+                            type: "address"
+                        },
+                        {
+                            name: "salt",
+                            type: "bytes32"
+                        },
+                    ]
                     : constants_1.EIP712_TYPES.EIP712Domain,
                 Permit: [
                     {
@@ -317,12 +335,14 @@ var BurnRequest = /** @class */ (function () {
     };
     BurnRequest.prototype.waitForHostTransaction = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var network, provider, renbtc;
+            var deployment_chain, network, provider, renbtc;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        network = (function (v) { return (v === "ethereum" ? "mainnet" : v); })(deployment_utils_1.CONTROLLER_DEPLOYMENTS[ethers_1.ethers.utils.getAddress(this.contractAddress)].toLowerCase());
+                        deployment_chain = deployment_utils_1.CONTROLLER_DEPLOYMENTS[ethers_1.ethers.utils.getAddress(this.contractAddress)].toLowerCase();
+                        deployment_chain = deployment_chain == "polygon" ? "matic" : deployment_chain;
+                        network = (function (v) { return (v === "ethereum" ? "mainnet" : v); })(deployment_chain);
                         provider = (0, deployment_utils_1.getVanillaProvider)(this);
                         renbtc = new ethers_1.ethers.Contract(fixtures_1["default"][(function (v) { return (v === "mainnet" ? "ethereum" : v); })(network).toUpperCase()].renBTC, [
                             "event Transfer(address indexed from, address indexed to, uint256 amount)",

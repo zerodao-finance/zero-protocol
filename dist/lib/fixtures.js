@@ -1,6 +1,7 @@
 "use strict";
 module.exports = {
     MATIC: {
+        MATIC: "0x" + "00".repeat(20),
         btcGateway: "0x05Cadbf3128BcB7f2b89F3dD55E5B0a036a49e20",
         renBTC: "0xDBf31dF14B66535aF65AaC99C32e9eA844e14501",
         wETH: "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",

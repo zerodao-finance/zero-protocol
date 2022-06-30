@@ -23,24 +23,6 @@ exports.EIP712_TYPES = {
             type: "address"
         },
     ],
-    EIP712DomainMatic: [
-        {
-            name: "name",
-            type: "string"
-        },
-        {
-            name: "version",
-            type: "string"
-        },
-        {
-            name: "verifyingContract",
-            type: "address"
-        },
-        {
-            name: "salt",
-            type: "bytes32"
-        },
-    ],
     TransferRequest: [
         {
             name: "asset",

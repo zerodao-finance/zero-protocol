@@ -188,8 +188,26 @@ export class BurnRequest {
     return {
       types: {
         EIP712Domain:
-          Number(this.chainId) == 137
-            ? EIP712_TYPES.EIP712DomainMatic
+          Number(this.chainId) == 137 &&
+          this.asset.toLowerCase() == fixtures.MATIC.USDC.toLowerCase()
+            ? [
+                {
+                  name: "name",
+                  type: "string",
+                },
+                {
+                  name: "version",
+                  type: "string",
+                },
+                {
+                  name: "verifyingContract",
+                  type: "address",
+                },
+                {
+                  name: "salt",
+                  type: "bytes32",
+                },
+              ]
             : EIP712_TYPES.EIP712Domain,
         Permit: [
           {
@@ -276,10 +294,14 @@ export class BurnRequest {
     }
   }
   async waitForHostTransaction() {
+     var deployment_chain = CONTROLLER_DEPLOYMENTS[
+      ethers.utils.getAddress(this.contractAddress)
+    ].toLowerCase();
+    deployment_chain = deployment_chain == "polygon" ? "matic" : deployment_chain;
+
+
     const network = ((v) => (v === "ethereum" ? "mainnet" : v))(
-      CONTROLLER_DEPLOYMENTS[
-        ethers.utils.getAddress(this.contractAddress)
-      ].toLowerCase()
+      deployment_chain
     );
     const provider = getVanillaProvider(this);
     const renbtc = new ethers.Contract(

@@ -254,20 +254,23 @@ module.exports = function makeQuoter(CHAIN, provider) {
         });
     }); };
     var ETHtoRenBTC = function (amount) { return __awaiter(_this, void 0, void 0, function () {
-        var output, result;
+        var path, output, result;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     if (!(chain.name === "AVALANCHE")) return [3 /*break*/, 2];
                     return [4 /*yield*/, getAVAXQuote(false, amount)];
                 case 1: return [2 /*return*/, _a.sent()];
-                case 2: return [4 /*yield*/, quoter.quoteExactInput(ethers.utils.solidityPack(["address", "uint24", "address"].concat(chain.name === "MATIC" ? ["uint24", "address"] : []), [
+                case 2:
+                    path = [
                         fixtures[chain.name].wNative,
                         500,
                         fixtures[chain.name].wETH,
                         500,
                         fixtures[chain.name].WBTC,
-                    ].splice(2, chain.name !== "MATIC" ? 2 : 0)), amount)];
+                    ];
+                    path.splice(2, chain.name !== "MATIC" ? 2 : 0);
+                    return [4 /*yield*/, quoter.quoteExactInput(ethers.utils.solidityPack(["address", "uint24", "address"].concat(chain.name === "MATIC" ? ["uint24", "address"] : []), path), amount)];
                 case 3:
                     output = _a.sent();
                     return [4 /*yield*/, getWbtcQuote(false, output)];
@@ -277,24 +280,36 @@ module.exports = function makeQuoter(CHAIN, provider) {
             }
         });
     }); };
+    // only for matic
+    var wNativeToUSDC = function (amount) { return __awaiter(_this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, quoter.quoteExactInput(ethers.utils.solidityPack(["address", "uint24", "address"], [fixtures[chain.name].wNative, 500, fixtures[chain.name].USDC]), amount)];
+                case 1: return [2 /*return*/, _a.sent()];
+            }
+        });
+    }); };
     var renBTCToETH = function (amount) { return __awaiter(_this, void 0, void 0, function () {
-        var wbtcOut, quote;
+        var path, wbtcOut, quote;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     if (!(chain.name === "AVALANCHE")) return [3 /*break*/, 2];
                     return [4 /*yield*/, getAVAXQuote(true, amount)];
                 case 1: return [2 /*return*/, _a.sent()];
-                case 2: return [4 /*yield*/, getWbtcQuote(true, amount)];
+                case 2:
+                    path = [
+                        fixtures[chain.name].WBTC,
+                        500,
+                        fixtures[chain.name].wETH,
+                        500,
+                        fixtures[chain.name].wNative,
+                    ];
+                    path.splice(2, chain.name !== "MATIC" ? 2 : 0);
+                    return [4 /*yield*/, getWbtcQuote(true, amount)];
                 case 3:
                     wbtcOut = _a.sent();
-                    return [4 /*yield*/, quoter.quoteExactInput(ethers.utils.solidityPack(["address", "uint24", "address"].concat(chain.name === "MATIC" ? ["uint24", "address"] : []), [
-                            fixtures[chain.name].WBTC,
-                            500,
-                            fixtures[chain.name].wETH,
-                            500,
-                            fixtures[chain.name].wNative,
-                        ].splice(2, chain.name !== "MATIC" ? 2 : 0)), wbtcOut)];
+                    return [4 /*yield*/, quoter.quoteExactInput(ethers.utils.solidityPack(["address", "uint24", "address"].concat(chain.name === "MATIC" ? ["uint24", "address"] : []), path), wbtcOut)];
                 case 4:
                     quote = _a.sent();
                     return [2 /*return*/, quote];
@@ -306,6 +321,7 @@ module.exports = function makeQuoter(CHAIN, provider) {
         getAVAXQuote: getAVAXQuote,
         getRenBTCForOneETHPrice: getRenBTCForOneETHPrice,
         getUsdcQuoteAVAX: getUsdcQuoteAVAX,
+        wNativeToUSDC: wNativeToUSDC,
         getWbtcQuote: getWbtcQuote,
         renBTCToETH: renBTCToETH,
         toUSDC: toUSDC,

@@ -37,9 +37,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var ethers = require("ethers");
 var fixtures = require("./fixtures");
-var UNISWAP = require("@uniswap/sdk");
 var Quotes = require("./quotes");
-var Route = require("@uniswap/sdk").Route;
 var keeperReward = ethers.utils.parseEther("0.001");
 var applyRatio = function (amount, ratio) {
     return ethers.BigNumber.from(amount)
@@ -53,8 +51,10 @@ exports.makeCompute = function (CHAIN) {
         switch (CHAIN) {
             case "42161":
                 return "480000";
+            case "137":
+                return "642000";
             case "43114":
-                return "124000";
+                return "1240000";
             default:
                 return "420000";
         }
