@@ -1,0 +1,24 @@
+{
+  "name": "@zerodao/common",
+  "version": "0.1.0",
+  "description": "zerodao utils",
+  "main": "lib/index.js",
+  "repository": "https://github.com/zerodao-finance/zero-protocol",
+  "author": "protoeloka",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "@ethersproject/abstract-signer": "^5.6.2",
+    "@ethersproject/hash": "^5.6.1",
+    "@ethersproject/wallet": "^5.6.2",
+    "@renproject/chains": "^3.3.0",
+    "ethers": "^5.6.9",
+    "hardhat-deploy-ethers": "^0.3.0-beta.13"
+  }
+}

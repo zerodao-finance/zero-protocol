@@ -41,7 +41,10 @@
   },
   "author": "zeroDAO",
   "license": "MIT",
-  "private": false,
+  "private": true,
+  "workspaces": [
+    "./packages/**"
+  ],
   "devDependencies": {
     "@babel/preset-typescript": "^7.14.5",
     "@boringcrypto/boring-solidity": "https://github.com/boringcrypto/BoringSolidity",
