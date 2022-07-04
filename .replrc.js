@@ -1,15 +1,9 @@
 
 var { ethers } = require('ethers');
-var BadgerBridgeZeroController = require('./deployments/mainnet/BadgerBridgeZeroController');
-var level = require('./lib/persistence/leveldb');
-
-var { TEST_KEEPER_ADDRESS } = require('./dist/lib/mock');
+var BadgerBridgeZeroController = require('./artifacts/contracts/controllers/BadgerBridgeZeroController.sol/BadgerBridgeZeroController');
 
 var provider = new ethers.providers.InfuraProvider('mainnet');
 
-var checkKeeperBalance = async () => ethers.utils.formatEther(await provider.getBalance(TEST_KEEPER_ADDRESS))
 
-var contract = new ethers.Contract(BadgerBridgeZeroController.address, BadgerBridgeZeroController.abi, new ethers.Wallet(process.env.WALLET, provider));
-
-var earn = async () => await contract.earn({ gasLimit: 500000 });
-
+var wallet = new ethers.Wallet(process.env.WALLET, provider);
+var factory = new ethers.ContractFactory(BadgerBridgeZeroController.abi, BadgerBridgeZeroController.bytecode, new ethers.Wallet(process.env.WALLET, provider));
