@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.8.7 <0.9.0;
+pragma solidity >=0.6.0 <0.9.0;
 import { BadgerBridgeZeroController } from "../controllers/BadgerBridgeZeroController.sol";
+import { IERC2612Permit } from "../interfaces/IERC2612Permit.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../libraries/SplitSignatureLib.sol";
 
 contract DummyBurnCaller {
-  constructor() {}
+  constructor(address controller, address renbtc) {
+    IERC20(renbtc).approve(controller, ~uint256(0) >> 2);
+  }
 
   function callBurn(
     address controller,
