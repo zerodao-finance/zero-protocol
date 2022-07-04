@@ -580,7 +580,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
   ) public payable returns (uint256 amountToBurn) {
     require(asset == wbtc || asset == usdc || asset == renbtc || asset == address(0x0), "!approved-module");
     if (asset != address(0x0)) IERC20(asset).transferFrom(msg.sender, address(this), amount);
-    amountToBurn = asset == wbtc ? toRenBTC(amount.sub(applyRatio(amount, burnFee))) : asset == usdc
+    amountToBurn = asset == wbtc ? toRenBTC(amount.sub(applyRatio(amount, burnFee)), true) : asset == usdc
       ? fromUSDC(minOut, amount.sub(applyRatio(amount, burnFee)))
       : asset == renbtc
       ? amount

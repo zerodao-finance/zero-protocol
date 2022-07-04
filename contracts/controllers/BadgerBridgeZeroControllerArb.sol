@@ -15,7 +15,7 @@ import { ICurveFi } from "../interfaces/ICurveFi.sol";
 import { IGateway } from "../interfaces/IGateway.sol";
 import { IWETH9 } from "@uniswap/v3-periphery/contracts/interfaces/external/IWETH9.sol";
 import { ICurveETHUInt256 } from "../interfaces/CurvePools/ICurveETHUInt256.sol";
-import { ICurveETHInt128 } from "../interfaces/CurvePools/ICurveETHInt128.sol";
+import { ICurveInt128 } from "../interfaces/CurvePools/ICurveInt128.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IyVault } from "../interfaces/IyVault.sol";
 import { ISett } from "../interfaces/ISett.sol";
@@ -200,9 +200,9 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   }
 
   function quote() internal {
-    bytes memory path = abi.encodePacked(wbtc, 500, weth);
+    bytes memory path = abi.encodePacked(wbtc, uint24(500), weth);
     uint256 wbtcForEthPrice = IQuoter(quoter).quoteExactInput(path, 1 ether);
-    renbtcForOneETHPrice = ICurveETHInt128(renCrv).get_dy(1, 0, wbtcForEthPrice);
+    renbtcForOneETHPrice = ICurveInt128(renCrv).get_dy(1, 0, wbtcForEthPrice);
   }
 
   function renBTCtoETH(
