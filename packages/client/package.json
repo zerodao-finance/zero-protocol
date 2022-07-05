@@ -1,0 +1,13 @@
+{
+  "name": "@zerodao/client",
+  "version": "0.1.0",
+  "description": "zerodao SDK client exports",
+  "main": "dist/lib/index.js",
+  "repository": "https://github.com/zerodao-finance/zero-protocol",
+  "author": "protoeloka",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "typescript": "^4.7.4"
+  }
+}

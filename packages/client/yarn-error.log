@@ -1,0 +1,45 @@
+Arguments: 
+  /Users/oobiora/.nvm/versions/node/v16.13.1/bin/node /usr/local/Cellar/yarn/1.22.17_2/libexec/bin/yarn.js add typscript
+
+PATH: 
+  /Users/oobiora/.nvm/versions/node/v16.13.1/bin:/Users/oobiora/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Applications/VMware Fusion.app/Contents/Public:/usr/local/go/bin:/Library/Apple/usr/bin:/Library/Frameworks/Mono.framework/Versions/Current/Commands:/Users/oobiora/.nvm/versions/node/v16.13.1/bin:/Users/oobiora/opt/anaconda3/bin:/Users/oobiora/opt/anaconda3/condabin:/Users/oobiora/bin:/Users/oobiora/.cargo/bin:/Users/oobiora/.local/bin:/Users/oobiora/.foundry/bin:/Users/oobiora/.local/bin:/Users/oobiora/.local/bin:/Users/oobiora/.foundry/bin:/Users/oobiora/.foundry/bin
+
+Yarn version: 
+  1.22.17
+
+Node version: 
+  16.13.1
+
+Platform: 
+  darwin x64
+
+Trace: 
+  Error: https://registry.yarnpkg.com/typscript: Not found
+      at Request.params.callback [as _callback] (/usr/local/Cellar/yarn/1.22.17_2/libexec/lib/cli.js:67029:18)
+      at Request.self.callback (/usr/local/Cellar/yarn/1.22.17_2/libexec/lib/cli.js:140883:22)
+      at Request.emit (node:events:390:28)
+      at Request.<anonymous> (/usr/local/Cellar/yarn/1.22.17_2/libexec/lib/cli.js:141855:10)
+      at Request.emit (node:events:390:28)
+      at IncomingMessage.<anonymous> (/usr/local/Cellar/yarn/1.22.17_2/libexec/lib/cli.js:141777:12)
+      at Object.onceWrapper (node:events:509:28)
+      at IncomingMessage.emit (node:events:402:35)
+      at endReadableNT (node:internal/streams/readable:1343:12)
+      at processTicksAndRejections (node:internal/process/task_queues:83:21)
+
+npm manifest: 
+  {
+    "name": "@zerodao/client",
+    "version": "0.1.0",
+    "description": "zerodao SDK client exports",
+    "main": "dist/lib/index.js",
+    "repository": "https://github.com/zerodao-finance/zero-protocol",
+    "author": "protoeloka",
+    "license": "MIT",
+    "private": false
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
