@@ -3,15 +3,16 @@ const ethers = require("ethers");
 const { mixinGetGasPrice } = require("ethers-gasnow");
 const fs = require("fs");
 
-//mixinGetGasPrice(ethers.providers.BaseProvider.prototype, "rapid");
-
 const getControllerName = () => {
   switch (process.env.CHAIN) {
     case "ARBITRUM":
       return "BadgerBridgeZeroControllerArb";
     case "AVALANCHE":
       return "BadgerBridgeZeroControllerAvax";
+    case "MATIC":
+      return "BadgerBridgeZeroControllerMatic";
     default:
+      mixinGetGasPrice(ethers.providers.BaseProvider.prototype, "rapid");
       return "BadgerBridgeZeroController";
   }
 };

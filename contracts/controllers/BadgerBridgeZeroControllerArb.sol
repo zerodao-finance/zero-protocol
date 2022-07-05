@@ -85,9 +85,6 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     assembly {
       sstore(lock_slot, lock)
     }
-
-    IERC20(wbtc).safeApprove(routerv3, ~uint256(0) >> 2);
-    IERC20(usdc).safeApprove(routerv3, ~uint256(0) >> 2);
   }
 
   function computeCalldataGasDiff() internal pure returns (uint256 diff) {
@@ -142,6 +139,8 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     IERC20(wbtc).safeApprove(renCrv, ~uint256(0) >> 2);
     IERC20(wbtc).safeApprove(tricrypto, ~uint256(0) >> 2);
     IERC20(renCrvLp).safeApprove(bCrvRen, ~uint256(0) >> 2);
+    IERC20(wbtc).safeApprove(routerv3, ~uint256(0) >> 2);
+    IERC20(usdc).safeApprove(routerv3, ~uint256(0) >> 2);
     //IERC20(bCrvRen).safeApprove(settPeak, ~uint256(0) >> 2);
     PERMIT_DOMAIN_SEPARATOR_WBTC = keccak256(
       abi.encode(
