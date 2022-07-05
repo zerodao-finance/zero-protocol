@@ -370,6 +370,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     bytes memory data,
     bytes memory signature
   ) public returns (uint256 amountOut) {
+    require(msg.data.length <= 516, "too much calldata");
     uint256 _gasBefore = gasleft();
     LoanParams memory params;
     {
@@ -474,6 +475,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     bytes memory destination,
     bytes memory signature
   ) public returns (uint256 amountToBurn) {
+    require(msg.data.length <= 580, "too much calldata");
     BurnLocals memory params = BurnLocals({
       to: to,
       asset: asset,
