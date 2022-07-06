@@ -1,15 +1,17 @@
-require("@nomiclabs/hardhat-ethers");
-require("hardhat-deploy");
-require("hardhat-deploy-ethers");
-require("hardhat-gas-reporter");
-require("@openzeppelin/hardhat-upgrades");
-require("@nomiclabs/hardhat-etherscan");
+import "@nomiclabs/hardhat-waffle";
+import "@typechain/hardhat";
+// import "@nomiclabs/hardhat-ethers";
+import "hardhat-deploy";
+import "hardhat-deploy-ethers";
+import "hardhat-gas-reporter";
+import "@nomiclabs/hardhat-etherscan";
+import { readFileSync } from "fs";
+import { ethers } from "ethers";
+import { randomBytes } from "crypto";
 require("dotenv").config();
 require("./tasks/multisig");
 require("./tasks/init-multisig");
 
-import { ethers } from "ethers";
-import { readFileSync } from "fs";
 if (!process.env.CHAIN_ID && process.env.CHAIN === "ARBITRUM")
   process.env.CHAIN_ID = "42161";
 if (!process.env.CHAIN_ID && process.env.CHAIN === "MATIC")
@@ -50,8 +52,8 @@ if (process.env.SIGNER_PATH && process.env.PASSWORD) {
 }
 
 const accounts = [
-  wallet || ethers.Wallet.createRandom().privateKey,
-  process.env.UNDERWRITER || ethers.Wallet.createRandom().privateKey,
+  wallet || randomBytes(32).toString("hex"),
+  process.env.UNDERWRITER || randomBytes(32).toString("hex"),
 ];
 
 process.env.ETHEREUM_MAINNET_URL =
@@ -96,6 +98,7 @@ module.exports = {
       saveDeployments: true,
       tags: ["development", "test"],
       chainId: process.env.CHAIN_ID && Number(process.env.CHAIN_ID),
+      allowUnlimitedContractSize: true,
       forking: {
         enabled: process.env.FORKING === "true",
         url: RPC_ENDPOINTS[process.env.CHAIN || "ETHEREUM"],
@@ -175,7 +178,7 @@ module.exports = {
           viaIR: true,
           optimizer: {
             enabled: true,
-            runs: 1000000,
+            runs: 50000,
           },
         },
       },
