@@ -7,10 +7,10 @@ import { ethers } from 'ethers';
 import { Polygon, Ethereum, Arbitrum, Avalanche } from '@renproject/chains';
 
 export const CONTROLLER_DEPLOYMENTS = {
-	[ethers.utils.getAddress(require('../deployments/arbitrum/BadgerBridgeZeroController.json').address)]: 'Arbitrum',
-	[ethers.utils.getAddress(require('../deployments/avalanche/BadgerBridgeZeroController.json').address)]: 'Avalanche',
-	[ethers.utils.getAddress(require('../deployments/matic/BadgerBridgeZeroController.json').address)]: 'Polygon',
-	[ethers.utils.getAddress(require('../deployments/mainnet/BadgerBridgeZeroController.json').address)]: 'Ethereum',
+	// [ethers.utils.getAddress(require('../../../../deployments/arbitrum/BadgerBridgeZeroController.json').address)]: 'Arbitrum',
+	// [ethers.utils.getAddress(require('../../../../deployments/avalanche/BadgerBridgeZeroController.json').address)]: 'Avalanche',
+	// [ethers.utils.getAddress(require('../../../../deployments/matic/BadgerBridgeZeroController.json').address)]: 'Polygon',
+	// [ethers.utils.getAddress(require('../../../../deployments/mainnet/BadgerBridgeZeroController.json').address)]: 'Ethereum',
 };
 
 export const RPC_ENDPOINTS = {
