@@ -71,6 +71,20 @@ library FixedPointMathLib {
     }
   }
 
+  function divUp(uint256 numerator, uint256 denominator) internal pure returns (uint256 z) {
+    assembly {
+      // Equivalent to require(denominator != 0)
+      if iszero(denominator) {
+        revert(0, 0)
+      }
+
+      // First, divide numerator - 1 by the denominator and add 1.
+      // We allow z - 1 to underflow if z is 0, because we multiply the
+      // end result by 0 if z is zero, ensuring we return 0 if z is zero.
+      z := mul(iszero(iszero(numerator)), add(div(sub(numerator, 1), denominator), 1))
+    }
+  }
+
   function rpow(
     uint256 x,
     uint256 n,

@@ -21,7 +21,7 @@ uint256 constant TransferRequest_data_offset = 0x80;
 
 // Without Underwriter
 bytes32 constant _TRANSFER_REQUEST_TYPE_HASH = 0x9bb77eff76a7692d1cd3e09b42675d0ef4c6d1fc6437ed88c47852ef44f69558;
-bytes32 constant _META_REQUEST_TYPE_HASH = 0xf35bb2892bbe9a67a97503bb135e39d415a9f8dacc33c3d5dd39dd5c52ebc29b;
+bytes32 constant _META_REQUEST_TYPE_HASH = 0x6999c2d6881f6c154b0a73e1b8e3511497f85327e303a84c8edef11e4d6ec515;
 bytes32 constant _PERMIT_TYPE_HASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
 bytes constant TransferRequestTypeString = "TransferRequest(address asset,uint256 amount,address module,uint256 nonce,bytes data)";
 bytes constant MetaRequestTypeString = "MetaRequest(address asset,uint256 amount,address module,uint256 nonce,bytes data)";
