@@ -3,12 +3,17 @@ pragma solidity >=0.8.13;
 
 import { LendableSharesVaultBase } from "./LendableSharesVaultBase.sol";
 import "./GovernableBase.sol";
+import { ModuleFeesCoder, ModuleType, ModuleFees } from "../utils/ModuleFeesCoder.sol";
+import { GlobalFeesCoder, GlobalFees } from "../utils/GlobalFeesCoder.sol";
 
 contract BtcVaultBase is LendableSharesVaultBase, GovernableBase {
   /*//////////////////////////////////////////////////////////////
                                 Storage
   //////////////////////////////////////////////////////////////*/
-  mapping(address => bool) public approvedModules;
+
+  GlobalFees internal _globalFees;
+
+  mapping(address => ModuleFees) internal _moduleFees;
 
   /*//////////////////////////////////////////////////////////////
                                  ERRORS
@@ -23,5 +28,7 @@ contract BtcVaultBase is LendableSharesVaultBase, GovernableBase {
   /*//////////////////////////////////////////////////////////////
                                 EVENTS
   //////////////////////////////////////////////////////////////*/
-  event ModuleStatusUpdated(address module, bool approved);
+  event ModuleFeesUpdated(address module, ModuleType moduleType, uint256 loanGasE5, uint256 repayGasE5);
+
+  event GlobalFeesUpdated(address gasFeeOracle, uint256 dynamicBorrowFee, uint256 staticBorrowFee);
 }
