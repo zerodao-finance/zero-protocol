@@ -192,6 +192,9 @@ exports.makeCompute = function (CHAIN) {
                     renVmFeeAmt = applyRatio(amountIn, renVmFee);
                     opFee = zeroProtocolFeeAmt.add(renVmFeeAmt);
                     totalFees = gasFee.add(opFee);
+                    if (zeroProtocolFeeAmt == burnFee) {
+                        totalFees.add(ethers.BigNumber.from(".001").div(ethers.utils.parseEther("1")));
+                    }
                     return [2 /*return*/, { gasFee: gasFee, zeroProtocolFeeAmt: zeroProtocolFeeAmt, renVmFeeAmt: renVmFeeAmt, opFee: opFee, totalFees: totalFees }];
             }
         });
