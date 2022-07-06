@@ -116,7 +116,7 @@ exports.makeCompute = function (CHAIN) {
             switch (_a.label) {
                 case 0:
                     amount = ethers.BigNumber.from(amount);
-                    return [4 /*yield*/, applyFee(amount, burnFee, multiplier)];
+                    return [4 /*yield*/, applyFee(amount, burnFee, renVmFeeBurn)];
                 case 1:
                     feeAmounts = _a.sent();
                     amountAfterDeduction = amount.sub(feeAmounts.totalFees);
@@ -130,7 +130,7 @@ exports.makeCompute = function (CHAIN) {
             switch (_a.label) {
                 case 0:
                     amount = ethers.BigNumber.from(amount);
-                    return [4 /*yield*/, applyFee(amount, mintFee)];
+                    return [4 /*yield*/, applyFee(amount, mintFee, renVmFeeMint)];
                 case 1:
                     feeAmounts = _a.sent();
                     amountAfterDeduction = amount.sub(feeAmounts.totalFees);
@@ -178,7 +178,7 @@ exports.makeCompute = function (CHAIN) {
             }
         });
     }); };
-    var applyFee = function (amountIn) { return __awaiter(void 0, void 0, void 0, function () {
+    var applyFee = function (amountIn, zeroFee, renVmFee) { return __awaiter(void 0, void 0, void 0, function () {
         var gasPrice, gasFee, zeroProtocolFeeAmt, renVmFeeAmt, opFee, totalFees;
         return __generator(this, function (_a) {
             switch (_a.label) {
@@ -188,7 +188,7 @@ exports.makeCompute = function (CHAIN) {
                     return [4 /*yield*/, computeRenBTCGasFee(GAS_COST.add(keeperReward.div(gasPrice)), gasPrice)];
                 case 2:
                     gasFee = _a.sent();
-                    zeroProtocolFeeAmt = applyRatio(amountIn, burnFee);
+                    zeroProtocolFeeAmt = applyRatio(amountIn, zeroFee);
                     renVmFeeAmt = applyRatio(amountIn, renVmFee);
                     opFee = zeroProtocolFeeAmt.add(renVmFeeAmt);
                     totalFees = gasFee.add(opFee);
@@ -196,13 +196,18 @@ exports.makeCompute = function (CHAIN) {
             }
         });
     }); };
-    var burnFee = (exports.burnFee = ethers.utils.parseEther("0.004"));
-    var mintFee = (exports.mintFee = ethers.utils.parseEther("0.0025"));
-    var renVmFee = (exports.mintFee = ethers.utils.parseEther("0.0015"));
+    var burnFee = ethers.utils.parseEther("0.003");
+    var renVmFeeBurn = ethers.utils.parseEther("0.001");
+    var mintFee = ethers.utils.parseEther("0.002");
+    var renVmFeeMint = ethers.utils.parseEther("0.002");
     return {
         computeTransferOutput: computeTransferOutput,
         computeOutputBTC: computeOutputBTC,
         applyFee: applyFee,
+        burnFee: burnFee,
+        mintFee: mintFee,
+        renVmFeeBurn: renVmFeeBurn,
+        renVmFeeMint: renVmFeeMint,
         computeRenBTCGasFee: computeRenBTCGasFee,
         getConvertedAmount: getConvertedAmount
     };
