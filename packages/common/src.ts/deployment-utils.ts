@@ -7,10 +7,10 @@ import { ethers } from 'ethers';
 import { Polygon, Ethereum, Arbitrum, Avalanche } from '@renproject/chains';
 
 export const CONTROLLER_DEPLOYMENTS = {
-	// [ethers.utils.getAddress(require('../../../../deployments/arbitrum/BadgerBridgeZeroController.json').address)]: 'Arbitrum',
-	// [ethers.utils.getAddress(require('../../../../deployments/avalanche/BadgerBridgeZeroController.json').address)]: 'Avalanche',
-	// [ethers.utils.getAddress(require('../../../../deployments/matic/BadgerBridgeZeroController.json').address)]: 'Polygon',
-	// [ethers.utils.getAddress(require('../../../../deployments/mainnet/BadgerBridgeZeroController.json').address)]: 'Ethereum',
+	[ethers.utils.getAddress(require('../deployments/arbitrum/BadgerBridgeZeroController.json').address)]: 'Arbitrum',
+	[ethers.utils.getAddress(require('../deployments/avalanche/BadgerBridgeZeroController.json').address)]: 'Avalanche',
+	[ethers.utils.getAddress(require('../deployments/matic/BadgerBridgeZeroController.json').address)]: 'Polygon',
+	[ethers.utils.getAddress(require('../deployments/mainnet/BadgerBridgeZeroController.json').address)]: 'Ethereum',
 };
 
 export const RPC_ENDPOINTS = {
@@ -48,11 +48,11 @@ export const getVanillaProvider = (request) => {
 	}
 };
 
-export const getProvider = (transferRequest) => {
+export const getRenVMChain = (transferRequest) => {
 	const checkSummedContractAddr = ethers.utils.getAddress(transferRequest.contractAddress);
 	const ethersProvider = getVanillaProvider(transferRequest);
 	const chain_key = CONTROLLER_DEPLOYMENTS[checkSummedContractAddr];
-	return RENVM_PROVIDERS[chain_key](ethersProvider);
+	return new RENVM_PROVIDERS[chain_key]({network: "mainnet", provider: ethersProvider});
 }
 
 export const logger = {

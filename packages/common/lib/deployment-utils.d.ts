@@ -3,7 +3,9 @@ import { Signer } from '@ethersproject/abstract-signer';
 import type { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signer-with-address';
 import { ethers } from 'ethers';
 import { Polygon, Ethereum, Arbitrum, Avalanche } from '@renproject/chains';
-export declare const CONTROLLER_DEPLOYMENTS: {};
+export declare const CONTROLLER_DEPLOYMENTS: {
+    [x: string]: string;
+};
 export declare const RPC_ENDPOINTS: {
     Arbitrum: string;
     Avalanche: string;
@@ -17,7 +19,7 @@ export declare const RENVM_PROVIDERS: {
     Avalanche: typeof Avalanche;
 };
 export declare const getVanillaProvider: (request: any) => ethers.providers.JsonRpcProvider;
-export declare const getProvider: (transferRequest: any) => any;
+export declare const getRenVMChain: (transferRequest: any) => any;
 export declare const logger: {
     debug(v: any): void;
 };

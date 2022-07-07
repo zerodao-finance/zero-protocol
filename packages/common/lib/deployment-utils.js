@@ -1,13 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logger = exports.getProvider = exports.getVanillaProvider = exports.RENVM_PROVIDERS = exports.RPC_ENDPOINTS = exports.CONTROLLER_DEPLOYMENTS = void 0;
+exports.logger = exports.getRenVMChain = exports.getVanillaProvider = exports.RENVM_PROVIDERS = exports.RPC_ENDPOINTS = exports.CONTROLLER_DEPLOYMENTS = void 0;
 const ethers_1 = require("ethers");
 const chains_1 = require("@renproject/chains");
 exports.CONTROLLER_DEPLOYMENTS = {
-// [ethers.utils.getAddress(require('../../../../deployments/arbitrum/BadgerBridgeZeroController.json').address)]: 'Arbitrum',
-// [ethers.utils.getAddress(require('../../../../deployments/avalanche/BadgerBridgeZeroController.json').address)]: 'Avalanche',
-// [ethers.utils.getAddress(require('../../../../deployments/matic/BadgerBridgeZeroController.json').address)]: 'Polygon',
-// [ethers.utils.getAddress(require('../../../../deployments/mainnet/BadgerBridgeZeroController.json').address)]: 'Ethereum',
+    [ethers_1.ethers.utils.getAddress(require('../deployments/arbitrum/BadgerBridgeZeroController.json').address)]: 'Arbitrum',
+    [ethers_1.ethers.utils.getAddress(require('../deployments/avalanche/BadgerBridgeZeroController.json').address)]: 'Avalanche',
+    [ethers_1.ethers.utils.getAddress(require('../deployments/matic/BadgerBridgeZeroController.json').address)]: 'Polygon',
+    [ethers_1.ethers.utils.getAddress(require('../deployments/mainnet/BadgerBridgeZeroController.json').address)]: 'Ethereum',
 };
 exports.RPC_ENDPOINTS = {
     Arbitrum: 'https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2',
@@ -44,13 +44,13 @@ const getVanillaProvider = (request) => {
     }
 };
 exports.getVanillaProvider = getVanillaProvider;
-const getProvider = (transferRequest) => {
+const getRenVMChain = (transferRequest) => {
     const checkSummedContractAddr = ethers_1.ethers.utils.getAddress(transferRequest.contractAddress);
     const ethersProvider = (0, exports.getVanillaProvider)(transferRequest);
     const chain_key = exports.CONTROLLER_DEPLOYMENTS[checkSummedContractAddr];
-    return exports.RENVM_PROVIDERS[chain_key](ethersProvider);
+    return new exports.RENVM_PROVIDERS[chain_key]({ network: "mainnet", provider: ethersProvider });
 };
-exports.getProvider = getProvider;
+exports.getRenVMChain = getRenVMChain;
 exports.logger = {
     debug(v) {
         console.error(v);
