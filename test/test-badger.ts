@@ -596,4 +596,7 @@ describe("BadgerBridgeZeroController", () => {
       burnRequest.destination
     );
   });
+  it("should test earn", async () => {
+    await (await getController()).earn();
+  });
 });

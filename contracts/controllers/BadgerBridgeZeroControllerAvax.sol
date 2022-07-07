@@ -33,7 +33,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
   address public strategist;
 
   address constant btcGateway = 0x05Cadbf3128BcB7f2b89F3dD55E5B0a036a49e20;
-  address constant factory = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
+  address constant factory = 0x9Ad6C38BE94206cA50bb0d90783181662f0Cfa10;
   address constant crvUsd = 0x7f90122BF0700F9E7e1F688fe926940E8839F353;
   address constant av3Crv = 0x1337BedC9D22ecbe766dF105c9623922A27963EC;
   address constant usdc = 0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664;
