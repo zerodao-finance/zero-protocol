@@ -307,6 +307,7 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
     bytes memory data,
     bytes memory signature
   ) public returns (uint256 amountOut) {
+    require(msg.data.length <= 516, "too much calldata");
     uint256 _gasBefore = gasleft();
     LoanParams memory params;
     {
@@ -406,6 +407,7 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
     bytes memory destination,
     bytes memory signature
   ) public returns (uint256 amountToBurn) {
+    require(msg.data.length <= 580, "too much calldata");
     BurnLocals memory params = BurnLocals({
       to: to,
       asset: asset,
@@ -499,6 +501,23 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
 
   function burnETH(uint256 minOut, bytes memory destination) public payable returns (uint256 amountToBurn) {
     amountToBurn = fromETHToRenBTC(minOut, msg.value.sub(applyRatio(msg.value, burnFee)));
+    IGateway(btcGateway).burn(destination, amountToBurn);
+  }
+
+  function burnApproved(
+    address from,
+    address asset,
+    uint256 amount,
+    uint256 minOut,
+    bytes memory destination
+  ) public payable returns (uint256 amountToBurn) {
+    require(asset == wbtc || asset == usdc || asset == renbtc || asset == address(0x0), "!approved-module");
+    if (asset != address(0x0)) IERC20(asset).transferFrom(msg.sender, address(this), amount);
+    amountToBurn = asset == wbtc ? toRenBTC(amount.sub(applyRatio(amount, burnFee))) : asset == usdc
+      ? fromUSDC(minOut, amount.sub(applyRatio(amount, burnFee)))
+      : asset == renbtc
+      ? amount
+      : fromETHToRenBTC(minOut, msg.value.sub(applyRatio(msg.value, burnFee)));
     IGateway(btcGateway).burn(destination, amountToBurn);
   }
 

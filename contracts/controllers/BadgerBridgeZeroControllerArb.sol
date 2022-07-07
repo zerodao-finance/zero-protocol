@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import { IUniswapV2Router02 } from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import { ISwapRouter } from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import { IQuoter } from "@uniswap/v3-periphery/contracts/interfaces/IQuoter.sol";
 import { UniswapV2Library } from "../libraries/UniswapV2Library.sol";
 import { ZeroLib } from "../libraries/ZeroLib.sol";
 import { IERC2612Permit } from "../interfaces/IERC2612Permit.sol";
@@ -14,6 +15,7 @@ import { ICurveFi } from "../interfaces/ICurveFi.sol";
 import { IGateway } from "../interfaces/IGateway.sol";
 import { IWETH9 } from "@uniswap/v3-periphery/contracts/interfaces/external/IWETH9.sol";
 import { ICurveETHUInt256 } from "../interfaces/CurvePools/ICurveETHUInt256.sol";
+import { ICurveInt128 } from "../interfaces/CurvePools/ICurveInt128.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IyVault } from "../interfaces/IyVault.sol";
 import { ISett } from "../interfaces/ISett.sol";
@@ -43,13 +45,13 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   address constant renCrvLp = 0x3E01dD8a5E1fb3481F0F589056b428Fc308AF0Fb;
   address constant bCrvRen = 0x6dEf55d2e18486B9dDfaA075bc4e4EE0B28c1545;
   address constant settPeak = 0x41671BA1abcbA387b9b2B752c205e22e916BE6e3;
+  address constant quoter = 0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6;
   address constant ibbtc = 0xc4E15973E6fF2A35cC804c2CF9D2a1b817a8b40F;
   uint24 constant wethWbtcFee = 500;
   uint24 constant usdcWethFee = 500;
   uint256 public governanceFee;
-  bytes32 constant PERMIT_TYPEHASH =
-    0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
-  bytes32 constant LOCK_SLOT = keccak256('upgrade-lock-v2');
+  bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
+  bytes32 constant LOCK_SLOT = keccak256("upgrade-lock-v2");
   uint256 constant GAS_COST = uint256(48e4);
   uint256 constant IBBTC_GAS_COST = uint256(7e5);
   uint256 constant ETH_RESERVE = uint256(5 ether);
@@ -83,9 +85,6 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     assembly {
       sstore(lock_slot, lock)
     }
-
-    IERC20(wbtc).safeApprove(routerv3, ~uint256(0) >> 2);
-    IERC20(usdc).safeApprove(routerv3, ~uint256(0) >> 2);
   }
 
   function computeCalldataGasDiff() internal pure returns (uint256 diff) {
@@ -140,6 +139,8 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     IERC20(wbtc).safeApprove(renCrv, ~uint256(0) >> 2);
     IERC20(wbtc).safeApprove(tricrypto, ~uint256(0) >> 2);
     IERC20(renCrvLp).safeApprove(bCrvRen, ~uint256(0) >> 2);
+    IERC20(wbtc).safeApprove(routerv3, ~uint256(0) >> 2);
+    IERC20(usdc).safeApprove(routerv3, ~uint256(0) >> 2);
     //IERC20(bCrvRen).safeApprove(settPeak, ~uint256(0) >> 2);
     PERMIT_DOMAIN_SEPARATOR_WBTC = keccak256(
       abi.encode(
@@ -198,8 +199,9 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   }
 
   function quote() internal {
-    (uint256 amountWeth, uint256 amountRenBTC) = UniswapV2Library.getReserves(factory, weth, renbtc);
-    renbtcForOneETHPrice = UniswapV2Library.quote(uint256(1 ether), amountWeth, amountRenBTC);
+    bytes memory path = abi.encodePacked(wbtc, uint24(500), weth);
+    uint256 wbtcForEthPrice = IQuoter(quoter).quoteExactInput(path, 1 ether);
+    renbtcForOneETHPrice = ICurveInt128(renCrv).get_dy(1, 0, wbtcForEthPrice);
   }
 
   function renBTCtoETH(
@@ -387,6 +389,7 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     bytes memory data,
     bytes memory signature
   ) public returns (uint256 amountOut) {
+    require(msg.data.length <= 516, "too much calldata");
     uint256 _gasBefore = gasleft();
     LoanParams memory params;
     {
@@ -491,6 +494,7 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
     bytes memory destination,
     bytes memory signature
   ) public returns (uint256 amountToBurn) {
+    require(msg.data.length <= 580, "too much calldata");
     BurnLocals memory params = BurnLocals({
       to: to,
       asset: asset,
@@ -595,6 +599,23 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
 
   function burnETH(uint256 minOut, bytes memory destination) public payable returns (uint256 amountToBurn) {
     amountToBurn = fromETHToRenBTC(minOut, msg.value.sub(applyRatio(msg.value, burnFee)));
+    IGateway(btcGateway).burn(destination, amountToBurn);
+  }
+
+  function burnApproved(
+    address from,
+    address asset,
+    uint256 amount,
+    uint256 minOut,
+    bytes memory destination
+  ) public payable returns (uint256 amountToBurn) {
+    require(asset == wbtc || asset == usdc || asset == renbtc || asset == address(0x0), "!approved-module");
+    if (asset != address(0x0)) IERC20(asset).transferFrom(msg.sender, address(this), amount);
+    amountToBurn = asset == wbtc ? toRenBTC(amount.sub(applyRatio(amount, burnFee))) : asset == usdc
+      ? fromUSDC(minOut, amount.sub(applyRatio(amount, burnFee)))
+      : asset == renbtc
+      ? amount
+      : fromETHToRenBTC(minOut, msg.value.sub(applyRatio(msg.value, burnFee)));
     IGateway(btcGateway).burn(destination, amountToBurn);
   }
 

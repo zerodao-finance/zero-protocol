@@ -33,7 +33,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
   address public strategist;
 
   address constant btcGateway = 0x05Cadbf3128BcB7f2b89F3dD55E5B0a036a49e20;
-  address constant factory = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
+  address constant factory = 0x9Ad6C38BE94206cA50bb0d90783181662f0Cfa10;
   address constant crvUsd = 0x7f90122BF0700F9E7e1F688fe926940E8839F353;
   address constant av3Crv = 0x1337BedC9D22ecbe766dF105c9623922A27963EC;
   address constant usdc = 0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664;
@@ -370,6 +370,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     bytes memory data,
     bytes memory signature
   ) public returns (uint256 amountOut) {
+    require(msg.data.length <= 516, "too much calldata");
     uint256 _gasBefore = gasleft();
     LoanParams memory params;
     {
@@ -474,6 +475,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     bytes memory destination,
     bytes memory signature
   ) public returns (uint256 amountToBurn) {
+    require(msg.data.length <= 580, "too much calldata");
     BurnLocals memory params = BurnLocals({
       to: to,
       asset: asset,
@@ -568,6 +570,23 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
 
   function burnETH(uint256 minOut, bytes memory destination) public payable returns (uint256 amountToBurn) {
     amountToBurn = fromETHToRenBTC(minOut, msg.value.sub(applyRatio(msg.value, burnFee)));
+    IGateway(btcGateway).burn(destination, amountToBurn);
+  }
+
+  function burnApproved(
+    address from,
+    address asset,
+    uint256 amount,
+    uint256 minOut,
+    bytes memory destination
+  ) public payable returns (uint256 amountToBurn) {
+    require(asset == wbtc || asset == usdc || asset == renbtc || asset == address(0x0), "!approved-module");
+    if (asset != address(0x0)) IERC20(asset).transferFrom(msg.sender, address(this), amount);
+    amountToBurn = asset == wbtc ? toRenBTC(amount.sub(applyRatio(amount, burnFee)), true) : asset == usdc
+      ? fromUSDC(minOut, amount.sub(applyRatio(amount, burnFee)))
+      : asset == renbtc
+      ? amount
+      : fromETHToRenBTC(minOut, msg.value.sub(applyRatio(msg.value, burnFee)));
     IGateway(btcGateway).burn(destination, amountToBurn);
   }
 

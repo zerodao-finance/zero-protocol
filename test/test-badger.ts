@@ -543,4 +543,60 @@ describe("BadgerBridgeZeroController", () => {
   //   const tx = await transferRequest.burn(signer);
   //   console.log("Gas Used:", (await tx.wait()).gasUsed.toString());
   // });
+  it("should test burnApproved", async () => {
+    const contractAddress = (await getController()).address;
+    deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
+    const [signer] = await hre.ethers.getSigners();
+    const { chainId } = await signer.provider.getNetwork();
+    const Dummy = await hre.deployments.deploy("DummyBurnCaller", {
+      from: await signer.getAddress(),
+      args: [contractAddress, deployParameters[process.env.CHAIN].renBTC],
+    });
+    const transferRequest = new UnderwriterTransferRequest({
+      contractAddress,
+      nonce: utils.hexlify(utils.randomBytes(32)),
+      to: await signer.getAddress(),
+      pNonce: utils.hexlify(utils.randomBytes(32)),
+      module: deployParameters[process.env.CHAIN].renBTC,
+      amount: utils.hexlify(utils.parseUnits("0.005", 8)),
+      asset: deployParameters[process.env.CHAIN].WBTC,
+      chainId,
+      data: utils.defaultAbiCoder.encode(["uint256"], ["1"]),
+      underwriter: contractAddress,
+    });
+    transferRequest.requestType = "TRANSFER";
+    await transferRequest.sign(signer);
+    console.log("signed", transferRequest.signature);
+    const tx = await transferRequest.repay(signer);
+    const burnRequest = new UnderwriterBurnRequest({
+      contractAddress: Dummy.receipt.contractAddress,
+      owner: await signer.getAddress(),
+      amount: utils.hexlify(utils.parseUnits("0.005", 8)),
+      asset: deployParameters[process.env.CHAIN].renBTC,
+      chainId,
+      underwriter: contractAddress,
+      deadline: Math.floor((+new Date() + 1000 * 60 * 60 * 24) / 1000),
+      destination: utils.hexlify(utils.randomBytes(64)),
+      data: utils.defaultAbiCoder.encode(["uint256"], ["1"]),
+    });
+    transferRequest.requestType = "BURN";
+    await burnRequest.sign(signer, Dummy.receipt.contractAddress);
+    const dummy = new ethers.Contract(
+      Dummy.receipt.contractAddress,
+      Dummy.abi,
+      signer
+    );
+    await dummy.callBurn(
+      contractAddress,
+      await signer.getAddress(),
+      burnRequest.asset,
+      burnRequest.amount,
+      burnRequest.getExpiry(),
+      burnRequest.signature,
+      burnRequest.destination
+    );
+  });
+  it("should test earn", async () => {
+    await (await getController()).earn();
+  });
 });

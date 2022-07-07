@@ -44,14 +44,12 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
   address constant renCrvLp = 0x49849C98ae39Fff122806C06791Fa73784FB3675;
   address constant bCrvRen = 0x6dEf55d2e18486B9dDfaA075bc4e4EE0B28c1545;
   address constant settPeak = 0x41671BA1abcbA387b9b2B752c205e22e916BE6e3;
-  address constant ibbtc = 0xc4E15973E6fF2A35cC804c2CF9D2a1b817a8b40F;
   uint24 constant wethWbtcFee = 500;
   uint24 constant usdcWethFee = 500;
   uint256 public governanceFee;
   bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
   bytes32 constant LOCK_SLOT = keccak256("upgrade-lock-v2");
   uint256 constant GAS_COST = uint256(42e4);
-  uint256 constant IBBTC_GAS_COST = uint256(7e5);
   uint256 constant ETH_RESERVE = uint256(5 ether);
   uint256 internal renbtcForOneETHPrice;
   uint256 internal burnFee;
@@ -60,7 +58,6 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
   uint256 public constant BURN_GAS_DIFF = 41118;
   mapping(address => uint256) public nonces;
   bytes32 internal PERMIT_DOMAIN_SEPARATOR_WBTC;
-  bytes32 internal PERMIT_DOMAIN_SEPARATOR_IBBTC;
 
   function setStrategist(address _strategist) public {
     require(msg.sender == governance, "!governance");
@@ -83,9 +80,6 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     assembly {
       sstore(lock_slot, lock)
     }
-
-    IERC20(wbtc).safeApprove(routerv3, ~uint256(0) >> 2);
-    IERC20(usdc).safeApprove(routerv3, ~uint256(0) >> 2);
   }
 
   function computeCalldataGasDiff() internal pure returns (uint256 diff) {
@@ -139,10 +133,8 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     IERC20(renbtc).safeApprove(renCrv, ~uint256(0) >> 2);
     IERC20(wbtc).safeApprove(renCrv, ~uint256(0) >> 2);
     IERC20(wbtc).safeApprove(tricrypto, ~uint256(0) >> 2);
-    IERC20(renCrvLp).safeApprove(bCrvRen, ~uint256(0) >> 2);
-    IERC20(bCrvRen).safeApprove(settPeak, ~uint256(0) >> 2);
-    IERC20(renbtc).safeApprove(router, ~uint256(0) >> 2);
-    IERC20(usdc).safeApprove(router, ~uint256(0) >> 2);
+    IERC20(wbtc).safeApprove(routerv3, ~uint256(0) >> 2);
+    IERC20(usdc).safeApprove(routerv3, ~uint256(0) >> 2);
     PERMIT_DOMAIN_SEPARATOR_WBTC = keccak256(
       abi.encode(
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
@@ -150,15 +142,6 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
         keccak256("1"),
         getChainId(),
         wbtc
-      )
-    );
-    PERMIT_DOMAIN_SEPARATOR_IBBTC = keccak256(
-      abi.encode(
-        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-        keccak256("ibBTC"),
-        keccak256("1"),
-        getChainId(),
-        ibbtc
       )
     );
   }
@@ -171,15 +154,6 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     uint256 amountStart = IERC20(wbtc).balanceOf(address(this));
     (bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 0, 1, amount));
     amountOut = IERC20(wbtc).balanceOf(address(this)).sub(amountStart);
-  }
-
-  function toIBBTC(uint256 amountIn) internal returns (uint256 amountOut) {
-    uint256[2] memory amounts;
-    amounts[0] = amountIn;
-    (bool success, ) = renCrv.call(abi.encodeWithSelector(ICurveFi.add_liquidity.selector, amounts, 0));
-    require(success, "!curve");
-    ISett(bCrvRen).deposit(IERC20(renCrvLp).balanceOf(address(this)));
-    amountOut = IBadgerSettPeak(settPeak).mint(0, IERC20(bCrvRen).balanceOf(address(this)), new bytes32[](0));
   }
 
   function toUSDC(
@@ -226,20 +200,21 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     recipient.transfer(amountOut);
   }
 
-  function fromIBBTC(uint256 amountIn) internal returns (uint256 amountOut) {
-    uint256 amountStart = IERC20(renbtc).balanceOf(address(this));
-    IBadgerSettPeak(settPeak).redeem(0, amountIn);
-    ISett(bCrvRen).withdraw(IERC20(bCrvRen).balanceOf(address(this)));
-    (bool success, ) = renCrv.call(
-      abi.encodeWithSelector(
-        ICurveFi.remove_liquidity_one_coin.selector,
-        IERC20(renCrvLp).balanceOf(address(this)),
-        0,
-        0
-      )
-    );
-    require(success, "!curve");
-    amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
+  function burnApproved(
+    address from,
+    address asset,
+    uint256 amount,
+    uint256 minOut,
+    bytes memory destination
+  ) public payable returns (uint256 amountToBurn) {
+    require(asset == wbtc || asset == usdc || asset == renbtc || asset == address(0x0), "!approved-module");
+    if (asset != address(0x0)) IERC20(asset).transferFrom(msg.sender, address(this), amount);
+    amountToBurn = asset == wbtc ? toRenBTC(amount.sub(applyRatio(amount, burnFee))) : asset == usdc
+      ? fromUSDC(minOut, amount.sub(applyRatio(amount, burnFee)))
+      : asset == renbtc
+      ? amount
+      : fromETHToRenBTC(minOut, msg.value.sub(applyRatio(msg.value, burnFee)));
+    IGateway(btcGateway).burn(destination, amountToBurn);
   }
 
   function toRenBTC(uint256 amountIn) internal returns (uint256 amountOut) {
@@ -316,16 +291,8 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     amount = amountIn.sub(applyFee(amountIn, fee, multiplier));
   }
 
-  function deductIBBTCMintFee(uint256 amountIn, uint256 multiplier) internal view returns (uint256 amount) {
-    amount = amountIn.sub(applyIBBTCFee(amountIn, fee, multiplier));
-  }
-
   function deductBurnFee(uint256 amountIn, uint256 multiplier) internal view returns (uint256 amount) {
     amount = amountIn.sub(applyFee(amountIn, burnFee, multiplier));
-  }
-
-  function deductIBBTCBurnFee(uint256 amountIn, uint256 multiplier) internal view returns (uint256 amount) {
-    amount = amountIn.sub(applyIBBTCFee(amountIn, burnFee, multiplier));
   }
 
   function applyFee(
@@ -334,16 +301,6 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     uint256 multiplier
   ) internal view returns (uint256 amount) {
     amount = computeRenBTCGasFee(GAS_COST.add(keeperReward.div(tx.gasprice)), tx.gasprice).add(
-      applyRatio(amountIn, _fee)
-    );
-  }
-
-  function applyIBBTCFee(
-    uint256 amountIn,
-    uint256 _fee,
-    uint256 multiplier
-  ) internal view returns (uint256 amount) {
-    amount = computeRenBTCGasFee(IBBTC_GAS_COST.add(keeperReward.div(tx.gasprice)), tx.gasprice).add(
       applyRatio(amountIn, _fee)
     );
   }
@@ -396,10 +353,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     uint256 _gasBefore = gasleft();
     LoanParams memory params;
     {
-      require(
-        module == wbtc || module == usdc || module == ibbtc || module == renbtc || module == address(0x0),
-        "!approved-module"
-      );
+      require(module == wbtc || module == usdc || module == renbtc || module == address(0x0), "!approved-module");
       params = LoanParams({
         to: to,
         asset: asset,
@@ -428,8 +382,6 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
         ? renBTCtoETH(params.minOut, deductMintFee(params._mintAmount, 1), to)
         : module == usdc
         ? toUSDC(params.minOut, deductMintFee(params._mintAmount, 1), to)
-        : module == ibbtc
-        ? toIBBTC(deductIBBTCMintFee(params._mintAmount, 3))
         : deductMintFee(params._mintAmount, 1);
     }
     {
@@ -531,17 +483,6 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
       {
         IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
         amountToBurn = toRenBTC(deductBurnFee(params.amount, 1));
-      }
-    } else if (asset == ibbtc) {
-      params.nonce = nonces[to];
-      nonces[to]++;
-      require(
-        params.to == ECDSA.recover(computeERC20PermitDigest(PERMIT_DOMAIN_SEPARATOR_IBBTC, params), params.signature),
-        "!signature"
-      ); //  wbtc ibbtc do not implement ERC20Permit
-      {
-        IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
-        amountToBurn = deductIBBTCBurnFee(fromIBBTC(params.amount), 3);
       }
     } else if (params.asset == renbtc) {
       {
