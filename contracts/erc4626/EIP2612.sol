@@ -18,7 +18,7 @@ abstract contract EIP2612 is EIP2612Base, SignatureVerification {
     uint8,
     bytes32,
     bytes32
-  ) public virtual RestoreTwoWords(0x80, 0xa0) RestoreFreeMemoryPointer RestoreZeroSlot {
+  ) public virtual {
     if (deadline < block.timestamp) {
       revert PermitDeadlineExpired(deadline, block.timestamp);
     }
