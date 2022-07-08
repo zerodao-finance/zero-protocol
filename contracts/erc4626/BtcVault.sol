@@ -48,16 +48,6 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
   IGatewayRegistry public immutable gatewayRegistry;
   string public constant version = "v0.1";
 
-  function _getSatoshiPerEth() internal view returns (uint256) {
-    uint256 ethPerBitcoin = btcEthPriceOracle.latestAnswer();
-    return BtcEthPriceInversionNumerator / ethPerBitcoin;
-  }
-
-  function _getGweiPerGas() internal view returns (uint256) {
-    uint256 gasPrice = gasPriceOracle.latestAnswer();
-    return gasPrice / 1e9;
-  }
-
   constructor(
     IGatewayRegistry _gatewayRegistry,
     address _btcAddress,
@@ -94,6 +84,23 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
     }
   }
 
+  function _getSatoshiPerEth() internal view returns (uint256) {
+    uint256 ethPerBitcoin = btcEthPriceOracle.latestAnswer();
+    return BtcEthPriceInversionNumerator / ethPerBitcoin;
+  }
+
+  function _getGweiPerGas() internal view returns (uint256) {
+    uint256 gasPrice = gasPriceOracle.latestAnswer();
+    return gasPrice / 1e9;
+  }
+
+  function setGlobalFees(uint256 dynamicBorrowFeeBips, uint256 staticBorrowFee) external onlyGovernance {
+    if (dynamicBorrowFeeBips > 1500) {
+      revert DynamicBorrowFeeTooHigh(dynamicBorrowFeeBips);
+    }
+    _globalFees = _globalFees.setConfig(dynamicBorrowFeeBips, staticBorrowFee);
+  }
+
   function getGlobalFees()
     external
     view
@@ -106,6 +113,10 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
     )
   {
     return _globalFees.decode();
+  }
+
+  function pokeGlobalFees() external {
+    _getUpdatedGlobalFees();
   }
 
   function getModuleFees(address module)
@@ -125,11 +136,14 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
   }
 
   function _getUpdatedGlobalFees() internal returns (GlobalFees fees, uint256 lastUpdateTimestamp) {
-    lastUpdateTimestamp = fees.getLastUpdateTimestamp();
     fees = _globalFees;
+    lastUpdateTimestamp = fees.getLastUpdateTimestamp();
     if (block.timestamp - lastUpdateTimestamp > feesTimeToLive) {
-      fees = fees.setCached(_getSatoshiPerEth(), _getGweiPerGas(), block.timestamp);
+      uint256 satoshiPerEth = _getSatoshiPerEth();
+      uint256 gweiPerGas = _getGweiPerGas();
+      fees = fees.setCached(satoshiPerEth, gweiPerGas, block.timestamp);
       _globalFees = fees;
+      emit GlobalFeesCacheUpdated(satoshiPerEth, gweiPerGas);
     }
   }
 
@@ -139,7 +153,7 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
     uint256 repayGasE4
   )
     internal
-    view
+    pure
     returns (
       uint256 loanRefundEth,
       uint256 repayRefundEth,
@@ -168,6 +182,9 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
     uint256 lastGlobalUpdateTimestamp;
     (globalFees, lastGlobalUpdateTimestamp) = _getUpdatedGlobalFees();
     moduleFees = _moduleFees[module];
+    if (ModuleFees.unwrap(moduleFees) == 0) {
+      revert ModuleNotApproved();
+    }
     if (moduleFees.getLastUpdateTimestamp() < lastGlobalUpdateTimestamp) {
       (uint256 loanGasE4, uint256 repayGasE4) = moduleFees.getGasParams();
       (uint256 loanRefundEth, uint256 repayRefundEth, uint256 staticBorrowFee) = _calculateModuleFees(
@@ -182,33 +199,37 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
 
   function addModule(
     address module,
-    bool overrideRepayAndLoan,
+    ModuleType moduleType,
     uint256 loanGas,
     uint256 repayGas
   ) external onlyGovernance {
-    if (IZeroModule(module).asset() != asset) {
-      revert ModuleAssetDoesNotMatch(module);
+    if (module != address(0)) {
+      address moduleAsset = IZeroModule(module).asset();
+      if (moduleAsset != asset) {
+        revert ModuleAssetDoesNotMatch(moduleAsset);
+      }
+    }
+    if ((moduleType == ModuleType.Null) != (module == address(0))) {
+      revert InvalidModuleType();
     }
     uint256 loanGasE4 = (loanGas + 9999) / 10000;
     uint256 repayGasE4 = (repayGas + 9999) / 10000;
     (GlobalFees globalFees, ) = _getUpdatedGlobalFees();
+
     (uint256 loanRefundEth, uint256 repayRefundEth, uint256 staticBorrowFee) = _calculateModuleFees(
       globalFees,
       loanGasE4,
       repayGasE4
     );
-    ModuleType moduleType;
-    assembly {
-      moduleType := add(1, overrideRepayAndLoan)
-    }
+
     _moduleFees[module] = ModuleFeesCoder.encode(
       moduleType,
       loanGasE4,
       repayGasE4,
-      uint64(loanRefundEth),
-      uint64(repayRefundEth),
-      uint24(staticBorrowFee),
-      uint32(block.timestamp)
+      loanRefundEth,
+      repayRefundEth,
+      staticBorrowFee,
+      block.timestamp
     );
 
     emit ModuleFeesUpdated(module, moduleType, loanGasE4, repayGasE4);
@@ -232,7 +253,7 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
     bytes32 loanId,
     uint256 borrowAmount,
     bytes memory data
-  ) internal RestoreFiveWordsBefore(data) returns (uint256 collateralToLock, uint256 gasRefundEth) {
+  ) internal RestoreFiveWordsBefore(data) {
     assembly {
       let startPtr := sub(data, 0x84)
       // Write receiveLoan selector
@@ -248,7 +269,7 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
       // Size of data + (selector, borrower, borrowAmount, loanId, data_offset, data_length)
       let calldataLength := add(mload(data), 0xa4)
 
-      let status := delegatecall(gas(), module, startPtr, calldataLength, 0, 0x40)
+      let status := delegatecall(gas(), module, startPtr, calldataLength, 0, 0)
       if iszero(status) {
         if returndatasize() {
           returndatacopy(0, 0, returndatasize())
@@ -262,9 +283,6 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
         mstore(add(startPtr, 0x64), 0xa0)
         revert(sub(startPtr, 0x20), add(calldataLength, 0x20))
       }
-
-      collateralToLock := mload(0)
-      gasRefundEth := mload(0x20)
     }
   }
 
@@ -274,7 +292,7 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
     address borrower,
     uint256 repayAmount,
     bytes memory data
-  ) internal RestoreFiveWordsBefore(data) returns (uint256 collateralToUnlock, uint256 gasRefundEth) {
+  ) internal RestoreFiveWordsBefore(data) returns (uint256 collateralToUnlock) {
     assembly {
       let startPtr := sub(data, 0x84)
       // Write repayLoan selector
@@ -291,7 +309,7 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
       // Size of data + (selector, borrower, repayAmount, loanId, data_offset, data_length)
       let calldataLength := add(mload(data), 0xa4)
 
-      let status := delegatecall(gas(), module, startPtr, calldataLength, 0, 0x40)
+      let status := delegatecall(gas(), module, startPtr, calldataLength, 0, 0x20)
       if iszero(status) {
         if returndatasize() {
           returndatacopy(0, 0, returndatasize())
@@ -307,7 +325,6 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
       }
 
       collateralToUnlock := mload(0)
-      gasRefundEth := mload(0x20)
     }
   }
 
@@ -338,10 +355,6 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
     (GlobalFees globalFees, ModuleFees moduleFees) = _getUpdatedGlobalAndModuleFees(module);
     (ModuleType moduleType, uint256 loanRefundEth, uint256 staticBorrowFee) = moduleFees.getLoanParams();
 
-    if (moduleType == ModuleType.Null && module != address(0)) {
-      revert ModuleNotApproved();
-    }
-
     bytes32 loanId = verifyTransferRequestSignature(borrower, asset, borrowAmount, module, nonce, data, signature);
 
     borrowAmount -= getLoanFee(globalFees, borrowAmount, staticBorrowFee);
@@ -352,7 +365,7 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
 
     bool overrideLoan;
     assembly {
-      overrideLoan := gt(moduleType, 1)
+      overrideLoan := gt(moduleType, 0)
     }
     if (overrideLoan) {
       // Execute module interaction
@@ -381,27 +394,24 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
     uint256 nonce,
     address module,
     bytes32 nHash,
-    bytes memory data,
-    bytes memory signature
+    bytes memory signature,
+    bytes memory data
   ) external nonReentrant {
     (, ModuleFees moduleFees) = _getUpdatedGlobalAndModuleFees(module);
 
     bytes32 loanId = digestTransferRequest(asset, borrowAmount, module, nonce, data);
     uint256 mintAmount = getGateway().mint(loanId, borrowAmount, nHash, signature);
 
-    bool repayOverride;
-    {
-      ModuleType moduleType = moduleFees.getModuleType();
-      assembly {
-        repayOverride := or(eq(moduleType, 1), eq(moduleType, 3))
-      }
-    }
-    if (repayOverride) {
-      (uint256 collateralToUnlock, ) = executeRepayLoan(module, loanId, borrower, mintAmount, data);
+    (ModuleType moduleType, uint256 repayRefundEth) = moduleFees.getRepayParams();
+
+    if (moduleType == ModuleType.LoanAndRepayOverride) {
+      uint256 collateralToUnlock = executeRepayLoan(module, loanId, borrower, mintAmount, data);
       _repayTo(lender, uint256(loanId), collateralToUnlock);
     } else {
       _repayTo(lender, uint256(loanId), mintAmount);
     }
-    tx.origin.safeTransferETH(moduleFees.getRepayRefundEth());
+    tx.origin.safeTransferETH(repayRefundEth);
   }
+
+  receive() external payable {}
 }

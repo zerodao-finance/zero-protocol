@@ -2,7 +2,6 @@
 pragma solidity >=0.8.13;
 
 import "./EIP712/AbstractEIP712.sol";
-import "./utils/MemoryRestoration.sol";
 import { ECDSA } from "oz460/utils/cryptography/ECDSA.sol";
 
 // With underwriter
@@ -27,7 +26,7 @@ bytes constant TransferRequestTypeString = "TransferRequest(address asset,uint25
 bytes constant MetaRequestTypeString = "MetaRequest(address asset,uint256 amount,address module,uint256 nonce,bytes data)";
 bytes constant PermitTypeString = "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)";
 
-abstract contract SignatureVerification is AbstractEIP712, MemoryRestoration {
+abstract contract SignatureVerification is AbstractEIP712 {
   error InvalidSigner();
 
   constructor() {
@@ -56,6 +55,17 @@ abstract contract SignatureVerification is AbstractEIP712, MemoryRestoration {
       mstore(0x22, permitHash)
       digest := keccak256(0, 0x42)
     }
+  }
+
+  function _digestPermit(uint256 nonce, uint256 deadline)
+    internal
+    view
+    RestoreTwoWords(0x80, 0xa0)
+    RestoreFreeMemoryPointer
+    RestoreZeroSlot
+    returns (bytes32)
+  {
+    return digestPermit(nonce, deadline);
   }
 
   function verifyPermitSignature(
@@ -95,7 +105,7 @@ abstract contract SignatureVerification is AbstractEIP712, MemoryRestoration {
     address module,
     uint256 nonce,
     bytes memory data
-  ) internal view RestoreFreeMemoryPointer RestoreZeroSlot RestoreTwoWords(0x80, 0xa0) returns (bytes32 digest) {
+  ) internal view RestoreFreeMemoryPointer RestoreZeroSlot RestoreFirstTwoUnreservedSlots returns (bytes32 digest) {
     bytes32 domainSeparator = getDomainSeparator();
     assembly {
       mstore(0x0, _TRANSFER_REQUEST_TYPE_HASH)
