@@ -48,11 +48,8 @@ library GlobalFeesCoder {
 	) internal pure returns (GlobalFees encoded) {
 		assembly {
 			if or(
-				gt(dynamicBorrowFeeBips, MaxUint16),
-				or(
-					gt(staticBorrowFee, MaxUint24),
-					or(gt(satoshiPerEth, MaxUint40), or(gt(gweiPerGas, MaxUint16), gt(lastUpdateTimestamp, MaxUint32)))
-				)
+				gt(staticBorrowFee, MaxUint24),
+				or(gt(satoshiPerEth, MaxUint40), or(gt(gweiPerGas, MaxUint16), gt(lastUpdateTimestamp, MaxUint32)))
 			) {
 				mstore(0, Panic_error_signature)
 				mstore(Panic_error_offset, Panic_arithmetic)
@@ -90,11 +87,6 @@ library GlobalFeesCoder {
 		returns (GlobalFees updated)
 	{
 		assembly {
-			if gt(dynamicBorrowFeeBips, MaxUint16) {
-				mstore(0, Panic_error_signature)
-				mstore(Panic_error_offset, Panic_arithmetic)
-				revert(0, Panic_error_length)
-			}
 			updated := or(
 				and(old, GlobalFees_dynamicBorrowFeeBips_maskOut),
 				shl(GlobalFees_dynamicBorrowFeeBips_bitsAfter, dynamicBorrowFeeBips)
@@ -293,7 +285,7 @@ library GlobalFeesCoder {
 		uint256 staticBorrowFee
 	) internal pure returns (GlobalFees updated) {
 		assembly {
-			if or(gt(dynamicBorrowFeeBips, MaxUint16), gt(staticBorrowFee, MaxUint24)) {
+			if gt(staticBorrowFee, MaxUint24) {
 				mstore(0, Panic_error_signature)
 				mstore(Panic_error_offset, Panic_arithmetic)
 				revert(0, Panic_error_length)
