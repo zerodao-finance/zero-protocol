@@ -4,7 +4,7 @@ enum ModuleType {
   LoanAndRepayOverride
 }
 struct ModuleFees {
-  ModuleType moduleType;
+  ModuleType moduleType exact;
   // gas to refund keeper for executing a loan call (set by governance)
   uint8 loanGasE4;
   // gas to refund keeper for executing a repay call (set by governance)
@@ -24,9 +24,14 @@ struct ModuleFees {
   uint32 lastUpdateTimestamp;
 
   group LoanParams {
-    moduleType;
+    moduleType exact;
     loanRefundEth;
     staticBorrowFee;
+  }
+
+  group RepayParams {
+    moduleType exact;
+    repayRefundEth;
   }
 
   group Cached {
