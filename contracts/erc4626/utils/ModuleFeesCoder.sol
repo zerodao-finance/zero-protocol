@@ -25,7 +25,7 @@ library ModuleFeesCoder {
 		internal
 		pure
 		returns (
-			uint256 moduleType,
+			ModuleType moduleType,
 			uint256 loanGasE4,
 			uint256 repayGasE4,
 			uint256 loanRefundEth,
@@ -46,7 +46,7 @@ library ModuleFeesCoder {
 	}
 
 	function encode(
-		uint256 moduleType,
+		ModuleType moduleType,
 		uint256 loanGasE4,
 		uint256 repayGasE4,
 		uint256 loanRefundEth,
@@ -56,15 +56,12 @@ library ModuleFeesCoder {
 	) internal pure returns (ModuleFees encoded) {
 		assembly {
 			if or(
-				gt(moduleType, MaxUint8),
+				gt(loanGasE4, MaxUint8),
 				or(
-					gt(loanGasE4, MaxUint8),
+					gt(repayGasE4, MaxUint8),
 					or(
-						gt(repayGasE4, MaxUint8),
-						or(
-							gt(loanRefundEth, MaxUint64),
-							or(gt(repayRefundEth, MaxUint64), or(gt(staticBorrowFee, MaxUint24), gt(lastUpdateTimestamp, MaxUint32)))
-						)
+						gt(loanRefundEth, MaxUint64),
+						or(gt(repayRefundEth, MaxUint64), or(gt(staticBorrowFee, MaxUint24), gt(lastUpdateTimestamp, MaxUint32)))
 					)
 				)
 			) {
@@ -98,19 +95,14 @@ library ModuleFeesCoder {
                   ModuleFees.moduleType coders
 //////////////////////////////////////////////////////////////*/
 
-	function getModuleType(ModuleFees encoded) internal pure returns (uint256 moduleType) {
+	function getModuleType(ModuleFees encoded) internal pure returns (ModuleType moduleType) {
 		assembly {
 			moduleType := shr(ModuleFees_moduleType_bitsAfter, encoded)
 		}
 	}
 
-	function setModuleType(ModuleFees old, uint256 moduleType) internal pure returns (ModuleFees updated) {
+	function setModuleType(ModuleFees old, ModuleType moduleType) internal pure returns (ModuleFees updated) {
 		assembly {
-			if gt(moduleType, MaxUint8) {
-				mstore(0, Panic_error_signature)
-				mstore(Panic_error_offset, Panic_arithmetic)
-				revert(0, Panic_error_length)
-			}
 			updated := or(and(old, ModuleFees_moduleType_maskOut), shl(ModuleFees_moduleType_bitsAfter, moduleType))
 		}
 	}
@@ -260,12 +252,12 @@ library ModuleFeesCoder {
 
 	function setLoanParams(
 		ModuleFees old,
-		uint256 moduleType,
+		ModuleType moduleType,
 		uint256 loanRefundEth,
 		uint256 staticBorrowFee
 	) internal pure returns (ModuleFees updated) {
 		assembly {
-			if or(gt(moduleType, MaxUint8), or(gt(loanRefundEth, MaxUint64), gt(staticBorrowFee, MaxUint24))) {
+			if or(gt(loanRefundEth, MaxUint64), gt(staticBorrowFee, MaxUint24)) {
 				mstore(0, Panic_error_signature)
 				mstore(Panic_error_offset, Panic_arithmetic)
 				revert(0, Panic_error_length)
@@ -287,7 +279,7 @@ library ModuleFeesCoder {
 		internal
 		pure
 		returns (
-			uint256 moduleType,
+			ModuleType moduleType,
 			uint256 loanRefundEth,
 			uint256 staticBorrowFee
 		)
@@ -296,6 +288,35 @@ library ModuleFeesCoder {
 			moduleType := shr(ModuleFees_moduleType_bitsAfter, encoded)
 			loanRefundEth := and(MaxUint64, shr(ModuleFees_loanRefundEth_bitsAfter, encoded))
 			staticBorrowFee := and(MaxUint24, shr(ModuleFees_staticBorrowFee_bitsAfter, encoded))
+		}
+	}
+
+	/*//////////////////////////////////////////////////////////////
+                  ModuleFees RepayParams Group
+//////////////////////////////////////////////////////////////*/
+
+	function setRepayParams(
+		ModuleFees old,
+		ModuleType moduleType,
+		uint256 repayRefundEth
+	) internal pure returns (ModuleFees updated) {
+		assembly {
+			if gt(repayRefundEth, MaxUint64) {
+				mstore(0, Panic_error_signature)
+				mstore(Panic_error_offset, Panic_arithmetic)
+				revert(0, Panic_error_length)
+			}
+			updated := or(
+				and(old, ModuleFees_RepayParams_maskOut),
+				or(shl(ModuleFees_moduleType_bitsAfter, moduleType), shl(ModuleFees_repayRefundEth_bitsAfter, repayRefundEth))
+			)
+		}
+	}
+
+	function getRepayParams(ModuleFees encoded) internal pure returns (ModuleType moduleType, uint256 repayRefundEth) {
+		assembly {
+			moduleType := shr(ModuleFees_moduleType_bitsAfter, encoded)
+			repayRefundEth := and(MaxUint64, shr(ModuleFees_repayRefundEth_bitsAfter, encoded))
 		}
 	}
 
