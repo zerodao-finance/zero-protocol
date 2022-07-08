@@ -6,8 +6,7 @@ import { EIP2612 } from "../EIP2612.sol";
 import { SafeCastLib } from "../utils/SafeCastLib.sol";
 import { FixedPointMathLib } from "../utils/FixedPointMathLib.sol";
 import "../storage/LendableSharesVaultBase.sol";
-import "../utils/OverflowConstants.sol";
-import "../utils/MaxUintConstants.sol";
+import "../utils/CoderConstants.sol";
 
 uint256 constant LoanIdNotUnique_selector = 0x4e435beb00000000000000000000000000000000000000000000000000000000;
 uint256 constant LoanIdNotUnique_loanId_ptr = 0x04;
