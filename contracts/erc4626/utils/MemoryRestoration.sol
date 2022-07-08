@@ -48,6 +48,31 @@ contract MemoryRestoration {
     }
   }
 
+  modifier RestoreFourWords(
+    uint256 slot1,
+    uint256 slot2,
+    uint256 slot3,
+    uint256 slot4
+  ) {
+    uint256 cachedValue1;
+    uint256 cachedValue2;
+    uint256 cachedValue3;
+    uint256 cachedValue4;
+    assembly {
+      cachedValue1 := mload(slot1)
+      cachedValue2 := mload(slot2)
+      cachedValue3 := mload(slot3)
+      cachedValue4 := mload(slot4)
+    }
+    _;
+    assembly {
+      mstore(slot1, cachedValue1)
+      mstore(slot2, cachedValue2)
+      mstore(slot3, cachedValue3)
+      mstore(slot4, cachedValue4)
+    }
+  }
+
   modifier RestoreFiveWordsBefore(bytes memory data) {
     uint256 cachedValue1;
     uint256 cachedValue2;
@@ -68,6 +93,20 @@ contract MemoryRestoration {
       mstore(sub(data, 0x60), cachedValue3)
       mstore(sub(data, 0x80), cachedValue4)
       mstore(sub(data, 0xa0), cachedValue5)
+    }
+  }
+
+  modifier RestoreFirstTwoUnreservedSlots() {
+    uint256 cachedValue1;
+    uint256 cachedValue2;
+    assembly {
+      cachedValue1 := mload(0x80)
+      cachedValue2 := mload(0xa0)
+    }
+    _;
+    assembly {
+      mstore(0x80, cachedValue1)
+      mstore(0xa0, cachedValue2)
     }
   }
 
