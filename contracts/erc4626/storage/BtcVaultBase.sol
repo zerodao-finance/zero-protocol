@@ -23,12 +23,16 @@ contract BtcVaultBase is LendableSharesVaultBase, GovernableBase {
   error InvalidSelector();
   error ReceiveLoanError(address module, address borrower, uint256 borrowAmount, uint256 loanId, bytes data);
   error RepayLoanError(address module, address borrower, uint256 repaidAmount, uint256 loanId, bytes data);
-  error ModuleAssetDoesNotMatch(address module);
+  error ModuleAssetDoesNotMatch(address moduleAsset);
+  error InvalidModuleType();
+  error DynamicBorrowFeeTooHigh(uint256 dynamicBorrowFeeBips);
 
   /*//////////////////////////////////////////////////////////////
                                 EVENTS
   //////////////////////////////////////////////////////////////*/
   event ModuleFeesUpdated(address module, ModuleType moduleType, uint256 loanGasE5, uint256 repayGasE5);
 
-  event GlobalFeesUpdated(address gasFeeOracle, uint256 dynamicBorrowFee, uint256 staticBorrowFee);
+  event GlobalFeesConfigUpdated(uint256 dynamicBorrowFee, uint256 staticBorrowFee);
+
+  event GlobalFeesCacheUpdated(uint256 satoshiPerEth, uint256 getGweiPerGas);
 }
