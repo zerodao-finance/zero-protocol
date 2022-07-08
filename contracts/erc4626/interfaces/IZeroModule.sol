@@ -9,12 +9,12 @@ interface IZeroModule {
     uint256 repaidAmount,
     uint256 loanId,
     bytes calldata data
-  ) external returns (uint256 collateralToUnlock, uint256 gasCostEther);
+  ) external returns (uint256 collateralToUnlock);
 
   function receiveLoan(
     address borrower,
     uint256 borrowAmount,
     uint256 loanId,
     bytes calldata data
-  ) external returns (uint256 collateralToLock, uint256 gasCostEther);
+  ) external returns (uint256 collateralToLock);
 }
