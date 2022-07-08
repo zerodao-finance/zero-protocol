@@ -1,7 +1,13 @@
 struct GlobalFees {
-  // Fraction of borrow amounts taken as a fee (set by governance)
+  // Fraction of borrow amounts taken as a fee for Zero (set by governance)
   // Expressed in basis points (unit = 0.01%)
-  uint16 dynamicBorrowFeeBips;
+  // Can not exceed 20.47%
+  uint11 zeroBorrowFeeBips unchecked;
+  // Fraction of borrow amounts taken as a fee for RenVM (set by governance)
+  // Expressed in basis points (unit = 0.01%)
+  // Can not exceed 20.47%
+  uint11 renBorrowFeeBips unchecked;
+
   // Amount of Bitcoin taken as a fee on borrow amounts (set by governance)
   // Supports fees up to 0.16777216 Bitcoin
   uint24 staticBorrowFee;
@@ -17,6 +23,8 @@ struct GlobalFees {
   // Cache must update if it is lower than global update timestamp
   // or is older than the cache ttl
   uint32 lastUpdateTimestamp;
+  // Index of the most recent loan
+  uint30 loanIndex unchecked;
 
   group Cached {
     satoshiPerEth;
