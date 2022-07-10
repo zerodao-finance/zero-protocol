@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+      "experimentalDecorators": true,
+      "emitDecoratorMetadata": true,
+      "module": "commonjs",
+      "moduleResolution": "node",
+      "target": "es2020",
+      "noImplicitAny": false,
+      "esModuleInterop": true,
+      "sourceMap": true,
+      "outDir": "lib",
+      "declaration": true,
+      "types": [
+        "node"
+      ]
+    },
+    "include": [
+       "src.ts/**/*"
+    ], 
+    "exclude": [
+      "lib/**/*"
+    ]
+  }

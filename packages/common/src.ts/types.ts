@@ -1,6 +1,5 @@
 import { BigNumberish } from '@ethersproject/bignumber';
 //import { SignerWithAddress } from 'hardhat-deploy-ethers/dist/src/signer-with-address';
-import { ZeroConnection, ZeroKeeper, ZeroUser } from '@zerodao/p2p';
 import { EIP712TypedData } from '@0x/types';
 
 export interface GatewayAddressInput {
@@ -34,6 +33,8 @@ export interface DarknodeSignatureInput {
 	tokenAddress: string;
 }
 
+// export type ConnectionTypes = ZeroConnection;
+
 export declare class TransferRequest {
 	constructor(
 		module: string,
@@ -52,9 +53,9 @@ export declare class TransferRequest {
 	public sign(signer: any, contractAddress: string): Promise<string>;
 }
 
-export declare function createZeroConnection(address: string): Promise<ZeroConnection>;
-export declare function createZeroKeeper(connection: ZeroConnection): ZeroKeeper;
-export declare function createZeroUser(connection: ZeroConnection): ZeroUser;
+// export declare function createZeroConnection(address: string): Promise<ZeroConnection>;
+// export declare function createZeroKeeper(connection: ZeroConnection): ZeroKeeper;
+// export declare function createZeroUser(connection: ZeroConnection): ZeroUser;
 
 export interface Request {
 	requestType: "burn" | "transfer" | "meta"

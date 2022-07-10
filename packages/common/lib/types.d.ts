@@ -1,6 +1,5 @@
 /// <reference types="node" />
 import { BigNumberish } from '@ethersproject/bignumber';
-import { ZeroConnection, ZeroKeeper, ZeroUser } from '@zerodao/p2p';
 import { EIP712TypedData } from '@0x/types';
 export interface GatewayAddressInput {
     isTest: boolean;
@@ -37,9 +36,6 @@ export declare class TransferRequest {
     toGatewayAddress(input: GatewayAddressInput): string;
     sign(signer: any, contractAddress: string): Promise<string>;
 }
-export declare function createZeroConnection(address: string): Promise<ZeroConnection>;
-export declare function createZeroKeeper(connection: ZeroConnection): ZeroKeeper;
-export declare function createZeroUser(connection: ZeroConnection): ZeroUser;
 export interface Request {
     requestType: "burn" | "transfer" | "meta";
     signature: string;
