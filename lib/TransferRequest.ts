@@ -11,7 +11,7 @@ import { signTypedDataUtils } from "@0x/utils";
 import { EIP712TypedData } from "@0x/types";
 import { EIP712_TYPES } from "./config/constants";
 import { Bitcoin } from "@renproject/chains";
-import RenJS from "@renproject/ren";
+import RenJS, { Gateway } from "@renproject/ren";
 import { EthArgs } from "@renproject/interfaces";
 import { getProvider } from "./deployment-utils";
 
@@ -37,6 +37,7 @@ export class TransferRequest {
   public provider: any;
   public _mint: any;
   public requestType = "transfer";
+  private bitcoin: Bitcoin;
 
   constructor(params: {
     module: string;
@@ -73,32 +74,8 @@ export class TransferRequest {
     this.contractAddress = params.contractAddress;
     this.signature = params.signature;
     const networkName = "mainnet";
-    this._ren = new (RenJS as any)(networkName, {
-      loadCompletedDeposits: true,
-    });
-    this._contractFn = "zeroCall";
-    this._contractParams = [
-      {
-        name: "to",
-        type: "address",
-        value: this.to,
-      },
-      {
-        name: "pNonce",
-        type: "uint256",
-        value: this.pNonce,
-      },
-      {
-        name: "module",
-        type: "address",
-        value: this.module,
-      },
-      {
-        name: "data",
-        type: "bytes",
-        value: this.data,
-      },
-    ];
+    this.bitcoin = new Bitcoin({ network: "mainnet" });
+    this._ren = new RenJS(networkName).withChain(this.bitcoin);
   }
 
   destination(
@@ -130,16 +107,15 @@ export class TransferRequest {
 
   async submitToRenVM() {
     if (this._mint) return this._mint;
-    const result = (this._mint = await this._ren.lockAndMint({
+    const eth = getProvider(this);
+    this._ren = this._ren.withChain(eth);
+    const result = (this._mint = this._ren.gateway({
       asset: "BTC",
-      from: Bitcoin(),
+      from: this.bitcoin.GatewayAddress(),
+      to: eth.Address(ethers.utils.getAddress(this.contractAddress)),
       nonce: this.nonce,
-      to: getProvider(this).Contract({
-        sendTo: ethers.utils.getAddress(this.contractAddress),
-        contractFn: this._contractFn,
-        contractParams: this._contractParams,
-      }),
     }));
+
     return result;
   }
 
