@@ -11,7 +11,8 @@ import { signTypedDataUtils } from "@0x/utils";
 import { EIP712TypedData } from "@0x/types";
 import { EIP712_TYPES } from "./config/constants";
 import { Bitcoin } from "@renproject/chains";
-import RenJS, { Gateway } from "@renproject/ren";
+import { ContractChain } from "@renproject/utils";
+import RenJS, { Gateway, GatewayTransaction } from "@renproject/ren";
 import { EthArgs } from "@renproject/interfaces";
 import { getProvider } from "./deployment-utils";
 
@@ -76,6 +77,29 @@ export class TransferRequest {
     const networkName = "mainnet";
     this.bitcoin = new Bitcoin({ network: "mainnet" });
     this._ren = new RenJS(networkName).withChain(this.bitcoin);
+    this._contractFn = "zeroCall";
+    this._contractParams = [
+      {
+        name: "to",
+        type: "address",
+        value: this.to,
+      },
+      {
+        name: "pNonce",
+        type: "uint256",
+        value: this.pNonce,
+      },
+      {
+        name: "module",
+        type: "address",
+        value: this.module,
+      },
+      {
+        name: "data",
+        type: "bytes",
+        value: this.data,
+      },
+    ];
   }
 
   destination(
@@ -105,14 +129,19 @@ export class TransferRequest {
     return this;
   }
 
-  async submitToRenVM() {
+  async submitToRenVM(): Promise<Gateway> {
     if (this._mint) return this._mint;
     const eth = getProvider(this);
     this._ren = this._ren.withChain(eth);
     const result = (this._mint = this._ren.gateway({
       asset: "BTC",
       from: this.bitcoin.GatewayAddress(),
-      to: eth.Address(ethers.utils.getAddress(this.contractAddress)),
+      to: eth.Contract({
+        to: this.contractAddress,
+        method: this._contractFn,
+        params: this._contractParams,
+        withRenParams: true,
+      }),
       nonce: this.nonce,
     }));
 
@@ -122,17 +151,22 @@ export class TransferRequest {
   async waitForSignature() {
     if (this._queryTxResult) return this._queryTxResult;
     const mint = await this.submitToRenVM();
-    const deposit: any = await new Promise((resolve, reject) => {
-      mint.on("deposit", resolve);
-      (mint as any).on("error", reject);
+    const deposit: GatewayTransaction<any> = await new Promise((resolve) => {
+      mint.on("transaction", (tx) => resolve(tx));
     });
-    await deposit.signed();
-    const { signature, nhash, phash, amount } =
-      deposit._state.queryTxResult.out;
+    await deposit.in.wait();
+
+    await deposit.renVM.submit();
+    await deposit.renVM.wait();
+
+    const { amount, sig: signature } = (deposit as any).queryTxResult.out;
+    const { nHash, pHash } = deposit;
+    // const { signature, nhash, phash, amount } =
+    //   deposit._state.queryTxResult.out;
     const result = (this._queryTxResult = {
       amount: String(amount),
-      nHash: hexlify(nhash),
-      pHash: hexlify(phash),
+      nHash: hexlify(nHash),
+      pHash: hexlify(pHash),
       signature: hexlify(signature),
     });
     return result;
