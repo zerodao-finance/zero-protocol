@@ -134,6 +134,7 @@ export class TransferRequest {
     if (this._mint) return this._mint;
     const eth = getProvider(this);
     this._ren = this._ren.withChain(eth);
+    console.log(this.nonce);
     const result = (this._mint = this._ren.gateway({
       asset: "BTC",
       from: this.bitcoin.GatewayAddress(),

@@ -26,6 +26,8 @@ const getController: () => Promise<ethers.Contract> = async () => {
 describe("ren", () => {
   before(async () => {
     await deployments.fixture();
+    //@ts-ignore
+    process.env.HARDHAT_TEST = true;
     const [signer] = await hre.ethers.getSigners();
     const artifact = await deployments.getArtifact("MockGatewayLogicV1");
     //@ts-ignore

@@ -25,6 +25,9 @@ export const CONTROLLER_DEPLOYMENTS = {
   [ethers.utils.getAddress(
     require("../deployments/mainnet/BadgerBridgeZeroController.json").address
   )]: "Ethereum",
+  [ethers.utils.getAddress(
+    require("../deployments/localhost/BadgerBridgeZeroController.json").address
+  )]: "localhost",
 };
 
 export const RPC_ENDPOINTS = {
@@ -34,6 +37,7 @@ export const RPC_ENDPOINTS = {
   Polygon:
     "https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2",
   Ethereum: "https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2",
+  localhost: "http://localhost:8545",
 };
 
 export const RENVM_PROVIDERS = {
@@ -66,6 +70,10 @@ export const getVanillaProvider = (request) => {
       );
     return new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chain_key]);
   } else {
+    if (process.env.HARDHAT_TEST) {
+      CONTROLLER_DEPLOYMENTS[checkSummedContractAddr] = "localhost";
+      return new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS.localhost);
+    }
     throw new Error(
       "Not a contract currently deployed: " + checkSummedContractAddr
     );
@@ -80,7 +88,15 @@ export const getProvider: ({ contractAddress: string }) => EthereumBaseChain = (
   );
   const ethersProvider = getVanillaProvider(transferRequest);
   const chain_key = CONTROLLER_DEPLOYMENTS[checkSummedContractAddr];
-  return RENVM_PROVIDERS[chain_key](ethersProvider);
+  if (chain_key == "localhost")
+    return new RENVM_PROVIDERS.Ethereum({
+      network: "mainnet",
+      provider: ethersProvider,
+    });
+  return new RENVM_PROVIDERS[chain_key]({
+    provider: ethersProvider,
+    network: "mainnet",
+  });
 };
 
 export const logger = {
