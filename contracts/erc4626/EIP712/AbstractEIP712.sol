@@ -3,8 +3,8 @@ pragma solidity >=0.8.13;
 
 import "../utils/MemoryRestoration.sol";
 
-bytes constant EIP712DomainTypeString = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)";
-bytes32 constant EIP712DomainTypeHash = 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f;
+bytes constant EIP712Domain_typeString = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)";
+bytes32 constant EIP712Domain_typeHash = 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f;
 
 uint256 constant EIP712Signature_prefix = 0x1901000000000000000000000000000000000000000000000000000000000000;
 uint256 constant EIP712Signature_domainSeparator_ptr = 0x2;
@@ -29,19 +29,19 @@ abstract contract AbstractEIP712 is MemoryRestoration {
     _CHAIN_ID = block.chainid;
     _NAME_HASH = keccak256(bytes(_name));
     _VERSION_HASH = keccak256(bytes(_version));
-    _DOMAIN_SEPARATOR = computeDomainSeparator();
-    if (EIP712DomainTypeHash != keccak256(EIP712DomainTypeString)) {
+    _DOMAIN_SEPARATOR = _computeDomainSeparator();
+    if (EIP712Domain_typeHash != keccak256(EIP712Domain_typeString)) {
       revert InvalidTypeHash();
     }
   }
 
-  function computeDomainSeparator() internal view returns (bytes32 separator) {
+  function _computeDomainSeparator() internal view returns (bytes32 separator) {
     address _verifyingContract = verifyingContract();
     bytes32 nameHash = _NAME_HASH;
     bytes32 versionHash = _VERSION_HASH;
     assembly {
       let ptr := mload(0x40)
-      mstore(ptr, EIP712DomainTypeHash)
+      mstore(ptr, EIP712Domain_typeHash)
       mstore(add(ptr, DomainSeparator_nameHash_offset), nameHash)
       mstore(add(ptr, DomainSeparator_versionHash_offset), versionHash)
       mstore(add(ptr, DomainSeparator_chainId_offset), chainid())
@@ -50,8 +50,8 @@ abstract contract AbstractEIP712 is MemoryRestoration {
     }
   }
 
-  function getDomainSeparator() public view virtual returns (bytes32) {
-    return block.chainid == _CHAIN_ID ? _DOMAIN_SEPARATOR : computeDomainSeparator();
+  function DOMAIN_SEPARATOR() public view virtual returns (bytes32) {
+    return block.chainid == _CHAIN_ID ? _DOMAIN_SEPARATOR : _computeDomainSeparator();
   }
 
   function verifyingContract() internal view virtual returns (address);
