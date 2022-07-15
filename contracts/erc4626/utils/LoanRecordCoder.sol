@@ -10,102 +10,87 @@ import './CoderConstants.sol';
 // ====================================================================
 
 // struct LoanRecord {
-//   address lender;
 //   uint48 sharesLocked;
-//   uint48 loanAmount;
+//   uint48 actualBorrowAmount;
+//   uint48 lenderDebt;
+//   uint48 vaultExpenseWithoutRepayFee;
+//   uint32 expiry;
 // }
 type LoanRecord is uint256;
 
+LoanRecord constant DefaultLoanRecord = LoanRecord.wrap(0);
+
 library LoanRecordCoder {
+	/*//////////////////////////////////////////////////////////////
+                           LoanRecord
+//////////////////////////////////////////////////////////////*/
+
 	function decode(LoanRecord encoded)
 		internal
 		pure
 		returns (
-			address lender,
 			uint256 sharesLocked,
-			uint256 loanAmount
+			uint256 actualBorrowAmount,
+			uint256 lenderDebt,
+			uint256 vaultExpenseWithoutRepayFee,
+			uint256 expiry
 		)
 	{
 		assembly {
-			lender := shr(LoanRecord_lender_bitsAfter, encoded)
-			sharesLocked := and(MaxUint48, shr(LoanRecord_sharesLocked_bitsAfter, encoded))
-			loanAmount := and(MaxUint48, encoded)
+			sharesLocked := shr(LoanRecord_sharesLocked_bitsAfter, encoded)
+			actualBorrowAmount := and(MaxUint48, shr(LoanRecord_actualBorrowAmount_bitsAfter, encoded))
+			lenderDebt := and(MaxUint48, shr(LoanRecord_lenderDebt_bitsAfter, encoded))
+			vaultExpenseWithoutRepayFee := and(MaxUint48, shr(LoanRecord_vaultExpenseWithoutRepayFee_bitsAfter, encoded))
+			expiry := and(MaxUint32, shr(LoanRecord_expiry_bitsAfter, encoded))
 		}
 	}
 
 	function encode(
-		address lender,
 		uint256 sharesLocked,
-		uint256 loanAmount
+		uint256 actualBorrowAmount,
+		uint256 lenderDebt,
+		uint256 vaultExpenseWithoutRepayFee,
+		uint256 expiry
 	) internal pure returns (LoanRecord encoded) {
 		assembly {
-			if or(gt(sharesLocked, MaxUint48), gt(loanAmount, MaxUint48)) {
+			if or(
+				gt(sharesLocked, MaxUint48),
+				or(
+					gt(actualBorrowAmount, MaxUint48),
+					or(gt(lenderDebt, MaxUint48), or(gt(vaultExpenseWithoutRepayFee, MaxUint48), gt(expiry, MaxUint32)))
+				)
+			) {
 				mstore(0, Panic_error_signature)
 				mstore(Panic_error_offset, Panic_arithmetic)
 				revert(0, Panic_error_length)
 			}
 			encoded := or(
-				shl(LoanRecord_lender_bitsAfter, lender),
-				or(shl(LoanRecord_sharesLocked_bitsAfter, sharesLocked), loanAmount)
+				shl(LoanRecord_sharesLocked_bitsAfter, sharesLocked),
+				or(
+					shl(LoanRecord_actualBorrowAmount_bitsAfter, actualBorrowAmount),
+					or(
+						shl(LoanRecord_lenderDebt_bitsAfter, lenderDebt),
+						or(
+							shl(LoanRecord_vaultExpenseWithoutRepayFee_bitsAfter, vaultExpenseWithoutRepayFee),
+							shl(LoanRecord_expiry_bitsAfter, expiry)
+						)
+					)
+				)
 			)
 		}
 	}
 
 	/*//////////////////////////////////////////////////////////////
-                    LoanRecord.lender coders
+                  LoanRecord comparison methods
 //////////////////////////////////////////////////////////////*/
 
-	function getLender(LoanRecord encoded) internal pure returns (address lender) {
+	function equals(LoanRecord a, LoanRecord b) internal pure returns (bool _equals) {
 		assembly {
-			lender := shr(LoanRecord_lender_bitsAfter, encoded)
+			_equals := eq(a, b)
 		}
 	}
 
-	function setLender(LoanRecord old, address lender) internal pure returns (LoanRecord updated) {
-		assembly {
-			updated := or(and(old, LoanRecord_lender_maskOut), shl(LoanRecord_lender_bitsAfter, lender))
-		}
-	}
-
-	/*//////////////////////////////////////////////////////////////
-                 LoanRecord.sharesLocked coders
-//////////////////////////////////////////////////////////////*/
-
-	function getSharesLocked(LoanRecord encoded) internal pure returns (uint256 sharesLocked) {
-		assembly {
-			sharesLocked := and(MaxUint48, shr(LoanRecord_sharesLocked_bitsAfter, encoded))
-		}
-	}
-
-	function setSharesLocked(LoanRecord old, uint256 sharesLocked) internal pure returns (LoanRecord updated) {
-		assembly {
-			if gt(sharesLocked, MaxUint48) {
-				mstore(0, Panic_error_signature)
-				mstore(Panic_error_offset, Panic_arithmetic)
-				revert(0, Panic_error_length)
-			}
-			updated := or(and(old, LoanRecord_sharesLocked_maskOut), shl(LoanRecord_sharesLocked_bitsAfter, sharesLocked))
-		}
-	}
-
-	/*//////////////////////////////////////////////////////////////
-                  LoanRecord.loanAmount coders
-//////////////////////////////////////////////////////////////*/
-
-	function getLoanAmount(LoanRecord encoded) internal pure returns (uint256 loanAmount) {
-		assembly {
-			loanAmount := and(MaxUint48, encoded)
-		}
-	}
-
-	function setLoanAmount(LoanRecord old, uint256 loanAmount) internal pure returns (LoanRecord updated) {
-		assembly {
-			if gt(loanAmount, MaxUint48) {
-				mstore(0, Panic_error_signature)
-				mstore(Panic_error_offset, Panic_arithmetic)
-				revert(0, Panic_error_length)
-			}
-			updated := or(and(old, LoanRecord_loanAmount_maskOut), loanAmount)
-		}
+	function isNull(LoanRecord a) internal pure returns (bool _isNull) {
+		_isNull = equals(a, DefaultLoanRecord);
 	}
 }
