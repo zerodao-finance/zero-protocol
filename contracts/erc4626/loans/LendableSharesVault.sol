@@ -3,119 +3,115 @@ pragma solidity >=0.8.13;
 
 import "../ERC4626.sol";
 import { EIP2612 } from "../EIP2612.sol";
-import { SafeCastLib } from "../utils/SafeCastLib.sol";
+import "../utils/Math.sol";
 import { FixedPointMathLib } from "../utils/FixedPointMathLib.sol";
-import "../storage/LendableSharesVaultBase.sol";
-import "../utils/CoderConstants.sol";
+import "../storage/VaultBase.sol";
+import { Panic_error_signature, Panic_error_offset, Panic_arithmetic, Panic_error_length, MaxUint48 } from "../utils/CoderConstants.sol";
 
-uint256 constant LoanIdNotUnique_selector = 0x4e435beb00000000000000000000000000000000000000000000000000000000;
-uint256 constant LoanIdNotUnique_loanId_ptr = 0x04;
-uint256 constant LoanIdNotUnique_length = 0x24;
-
-uint256 constant LoanDoesNotExist_selector = 0x1fa8ef9a00000000000000000000000000000000000000000000000000000000;
-uint256 constant LoanDoesNotExist_loanId_ptr = 0x04;
-uint256 constant LoanDoesNotExist_length = 0x24;
-
-uint256 constant LoanAlreadyRepaid_selector = 0xdae2c27300000000000000000000000000000000000000000000000000000000;
-uint256 constant LoanAlreadyRepaid_loanId_ptr = 0x04;
-uint256 constant LoanAlreadyRepaid_length = 0x24;
-
-abstract contract LendableSharesVault is LendableSharesVaultBase, ERC4626, EIP2612 {
-  using SafeCastLib for uint256;
+abstract contract LendableSharesVault is VaultBase, ERC4626, EIP2612 {
   using FixedPointMathLib for uint256;
+  using GlobalStateCoder for GlobalState;
+  using LoanRecordCoder for LoanRecord;
 
-  function totalAssets() public view virtual override returns (uint256) {
-    return ERC20(asset).balanceOf(address(this)) + uint256(totalBorrowedAssets);
+  /*//////////////////////////////////////////////////////////////
+                          External Queries
+  //////////////////////////////////////////////////////////////*/
+
+  function getOutstandingLoan(address lender, uint256 loanId)
+    external
+    view
+    returns (
+      uint256 sharesLocked,
+      uint256 actualBorrowAmount,
+      uint256 lenderDebt,
+      uint256 vaultExpenseWithoutRepayFee,
+      uint256 expiry
+    )
+  {
+    return _outstandingLoans[lender][loanId].decode();
   }
 
-  /// @notice Lock user shares until they repay the underlying amount
-  /// The amount of shares that the underlying assets are equivalent to
-  /// will be locked until the underlying assets are returned to the vault.
-  /// @param loanId Identifier for the loan
-  /// @param lender Account lending assets
-  /// @param borrower Account borrowing assets
-  /// @param borrowAmount Amount of underlying asset to lend
+  function totalAssets() public view virtual override returns (uint256) {
+    return ERC20(asset).balanceOf(address(this)) + _state.getTotalBitcoinBorrowed();
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                       Internal Loan Handling
+  //////////////////////////////////////////////////////////////*/
+
+  function _getAndSetLoan(
+    address lender,
+    uint256 loanId,
+    LoanRecord newRecord
+  ) internal returns (LoanRecord oldRecord) {
+    assembly {
+      mstore(0, lender)
+      mstore(0x20, _outstandingLoans.slot)
+      mstore(0x20, keccak256(0, 0x40))
+      mstore(0, loanId)
+      let loanSlot := keccak256(0, 0x40)
+      oldRecord := sload(loanSlot)
+      sstore(loanSlot, newRecord)
+    }
+  }
+
+  /**
+   * @notice Lock lender shares until they repay `borrowedAmount`.
+   *
+   * `lenderDebt` is higher than `borrowAmount`, the amount leaving
+   * the contract, to account for gas fees paid to keepers in ETH
+   * as well as protocol fees from Zero.
+   *
+   * The lender will have an amount of shares equivalent to `lenderDebt` locked,
+   * and will have a fraction of those shares unlocked on repayment.
+   *
+   * @param loanId Identifier for the loan
+   * @param lender Account lending assets
+   * @param borrower Account borrowing assets
+   * @param actualBorrowAmount Amount of `asset` sent to borrower
+   * @param lenderDebt Amount of `asset` lender is responsible for repaying
+   * @param vaultExpenseWithoutRepayFee Amount of `asset` vault is expecting back without
+   * accounting for btc value of repay gas refund
+   */
   function _borrowFrom(
     uint256 loanId,
     address lender,
     address borrower,
-    uint256 borrowAmount
+    uint256 actualBorrowAmount,
+    uint256 lenderDebt,
+    uint256 vaultExpenseWithoutRepayFee
   ) internal {
     // Calculate the amount of shares to lock
-    uint256 shares = previewWithdraw(borrowAmount);
-    {
-      // Get the storage slot for the record
-      LoanRecord storage record = outstandingLoans[lender][loanId];
+    uint256 shares = previewWithdraw(lenderDebt);
 
-      assembly {
-        let totalBorrowedAssetsSlot := totalBorrowedAssets.slot
-        // Add borrowAmount to cached totalBorrowedAssets on the stack
-        let _totalBorrowedAssets := add(sload(totalBorrowedAssetsSlot), borrowAmount)
-        // Cache the storage slot for the loan record
-        let recordSlot := record.slot
-        // Set boolean indicating whether `loanId` is unique
-        // We use >0 instead of asserting iszero because repay
-        // sets the value to 1 instead of 0
-        let valueExists := gt(sload(recordSlot), 0)
-        // Set boolean indicating whether `amount`, `totalBorrowedAssets` or `shares` overflows uint128
-        // _totalBorrowedAssets can not overflow uint256 if borrowAmount is below the max uint128,
-        // since we already know the stored totalBorrowedAssets fits into a uint128.
-        let overflow := or(
-          or(gt(borrowAmount, MaxUint128), gt(_totalBorrowedAssets, MaxUint128)),
-          gt(shares, MaxUint128)
-        )
-        // Check if either error flag is set
-        if or(valueExists, overflow) {
-          // Revert if the value already exists
-          if valueExists {
-            mstore(0, LoanIdNotUnique_selector)
-            mstore(LoanIdNotUnique_loanId_ptr, loanId)
-            revert(0, LoanIdNotUnique_length)
-          }
-          // Revert if overflow was detected
-          mstore(0, Panic_error_signature)
-          mstore(Panic_error_offset, Panic_arithmetic)
-          revert(0, Panic_error_length)
-        }
-        // Write the loan data to storage
-        sstore(recordSlot, or(shl(128, shares), borrowAmount))
-        sstore(totalBorrowedAssetsSlot, _totalBorrowedAssets)
-      }
+    unchecked {
+      GlobalState state = _state;
+      uint256 totalBitcoinBorrowed = state.getTotalBitcoinBorrowed();
+      _state = state.setTotalBitcoinBorrowed(totalBitcoinBorrowed + actualBorrowAmount);
     }
+
+    LoanRecord oldRecord = _getAndSetLoan(
+      lender,
+      loanId,
+      LoanRecordCoder.encode(
+        shares,
+        actualBorrowAmount,
+        lenderDebt,
+        vaultExpenseWithoutRepayFee,
+        block.timestamp + maxLoanDuration
+      )
+    );
+
+    if (!oldRecord.isNull()) {
+      revert LoanIdNotUnique(loanId);
+    }
+
     // Transfer shares from the lender to the contract
     _transfer(lender, address(this), shares);
-    // Emit event for loan creation
-    emit LoanCreated(lender, borrower, loanId, borrowAmount, shares);
-  }
 
-  /// @notice Lock user shares until they repay the underlying amount
-  /// The amount of shares that the underlying assets are equivalent to
-  /// will be locked until the underlying assets are returned to the vault.
-  /// @param loanId Identifier for the loan
-  /// @param lender Account lending assets
-  /// @param borrower Account borrowing assets
-  /// @param borrowAmount Amount of underlying asset to lend from account
-  /// @param checkpointSupply Amount of shares that existed when the loan began
-  /// @param checkpointTotalAssets Amount of underlying asset held by vault when the loan began
-  // function _borrowFromAfterTransfer(
-  //   uint256 loanId,
-  //   address lender,
-  //   address borrower,
-  //   uint256 borrowAmount,
-  //   uint256 checkpointSupply,
-  //   uint256 checkpointTotalAssets
-  // ) internal {
-  //   uint128 amountAs128 = borrowAmount.safeCastTo128();
-  //   totalBorrowedAssets += amountAs128;
-  //   // Calculate the amount of shares to lock
-  //   uint256 shares = previewWithdrawForCheckpoint(borrowAmount, checkpointSupply, checkpointTotalAssets);
-  //   // Write the loan data to storage
-  //   outstandingLoans[lender][loanId] = LoanRecord(amountAs128, shares.safeCastTo128());
-  //   // Transfer shares from the lender to the contract
-  //   _transfer(lender, address(this), shares);
-  //   // Emit event for loan creation
-  //   emit LoanCreated(lender, borrower, loanId, borrowAmount, shares);
-  // }
+    // Emit event for loan creation
+    emit LoanCreated(lender, borrower, loanId, actualBorrowAmount, shares);
+  }
 
   /**
    * @notice Repay assets for a loan and unlock the shares of the lender
@@ -127,51 +123,62 @@ abstract contract LendableSharesVault is LendableSharesVaultBase, ERC4626, EIP26
    * Note: amountRepaid MUST have already been received by the vault
    * before this function is called.
    *
-   * @param lender Account that loaned the assets
+   * @param lender Account that gave the loan
    * @param loanId Identifier for the loan
    * @param assetsRepaid Amount of underlying repaid
    */
   function _repayTo(
     address lender,
     uint256 loanId,
-    uint256 assetsRepaid
-  ) internal {
-    uint256 sharesLocked;
-    uint256 assetsBorrowed;
-    {
-      // Get the storage slot for the record
-      LoanRecord storage record = outstandingLoans[lender][loanId];
-      assembly {
-        let recordSlot := record.slot
-        let recordValue := sload(recordSlot)
-        // Mark record as repaid
-        sstore(recordSlot, 0)
-        // Ensure the loan exists
-        if iszero(recordValue) {
-          mstore(0, LoanDoesNotExist_selector)
-          mstore(LoanDoesNotExist_loanId_ptr, loanId)
-          revert(0, LoanDoesNotExist_length)
-        }
-        // Decode sharesLocked and assetsBorrowed
-        sharesLocked := shr(128, recordValue)
-        assetsBorrowed := and(recordValue, MaxUint128)
+    uint256 assetsRepaid,
+    uint256 btcFeeForRepayGas
+  ) internal returns (uint256 feesCollected) {
+    LoanRecord oldRecord = _getAndSetLoan(lender, loanId, DefaultLoanRecord);
 
-        let totalBorrowedAssetsSlot := totalBorrowedAssets.slot
-        // `totalBorrowedAssets` is only set through the borrow and repay
-        // functions, and we know `assetsBorrowed` has already been added
-        // to it, so it can not underflow
-        sstore(totalBorrowedAssetsSlot, sub(sload(totalBorrowedAssetsSlot), assetsBorrowed))
-      }
+    // Ensure the loan exists
+    if (oldRecord.isNull()) {
+      revert LoanDoesNotExist(loanId);
     }
+
+    (
+      uint256 sharesLocked,
+      uint256 actualBorrowAmount,
+      uint256 lenderDebt,
+      uint256 vaultExpenseWithoutRepayFee,
+
+    ) = oldRecord.decode();
+
+    {
+      uint256 vaultExpense = vaultExpenseWithoutRepayFee + btcFeeForRepayGas;
+      feesCollected = Math.subMinZero(assetsRepaid, vaultExpense);
+    }
+
+    unchecked {
+      // `totalBitcoinBorrowed` is only set through the borrow and repay
+      // functions, and we know `actualBorrowAmount` has already been added
+      // to it, so it can not underflow
+      GlobalState state = _state;
+      uint256 totalBitcoinBorrowed = state.getTotalBitcoinBorrowed();
+      _state = state.setTotalBitcoinBorrowed(totalBitcoinBorrowed - actualBorrowAmount);
+    }
+
     uint256 sharesBurned;
     uint256 sharesUnlocked = sharesLocked;
 
     // If loan is less than fully repaid
-    if (assetsRepaid < assetsBorrowed) {
-      // Unlock shares proportional to the fraction repaid
-      sharesUnlocked = assetsRepaid.mulDivDown(sharesLocked, assetsBorrowed);
+    if (assetsRepaid < lenderDebt) {
+      // Unchecked because assetsRepaid * sharesLocked can never
+      // overflow a uint256 and sharesUnlocked will always be less
+      // than sharesLocked.
+      unchecked {
+        // Unlock shares proportional to the fraction repaid
+        sharesUnlocked = assetsRepaid.mulDivDown(sharesLocked, lenderDebt);
+
+        // Will never be 0 since we take the floor
+        sharesBurned = sharesLocked - sharesUnlocked;
+      }
+
       // Burn the shares that were not unlocked
-      sharesBurned = sharesLocked - sharesUnlocked;
       _burn(address(this), sharesBurned);
     }
 
