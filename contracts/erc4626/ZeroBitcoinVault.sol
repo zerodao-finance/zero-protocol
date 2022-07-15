@@ -396,9 +396,9 @@ abstract contract ZeroBitcoinVault is VaultBase, LendableSharesVault, ModuleInte
     (uint256 renFees, uint256 zeroFees) = _calculateRenAndZeroFees(state, borrowAmount);
     (uint256 btcFeeForLoanGas, uint256 btcFeeForRepayGas) = moduleState.getBitcoinGasFees();
 
+    lenderDebt = borrowAmount - renFees;
     vaultExpenseWithoutRepayFee = borrowAmount - (renFees + zeroFees + btcFeeForLoanGas);
-    lenderDebt = vaultExpenseWithoutRepayFee - btcFeeForRepayGas;
-    actualBorrowAmount = lenderDebt - zeroFees;
+    actualBorrowAmount = lenderDebt - btcFeeForRepayGas;
   }
 
   /*//////////////////////////////////////////////////////////////
