@@ -50,7 +50,7 @@ abstract contract AbstractEIP712 is MemoryRestoration {
     }
   }
 
-  function getDomainSeparator() public view virtual override returns (bytes32) {
+  function getDomainSeparator() public view virtual returns (bytes32) {
     return block.chainid == _CHAIN_ID ? _DOMAIN_SEPARATOR : computeDomainSeparator();
   }
 
