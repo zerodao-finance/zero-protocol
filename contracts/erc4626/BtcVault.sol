@@ -1,340 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.8.13;
 
-import "./loans/LendableSharesVault.sol";
-import { BtcVaultBase, ModuleFeesCoder, ModuleType, ModuleFees, GlobalFeesCoder, GlobalFees } from "./storage/BtcVaultBase.sol";
-import { IGateway } from "../interfaces/IGateway.sol";
-import { IChainlinkOracle } from "../interfaces/IChainlinkOracle.sol";
-import { IGatewayRegistry } from "../interfaces/IGatewayRegistry.sol";
+import { LendableSharesVault } from "./loans/LendableSharesVault.sol";
+import { VaultBase, ModuleStateCoder, DefaultModuleState, ModuleType, ModuleState, GlobalStateCoder, GlobalState, LoanRecordCoder, LoanRecord } from "./storage/VaultBase.sol";
+import { IGateway, IGatewayRegistry } from "../interfaces/IGatewayRegistry.sol";
 import { EIP712 } from "./EIP712/EIP712.sol";
+import { ModuleInteractions } from "./ModuleInteractions.sol";
 import "./interfaces/IZeroModule.sol";
-import "./IQuoter.sol";
 import "./Governable.sol";
-
-uint256 constant ReceiveLoanErrorSelector = 0x83f44e2200000000000000000000000000000000000000000000000000000000;
-uint256 constant RepayLoanErrorSelector = 0x0ccaea8800000000000000000000000000000000000000000000000000000000;
-
-uint256 constant RepayLoanSelector = 0x2584dde800000000000000000000000000000000000000000000000000000000;
-uint256 constant ReceiveLoanSelector = 0x332b578c00000000000000000000000000000000000000000000000000000000;
-
-uint256 constant RepayLoan_borrower_ptr = 0x04;
-uint256 constant RepayLoan_repaidAmount_ptr = 0x24;
-uint256 constant RepayLoan_loanId_ptr = 0x44;
-uint256 constant RepayLoan_data_ptr = 0x64;
-uint256 constant RepayLoan_calldata_baseLength = 0x84;
-
-uint256 constant ReceiveLoan_borrower_ptr = 0x04;
-uint256 constant ReceiveLoan_borrowAmount_ptr = 0x24;
-uint256 constant ReceiveLoan_loanId_ptr = 0x44;
-uint256 constant ReceiveLoan_data_ptr = 0x64;
-uint256 constant ReceiveLoan_calldata_baseLength = 0x84;
+import "./utils/Math.sol";
+import "./utils/SafeTransferLib.sol";
 
 uint256 constant OneBitcoin = 1e8;
-uint256 constant BasisPointsOne = 1e4;
+
 // Used to convert a price expressed as wei per btc to one expressed
 // as satoshi per ETH
 uint256 constant BtcEthPriceInversionNumerator = 1e26;
 
-contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
+abstract contract ZeroBitcoinVault is VaultBase, LendableSharesVault, ModuleInteractions, Governable {
   using SafeTransferLib for address;
-  using ModuleFeesCoder for ModuleFees;
-  using GlobalFeesCoder for GlobalFees;
+  using ModuleStateCoder for ModuleState;
+  using GlobalStateCoder for GlobalState;
+  using LoanRecordCoder for LoanRecord;
+  using Math for uint256;
 
-  // gasPriceOracle MUST return gas prices expressed as wei per unit of gas
-  IChainlinkOracle public immutable gasPriceOracle;
-  // btcEthPriceOracle MUST return prices expressed as wei per full bitcoin
-  IChainlinkOracle public immutable btcEthPriceOracle;
-  uint256 public immutable feesTimeToLive;
-  IGatewayRegistry public immutable gatewayRegistry;
-  string public constant version = "v0.1";
+  receive() external payable {}
 
-  constructor(
-    IGatewayRegistry _gatewayRegistry,
-    address _btcAddress,
-    IChainlinkOracle _btcEthPriceOracle,
-    IChainlinkOracle _gasPriceOracle,
-    uint256 _feesTimeToLive,
-    uint16 _dynamicBorrowFeeBips,
-    uint24 _staticBorrowFee
-  )
-    ERC4626(_btcAddress)
-    ERC20Metadata("ZeroBTC", "ZBTC", 18)
-    ReentrancyGuard()
-    Governable()
-    EIP712("ZeroBTC", version)
-  {
-    btcEthPriceOracle = _btcEthPriceOracle;
-    gasPriceOracle = _gasPriceOracle;
-    gatewayRegistry = _gatewayRegistry;
-    feesTimeToLive = _feesTimeToLive;
-    _globalFees = GlobalFeesCoder.encode(
-      _dynamicBorrowFeeBips,
-      _staticBorrowFee,
-      _getSatoshiPerEth(),
-      _getGweiPerGas(),
-      uint32(block.timestamp)
-    );
-    if (
-      uint256(bytes32(IZeroModule.receiveLoan.selector)) != ReceiveLoanSelector ||
-      uint256(bytes32(IZeroModule.repayLoan.selector)) != RepayLoanSelector ||
-      uint256(bytes32(ReceiveLoanError.selector)) != ReceiveLoanErrorSelector ||
-      uint256(bytes32(RepayLoanError.selector)) != RepayLoanErrorSelector
-    ) {
-      revert InvalidSelector();
-    }
-  }
-
-  function _getSatoshiPerEth() internal view returns (uint256) {
-    uint256 ethPerBitcoin = btcEthPriceOracle.latestAnswer();
-    return BtcEthPriceInversionNumerator / ethPerBitcoin;
-  }
-
-  function _getGweiPerGas() internal view returns (uint256) {
-    uint256 gasPrice = gasPriceOracle.latestAnswer();
-    return gasPrice / 1e9;
-  }
-
-  function setGlobalFees(uint256 dynamicBorrowFeeBips, uint256 staticBorrowFee) external onlyGovernance {
-    if (dynamicBorrowFeeBips > 1500) {
-      revert DynamicBorrowFeeTooHigh(dynamicBorrowFeeBips);
-    }
-    _globalFees = _globalFees.setConfig(dynamicBorrowFeeBips, staticBorrowFee);
-  }
-
-  function getGlobalFees()
-    external
-    view
-    returns (
-      uint256 dynamicBorrowFeeBips,
-      uint256 staticBorrowFee,
-      uint256 satoshiPerEth,
-      uint256 gweiPerGas,
-      uint256 lastUpdateTimestamp
-    )
-  {
-    return _globalFees.decode();
-  }
-
-  function pokeGlobalFees() external {
-    _getUpdatedGlobalFees();
-  }
-
-  function getModuleFees(address module)
-    external
-    view
-    returns (
-      ModuleType moduleType,
-      uint256 loanGasE4,
-      uint256 repayGasE4,
-      uint256 loanRefundEth,
-      uint256 repayRefundEth,
-      uint256 staticBorrowFee,
-      uint256 lastUpdateTimestamp
-    )
-  {
-    return _moduleFees[module].decode();
-  }
-
-  function _getUpdatedGlobalFees() internal returns (GlobalFees fees, uint256 lastUpdateTimestamp) {
-    fees = _globalFees;
-    lastUpdateTimestamp = fees.getLastUpdateTimestamp();
-    if (block.timestamp - lastUpdateTimestamp > feesTimeToLive) {
-      uint256 satoshiPerEth = _getSatoshiPerEth();
-      uint256 gweiPerGas = _getGweiPerGas();
-      fees = fees.setCached(satoshiPerEth, gweiPerGas, block.timestamp);
-      _globalFees = fees;
-      emit GlobalFeesCacheUpdated(satoshiPerEth, gweiPerGas);
-    }
-  }
-
-  function _calculateModuleFees(
-    GlobalFees globalFees,
-    uint256 loanGasE4,
-    uint256 repayGasE4
-  )
-    internal
-    pure
-    returns (
-      uint256 loanRefundEth,
-      uint256 repayRefundEth,
-      uint256 staticBorrowFee
-    )
-  {
-    uint256 satoshiPerEth;
-    uint256 gasPrice;
-    (staticBorrowFee, satoshiPerEth, gasPrice) = globalFees.getParamsForModuleFees();
-    // Multiply gasPrice (expressed in gwei) by 1e9 to convert to wei, and by 1e4 to convert
-    // the gas values (expressed as gas * 1e-4) to ETH
-    gasPrice *= 1e13;
-    // Compute ETH cost of running loan function
-    loanRefundEth = loanGasE4 * gasPrice;
-    // Compute ETH cost of running repay function
-    repayRefundEth = repayGasE4 * gasPrice;
-    // Compute BTC value of the total gas cost for both functions and add it to the
-    // global static borrow fee
-    staticBorrowFee += (satoshiPerEth * (loanRefundEth + repayRefundEth)) / 1e18;
-  }
-
-  function _getUpdatedGlobalAndModuleFees(address module)
-    internal
-    returns (GlobalFees globalFees, ModuleFees moduleFees)
-  {
-    uint256 lastGlobalUpdateTimestamp;
-    (globalFees, lastGlobalUpdateTimestamp) = _getUpdatedGlobalFees();
-    moduleFees = _moduleFees[module];
-    if (ModuleFees.unwrap(moduleFees) == 0) {
-      revert ModuleNotApproved();
-    }
-    if (moduleFees.getLastUpdateTimestamp() < lastGlobalUpdateTimestamp) {
-      (uint256 loanGasE4, uint256 repayGasE4) = moduleFees.getGasParams();
-      (uint256 loanRefundEth, uint256 repayRefundEth, uint256 staticBorrowFee) = _calculateModuleFees(
-        globalFees,
-        loanGasE4,
-        repayGasE4
-      );
-      moduleFees = moduleFees.setCached(loanRefundEth, repayRefundEth, staticBorrowFee, block.timestamp);
-      _moduleFees[module] = moduleFees;
-    }
-  }
-
-  function addModule(
-    address module,
-    ModuleType moduleType,
-    uint256 loanGas,
-    uint256 repayGas
-  ) external onlyGovernance {
-    if (module != address(0)) {
-      address moduleAsset = IZeroModule(module).asset();
-      if (moduleAsset != asset) {
-        revert ModuleAssetDoesNotMatch(moduleAsset);
-      }
-    }
-    if ((moduleType == ModuleType.Null) != (module == address(0))) {
-      revert InvalidModuleType();
-    }
-    uint256 loanGasE4 = (loanGas + 9999) / 10000;
-    uint256 repayGasE4 = (repayGas + 9999) / 10000;
-    (GlobalFees globalFees, ) = _getUpdatedGlobalFees();
-
-    (uint256 loanRefundEth, uint256 repayRefundEth, uint256 staticBorrowFee) = _calculateModuleFees(
-      globalFees,
-      loanGasE4,
-      repayGasE4
-    );
-
-    _moduleFees[module] = ModuleFeesCoder.encode(
-      moduleType,
-      loanGasE4,
-      repayGasE4,
-      loanRefundEth,
-      repayRefundEth,
-      staticBorrowFee,
-      block.timestamp
-    );
-
-    emit ModuleFeesUpdated(module, moduleType, loanGasE4, repayGasE4);
-  }
-
-  function removeModule(address module) external onlyGovernance {
-    ModuleFees _fees;
-    assembly {
-      _fees := 0
-    }
-    _moduleFees[module] = _fees; //ModuleFees.wrap(0);
-  }
-
-  function getGateway() internal view returns (IGateway gateway) {
-    gateway = IGateway(gatewayRegistry.getGatewayByToken(asset));
-  }
-
-  function executeReceiveLoan(
-    address module,
-    address borrower,
-    bytes32 loanId,
-    uint256 borrowAmount,
-    bytes memory data
-  ) internal RestoreFiveWordsBefore(data) {
-    assembly {
-      let startPtr := sub(data, 0x84)
-      // Write receiveLoan selector
-      mstore(startPtr, ReceiveLoanSelector)
-      // Write borrower
-      mstore(add(startPtr, 0x04), borrower)
-      // Write borrowAmount
-      mstore(add(startPtr, 0x24), borrowAmount)
-      // Write loanId
-      mstore(add(startPtr, 0x44), loanId)
-      // Write data offset
-      mstore(add(startPtr, 0x64), 0x80)
-      // Size of data + (selector, borrower, borrowAmount, loanId, data_offset, data_length)
-      let calldataLength := add(mload(data), 0xa4)
-
-      let status := delegatecall(gas(), module, startPtr, calldataLength, 0, 0)
-      if iszero(status) {
-        if returndatasize() {
-          returndatacopy(0, 0, returndatasize())
-          revert(0, returndatasize())
-        }
-        // Write ReceiveLoanError.selector
-        mstore(sub(startPtr, 0x20), ReceiveLoanSelector)
-        // Write module to memory
-        mstore(sub(startPtr, 0x1c), module)
-        // Update data offset
-        mstore(add(startPtr, 0x64), 0xa0)
-        revert(sub(startPtr, 0x20), add(calldataLength, 0x20))
-      }
-    }
-  }
-
-  function executeRepayLoan(
-    address module,
-    bytes32 loanId,
-    address borrower,
-    uint256 repayAmount,
-    bytes memory data
-  ) internal RestoreFiveWordsBefore(data) returns (uint256 collateralToUnlock) {
-    assembly {
-      let startPtr := sub(data, 0x84)
-      // Write repayLoan selector
-      mstore(startPtr, RepayLoanSelector)
-      calldatacopy(add(startPtr, 0x04), 0x24, 0x40)
-      // Write borrower
-      mstore(add(startPtr, 0x04), borrower)
-      // Write repayAmount
-      mstore(add(startPtr, 0x24), repayAmount)
-      // Write loanId
-      mstore(add(startPtr, 0x44), loanId)
-      // Write data offset
-      mstore(add(startPtr, 0x64), 0x80)
-      // Size of data + (selector, borrower, repayAmount, loanId, data_offset, data_length)
-      let calldataLength := add(mload(data), 0xa4)
-
-      let status := delegatecall(gas(), module, startPtr, calldataLength, 0, 0x20)
-      if iszero(status) {
-        if returndatasize() {
-          returndatacopy(0, 0, returndatasize())
-          revert(0, returndatasize())
-        }
-        // Write RepayLoanError.selector
-        mstore(sub(startPtr, 0x20), RepayLoanSelector)
-        // Write module to memory
-        mstore(sub(startPtr, 0x1c), module)
-        // Update data offset
-        mstore(add(startPtr, 0x64), 0xa0)
-        revert(sub(startPtr, 0x20), add(calldataLength, 0x20))
-      }
-
-      collateralToUnlock := mload(0)
-    }
-  }
-
-  function getLoanFee(
-    GlobalFees globalFees,
-    uint256 borrowAmount,
-    uint256 staticBorrowFee
-  ) internal pure returns (uint256) {
-    return staticBorrowFee + (borrowAmount * globalFees.getDynamicBorrowFeeBips()) / BasisPointsOne;
-  }
+  /*//////////////////////////////////////////////////////////////
+                        External Loan Actions
+  //////////////////////////////////////////////////////////////*/
 
   /**
    * @param module Module to use for conversion
@@ -352,40 +46,41 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
     bytes memory signature,
     bytes memory data
   ) external nonReentrant {
-    (GlobalFees globalFees, ModuleFees moduleFees) = _getUpdatedGlobalAndModuleFees(module);
-    (ModuleType moduleType, uint256 loanRefundEth, uint256 staticBorrowFee) = moduleFees.getLoanParams();
+    (GlobalState state, ModuleState moduleState) = _getUpdatedGlobalAndModuleState(module);
 
-    bytes32 loanId = verifyTransferRequestSignature(borrower, asset, borrowAmount, module, nonce, data, signature);
+    bytes32 loanId = _verifyTransferRequestSignature(borrower, asset, borrowAmount, module, nonce, data, signature);
 
-    borrowAmount -= getLoanFee(globalFees, borrowAmount, staticBorrowFee);
+    (uint256 actualBorrowAmount, uint256 lenderDebt, uint256 vaultExpenseWithoutRepayFee) = _calculateLoanFees(
+      state,
+      moduleState,
+      borrowAmount
+    );
 
     // Store loan information (underlying and shares locked for lender)
-    // and transfer their shares to the vault.
-    _borrowFrom(uint256(loanId), msg.sender, borrower, borrowAmount);
+    // and transfer their shares to the vault. The lender
+    _borrowFrom(uint256(loanId), msg.sender, borrower, actualBorrowAmount, lenderDebt, vaultExpenseWithoutRepayFee);
 
-    bool overrideLoan;
-    assembly {
-      overrideLoan := gt(moduleType, 0)
-    }
-    if (overrideLoan) {
+    (ModuleType moduleType, uint256 ethRefundForLoanGas) = moduleState.getLoanParams();
+    if (uint256(moduleType) > 0) {
       // Execute module interaction
-      executeReceiveLoan(module, borrower, loanId, borrowAmount, data);
+      _executeReceiveLoan(module, borrower, loanId, borrowAmount, data);
     } else {
+      // If module does not override loan behavior,
       asset.safeTransfer(borrower, borrowAmount);
     }
 
-    tx.origin.safeTransferETH(loanRefundEth);
+    tx.origin.safeTransferETH(ethRefundForLoanGas);
   }
 
   /**
-   * @param lender Address of lender that backed the loan
+   * @param lender Address of account that gave the loan
    * @param borrower Address of account that took out the loan
    * @param borrowAmount Original loan amount before fees
    * @param nonce Nonce for the loan
    * @param module Module used for the loan
    * @param nHash Nonce hash from RenVM deposit
+   * @param renSignature Signature from RenVM
    * @param data Extra data used by module
-   * @param signature Signature from RenVM
    */
   function repay(
     address lender,
@@ -394,24 +89,326 @@ contract BtcVault is BtcVaultBase, LendableSharesVault, EIP712, Governable {
     uint256 nonce,
     address module,
     bytes32 nHash,
-    bytes memory signature,
+    bytes memory renSignature,
     bytes memory data
   ) external nonReentrant {
-    (, ModuleFees moduleFees) = _getUpdatedGlobalAndModuleFees(module);
+    (, ModuleState moduleState) = _getUpdatedGlobalAndModuleState(module);
 
-    bytes32 loanId = digestTransferRequest(asset, borrowAmount, module, nonce, data);
-    uint256 mintAmount = getGateway().mint(loanId, borrowAmount, nHash, signature);
+    bytes32 loanId = _digestTransferRequest(borrower, asset, borrowAmount, module, nonce, data);
+    uint256 mintAmount = _getGateway().mint(loanId, borrowAmount, nHash, renSignature);
 
-    (ModuleType moduleType, uint256 repayRefundEth) = moduleFees.getRepayParams();
+    (ModuleType moduleType, uint256 ethRefundForRepayGas, uint256 btcFeeForRepayGas) = moduleState.getRepayParams();
+    uint256 collateralToUnlock = mintAmount;
 
     if (moduleType == ModuleType.LoanAndRepayOverride) {
-      uint256 collateralToUnlock = executeRepayLoan(module, loanId, borrower, mintAmount, data);
-      _repayTo(lender, uint256(loanId), collateralToUnlock);
-    } else {
-      _repayTo(lender, uint256(loanId), mintAmount);
+      collateralToUnlock = _executeRepayLoan(module, borrower, loanId, mintAmount, data);
     }
-    tx.origin.safeTransferETH(repayRefundEth);
+
+    _repayTo(lender, uint256(loanId), collateralToUnlock, btcFeeForRepayGas);
+
+    tx.origin.safeTransferETH(ethRefundForRepayGas);
   }
 
-  receive() external payable {}
+  /*//////////////////////////////////////////////////////////////
+                         Governance Actions
+  //////////////////////////////////////////////////////////////*/
+
+  function setGlobalFees(
+    uint256 zeroBorrowFeeBips,
+    uint256 renBorrowFeeBips,
+    uint256 zeroBorrowFeeStatic,
+    uint256 renBorrowFeeStatic
+  ) external onlyGovernance nonReentrant {
+    if (zeroBorrowFeeBips > 2000 || renBorrowFeeBips > 2000 || zeroBorrowFeeBips == 0 || renBorrowFeeBips == 0) {
+      revert InvalidDynamicBorrowFee();
+    }
+    _state = _state.setFees(zeroBorrowFeeBips, renBorrowFeeBips, zeroBorrowFeeStatic, renBorrowFeeStatic);
+  }
+
+  function setModuleGasFees(
+    address module,
+    uint256 loanGas,
+    uint256 repayGas
+  ) external onlyGovernance nonReentrant {
+    (GlobalState state, ) = _getUpdatedGlobalState();
+    ModuleState moduleState = _getExistingModuleState(module);
+    // Divide loan and repay gas by 10000
+    uint256 loanGasE4 = loanGas.uncheckedDivUpE4();
+    uint256 repayGasE4 = repayGas.uncheckedDivUpE4();
+    moduleState = moduleState.setGasParams(loanGasE4, repayGasE4);
+    _updateModuleCache(state, moduleState, module);
+  }
+
+  function addModule(
+    address module,
+    ModuleType moduleType,
+    uint256 loanGas,
+    uint256 repayGas
+  ) external onlyGovernance nonReentrant {
+    if (module != address(0)) {
+      address moduleAsset = IZeroModule(module).asset();
+      if (moduleAsset != asset) {
+        revert ModuleAssetDoesNotMatch(moduleAsset);
+      }
+    }
+
+    if (loanGas == 0 || repayGas == 0) {
+      revert InvalidNullValue();
+    }
+
+    // Module type can not be null unless address is 0
+    // If address is 0, module type must be null
+    if ((moduleType == ModuleType.Null) != (module == address(0))) {
+      revert InvalidModuleType();
+    }
+
+    // Divide loan and repay gas by 10000
+    uint256 loanGasE4 = loanGas.uncheckedDivUpE4();
+    uint256 repayGasE4 = repayGas.uncheckedDivUpE4();
+
+    // Get updated global state, with cache refreshed if it had expired
+    (GlobalState state, ) = _getUpdatedGlobalState();
+
+    // Calculate the new gas refunds for the module
+    (
+      uint256 ethRefundForLoanGas,
+      uint256 ethRefundForRepayGas,
+      uint256 btcFeeForLoanGas,
+      uint256 btcFeeForRepayGas
+    ) = _calculateModuleGasFees(state, loanGasE4, repayGasE4);
+
+    // Write the module data to storage
+    _moduleFees[module] = ModuleStateCoder.encode(
+      moduleType,
+      loanGasE4,
+      repayGasE4,
+      ethRefundForLoanGas,
+      ethRefundForRepayGas,
+      btcFeeForLoanGas,
+      btcFeeForRepayGas,
+      block.timestamp
+    );
+
+    emit ModuleStateUpdated(module, moduleType, loanGasE4, repayGasE4);
+  }
+
+  function removeModule(address module) external onlyGovernance nonReentrant {
+    _moduleFees[module] = DefaultModuleState;
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                          External Updaters
+  //////////////////////////////////////////////////////////////*/
+
+  function pokeGlobalCache() external nonReentrant {
+    _updateGlobalCache(_state);
+  }
+
+  function pokeModuleCache(address module) external nonReentrant {
+    _getUpdatedGlobalAndModuleState(module);
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                          External Getters
+  //////////////////////////////////////////////////////////////*/
+
+  function getGlobalState()
+    external
+    view
+    returns (
+      uint256 zeroBorrowFeeBips,
+      uint256 renBorrowFeeBips,
+      uint256 zeroBorrowFeeStatic,
+      uint256 renBorrowFeeStatic,
+      uint256 zeroFeeShareBips,
+      uint256 totalBitcoinBorrowed,
+      uint256 satoshiPerEth,
+      uint256 gweiPerGas,
+      uint256 lastUpdateTimestamp
+    )
+  {
+    return _state.decode();
+  }
+
+  function getModuleState(address module)
+    external
+    view
+    returns (
+      ModuleType moduleType,
+      uint256 loanGasE4,
+      uint256 repayGasE4,
+      uint256 ethRefundForLoanGas,
+      uint256 ethRefundForRepayGas,
+      uint256 btcFeeForLoanGas,
+      uint256 btcFeeForRepayGas,
+      uint256 lastUpdateTimestamp
+    )
+  {
+    return _getExistingModuleState(module).decode();
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                           Oracle Queries
+  //////////////////////////////////////////////////////////////*/
+
+  function _getSatoshiPerEth() internal view returns (uint256) {
+    uint256 ethPerBitcoin = btcEthPriceOracle.latestAnswer();
+    return BtcEthPriceInversionNumerator / ethPerBitcoin;
+  }
+
+  function _getGweiPerGas() internal view returns (uint256) {
+    uint256 gasPrice = gasPriceOracle.latestAnswer();
+    return gasPrice / 1e9;
+  }
+
+  function _getGateway() internal view returns (IGateway gateway) {
+    gateway = IGateway(gatewayRegistry.getGatewayByToken(asset));
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                  Internal Fee Getters and Updaters               
+  //////////////////////////////////////////////////////////////*/
+
+  function _updateGlobalCache(GlobalState state) internal returns (GlobalState) {
+    uint256 satoshiPerEth = _getSatoshiPerEth();
+    uint256 gweiPerGas = _getGweiPerGas();
+    state = state.setCached(satoshiPerEth, gweiPerGas, block.timestamp);
+    _state = state;
+    emit GlobalStateCacheUpdated(satoshiPerEth, gweiPerGas);
+    return state;
+  }
+
+  function _updateModuleCache(
+    GlobalState state,
+    ModuleState moduleState,
+    address module
+  ) internal returns (ModuleState) {
+    // Read the gas parameters
+    (uint256 loanGasE4, uint256 repayGasE4) = moduleState.getGasParams();
+    // Calculate the new gas refunds for the module
+    (
+      uint256 ethRefundForLoanGas,
+      uint256 ethRefundForRepayGas,
+      uint256 btcFeeForLoanGas,
+      uint256 btcFeeForRepayGas
+    ) = _calculateModuleGasFees(state, loanGasE4, repayGasE4);
+    // Update the module's cache and write it to storage
+    moduleState = moduleState.setCached(
+      ethRefundForLoanGas,
+      ethRefundForRepayGas,
+      btcFeeForLoanGas,
+      btcFeeForRepayGas,
+      block.timestamp
+    );
+    _moduleFees[module] = moduleState;
+    return moduleState;
+  }
+
+  function _getUpdatedGlobalState() internal returns (GlobalState state, uint256 lastUpdateTimestamp) {
+    state = _state;
+    lastUpdateTimestamp = state.getLastUpdateTimestamp();
+    if (block.timestamp - lastUpdateTimestamp > cacheTimeToLive) {
+      state = _updateGlobalCache(state);
+    }
+  }
+
+  function _getUpdatedGlobalAndModuleState(address module)
+    internal
+    returns (GlobalState state, ModuleState moduleState)
+  {
+    // Get updated global state, with cache refreshed if it had expired
+    uint256 lastGlobalUpdateTimestamp;
+    (state, lastGlobalUpdateTimestamp) = _getUpdatedGlobalState();
+    // Read module state from storage
+    moduleState = _getExistingModuleState(module);
+    // Check if module's cache is older than global cache
+    if (moduleState.getLastUpdateTimestamp() < lastGlobalUpdateTimestamp) {
+      moduleState = _updateModuleCache(state, moduleState, module);
+    }
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                      Internal Fee Calculators
+  //////////////////////////////////////////////////////////////*/
+
+  function _calculateModuleGasFees(
+    GlobalState state,
+    uint256 loanGasE4,
+    uint256 repayGasE4
+  )
+    internal
+    pure
+    returns (
+      uint256 ethRefundForLoanGas,
+      uint256 ethRefundForRepayGas,
+      uint256 btcFeeForLoanGas,
+      uint256 btcFeeForRepayGas
+    )
+  {
+    (uint256 satoshiPerEth, uint256 gasPrice) = state.getParamsForModuleState();
+    // Unchecked because gasPrice can not exceed 60 bits,
+    // refunds can not exceed 68 bits and the numerator for
+    // borrowGasFeeBitcoin can not exceed 108 bits
+    unchecked {
+      // Multiply gasPrice (expressed in gwei) by 1e9 to convert to wei, and by 1e4 to convert
+      // the gas values (expressed as gas * 1e-4) to ETH
+      gasPrice *= 1e13;
+      // Compute ETH cost of running loan function
+      ethRefundForLoanGas = loanGasE4 * gasPrice;
+      // Compute ETH cost of running repay function
+      ethRefundForRepayGas = repayGasE4 * gasPrice;
+      // Compute BTC value of `ethRefundForLoanGas`
+      btcFeeForLoanGas = (satoshiPerEth * ethRefundForLoanGas) / OneEth;
+      // Compute BTC value of `ethRefundForRepayGas`
+      btcFeeForRepayGas = (satoshiPerEth * ethRefundForRepayGas) / OneEth;
+    }
+  }
+
+  function _calculateRenAndZeroFees(GlobalState state, uint256 borrowAmount)
+    internal
+    pure
+    returns (uint256 renFees, uint256 zeroFees)
+  {
+    (
+      uint256 zeroBorrowFeeBips,
+      uint256 renBorrowFeeBips,
+      uint256 zeroBorrowFeeStatic,
+      uint256 renBorrowFeeStatic
+    ) = state.getFees();
+
+    renFees = renBorrowFeeStatic + borrowAmount.uncheckedMulBipsUp(renBorrowFeeBips);
+    zeroFees = zeroBorrowFeeStatic + borrowAmount.uncheckedMulBipsUp(zeroBorrowFeeBips);
+  }
+
+  function _calculateLoanFees(
+    GlobalState state,
+    ModuleState moduleState,
+    uint256 borrowAmount
+  )
+    internal
+    pure
+    returns (
+      uint256 actualBorrowAmount,
+      uint256 lenderDebt,
+      uint256 vaultExpenseWithoutRepayFee
+    )
+  {
+    (uint256 renFees, uint256 zeroFees) = _calculateRenAndZeroFees(state, borrowAmount);
+    (uint256 btcFeeForLoanGas, uint256 btcFeeForRepayGas) = moduleState.getBitcoinGasFees();
+
+    vaultExpenseWithoutRepayFee = borrowAmount - (renFees + zeroFees + btcFeeForLoanGas);
+    lenderDebt = vaultExpenseWithoutRepayFee - btcFeeForRepayGas;
+    actualBorrowAmount = lenderDebt - zeroFees;
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                          Internal Getters
+  //////////////////////////////////////////////////////////////*/
+
+  function _getExistingModuleState(address module) internal view returns (ModuleState moduleState) {
+    moduleState = _moduleFees[module];
+    if (moduleState.isNull()) {
+      revert ModuleDoesNotExist();
+    }
+  }
 }
