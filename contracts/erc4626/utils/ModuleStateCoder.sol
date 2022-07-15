@@ -21,9 +21,9 @@ import './CoderConstants.sol';
 // }
 type ModuleState is uint256;
 
-ModuleState constant DefaultModuleFees = ModuleState.wrap(0);
+ModuleState constant DefaultModuleState = ModuleState.wrap(0);
 
-library ModuleFeesCoder {
+library ModuleStateCoder {
 	/*//////////////////////////////////////////////////////////////
                            ModuleState
 //////////////////////////////////////////////////////////////*/
@@ -43,14 +43,14 @@ library ModuleFeesCoder {
 		)
 	{
 		assembly {
-			moduleType := shr(ModuleFees_moduleType_bitsAfter, encoded)
-			loanGasE4 := and(MaxUint8, shr(ModuleFees_loanGasE4_bitsAfter, encoded))
-			repayGasE4 := and(MaxUint8, shr(ModuleFees_repayGasE4_bitsAfter, encoded))
-			ethRefundForLoanGas := and(MaxUint64, shr(ModuleFees_ethRefundForLoanGas_bitsAfter, encoded))
-			ethRefundForRepayGas := and(MaxUint64, shr(ModuleFees_ethRefundForRepayGas_bitsAfter, encoded))
-			btcFeeForLoanGas := and(MaxUint24, shr(ModuleFees_btcFeeForLoanGas_bitsAfter, encoded))
-			btcFeeForRepayGas := and(MaxUint24, shr(ModuleFees_btcFeeForRepayGas_bitsAfter, encoded))
-			lastUpdateTimestamp := and(MaxUint32, shr(ModuleFees_lastUpdateTimestamp_bitsAfter, encoded))
+			moduleType := shr(ModuleState_moduleType_bitsAfter, encoded)
+			loanGasE4 := and(MaxUint8, shr(ModuleState_loanGasE4_bitsAfter, encoded))
+			repayGasE4 := and(MaxUint8, shr(ModuleState_repayGasE4_bitsAfter, encoded))
+			ethRefundForLoanGas := and(MaxUint64, shr(ModuleState_ethRefundForLoanGas_bitsAfter, encoded))
+			ethRefundForRepayGas := and(MaxUint64, shr(ModuleState_ethRefundForRepayGas_bitsAfter, encoded))
+			btcFeeForLoanGas := and(MaxUint24, shr(ModuleState_btcFeeForLoanGas_bitsAfter, encoded))
+			btcFeeForRepayGas := and(MaxUint24, shr(ModuleState_btcFeeForRepayGas_bitsAfter, encoded))
+			lastUpdateTimestamp := and(MaxUint32, shr(ModuleState_lastUpdateTimestamp_bitsAfter, encoded))
 		}
 	}
 
@@ -86,20 +86,20 @@ library ModuleFeesCoder {
 				revert(0, Panic_error_length)
 			}
 			encoded := or(
-				shl(ModuleFees_moduleType_bitsAfter, moduleType),
+				shl(ModuleState_moduleType_bitsAfter, moduleType),
 				or(
-					shl(ModuleFees_loanGasE4_bitsAfter, loanGasE4),
+					shl(ModuleState_loanGasE4_bitsAfter, loanGasE4),
 					or(
-						shl(ModuleFees_repayGasE4_bitsAfter, repayGasE4),
+						shl(ModuleState_repayGasE4_bitsAfter, repayGasE4),
 						or(
-							shl(ModuleFees_ethRefundForLoanGas_bitsAfter, ethRefundForLoanGas),
+							shl(ModuleState_ethRefundForLoanGas_bitsAfter, ethRefundForLoanGas),
 							or(
-								shl(ModuleFees_ethRefundForRepayGas_bitsAfter, ethRefundForRepayGas),
+								shl(ModuleState_ethRefundForRepayGas_bitsAfter, ethRefundForRepayGas),
 								or(
-									shl(ModuleFees_btcFeeForLoanGas_bitsAfter, btcFeeForLoanGas),
+									shl(ModuleState_btcFeeForLoanGas_bitsAfter, btcFeeForLoanGas),
 									or(
-										shl(ModuleFees_btcFeeForRepayGas_bitsAfter, btcFeeForRepayGas),
-										shl(ModuleFees_lastUpdateTimestamp_bitsAfter, lastUpdateTimestamp)
+										shl(ModuleState_btcFeeForRepayGas_bitsAfter, btcFeeForRepayGas),
+										shl(ModuleState_lastUpdateTimestamp_bitsAfter, lastUpdateTimestamp)
 									)
 								)
 							)
@@ -120,8 +120,8 @@ library ModuleFeesCoder {
 		returns (ModuleType moduleType, uint256 ethRefundForLoanGas)
 	{
 		assembly {
-			moduleType := shr(ModuleFees_moduleType_bitsAfter, encoded)
-			ethRefundForLoanGas := and(MaxUint64, shr(ModuleFees_ethRefundForLoanGas_bitsAfter, encoded))
+			moduleType := shr(ModuleState_moduleType_bitsAfter, encoded)
+			ethRefundForLoanGas := and(MaxUint64, shr(ModuleState_ethRefundForLoanGas_bitsAfter, encoded))
 		}
 	}
 
@@ -135,13 +135,13 @@ library ModuleFeesCoder {
 		returns (uint256 btcFeeForLoanGas, uint256 btcFeeForRepayGas)
 	{
 		assembly {
-			btcFeeForLoanGas := and(MaxUint24, shr(ModuleFees_btcFeeForLoanGas_bitsAfter, encoded))
-			btcFeeForRepayGas := and(MaxUint24, shr(ModuleFees_btcFeeForRepayGas_bitsAfter, encoded))
+			btcFeeForLoanGas := and(MaxUint24, shr(ModuleState_btcFeeForLoanGas_bitsAfter, encoded))
+			btcFeeForRepayGas := and(MaxUint24, shr(ModuleState_btcFeeForRepayGas_bitsAfter, encoded))
 		}
 	}
 
 	/*//////////////////////////////////////////////////////////////
-                  ModuleState RepayParams coders
+                 ModuleState RepayParams coders
 //////////////////////////////////////////////////////////////*/
 
 	function setRepayParams(
@@ -157,12 +157,12 @@ library ModuleFeesCoder {
 				revert(0, Panic_error_length)
 			}
 			updated := or(
-				and(old, ModuleFees_RepayParams_maskOut),
+				and(old, ModuleState_RepayParams_maskOut),
 				or(
-					shl(ModuleFees_moduleType_bitsAfter, moduleType),
+					shl(ModuleState_moduleType_bitsAfter, moduleType),
 					or(
-						shl(ModuleFees_ethRefundForRepayGas_bitsAfter, ethRefundForRepayGas),
-						shl(ModuleFees_btcFeeForRepayGas_bitsAfter, btcFeeForRepayGas)
+						shl(ModuleState_ethRefundForRepayGas_bitsAfter, ethRefundForRepayGas),
+						shl(ModuleState_btcFeeForRepayGas_bitsAfter, btcFeeForRepayGas)
 					)
 				)
 			)
@@ -179,9 +179,9 @@ library ModuleFeesCoder {
 		)
 	{
 		assembly {
-			moduleType := shr(ModuleFees_moduleType_bitsAfter, encoded)
-			ethRefundForRepayGas := and(MaxUint64, shr(ModuleFees_ethRefundForRepayGas_bitsAfter, encoded))
-			btcFeeForRepayGas := and(MaxUint24, shr(ModuleFees_btcFeeForRepayGas_bitsAfter, encoded))
+			moduleType := shr(ModuleState_moduleType_bitsAfter, encoded)
+			ethRefundForRepayGas := and(MaxUint64, shr(ModuleState_ethRefundForRepayGas_bitsAfter, encoded))
+			btcFeeForRepayGas := and(MaxUint24, shr(ModuleState_btcFeeForRepayGas_bitsAfter, encoded))
 		}
 	}
 
@@ -210,16 +210,16 @@ library ModuleFeesCoder {
 				revert(0, Panic_error_length)
 			}
 			updated := or(
-				and(old, ModuleFees_Cached_maskOut),
+				and(old, ModuleState_Cached_maskOut),
 				or(
-					shl(ModuleFees_ethRefundForLoanGas_bitsAfter, ethRefundForLoanGas),
+					shl(ModuleState_ethRefundForLoanGas_bitsAfter, ethRefundForLoanGas),
 					or(
-						shl(ModuleFees_ethRefundForRepayGas_bitsAfter, ethRefundForRepayGas),
+						shl(ModuleState_ethRefundForRepayGas_bitsAfter, ethRefundForRepayGas),
 						or(
-							shl(ModuleFees_btcFeeForLoanGas_bitsAfter, btcFeeForLoanGas),
+							shl(ModuleState_btcFeeForLoanGas_bitsAfter, btcFeeForLoanGas),
 							or(
-								shl(ModuleFees_btcFeeForRepayGas_bitsAfter, btcFeeForRepayGas),
-								shl(ModuleFees_lastUpdateTimestamp_bitsAfter, lastUpdateTimestamp)
+								shl(ModuleState_btcFeeForRepayGas_bitsAfter, btcFeeForRepayGas),
+								shl(ModuleState_lastUpdateTimestamp_bitsAfter, lastUpdateTimestamp)
 							)
 						)
 					)
@@ -240,16 +240,16 @@ library ModuleFeesCoder {
 		)
 	{
 		assembly {
-			ethRefundForLoanGas := and(MaxUint64, shr(ModuleFees_ethRefundForLoanGas_bitsAfter, encoded))
-			ethRefundForRepayGas := and(MaxUint64, shr(ModuleFees_ethRefundForRepayGas_bitsAfter, encoded))
-			btcFeeForLoanGas := and(MaxUint24, shr(ModuleFees_btcFeeForLoanGas_bitsAfter, encoded))
-			btcFeeForRepayGas := and(MaxUint24, shr(ModuleFees_btcFeeForRepayGas_bitsAfter, encoded))
-			lastUpdateTimestamp := and(MaxUint32, shr(ModuleFees_lastUpdateTimestamp_bitsAfter, encoded))
+			ethRefundForLoanGas := and(MaxUint64, shr(ModuleState_ethRefundForLoanGas_bitsAfter, encoded))
+			ethRefundForRepayGas := and(MaxUint64, shr(ModuleState_ethRefundForRepayGas_bitsAfter, encoded))
+			btcFeeForLoanGas := and(MaxUint24, shr(ModuleState_btcFeeForLoanGas_bitsAfter, encoded))
+			btcFeeForRepayGas := and(MaxUint24, shr(ModuleState_btcFeeForRepayGas_bitsAfter, encoded))
+			lastUpdateTimestamp := and(MaxUint32, shr(ModuleState_lastUpdateTimestamp_bitsAfter, encoded))
 		}
 	}
 
 	/*//////////////////////////////////////////////////////////////
-                   ModuleState GasParams coders
+                  ModuleState GasParams coders
 //////////////////////////////////////////////////////////////*/
 
 	function setGasParams(
@@ -264,16 +264,16 @@ library ModuleFeesCoder {
 				revert(0, Panic_error_length)
 			}
 			updated := or(
-				and(old, ModuleFees_GasParams_maskOut),
-				or(shl(ModuleFees_loanGasE4_bitsAfter, loanGasE4), shl(ModuleFees_repayGasE4_bitsAfter, repayGasE4))
+				and(old, ModuleState_GasParams_maskOut),
+				or(shl(ModuleState_loanGasE4_bitsAfter, loanGasE4), shl(ModuleState_repayGasE4_bitsAfter, repayGasE4))
 			)
 		}
 	}
 
 	function getGasParams(ModuleState encoded) internal pure returns (uint256 loanGasE4, uint256 repayGasE4) {
 		assembly {
-			loanGasE4 := and(MaxUint8, shr(ModuleFees_loanGasE4_bitsAfter, encoded))
-			repayGasE4 := and(MaxUint8, shr(ModuleFees_repayGasE4_bitsAfter, encoded))
+			loanGasE4 := and(MaxUint8, shr(ModuleState_loanGasE4_bitsAfter, encoded))
+			repayGasE4 := and(MaxUint8, shr(ModuleState_repayGasE4_bitsAfter, encoded))
 		}
 	}
 
@@ -283,23 +283,23 @@ library ModuleFeesCoder {
 
 	function getModuleType(ModuleState encoded) internal pure returns (ModuleType moduleType) {
 		assembly {
-			moduleType := shr(ModuleFees_moduleType_bitsAfter, encoded)
+			moduleType := shr(ModuleState_moduleType_bitsAfter, encoded)
 		}
 	}
 
 	function setModuleType(ModuleState old, ModuleType moduleType) internal pure returns (ModuleState updated) {
 		assembly {
-			updated := or(and(old, ModuleFees_moduleType_maskOut), shl(ModuleFees_moduleType_bitsAfter, moduleType))
+			updated := or(and(old, ModuleState_moduleType_maskOut), shl(ModuleState_moduleType_bitsAfter, moduleType))
 		}
 	}
 
 	/*//////////////////////////////////////////////////////////////
-                   ModuleState.loanGasE4 coders
+                  ModuleState.loanGasE4 coders
 //////////////////////////////////////////////////////////////*/
 
 	function getLoanGasE4(ModuleState encoded) internal pure returns (uint256 loanGasE4) {
 		assembly {
-			loanGasE4 := and(MaxUint8, shr(ModuleFees_loanGasE4_bitsAfter, encoded))
+			loanGasE4 := and(MaxUint8, shr(ModuleState_loanGasE4_bitsAfter, encoded))
 		}
 	}
 
@@ -310,7 +310,7 @@ library ModuleFeesCoder {
 				mstore(Panic_error_offset, Panic_arithmetic)
 				revert(0, Panic_error_length)
 			}
-			updated := or(and(old, ModuleFees_loanGasE4_maskOut), shl(ModuleFees_loanGasE4_bitsAfter, loanGasE4))
+			updated := or(and(old, ModuleState_loanGasE4_maskOut), shl(ModuleState_loanGasE4_bitsAfter, loanGasE4))
 		}
 	}
 
@@ -320,7 +320,7 @@ library ModuleFeesCoder {
 
 	function getRepayGasE4(ModuleState encoded) internal pure returns (uint256 repayGasE4) {
 		assembly {
-			repayGasE4 := and(MaxUint8, shr(ModuleFees_repayGasE4_bitsAfter, encoded))
+			repayGasE4 := and(MaxUint8, shr(ModuleState_repayGasE4_bitsAfter, encoded))
 		}
 	}
 
@@ -331,17 +331,17 @@ library ModuleFeesCoder {
 				mstore(Panic_error_offset, Panic_arithmetic)
 				revert(0, Panic_error_length)
 			}
-			updated := or(and(old, ModuleFees_repayGasE4_maskOut), shl(ModuleFees_repayGasE4_bitsAfter, repayGasE4))
+			updated := or(and(old, ModuleState_repayGasE4_maskOut), shl(ModuleState_repayGasE4_bitsAfter, repayGasE4))
 		}
 	}
 
 	/*//////////////////////////////////////////////////////////////
-              ModuleState.ethRefundForLoanGas coders
+             ModuleState.ethRefundForLoanGas coders
 //////////////////////////////////////////////////////////////*/
 
 	function getEthRefundForLoanGas(ModuleState encoded) internal pure returns (uint256 ethRefundForLoanGas) {
 		assembly {
-			ethRefundForLoanGas := and(MaxUint64, shr(ModuleFees_ethRefundForLoanGas_bitsAfter, encoded))
+			ethRefundForLoanGas := and(MaxUint64, shr(ModuleState_ethRefundForLoanGas_bitsAfter, encoded))
 		}
 	}
 
@@ -357,8 +357,8 @@ library ModuleFeesCoder {
 				revert(0, Panic_error_length)
 			}
 			updated := or(
-				and(old, ModuleFees_ethRefundForLoanGas_maskOut),
-				shl(ModuleFees_ethRefundForLoanGas_bitsAfter, ethRefundForLoanGas)
+				and(old, ModuleState_ethRefundForLoanGas_maskOut),
+				shl(ModuleState_ethRefundForLoanGas_bitsAfter, ethRefundForLoanGas)
 			)
 		}
 	}
@@ -369,7 +369,7 @@ library ModuleFeesCoder {
 
 	function getEthRefundForRepayGas(ModuleState encoded) internal pure returns (uint256 ethRefundForRepayGas) {
 		assembly {
-			ethRefundForRepayGas := and(MaxUint64, shr(ModuleFees_ethRefundForRepayGas_bitsAfter, encoded))
+			ethRefundForRepayGas := and(MaxUint64, shr(ModuleState_ethRefundForRepayGas_bitsAfter, encoded))
 		}
 	}
 
@@ -385,8 +385,8 @@ library ModuleFeesCoder {
 				revert(0, Panic_error_length)
 			}
 			updated := or(
-				and(old, ModuleFees_ethRefundForRepayGas_maskOut),
-				shl(ModuleFees_ethRefundForRepayGas_bitsAfter, ethRefundForRepayGas)
+				and(old, ModuleState_ethRefundForRepayGas_maskOut),
+				shl(ModuleState_ethRefundForRepayGas_bitsAfter, ethRefundForRepayGas)
 			)
 		}
 	}
@@ -397,7 +397,7 @@ library ModuleFeesCoder {
 
 	function getBtcFeeForLoanGas(ModuleState encoded) internal pure returns (uint256 btcFeeForLoanGas) {
 		assembly {
-			btcFeeForLoanGas := and(MaxUint24, shr(ModuleFees_btcFeeForLoanGas_bitsAfter, encoded))
+			btcFeeForLoanGas := and(MaxUint24, shr(ModuleState_btcFeeForLoanGas_bitsAfter, encoded))
 		}
 	}
 
@@ -409,23 +409,27 @@ library ModuleFeesCoder {
 				revert(0, Panic_error_length)
 			}
 			updated := or(
-				and(old, ModuleFees_btcFeeForLoanGas_maskOut),
-				shl(ModuleFees_btcFeeForLoanGas_bitsAfter, btcFeeForLoanGas)
+				and(old, ModuleState_btcFeeForLoanGas_maskOut),
+				shl(ModuleState_btcFeeForLoanGas_bitsAfter, btcFeeForLoanGas)
 			)
 		}
 	}
 
 	/*//////////////////////////////////////////////////////////////
-               ModuleState.btcFeeForRepayGas coders
+              ModuleState.btcFeeForRepayGas coders
 //////////////////////////////////////////////////////////////*/
 
 	function getBtcFeeForRepayGas(ModuleState encoded) internal pure returns (uint256 btcFeeForRepayGas) {
 		assembly {
-			btcFeeForRepayGas := and(MaxUint24, shr(ModuleFees_btcFeeForRepayGas_bitsAfter, encoded))
+			btcFeeForRepayGas := and(MaxUint24, shr(ModuleState_btcFeeForRepayGas_bitsAfter, encoded))
 		}
 	}
 
-	function setBtcFeeForRepayGas(ModuleState old, uint256 btcFeeForRepayGas) internal pure returns (ModuleState updated) {
+	function setBtcFeeForRepayGas(ModuleState old, uint256 btcFeeForRepayGas)
+		internal
+		pure
+		returns (ModuleState updated)
+	{
 		assembly {
 			if gt(btcFeeForRepayGas, MaxUint24) {
 				mstore(0, Panic_error_signature)
@@ -433,19 +437,19 @@ library ModuleFeesCoder {
 				revert(0, Panic_error_length)
 			}
 			updated := or(
-				and(old, ModuleFees_btcFeeForRepayGas_maskOut),
-				shl(ModuleFees_btcFeeForRepayGas_bitsAfter, btcFeeForRepayGas)
+				and(old, ModuleState_btcFeeForRepayGas_maskOut),
+				shl(ModuleState_btcFeeForRepayGas_bitsAfter, btcFeeForRepayGas)
 			)
 		}
 	}
 
 	/*//////////////////////////////////////////////////////////////
-              ModuleState.lastUpdateTimestamp coders
+             ModuleState.lastUpdateTimestamp coders
 //////////////////////////////////////////////////////////////*/
 
 	function getLastUpdateTimestamp(ModuleState encoded) internal pure returns (uint256 lastUpdateTimestamp) {
 		assembly {
-			lastUpdateTimestamp := and(MaxUint32, shr(ModuleFees_lastUpdateTimestamp_bitsAfter, encoded))
+			lastUpdateTimestamp := and(MaxUint32, shr(ModuleState_lastUpdateTimestamp_bitsAfter, encoded))
 		}
 	}
 
@@ -461,14 +465,14 @@ library ModuleFeesCoder {
 				revert(0, Panic_error_length)
 			}
 			updated := or(
-				and(old, ModuleFees_lastUpdateTimestamp_maskOut),
-				shl(ModuleFees_lastUpdateTimestamp_bitsAfter, lastUpdateTimestamp)
+				and(old, ModuleState_lastUpdateTimestamp_maskOut),
+				shl(ModuleState_lastUpdateTimestamp_bitsAfter, lastUpdateTimestamp)
 			)
 		}
 	}
 
 	/*//////////////////////////////////////////////////////////////
-                  ModuleState comparison methods
+                 ModuleState comparison methods
 //////////////////////////////////////////////////////////////*/
 
 	function equals(ModuleState a, ModuleState b) internal pure returns (bool _equals) {
@@ -478,7 +482,7 @@ library ModuleFeesCoder {
 	}
 
 	function isNull(ModuleState a) internal pure returns (bool _isNull) {
-		_isNull = equals(a, DefaultModuleFees);
+		_isNull = equals(a, DefaultModuleState);
 	}
 }
 
