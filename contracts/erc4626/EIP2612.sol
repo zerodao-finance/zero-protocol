@@ -22,7 +22,7 @@ abstract contract EIP2612 is EIP2612Base, SignatureVerification {
     if (deadline < block.timestamp) {
       revert PermitDeadlineExpired(deadline, block.timestamp);
     }
-    verifyPermitSignature(owner, nonces[owner]++, deadline);
+    _verifyPermitSignature(owner, nonces[owner]++, deadline);
 
     // Unchecked because the only math done is incrementing
     // the owner's nonce which cannot realistically overflow.
