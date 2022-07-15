@@ -11,7 +11,7 @@ import { BigNumberish, ethers } from "ethers";
 import { signTypedDataUtils } from "@0x/utils";
 import { EIP712TypedData } from "@0x/types";
 import { Bitcoin } from "@renproject/chains";
-import RenJS, { BurnAndRelease } from "@renproject/ren";
+import RenJS from "@renproject/ren";
 import { EthArgs } from "@renproject/interfaces";
 import {
   CONTROLLER_DEPLOYMENTS,
@@ -112,39 +112,6 @@ export class BurnRequest {
   setProvider(provider) {
     this.provider = provider;
     return this;
-  }
-  async submitToRenVM(isTest) {
-    console.log("submitToRenVM");
-    console.log(this);
-    if (this._burn) return this._burn;
-    const result = (this._burn = await this._ren.burnAndRelease({
-      asset: "BTC",
-      to: Bitcoin().Address(this.destination),
-      from: getProvider(this).Contract((btcAddress) => ({
-        sendTo: this.contractAddress,
-        contractFn: this._contractFn,
-        contractParams: this._contractParams,
-      })),
-    }));
-    //    result.params.nonce = this.nonce;
-    return result;
-  }
-  async waitForTxNonce(burn: ReturnType<BurnAndRelease["burn"]>) {
-    if (this._queryTxResult) return this._queryTxResult;
-    const burnt: any = await new Promise((resolve, reject) => {
-      burn.on("transactionHash", resolve);
-      (burn as any).on("error", reject);
-    });
-    const tx = await this.provider.waitForTransaction(burnt);
-    const parsed = tx.logs.reduce((v, d) => {
-      if (v) return v;
-      try {
-        return this.gatewayIface.parseLog(d);
-      } catch (e) {}
-    }, null);
-    this.nonce = parsed._n;
-    this._queryTxResult = parsed;
-    return parsed;
   }
   setUnderwriter(underwriter: string): boolean {
     if (!ethers.utils.isAddress(underwriter)) return false;
@@ -248,10 +215,6 @@ export class BurnRequest {
       },
     };
   }
-  async toGatewayAddress(input: GatewayAddressInput): Promise<string> {
-    const burn = await this.submitToRenVM(false);
-    return burn.gatewayAddress;
-  }
   async sign(
     signer: Wallet & Signer,
     contractAddress?: string
@@ -294,11 +257,12 @@ export class BurnRequest {
     }
   }
   async waitForHostTransaction() {
-     var deployment_chain = CONTROLLER_DEPLOYMENTS[
-      ethers.utils.getAddress(this.contractAddress)
-    ].toLowerCase();
-    deployment_chain = deployment_chain == "polygon" ? "matic" : deployment_chain;
-
+    var deployment_chain =
+      CONTROLLER_DEPLOYMENTS[
+        ethers.utils.getAddress(this.contractAddress)
+      ].toLowerCase();
+    deployment_chain =
+      deployment_chain == "polygon" ? "matic" : deployment_chain;
 
     const network = ((v) => (v === "ethereum" ? "mainnet" : v))(
       deployment_chain

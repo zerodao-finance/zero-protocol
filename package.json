@@ -37,7 +37,8 @@
     "node:mainnet": "CHAIN=ETHEREUM CHAIN_ID=1 FORKING=true hardhat node",
     "node:badger": " DEPLOYMENT_NUMBER=1 yarn node:ethereum",
     "node:badger:local": "DEPLOYMENT_NUMBER=1 yarn node:badger:ethereum --export-all deployments/deployments.json",
-    "script:harvester": "hardhat run scripts/harvester.js"
+    "script:harvester": "hardhat run scripts/harvester.js",
+    "test:ren": "CHAIN=ETHEREUM yarn hardhat test test/test-renv3.ts --network localhost"
   },
   "author": "zeroDAO",
   "license": "MIT",

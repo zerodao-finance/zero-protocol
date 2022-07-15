@@ -52,6 +52,7 @@ export class TransferRequest {
     contractAddress?: string;
     chainId?: string | number;
     signature?: string;
+    network?: "mainnet" | "testnet";
   }) {
     this.module = params.module;
     this.to = params.to;
@@ -74,8 +75,8 @@ export class TransferRequest {
     this.chainId = params.chainId;
     this.contractAddress = params.contractAddress;
     this.signature = params.signature;
-    const networkName = "mainnet";
-    this.bitcoin = new Bitcoin({ network: "mainnet" });
+    const networkName = params.network || "mainnet";
+    this.bitcoin = new Bitcoin({ network: networkName });
     this._ren = new RenJS(networkName).withChain(this.bitcoin);
     this._contractFn = "zeroCall";
     this._contractParams = [
