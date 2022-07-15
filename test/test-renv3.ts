@@ -2,6 +2,7 @@ const hre = require("hardhat");
 //@ts-ignore
 const { deployments } = hre;
 import { ethers } from "ethers";
+import { utils as renUtils } from "@renproject/utils";
 var deployParameters = require("../lib/fixtures");
 var deploymentUtils = require("../dist/lib/deployment-utils");
 const { utils } = ethers;
@@ -102,7 +103,7 @@ describe("ren", () => {
     console.log(chainId);
     const transferRequest = new UnderwriterTransferRequest({
       contractAddress,
-      nonce: utils.hexlify(utils.randomBytes(32)),
+      nonce: renUtils.toNBytes(utils.randomBytes(32), 32),
       to: await signer.getAddress(),
       pNonce: utils.hexlify(utils.randomBytes(32)),
       module: deployParameters[process.env.CHAIN].renBTC,

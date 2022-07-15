@@ -1,6 +1,6 @@
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
-import { hexlify } from "@ethersproject/bytes";
+import { hexlify, arrayify } from "@ethersproject/bytes";
 import { randomBytes } from "@ethersproject/random";
 import { _TypedDataEncoder } from "@ethersproject/hash";
 import { GatewayAddressInput } from "./types";
@@ -11,7 +11,7 @@ import { signTypedDataUtils } from "@0x/utils";
 import { EIP712TypedData } from "@0x/types";
 import { EIP712_TYPES } from "./config/constants";
 import { Bitcoin } from "@renproject/chains";
-import { ContractChain } from "@renproject/utils";
+import { utils } from "@renproject/utils";
 import RenJS, { Gateway, GatewayTransaction } from "@renproject/ren";
 import { EthArgs } from "@renproject/interfaces";
 import { getProvider } from "./deployment-utils";
@@ -134,7 +134,6 @@ export class TransferRequest {
     if (this._mint) return this._mint;
     const eth = getProvider(this);
     this._ren = this._ren.withChain(eth);
-    console.log(this.nonce);
     const result = (this._mint = this._ren.gateway({
       asset: "BTC",
       from: this.bitcoin.GatewayAddress(),
@@ -144,7 +143,8 @@ export class TransferRequest {
         params: this._contractParams,
         withRenParams: true,
       }),
-      nonce: this.nonce,
+      //@ts-ignore
+      nonce: arrayify(this.nonce),
     }));
 
     return result;
@@ -153,6 +153,7 @@ export class TransferRequest {
   async waitForSignature() {
     if (this._queryTxResult) return this._queryTxResult;
     const mint = await this.submitToRenVM();
+    console.log("Gateway: ", mint.gatewayAddress);
     const deposit: GatewayTransaction<any> = await new Promise((resolve) => {
       mint.on("transaction", (tx) => resolve(tx));
     });
