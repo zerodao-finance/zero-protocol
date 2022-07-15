@@ -6,7 +6,8 @@ import "./AbstractEIP712.sol";
 /**
  * @dev ProxyImmutable is used to set `proxyContract` in UpgradeableEIP712
  * before the constructor of AbstractEIP712 runs, giving it access to the
- * `verifyingContract` function.
+ * `verifyingContract` function. The address of the proxy contract must be
+ * known when the implementation is deployed.
  */
 contract ProxyImmutable {
   address internal immutable proxyContract;
@@ -23,7 +24,7 @@ contract UpgradeableEIP712 is ProxyImmutable, AbstractEIP712 {
     string memory _version
   ) ProxyImmutable(_proxyContract) AbstractEIP712(_name, _version) {}
 
-  function verifyingContract() internal view virtual override returns (address) {
+  function _verifyingContract() internal view virtual override returns (address) {
     return proxyContract;
   }
 }
