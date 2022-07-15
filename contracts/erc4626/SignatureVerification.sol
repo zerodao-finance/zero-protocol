@@ -4,85 +4,82 @@ pragma solidity >=0.8.13;
 import "./EIP712/AbstractEIP712.sol";
 import { ECDSA } from "oz460/utils/cryptography/ECDSA.sol";
 
-// With underwriter
-// bytes32 constant _TRANSFER_REQUEST_TYPE_HASH = 0xdb76b3b6f252d5a7418b86aea25c87126f450d18491ccb7b8427fe0e9697a31c;
-// bytes32 constant _META_REQUEST_TYPE_HASH = 0xacca73c15b476818f48739adc92f84de507f609afc17aeef89e2bebadd929d18;
-// bytes constant TransferRequestTypeString = "TransferRequest(address asset,uint256 amount,address underwriter,address module,uint256 nonce,bytes data)";
-// bytes constant MetaRequestTypeString = "MetaRequest(address asset,address underwriter,address module,uint256 nonce,bytes data)";
+bytes constant Permit_typeString = "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)";
+bytes32 constant Permit_typeHash = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
+uint256 constant Permit_typeHash_ptr = 0x0;
+uint256 constant Permit_owner_ptr = 0x20;
+uint256 constant Permit_nonce_ptr = 0x80;
+uint256 constant Permit_deadline_ptr = 0xa0;
+uint256 constant Permit_owner_cdPtr = 0x04;
+uint256 constant Permit_v_cdPtr = 0x84;
+uint256 constant Permit_signature_length = 0x60;
+uint256 constant Permit_calldata_params_length = 0x60;
+uint256 constant Permit_length = 0xc0;
 
+bytes constant TransferRequest_typeString = "TransferRequest(address borrower,address asset,uint256 amount,address module,uint256 nonce,bytes data)";
+bytes32 constant TransferRequest_typeHash = 0xa7e9a880a2374f7c9f63e0bad628db064af52a719ca2ef7e894c8b5141e13ab0;
 uint256 constant TransferRequest_typeHash_ptr = 0x0;
-uint256 constant TransferRequest_asset_ptr = 0x20;
-uint256 constant TransferRequest_amount_ptr = 0x40;
-// uint256 constant TransferRequest_underwriter_ptr = 0;
-uint256 constant TransferRequest_module_ptr = 0x60;
-uint256 constant TransferRequest_nonce_ptr = 0x80;
-uint256 constant TransferRequest_data_offset = 0x80;
+uint256 constant TransferRequest_borrower_ptr = 0x20;
+uint256 constant TransferRequest_asset_ptr = 0x40;
+uint256 constant TransferRequest_amount_ptr = 0x60;
+uint256 constant TransferRequest_module_ptr = 0x80;
+uint256 constant TransferRequest_nonce_ptr = 0xa0;
+uint256 constant TransferRequest_data_offset = 0xc0;
+uint256 constant TransferRequest_length = 0xe0;
 
-// Without Underwriter
-bytes32 constant _TRANSFER_REQUEST_TYPE_HASH = 0x9bb77eff76a7692d1cd3e09b42675d0ef4c6d1fc6437ed88c47852ef44f69558;
-bytes32 constant _META_REQUEST_TYPE_HASH = 0x6999c2d6881f6c154b0a73e1b8e3511497f85327e303a84c8edef11e4d6ec515;
-bytes32 constant _PERMIT_TYPE_HASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
-bytes constant TransferRequestTypeString = "TransferRequest(address asset,uint256 amount,address module,uint256 nonce,bytes data)";
-bytes constant MetaRequestTypeString = "MetaRequest(address asset,uint256 amount,address module,uint256 nonce,bytes data)";
-bytes constant PermitTypeString = "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)";
+uint256 constant ECRecover_precompile = 0x01;
+uint256 constant ECRecover_digest_ptr = 0x0;
+uint256 constant ECRecover_v_ptr = 0x20;
+uint256 constant ECRecover_calldata_length = 0x80;
 
 abstract contract SignatureVerification is AbstractEIP712 {
   error InvalidSigner();
 
   constructor() {
     if (
-      _TRANSFER_REQUEST_TYPE_HASH != keccak256(TransferRequestTypeString) ||
-      _META_REQUEST_TYPE_HASH != keccak256(MetaRequestTypeString) ||
-      _PERMIT_TYPE_HASH != keccak256(PermitTypeString)
+      TransferRequest_typeHash != keccak256(TransferRequest_typeString) ||
+      Permit_typeHash != keccak256(Permit_typeString)
     ) {
       revert InvalidTypeHash();
     }
   }
 
-  function digestPermit(
-    uint256 nonce,
-    uint256 deadline // private because memory repairs happen in verifyPermitSignature
-  ) private view returns (bytes32 digest) {
-    bytes32 domainSeparator = getDomainSeparator();
+  /*//////////////////////////////////////////////////////////////
+                               Permit
+  //////////////////////////////////////////////////////////////*/
+
+  function _digestPermit(uint256 nonce, uint256 deadline) internal view returns (bytes32 digest) {
+    bytes32 domainSeparator = DOMAIN_SEPARATOR();
     assembly {
-      mstore(0, _PERMIT_TYPE_HASH)
-      calldatacopy(0x20, 4, 0x60)
-      mstore(0x80, nonce)
-      mstore(0xa0, deadline)
-      let permitHash := keccak256(0, 0xc0)
-      mstore(0, EIP712SignaturePrefix)
-      mstore(2, domainSeparator)
-      mstore(0x22, permitHash)
-      digest := keccak256(0, 0x42)
+      mstore(Permit_typeHash_ptr, Permit_typeHash)
+      calldatacopy(Permit_owner_ptr, Permit_owner_cdPtr, Permit_calldata_params_length)
+      mstore(Permit_nonce_ptr, nonce)
+      mstore(Permit_deadline_ptr, deadline)
+      let permitHash := keccak256(Permit_typeHash_ptr, Permit_length)
+      mstore(0, EIP712Signature_prefix)
+      mstore(EIP712Signature_domainSeparator_ptr, domainSeparator)
+      mstore(EIP712Signature_digest_ptr, permitHash)
+      digest := keccak256(0, EIP712Signature_length)
     }
   }
 
-  function _digestPermit(uint256 nonce, uint256 deadline)
-    internal
-    view
-    RestoreTwoWords(0x80, 0xa0)
-    RestoreFreeMemoryPointer
-    RestoreZeroSlot
-    returns (bytes32)
-  {
-    return digestPermit(nonce, deadline);
-  }
-
-  function verifyPermitSignature(
+  function _verifyPermitSignature(
     address owner,
     uint256 nonce,
     uint256 deadline
-  ) internal view RestoreTwoWords(0x80, 0xa0) RestoreFreeMemoryPointer RestoreZeroSlot {
-    bytes32 digest = digestPermit(nonce, deadline);
+  ) internal view RestoreFirstTwoUnreservedSlots RestoreFreeMemoryPointer RestoreZeroSlot {
+    bytes32 digest = _digestPermit(nonce, deadline);
     bool validSignature;
     assembly {
-      mstore(0, digest)
-      calldatacopy(0x20, 0x84, 0x60)
+      mstore(ECRecover_digest_ptr, digest)
+      // Copy v, r, s from calldata
+      calldatacopy(ECRecover_v_ptr, Permit_v_cdPtr, Permit_signature_length)
+      // Call ecrecover precompile to validate signature
       let success := staticcall(
         gas(),
-        0x1, // ecrecover precompile
-        0x0,
-        0x80,
+        ECRecover_precompile, // ecrecover precompile
+        ECRecover_digest_ptr,
+        ECRecover_calldata_length,
         0x0,
         0x20
       )
@@ -99,43 +96,54 @@ abstract contract SignatureVerification is AbstractEIP712 {
     }
   }
 
-  function digestTransferRequest(
+  /*//////////////////////////////////////////////////////////////
+                          Transfer Request
+  //////////////////////////////////////////////////////////////*/
+
+  function _digestTransferRequest(
+    address borrower,
     address asset,
     uint256 amount,
     address module,
     uint256 nonce,
     bytes memory data
   ) internal view RestoreFreeMemoryPointer RestoreZeroSlot RestoreFirstTwoUnreservedSlots returns (bytes32 digest) {
-    bytes32 domainSeparator = getDomainSeparator();
+    bytes32 domainSeparator = DOMAIN_SEPARATOR();
     assembly {
-      mstore(0x0, _TRANSFER_REQUEST_TYPE_HASH)
-      mstore(0x20, asset)
-      mstore(0x40, amount)
-      mstore(0x60, module)
-      mstore(0x80, nonce)
-      mstore(0xa0, keccak256(add(data, 0x20), mload(data)))
-      let transferRequestHash := keccak256(0, 0xc0)
-      mstore(0, EIP712SignaturePrefix)
-      mstore(2, domainSeparator)
-      mstore(0x22, transferRequestHash)
-      digest := keccak256(0, 0x42)
+      mstore(TransferRequest_typeHash_ptr, TransferRequest_typeHash)
+      mstore(TransferRequest_borrower_ptr, borrower)
+      mstore(TransferRequest_asset_ptr, asset)
+      mstore(TransferRequest_amount_ptr, amount)
+      mstore(TransferRequest_module_ptr, module)
+      mstore(TransferRequest_nonce_ptr, nonce)
+      mstore(TransferRequest_data_offset, keccak256(add(data, 0x20), mload(data)))
+
+      let transferRequestHash := keccak256(0, TransferRequest_length)
+      mstore(0, EIP712Signature_prefix)
+      mstore(EIP712Signature_domainSeparator_ptr, domainSeparator)
+      mstore(EIP712Signature_digest_ptr, transferRequestHash)
+      digest := keccak256(0, EIP712Signature_length)
     }
   }
 
-  function verifyTransferRequestSignature(
-    address signer,
+  function _verifyTransferRequestSignature(
+    address borrower,
     address asset,
-    uint256 amount,
+    uint256 borrowAmount,
     address module,
     uint256 nonce,
     bytes memory data,
     bytes memory signature
   ) internal view returns (bytes32 digest) {
-    digest = digestTransferRequest(asset, amount, module, nonce, data);
-    verifySignature(signer, digest, signature);
+    digest = _digestTransferRequest(borrower, asset, borrowAmount, module, nonce, data);
+    _verifySignature(borrower, digest, signature);
   }
 
-  function verifySignature(
+  /*//////////////////////////////////////////////////////////////
+                    Generic Signature Validation
+  //////////////////////////////////////////////////////////////*/
+
+  function _verifySignature(
     address signer,
     bytes32 digest,
     bytes memory signature
