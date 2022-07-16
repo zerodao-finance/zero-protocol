@@ -147,14 +147,18 @@ abstract contract ZeroBTCCache is ZeroBTCBase {
     returns (
       uint256 actualBorrowAmount,
       uint256 lenderDebt,
-      uint256 vaultExpenseWithoutRepayFee
+      uint256 btcFeeForLoanGas
     )
   {
     (uint256 renFees, uint256 zeroFees) = _calculateRenAndZeroFees(state, borrowAmount);
-    (uint256 btcFeeForLoanGas, uint256 btcFeeForRepayGas) = moduleState.getBitcoinGasFees();
+    uint256 btcFeeForRepayGas;
+    (btcFeeForLoanGas, btcFeeForRepayGas) = moduleState.getBitcoinGasFees();
 
+    // Lender is responsible for actualBorrowAmount, renFees, zeroFees, loan refund
+    // and estimated repay refund.
     lenderDebt = borrowAmount - renFees;
-    vaultExpenseWithoutRepayFee = borrowAmount - (renFees + zeroFees + btcFeeForLoanGas);
-    actualBorrowAmount = lenderDebt - btcFeeForRepayGas;
+
+    // Subtract ren, zero and gas fees
+    actualBorrowAmount = lenderDebt - (zeroFees + btcFeeForLoanGas + btcFeeForRepayGas);
   }
 }
