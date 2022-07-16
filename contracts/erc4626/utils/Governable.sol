@@ -5,6 +5,10 @@ import "../storage/GovernableStorage.sol";
 import "../interfaces/IGovernable.sol";
 
 contract Governable is GovernableStorage, IGovernable {
+  function _initialize(address initialGovernance) internal virtual {
+    _governance = initialGovernance;
+  }
+
   function governance() external view override returns (address) {
     return _governance;
   }
