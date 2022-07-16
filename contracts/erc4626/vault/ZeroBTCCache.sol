@@ -2,11 +2,13 @@
 pragma solidity >=0.8.13;
 
 import "./ZeroBTCBase.sol";
+import "../utils/Math.sol";
 
 abstract contract ZeroBTCCache is ZeroBTCBase {
   using ModuleStateCoder for ModuleState;
   using GlobalStateCoder for GlobalState;
   using LoanRecordCoder for LoanRecord;
+  using Math for uint256;
 
   /*//////////////////////////////////////////////////////////////
                           External Updaters
@@ -100,7 +102,7 @@ abstract contract ZeroBTCCache is ZeroBTCBase {
       uint256 btcFeeForRepayGas
     )
   {
-    (uint256 satoshiPerEth, uint256 gasPrice) = state.getParamsForModuleState();
+    (uint256 satoshiPerEth, uint256 gasPrice) = state.getParamsForModuleFees();
     // Unchecked because gasPrice can not exceed 60 bits,
     // refunds can not exceed 68 bits and the numerator for
     // borrowGasFeeBitcoin can not exceed 108 bits

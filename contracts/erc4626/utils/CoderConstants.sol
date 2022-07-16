@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.13;
+pragma solidity >=0.8.0;
 
 // ============================== NOTICE ==============================
 // This library was automatically generated with stackpacker.
@@ -10,7 +10,7 @@ pragma solidity >=0.8.13;
 uint256 constant GlobalState_Cached_maskOut = 0xffffffffffffffffffffffffffffffff80000000000000000000007fffffffff;
 uint256 constant GlobalState_Fees_maskOut = 0x000003ffe000000000007fffffffffffffffffffffffffffffffffffffffffff;
 uint256 constant GlobalState_LoanInfo_maskOut = 0xffffffffffffffffffff8000000000007fffffffffffffffffffffffffffffff;
-uint256 constant GlobalState_ParamsForModuleState_maskOut = 0xffffffffffffffffffffffffffffffff800000000000007fffffffffffffffff;
+uint256 constant GlobalState_ParamsForModuleFees_maskOut = 0xffffffffffffffffffffffffffffffff800000000000007fffffffffffffffff;
 uint256 constant GlobalState_gweiPerGas_bitsAfter = 0x47;
 uint256 constant GlobalState_gweiPerGas_maskOut = 0xffffffffffffffffffffffffffffffffffffffffff80007fffffffffffffffff;
 uint256 constant GlobalState_lastUpdateTimestamp_bitsAfter = 0x27;
@@ -31,14 +31,14 @@ uint256 constant GlobalState_zeroFeeShareBips_bitsAfter = 0xdd;
 uint256 constant GlobalState_zeroFeeShareBips_maskOut = 0xfffffc001fffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 uint256 constant LoanRecord_actualBorrowAmount_bitsAfter = 0xa0;
 uint256 constant LoanRecord_actualBorrowAmount_maskOut = 0xffffffffffff000000000000ffffffffffffffffffffffffffffffffffffffff;
+uint256 constant LoanRecord_btcFeeForLoanGas_bitsAfter = 0x40;
+uint256 constant LoanRecord_btcFeeForLoanGas_maskOut = 0xffffffffffffffffffffffffffffffffffff000000000000ffffffffffffffff;
 uint256 constant LoanRecord_expiry_bitsAfter = 0x20;
 uint256 constant LoanRecord_expiry_maskOut = 0xffffffffffffffffffffffffffffffffffffffffffffffff00000000ffffffff;
 uint256 constant LoanRecord_lenderDebt_bitsAfter = 0x70;
 uint256 constant LoanRecord_lenderDebt_maskOut = 0xffffffffffffffffffffffff000000000000ffffffffffffffffffffffffffff;
 uint256 constant LoanRecord_sharesLocked_bitsAfter = 0xd0;
 uint256 constant LoanRecord_sharesLocked_maskOut = 0x000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff;
-uint256 constant LoanRecord_vaultExpenseWithoutRepayFee_bitsAfter = 0x40;
-uint256 constant LoanRecord_vaultExpenseWithoutRepayFee_maskOut = 0xffffffffffffffffffffffffffffffffffff000000000000ffffffffffffffff;
 uint256 constant MaxUint11 = 0x07ff;
 uint256 constant MaxUint13 = 0x1fff;
 uint256 constant MaxUint16 = 0xffff;

@@ -216,10 +216,10 @@ library GlobalStateCoder {
   }
 
   /*//////////////////////////////////////////////////////////////
-             GlobalState ParamsForModuleState coders
+             GlobalState ParamsForModuleFees coders
 //////////////////////////////////////////////////////////////*/
 
-  function setParamsForModuleState(
+  function setParamsForModuleFees(
     GlobalState old,
     uint256 satoshiPerEth,
     uint256 gweiPerGas
@@ -231,13 +231,13 @@ library GlobalStateCoder {
         revert(0, Panic_error_length)
       }
       updated := or(
-        and(old, GlobalState_ParamsForModuleState_maskOut),
+        and(old, GlobalState_ParamsForModuleFees_maskOut),
         or(shl(GlobalState_satoshiPerEth_bitsAfter, satoshiPerEth), shl(GlobalState_gweiPerGas_bitsAfter, gweiPerGas))
       )
     }
   }
 
-  function getParamsForModuleState(GlobalState encoded)
+  function getParamsForModuleFees(GlobalState encoded)
     internal
     pure
     returns (uint256 satoshiPerEth, uint256 gweiPerGas)
