@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.13;
 
-import "./EIP712/UpgradeableEIP712.sol";
+import "../EIP712/UpgradeableEIP712.sol";
 import { ECDSA } from "oz460/utils/cryptography/ECDSA.sol";
 
 bytes constant Permit_typeString = "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)";
