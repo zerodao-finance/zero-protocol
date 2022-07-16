@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.13;
 
-import "./EIP712/AbstractEIP712.sol";
+import "./EIP712/UpgradeableEIP712.sol";
 import { ECDSA } from "oz460/utils/cryptography/ECDSA.sol";
 
 bytes constant Permit_typeString = "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)";
@@ -32,10 +32,16 @@ uint256 constant ECRecover_digest_ptr = 0x0;
 uint256 constant ECRecover_v_ptr = 0x20;
 uint256 constant ECRecover_calldata_length = 0x80;
 
-abstract contract SignatureVerification is AbstractEIP712 {
-  error InvalidSigner();
+contract SignatureVerification is UpgradeableEIP712 {
+  /*//////////////////////////////////////////////////////////////
+                             Constructor
+  //////////////////////////////////////////////////////////////*/
 
-  constructor() {
+  constructor(
+    address _proxyContract,
+    string memory _name,
+    string memory _version
+  ) UpgradeableEIP712(_proxyContract, _name, _version) {
     if (
       TransferRequest_typeHash != keccak256(TransferRequest_typeString) ||
       Permit_typeHash != keccak256(Permit_typeString)
@@ -49,7 +55,7 @@ abstract contract SignatureVerification is AbstractEIP712 {
   //////////////////////////////////////////////////////////////*/
 
   function _digestPermit(uint256 nonce, uint256 deadline) internal view returns (bytes32 digest) {
-    bytes32 domainSeparator = DOMAIN_SEPARATOR();
+    bytes32 domainSeparator = getDomainSeparator();
     assembly {
       mstore(Permit_typeHash_ptr, Permit_typeHash)
       calldatacopy(Permit_owner_ptr, Permit_owner_cdPtr, Permit_calldata_params_length)
@@ -108,7 +114,7 @@ abstract contract SignatureVerification is AbstractEIP712 {
     uint256 nonce,
     bytes memory data
   ) internal view RestoreFreeMemoryPointer RestoreZeroSlot RestoreFirstTwoUnreservedSlots returns (bytes32 digest) {
-    bytes32 domainSeparator = DOMAIN_SEPARATOR();
+    bytes32 domainSeparator = getDomainSeparator();
     assembly {
       mstore(TransferRequest_typeHash_ptr, TransferRequest_typeHash)
       mstore(TransferRequest_borrower_ptr, borrower)
