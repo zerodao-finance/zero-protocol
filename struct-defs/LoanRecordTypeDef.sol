@@ -9,8 +9,8 @@ struct LoanRecord {
   // repaying, equal to borrow amount plus gas and zero fees
   uint48 lenderDebt {}
 
-  // Amount of 
-  uint48 vaultExpenseWithoutRepayFee {}
+  // Bitcoin value of eth refund paid for the loan() call
+  uint48 btcFeeForLoanGas {}
 
   // Time at which the loan expires
   uint32 expiry {}
