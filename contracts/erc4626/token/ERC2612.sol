@@ -2,7 +2,7 @@
 pragma solidity >=0.8.13;
 
 import "../storage/ERC2612Storage.sol";
-import "../SignatureVerification.sol";
+import "../utils/SignatureVerification.sol";
 import "../interfaces/IERC2612.sol";
 import "./ERC20.sol";
 
