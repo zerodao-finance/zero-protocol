@@ -2,6 +2,7 @@
 pragma solidity >=0.8.13;
 
 import "../utils/MemoryRestoration.sol";
+import "../interfaces/EIP712Errors.sol";
 
 bytes constant EIP712Domain_typeString = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)";
 bytes32 constant EIP712Domain_typeHash = 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f;
@@ -17,13 +18,11 @@ uint256 constant DomainSeparator_chainId_offset = 0x60;
 uint256 constant DomainSeparator_verifyingContract_offset = 0x80;
 uint256 constant DomainSeparator_length = 0xa0;
 
-abstract contract AbstractEIP712 is MemoryRestoration {
+abstract contract AbstractEIP712 is MemoryRestoration, EIP712Errors {
   uint256 private immutable _CHAIN_ID;
   bytes32 private immutable _DOMAIN_SEPARATOR;
   bytes32 private immutable _NAME_HASH;
   bytes32 private immutable _VERSION_HASH;
-
-  error InvalidTypeHash();
 
   constructor(string memory _name, string memory _version) {
     _CHAIN_ID = block.chainid;
@@ -50,7 +49,7 @@ abstract contract AbstractEIP712 is MemoryRestoration {
     }
   }
 
-  function DOMAIN_SEPARATOR() public view virtual returns (bytes32) {
+  function getDomainSeparator() internal view virtual returns (bytes32) {
     return block.chainid == _CHAIN_ID ? _DOMAIN_SEPARATOR : _computeDomainSeparator();
   }
 
