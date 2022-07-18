@@ -1,34 +1,41 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
+
 // ============================== NOTICE ==============================
 // This library was automatically generated with stackpacker.
 // Be very careful about modifying it, as doing so incorrectly could
 // result in corrupted reads/writes.
 // ====================================================================
 
-uint256 constant GlobalState_Cached_maskOut = 0xffffffffffffffffffffffffffffffff80000000000000000000007fffffffff;
+uint256 constant GlobalState_Cached_maskOut = 0xffffffffffffffffffff80000000000000000001ffffffffffffffffffffffff;
 uint256 constant GlobalState_Fees_maskOut = 0x000003ffe000000000007fffffffffffffffffffffffffffffffffffffffffff;
-uint256 constant GlobalState_LoanInfo_maskOut = 0xffffffffffffffffffff8000000000007fffffffffffffffffffffffffffffff;
-uint256 constant GlobalState_ParamsForModuleFees_maskOut = 0xffffffffffffffffffffffffffffffff800000000000007fffffffffffffffff;
-uint256 constant GlobalState_gweiPerGas_bitsAfter = 0x47;
-uint256 constant GlobalState_gweiPerGas_maskOut = 0xffffffffffffffffffffffffffffffffffffffffff80007fffffffffffffffff;
-uint256 constant GlobalState_lastUpdateTimestamp_bitsAfter = 0x27;
-uint256 constant GlobalState_lastUpdateTimestamp_maskOut = 0xffffffffffffffffffffffffffffffffffffffffffffff800000007fffffffff;
+uint256 constant GlobalState_LoanInfo_maskOut = 0xfffffffffffffffffffffffffffffffffffffffe0000000001ffffffffffffff;
+uint256 constant GlobalState_ParamsForModuleFees_maskOut = 0xffffffffffffffffffff800000000001ffffffffffffffffffffffffffffffff;
+uint256 constant GlobalState_UnburnedShares_maskOut = 0xfffffffffffffffffffffffffffffffffffffffffffffffffe00000000000001;
+uint256 constant GlobalState_gweiPerGas_bitsAfter = 0x81;
+uint256 constant GlobalState_gweiPerGas_maskOut = 0xfffffffffffffffffffffffffffe0001ffffffffffffffffffffffffffffffff;
+uint256 constant GlobalState_lastUpdateTimestamp_bitsAfter = 0x61;
+uint256 constant GlobalState_lastUpdateTimestamp_maskOut = 0xfffffffffffffffffffffffffffffffe00000001ffffffffffffffffffffffff;
 uint256 constant GlobalState_renBorrowFeeBips_bitsAfter = 0xea;
 uint256 constant GlobalState_renBorrowFeeBips_maskOut = 0xffe003ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 uint256 constant GlobalState_renBorrowFeeStatic_bitsAfter = 0xaf;
 uint256 constant GlobalState_renBorrowFeeStatic_maskOut = 0xffffffffffffffc000007fffffffffffffffffffffffffffffffffffffffffff;
-uint256 constant GlobalState_satoshiPerEth_bitsAfter = 0x57;
-uint256 constant GlobalState_satoshiPerEth_maskOut = 0xffffffffffffffffffffffffffffffff80000000007fffffffffffffffffffff;
-uint256 constant GlobalState_totalBitcoinBorrowed_bitsAfter = 0x7f;
-uint256 constant GlobalState_totalBitcoinBorrowed_maskOut = 0xffffffffffffffffffff8000000000007fffffffffffffffffffffffffffffff;
+uint256 constant GlobalState_satoshiPerEth_bitsAfter = 0x91;
+uint256 constant GlobalState_satoshiPerEth_maskOut = 0xffffffffffffffffffff80000001ffffffffffffffffffffffffffffffffffff;
+uint256 constant GlobalState_totalBitcoinBorrowed_bitsAfter = 0x39;
+uint256 constant GlobalState_totalBitcoinBorrowed_maskOut = 0xfffffffffffffffffffffffffffffffffffffffe0000000001ffffffffffffff;
+uint256 constant GlobalState_unburnedGasReserveShares_bitsAfter = 0x1d;
+uint256 constant GlobalState_unburnedGasReserveShares_maskOut = 0xfffffffffffffffffffffffffffffffffffffffffffffffffe0000001fffffff;
+uint256 constant GlobalState_unburnedZeroFeeShares_bitsAfter = 0x01;
+uint256 constant GlobalState_unburnedZeroFeeShares_maskOut = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0000001;
 uint256 constant GlobalState_zeroBorrowFeeBips_bitsAfter = 0xf5;
 uint256 constant GlobalState_zeroBorrowFeeBips_maskOut = 0x001fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 uint256 constant GlobalState_zeroBorrowFeeStatic_bitsAfter = 0xc6;
 uint256 constant GlobalState_zeroBorrowFeeStatic_maskOut = 0xffffffffe000003fffffffffffffffffffffffffffffffffffffffffffffffff;
 uint256 constant GlobalState_zeroFeeShareBips_bitsAfter = 0xdd;
 uint256 constant GlobalState_zeroFeeShareBips_maskOut = 0xfffffc001fffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+uint256 constant LoanRecord_SharesAndDebt_maskOut = 0x000000000000ffffffffffff000000000000ffffffffffffffffffffffffffff;
 uint256 constant LoanRecord_actualBorrowAmount_bitsAfter = 0xa0;
 uint256 constant LoanRecord_actualBorrowAmount_maskOut = 0xffffffffffff000000000000ffffffffffffffffffffffffffffffffffffffff;
 uint256 constant LoanRecord_btcFeeForLoanGas_bitsAfter = 0x40;
@@ -45,6 +52,8 @@ uint256 constant MaxUint16 = 0xffff;
 uint256 constant MaxUint2 = 0x03;
 uint256 constant MaxUint23 = 0x7fffff;
 uint256 constant MaxUint24 = 0xffffff;
+uint256 constant MaxUint28 = 0x0fffffff;
+uint256 constant MaxUint30 = 0x3fffffff;
 uint256 constant MaxUint32 = 0xffffffff;
 uint256 constant MaxUint40 = 0xffffffffff;
 uint256 constant MaxUint48 = 0xffffffffffff;
