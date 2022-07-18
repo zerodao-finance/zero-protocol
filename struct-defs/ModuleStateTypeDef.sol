@@ -3,6 +3,7 @@ enum ModuleType {
   LoanOverride,
   LoanAndRepayOverride
 }
+
 struct ModuleState {
   ModuleType moduleType exact;
 
