@@ -161,4 +161,12 @@ abstract contract ZeroBTCCache is ZeroBTCBase {
     // Subtract ren, zero and gas fees
     actualBorrowAmount = lenderDebt - (zeroFees + btcFeeForLoanGas + btcFeeForRepayGas);
   }
+
+  function _ethToBtc(uint256 ethAmount, uint256 satoshiPerEth) internal pure returns (uint256 btcAmount) {
+    return (ethAmount * satoshiPerEth) / OneEth;
+  }
+
+  function _btcToEth(uint256 btcAmount, uint256 satoshiPerEth) internal pure returns (uint256 ethAmount) {
+    return (btcAmount * OneEth) / satoshiPerEth;
+  }
 }
