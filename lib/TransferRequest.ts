@@ -155,21 +155,28 @@ export class TransferRequest {
     const mint = await this.submitToRenVM();
     console.log("Gateway: ", mint.gatewayAddress);
     const deposit: GatewayTransaction<any> = await new Promise((resolve) => {
-      mint.on("transaction", (tx) => resolve(tx));
+      mint.on("transaction", (tx) => {
+        console.log("transaction received");
+        resolve(tx);
+      });
     });
     await deposit.in.wait();
 
     await deposit.renVM.submit();
     await deposit.renVM.wait();
 
-    const { amount, sig: signature } = (deposit as any).queryTxResult.out;
-    const { nHash, pHash } = deposit;
+    console.log((deposit as any).queryTxResult);
+    const queryTx = (deposit as any).queryTxResult.tx;
+    const { amount, sig: signature } = queryTx.out;
+    const { nhash, phash } = queryTx.in;
+    console.log(hexlify(deposit.pHash), hexlify(phash));
+    console.log(hexlify(deposit.nHash), hexlify(nhash));
     // const { signature, nhash, phash, amount } =
     //   deposit._state.queryTxResult.out;
     const result = (this._queryTxResult = {
       amount: String(amount),
-      nHash: hexlify(nHash),
-      pHash: hexlify(pHash),
+      nHash: hexlify(nhash),
+      pHash: hexlify(phash),
       signature: hexlify(signature),
     });
     return result;

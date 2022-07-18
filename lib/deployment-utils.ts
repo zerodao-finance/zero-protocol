@@ -25,9 +25,6 @@ export const CONTROLLER_DEPLOYMENTS = {
   [ethers.utils.getAddress(
     require("../deployments/mainnet/BadgerBridgeZeroController.json").address
   )]: "Ethereum",
-  [ethers.utils.getAddress(
-    require("../deployments/localhost/BadgerBridgeZeroController.json").address
-  )]: "localhost",
 };
 
 export const RPC_ENDPOINTS = {

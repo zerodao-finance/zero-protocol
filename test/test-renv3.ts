@@ -2,11 +2,11 @@ const hre = require("hardhat");
 //@ts-ignore
 const { deployments } = hre;
 import { ethers } from "ethers";
+import { UnderwriterTransferRequest } from "../lib/UnderwriterRequest";
 import { utils as renUtils } from "@renproject/utils";
 var deployParameters = require("../lib/fixtures");
 var deploymentUtils = require("../dist/lib/deployment-utils");
 const { utils } = ethers;
-const { UnderwriterTransferRequest } = require("../lib/UnderwriterRequest");
 
 const getContractName = () => {
   switch (process.env.CHAIN) {
@@ -103,11 +103,11 @@ describe("ren", () => {
     console.log(chainId);
     const transferRequest = new UnderwriterTransferRequest({
       contractAddress,
-      nonce: renUtils.toNBytes(utils.randomBytes(32), 32),
+      nonce: renUtils.toNBytes("0x1", 32),
       to: await signer.getAddress(),
       pNonce: utils.hexlify(utils.randomBytes(32)),
       module: deployParameters[process.env.CHAIN].renBTC,
-      amount: utils.hexlify(utils.parseUnits("0.005", 8)),
+      amount: utils.hexlify(utils.parseUnits("0.0002", 8)),
       asset: deployParameters[process.env.CHAIN].WBTC,
       chainId,
       data: utils.defaultAbiCoder.encode(["uint256"], ["1"]),
@@ -118,6 +118,12 @@ describe("ren", () => {
     console.log(process.env.NODE_ENV);
     await transferRequest.sign(signer);
     console.log("signed", transferRequest.signature);
-    const tx = await transferRequest.repay(signer);
+    const gateway = await transferRequest.submitToRenVM();
+    console.log("gateway:", gateway.gatewayAddress);
+    const gateway2 = await (transferRequest as any)._ren.gateway(
+      gateway.params
+    );
+    console.log(gateway2.gatewayAddress);
+    await transferRequest.waitForSignature();
   });
 });
