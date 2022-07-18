@@ -2,11 +2,13 @@
 pragma solidity >=0.8.13;
 
 import "./ZeroBTCCache.sol";
+import "../utils/Math.sol";
 
 abstract contract ZeroBTCConfig is ZeroBTCCache {
   using ModuleStateCoder for ModuleState;
   using GlobalStateCoder for GlobalState;
   using LoanRecordCoder for LoanRecord;
+  using Math for uint256;
 
   /*//////////////////////////////////////////////////////////////
                          Governance Actions
