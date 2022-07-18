@@ -84,4 +84,9 @@ struct GlobalState {
     satoshiPerEth;
     gweiPerGas;
   }
+
+  group UnburnedShares {
+    unburnedGasReserveShares;
+    unburnedZeroFeeShares;
+  }
 }
