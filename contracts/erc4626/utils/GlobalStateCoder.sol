@@ -498,6 +498,72 @@ library GlobalStateCoder {
   }
 
   /*//////////////////////////////////////////////////////////////
+                GlobalState UnburnedShares coders
+//////////////////////////////////////////////////////////////*/
+
+  function setUnburnedShares(
+    GlobalState old,
+    uint256 unburnedGasReserveShares,
+    uint256 unburnedZeroFeeShares
+  ) internal pure returns (GlobalState updated) {
+    assembly {
+      if or(
+        gt(unburnedGasReserveShares, MaxUint28),
+        gt(unburnedZeroFeeShares, MaxUint28)
+      ) {
+        mstore(0, Panic_error_signature)
+        mstore(
+          Panic_error_offset,
+          Panic_arithmetic
+        )
+        revert(0, Panic_error_length)
+      }
+      updated := or(
+        and(
+          old,
+          GlobalState_UnburnedShares_maskOut
+        ),
+        or(
+          shl(
+            GlobalState_unburnedGasReserveShares_bitsAfter,
+            unburnedGasReserveShares
+          ),
+          shl(
+            GlobalState_unburnedZeroFeeShares_bitsAfter,
+            unburnedZeroFeeShares
+          )
+        )
+      )
+    }
+  }
+
+  function getUnburnedShares(GlobalState encoded)
+    internal
+    pure
+    returns (
+      uint256 unburnedGasReserveShares,
+      uint256 unburnedZeroFeeShares
+    )
+  {
+    assembly {
+      unburnedGasReserveShares := and(
+        MaxUint28,
+        shr(
+          GlobalState_unburnedGasReserveShares_bitsAfter,
+          encoded
+        )
+      )
+      unburnedZeroFeeShares := and(
+        MaxUint28,
+        shr(
+          GlobalState_unburnedZeroFeeShares_bitsAfter,
+          encoded
+        )
+      )
+    }
+  }
+
+  /*//////////////////////////////////////////////////////////////
               GlobalState.zeroBorrowFeeBips coders
 //////////////////////////////////////////////////////////////*/
 
