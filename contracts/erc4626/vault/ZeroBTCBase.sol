@@ -37,6 +37,10 @@ abstract contract ZeroBTCBase is ZeroBTCStorage, ERC4626, Governable, IZeroBTC {
   uint256 internal immutable _cacheTimeToLive;
   // Maximum time a loan can remain outstanding
   uint256 internal immutable _maxLoanDuration;
+  // Target ETH reserves for gas refunds
+  uint256 internal immutable _targetEthReserve;
+  // Target ETH reserves for gas refunds
+  uint256 internal immutable _maxGasProfitShareBips;
 
   constructor(
     IGatewayRegistry gatewayRegistry,
@@ -44,6 +48,8 @@ abstract contract ZeroBTCBase is ZeroBTCStorage, ERC4626, Governable, IZeroBTC {
     IChainlinkOracle gasPriceOracle,
     uint256 cacheTimeToLive,
     uint256 maxLoanDuration,
+    uint256 targetEthReserve,
+    uint256 maxGasProfitShareBips,
     address _asset,
     address _proxyContract
   ) ERC4626(_asset, "ZeroBTC", "ZBTC", 8, _proxyContract, "v1") {
@@ -52,6 +58,8 @@ abstract contract ZeroBTCBase is ZeroBTCStorage, ERC4626, Governable, IZeroBTC {
     _gasPriceOracle = gasPriceOracle;
     _cacheTimeToLive = cacheTimeToLive;
     _maxLoanDuration = maxLoanDuration;
+    _targetEthReserve = targetEthReserve;
+    _maxGasProfitShareBips = maxGasProfitShareBips;
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -94,7 +102,9 @@ abstract contract ZeroBTCBase is ZeroBTCStorage, ERC4626, Governable, IZeroBTC {
       address btcEthPriceOracle,
       address gasPriceOracle,
       uint256 cacheTimeToLive,
-      uint256 maxLoanDuration
+      uint256 maxLoanDuration,
+      uint256 targetEthReserve,
+      uint256 maxGasProfitShareBips
     )
   {
     gatewayRegistry = address(_gatewayRegistry);
@@ -102,6 +112,8 @@ abstract contract ZeroBTCBase is ZeroBTCStorage, ERC4626, Governable, IZeroBTC {
     gasPriceOracle = address(_gasPriceOracle);
     cacheTimeToLive = _cacheTimeToLive;
     maxLoanDuration = _maxLoanDuration;
+    targetEthReserve = _targetEthReserve;
+    maxGasProfitShareBips = _maxGasProfitShareBips;
   }
 
   function getGlobalState()
@@ -111,13 +123,15 @@ abstract contract ZeroBTCBase is ZeroBTCStorage, ERC4626, Governable, IZeroBTC {
     returns (
       uint256 zeroBorrowFeeBips,
       uint256 renBorrowFeeBips,
+      uint256 zeroFeeShareBips,
       uint256 zeroBorrowFeeStatic,
       uint256 renBorrowFeeStatic,
-      uint256 zeroFeeShareBips,
-      uint256 totalBitcoinBorrowed,
       uint256 satoshiPerEth,
       uint256 gweiPerGas,
-      uint256 lastUpdateTimestamp
+      uint256 lastUpdateTimestamp,
+      uint256 totalBitcoinBorrowed,
+      uint256 unburnedGasReserveShares,
+      uint256 unburnedZeroFeeShares
     )
   {
     return _state.decode();
@@ -139,6 +153,10 @@ abstract contract ZeroBTCBase is ZeroBTCStorage, ERC4626, Governable, IZeroBTC {
     )
   {
     return _getExistingModuleState(module).decode();
+  }
+
+  function totalAssets() public view virtual override(ERC4626, IERC4626) returns (uint256) {
+    return ERC4626.totalAssets() + _state.getTotalBitcoinBorrowed();
   }
 
   /*//////////////////////////////////////////////////////////////
