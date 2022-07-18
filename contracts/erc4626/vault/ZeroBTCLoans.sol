@@ -2,7 +2,8 @@
 pragma solidity >=0.8.13;
 
 import "./ZeroBTCCache.sol";
-import "../utils/MemoryRestoration.sol";
+import { DefaultLoanRecord } from "../utils/LoanRecordCoder.sol";
+import "../utils/FixedPointMathLib.sol";
 
 uint256 constant ReceiveLoanError_selector = 0x83f44e2200000000000000000000000000000000000000000000000000000000;
 uint256 constant RepayLoanError_selector = 0x0ccaea8800000000000000000000000000000000000000000000000000000000;
@@ -17,10 +18,13 @@ uint256 constant ModuleCall_data_length_offset = 0x84;
 uint256 constant ModuleCall_data_offset = 0x80;
 uint256 constant ModuleCall_calldata_baseLength = 0xa4;
 
-abstract contract ZeroBTCLoans is ZeroBTCCache, MemoryRestoration {
+abstract contract ZeroBTCLoans is ZeroBTCCache {
   using ModuleStateCoder for ModuleState;
   using GlobalStateCoder for GlobalState;
   using LoanRecordCoder for LoanRecord;
+  using SafeTransferLib for address;
+  using FixedPointMathLib for uint256;
+  using Math for uint256;
 
   /*//////////////////////////////////////////////////////////////
                              Constructor
@@ -61,23 +65,22 @@ abstract contract ZeroBTCLoans is ZeroBTCCache, MemoryRestoration {
 
     bytes32 loanId = _verifyTransferRequestSignature(borrower, asset, borrowAmount, module, nonce, data, signature);
 
-    (uint256 actualBorrowAmount, uint256 lenderDebt, uint256 vaultExpenseWithoutRepayFee) = _calculateLoanFees(
+    (uint256 actualBorrowAmount, uint256 lenderDebt, uint256 btcFeeForLoanGas) = _calculateLoanFees(
       state,
       moduleState,
       borrowAmount
     );
 
-    // Store loan information (underlying and shares locked for lender)
-    // and transfer their shares to the vault. The lender
-    _borrowFrom(uint256(loanId), msg.sender, borrower, actualBorrowAmount, lenderDebt, vaultExpenseWithoutRepayFee);
+    // Store loan information and lock lender's shares
+    _borrowFrom(uint256(loanId), msg.sender, borrower, actualBorrowAmount, lenderDebt, btcFeeForLoanGas);
 
     (ModuleType moduleType, uint256 ethRefundForLoanGas) = moduleState.getLoanParams();
     if (uint256(moduleType) > 0) {
       // Execute module interaction
-      _executeReceiveLoan(module, borrower, loanId, borrowAmount, data);
+      _executeReceiveLoan(module, borrower, loanId, actualBorrowAmount, data);
     } else {
       // If module does not override loan behavior,
-      asset.safeTransfer(borrower, borrowAmount);
+      asset.safeTransfer(borrower, actualBorrowAmount);
     }
 
     tx.origin.safeTransferETH(ethRefundForLoanGas);
@@ -106,16 +109,16 @@ abstract contract ZeroBTCLoans is ZeroBTCCache, MemoryRestoration {
     (, ModuleState moduleState) = _getUpdatedGlobalAndModuleState(module);
 
     bytes32 loanId = _digestTransferRequest(borrower, asset, borrowAmount, module, nonce, data);
-    uint256 mintAmount = _getGateway().mint(loanId, borrowAmount, nHash, renSignature);
+    uint256 repaidAmount = _getGateway().mint(loanId, borrowAmount, nHash, renSignature);
 
-    (ModuleType moduleType, uint256 ethRefundForRepayGas, uint256 btcFeeForRepayGas) = moduleState.getRepayParams();
-    uint256 collateralToUnlock = mintAmount;
+    (ModuleType moduleType, uint256 ethRefundForRepayGas, ) = moduleState.getRepayParams();
+    uint256 collateralToUnlock = repaidAmount;
 
     if (moduleType == ModuleType.LoanAndRepayOverride) {
-      collateralToUnlock = _executeRepayLoan(module, borrower, loanId, mintAmount, data);
+      collateralToUnlock = _executeRepayLoan(module, borrower, loanId, repaidAmount, data);
     }
 
-    _repayTo(lender, uint256(loanId), collateralToUnlock, btcFeeForRepayGas);
+    _repayTo(_state, moduleState, lender, uint256(loanId), collateralToUnlock);
 
     tx.origin.safeTransferETH(ethRefundForRepayGas);
   }
@@ -132,15 +135,11 @@ abstract contract ZeroBTCLoans is ZeroBTCCache, MemoryRestoration {
       uint256 sharesLocked,
       uint256 actualBorrowAmount,
       uint256 lenderDebt,
-      uint256 vaultExpenseWithoutRepayFee,
+      uint256 btcFeeForLoanGas,
       uint256 expiry
     )
   {
     return _outstandingLoans[lender][loanId].decode();
-  }
-
-  function totalAssets() public view virtual override returns (uint256) {
-    return ERC4626.totalAssets() + _state.getTotalBitcoinBorrowed();
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -311,8 +310,12 @@ abstract contract ZeroBTCLoans is ZeroBTCCache, MemoryRestoration {
       revert LoanIdNotUnique(loanId);
     }
 
-    // Transfer shares from the lender to the contract
-    _transfer(lender, address(this), shares);
+    // Reduce lender's balance to lock shares for their debt
+    _balanceOf[lender] -= shares;
+
+    // Emit transfer event so indexing services can correctly track the
+    // lender's balance
+    emit Transfer(lender, address(this), shares);
 
     // Emit event for loan creation
     emit LoanCreated(lender, borrower, loanId, actualBorrowAmount, shares);
@@ -328,72 +331,150 @@ abstract contract ZeroBTCLoans is ZeroBTCCache, MemoryRestoration {
    * Note: amountRepaid MUST have already been received by the vault
    * before this function is called.
    *
+   * @param state Global state
+   * @param moduleState Module state
    * @param lender Account that gave the loan
    * @param loanId Identifier for the loan
-   * @param assetsRepaid Amount of underlying repaid
+   * @param repaidAmount Amount of underlying repaid
    */
   function _repayTo(
+    GlobalState state,
+    ModuleState moduleState,
     address lender,
     uint256 loanId,
-    uint256 assetsRepaid,
-    uint256 btcFeeForRepayGas
-  ) internal returns (uint256 feesCollected) {
-    LoanRecord oldRecord = _getAndSetLoan(lender, loanId, DefaultLoanRecord);
+    uint256 repaidAmount
+  ) internal {
+    LoanRecord loanRecord = _getAndSetLoan(lender, loanId, DefaultLoanRecord);
 
     // Ensure the loan exists
-    if (oldRecord.isNull()) {
+    if (loanRecord.isNull()) {
       revert LoanDoesNotExist(loanId);
     }
 
-    (
-      uint256 sharesLocked,
-      uint256 actualBorrowAmount,
-      uint256 lenderDebt,
-      uint256 vaultExpenseWithoutRepayFee,
+    // Unlock/burn shares for repaid amount
+    (uint256 sharesUnlocked, uint256 sharesBurned) = _unlockSharesForLoan(loanRecord, lender, repaidAmount);
 
-    ) = oldRecord.decode();
-
-    {
-      uint256 vaultExpense = vaultExpenseWithoutRepayFee + btcFeeForRepayGas;
-      feesCollected = Math.subMinZero(assetsRepaid, vaultExpense);
-    }
-
-    unchecked {
-      // `totalBitcoinBorrowed` is only set through the borrow and repay
-      // functions, and we know `actualBorrowAmount` has already been added
-      // to it, so it can not underflow
-      GlobalState state = _state;
-      uint256 totalBitcoinBorrowed = state.getTotalBitcoinBorrowed();
-      _state = state.setTotalBitcoinBorrowed(totalBitcoinBorrowed - actualBorrowAmount);
-    }
-
-    uint256 sharesBurned;
-    uint256 sharesUnlocked = sharesLocked;
-
-    // If loan is less than fully repaid
-    if (assetsRepaid < lenderDebt) {
-      // Unchecked because assetsRepaid * sharesLocked can never
-      // overflow a uint256 and sharesUnlocked will always be less
-      // than sharesLocked.
-      unchecked {
-        // Unlock shares proportional to the fraction repaid
-        sharesUnlocked = assetsRepaid.mulDivDown(sharesLocked, lenderDebt);
-
-        // Will never be 0 since we take the floor
-        sharesBurned = sharesLocked - sharesUnlocked;
-      }
-
-      // Burn the shares that were not unlocked
-      _burn(address(this), sharesBurned);
-    }
-
-    // If any shares should be unlocked
-    if (sharesUnlocked > 0) {
-      // Return shares to the lender
-      _transfer(address(this), lender, sharesUnlocked);
-    }
+    // Handle fees for gas reserves and ZeroDAO
+    _state = _collectLoanFees(state, moduleState, loanRecord, repaidAmount);
 
     // Emit event for loan repayment
-    emit LoanClosed(loanId, assetsRepaid, sharesUnlocked, sharesBurned);
+    emit LoanClosed(loanId, repaidAmount, sharesUnlocked, sharesBurned);
+  }
+
+  function _unlockSharesForLoan(
+    LoanRecord loanRecord,
+    address lender,
+    uint256 repaidAmount
+  ) internal returns (uint256 sharesUnlocked, uint256 sharesBurned) {
+    (uint256 sharesLocked, uint256 lenderDebt) = loanRecord.getSharesAndDebt();
+
+    sharesUnlocked = sharesLocked;
+
+    // If loan is less than fully repaid
+    if (repaidAmount < lenderDebt) {
+      // Unlock shares proportional to the fraction repaid
+      sharesUnlocked = repaidAmount.mulDivDown(sharesLocked, lenderDebt);
+      unchecked {
+        // sharesUnlocked will always be less than sharesLocked
+        sharesBurned = sharesLocked - sharesUnlocked;
+        // The shares have already been subtracted from the lender's balance
+        // so no balance update is needed.
+        // totalSupply will always be greater than sharesBurned.
+        _totalSupply -= sharesBurned;
+      }
+      // Emit transfer event so indexing services can correctly track the
+      // totalSupply.
+      emit Transfer(address(this), address(0), sharesBurned);
+    }
+
+    // If any shares should be unlocked, add them back to the lender's balance
+    if (sharesUnlocked > 0) {
+      // Cannot overflow because the sum of all user balances
+      // can't exceed the max uint256 value.
+      unchecked {
+        _balanceOf[lender] += sharesUnlocked;
+      }
+      // Emit transfer event so indexing services can correctly track the
+      // lender's balance
+      emit Transfer(address(this), lender, sharesUnlocked);
+    }
+  }
+
+  function _collectLoanFees(
+    GlobalState state,
+    ModuleState moduleState,
+    LoanRecord loanRecord,
+    uint256 repaidAmount
+  ) internal returns (GlobalState) {
+    (uint256 btcForGasReserve, uint256 ethForGasReserve) = _getEffectiveGasCosts(state, moduleState, loanRecord);
+    uint256 newBalance = address(this).balance + ethForGasReserve;
+    uint256 actualBorrowAmount = loanRecord.getActualBorrowAmount();
+    unchecked {
+      // `actualBorrowAmount` has already been added to `totalBitcoinBorrowed`
+      uint256 totalBitcoinBorrowed = state.getTotalBitcoinBorrowed();
+      state = state.setTotalBitcoinBorrowed(totalBitcoinBorrowed - actualBorrowAmount);
+    }
+
+    uint256 profit = repaidAmount.subMinZero(actualBorrowAmount + btcForGasReserve);
+    if (profit == 0) {
+      return state;
+    }
+
+    // If vault's gas reserves are below the target, reduce the profit shared
+    // with ZeroDAO and vault LPs by up to `(profit * maxGasProfitShareBips) / 10000`
+    if (newBalance < _targetEthReserve) {
+      // Calculate amount of ETH needed to reach target gas reserves
+      uint256 btcNeededForTarget = _ethToBtc(_targetEthReserve - newBalance, state.getSatoshiPerEth());
+      // Calculate maximum amount of profit that can be used to meet reserves
+      uint256 maxReservedBtcForGas = profit.uncheckedMulBipsUp(_maxGasProfitShareBips);
+      // Take the minimum of the two values
+      uint256 reservedProfit = Math.min(btcNeededForTarget, maxReservedBtcForGas);
+      unchecked {
+        // Reduce the profit that will be split between the vault's LPs and ZeroDAO
+        profit -= reservedProfit;
+        // Increase the BTC value that will be withheld for gas reserves
+        btcForGasReserve += reservedProfit;
+      }
+    }
+    return _mintFeeShares(state, profit, btcForGasReserve);
+  }
+
+  function _mintFeeShares(
+    GlobalState state,
+    uint256 profit,
+    uint256 btcForGasReserve
+  ) internal returns (GlobalState) {
+    // Calculate share of profits owed to ZeroDAO
+    uint256 btcForZeroDAO = profit.uncheckedMulBipsUp(state.getZeroFeeShareBips());
+    // Get the underlying assets held by the vault or in outstanding loans and subtract
+    // the fees that will be charged in order to calculate the number of shares to mint
+    // that will be worth the fees.
+    uint256 _totalAssets = (ERC4626.totalAssets() + state.getTotalBitcoinBorrowed()) -
+      (btcForGasReserve + btcForZeroDAO);
+    // Cache the total supply to avoid extra SLOADs
+    uint256 supply = _totalSupply;
+    // Calculate shares to mint for the gas reserves and ZeroDAO fees
+    uint256 gasReserveShares = btcForGasReserve.mulDivDown(supply, _totalAssets);
+    uint256 zeroFeeShares = btcForZeroDAO.mulDivDown(supply, _totalAssets);
+    // Emit event for fee shares
+    emit FeeSharesMinted(btcForGasReserve, gasReserveShares, btcForZeroDAO, zeroFeeShares);
+    // Add the new shares to the total supply. They are not added to any balance but we track
+    // them in the global state.
+    _totalSupply += (gasReserveShares + zeroFeeShares);
+    // Get the current fee share totals
+    (uint256 unburnedGasReserveShares, uint256 unburnedZeroFeeShares) = state.getUnburnedShares();
+    // Write the new fee share totals to the global state on the stack
+    return state.setUnburnedShares(unburnedGasReserveShares + gasReserveShares, unburnedZeroFeeShares + zeroFeeShares);
+  }
+
+  function _getEffectiveGasCosts(
+    GlobalState state,
+    ModuleState moduleState,
+    LoanRecord loanRecord
+  ) internal pure returns (uint256 btcSpentOnGas, uint256 ethSpentOnGas) {
+    uint256 satoshiPerEth = state.getSatoshiPerEth();
+    uint256 btcForLoanGas = loanRecord.getBtcFeeForLoanGas();
+    btcSpentOnGas = btcForLoanGas + moduleState.getBtcFeeForRepayGas();
+    ethSpentOnGas = _btcToEth(btcForLoanGas, satoshiPerEth) + moduleState.getEthRefundForRepayGas();
   }
 }
