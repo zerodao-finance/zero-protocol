@@ -78,6 +78,37 @@ library LoanRecordCoder {
   }
 
   /*//////////////////////////////////////////////////////////////
+                 LoanRecord SharesAndDebt coders
+//////////////////////////////////////////////////////////////*/
+
+  function getSharesAndDebt(LoanRecord encoded) internal pure returns (uint256 sharesLocked, uint256 lenderDebt) {
+    assembly {
+      sharesLocked := shr(LoanRecord_sharesLocked_bitsAfter, encoded)
+      lenderDebt := and(MaxUint48, shr(LoanRecord_lenderDebt_bitsAfter, encoded))
+    }
+  }
+
+  /*//////////////////////////////////////////////////////////////
+              LoanRecord.actualBorrowAmount coders
+//////////////////////////////////////////////////////////////*/
+
+  function getActualBorrowAmount(LoanRecord encoded) internal pure returns (uint256 actualBorrowAmount) {
+    assembly {
+      actualBorrowAmount := and(MaxUint48, shr(LoanRecord_actualBorrowAmount_bitsAfter, encoded))
+    }
+  }
+
+  /*//////////////////////////////////////////////////////////////
+               LoanRecord.btcFeeForLoanGas coders
+//////////////////////////////////////////////////////////////*/
+
+  function getBtcFeeForLoanGas(LoanRecord encoded) internal pure returns (uint256 btcFeeForLoanGas) {
+    assembly {
+      btcFeeForLoanGas := and(MaxUint48, shr(LoanRecord_btcFeeForLoanGas_bitsAfter, encoded))
+    }
+  }
+
+  /*//////////////////////////////////////////////////////////////
                   LoanRecord comparison methods
 //////////////////////////////////////////////////////////////*/
 
