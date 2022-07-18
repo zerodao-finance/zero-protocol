@@ -1,4 +1,8 @@
 struct GlobalState {
+  /*//////////////////////////////////////////////////////////////
+                                Fees
+  //////////////////////////////////////////////////////////////*/
+
   // Fraction of borrow amounts taken as a fee for Zero (set by governance)
   // Expressed in basis points (unit = 0.01%)
   // Can not exceed 20.47%
@@ -20,13 +24,14 @@ struct GlobalState {
   // Supports fees up to 0.08388607 Bitcoin
   uint23 renBorrowFeeStatic;
 
-  // Total amount of bitcoin that has been borrowed
-  uint48 totalBitcoinBorrowed;
+  /*//////////////////////////////////////////////////////////////
+                                Cache
+  //////////////////////////////////////////////////////////////*/
 
   // Last recorded price of ETH in Bitcoin (cached)
-  // Supports prices up to 10995.11627776 BTC per ETH
+  // Supports prices up to 10.73741823 BTC per ETH
   // Expressed in satoshi per full ETH (1e18 wei)
-  uint40 satoshiPerEth { get; };
+  uint30 satoshiPerEth { get; };
 
   // Gas price in gigawei (cached)
   // Runs out of space at gas price of 65535 gwei, which would make
@@ -35,8 +40,26 @@ struct GlobalState {
 
   // Last time the cached values were updated
   // Cache must update if it is lower than global update timestamp
-  // or is older than the cache ttl
+  // or is older than the cache ttl.
   uint32 lastUpdateTimestamp { get; };
+
+  /*//////////////////////////////////////////////////////////////
+                              Vault State
+  //////////////////////////////////////////////////////////////*/
+
+  // Total bitcoin in outstanding loans that has been borrowed from the vault.
+  // Supports up to 10995.11627775 BTC outstanding
+  uint40 totalBitcoinBorrowed;
+
+  // Amount of vault shares that have been minted for gas reserves
+  // and have not yet been burned.
+  // Supports up to 2.68435455 unburned shares.
+  uint28 unburnedGasReserveShares;
+
+  // Amount of vault shares that have been minted for ZeroDAO
+  // and have not yet been burned.
+  // Supports up to 2.68435455 unburned shares.
+  uint28 unburnedZeroFeeShares;
 
   group LoanInfo {
     totalBitcoinBorrowed;
