@@ -30,6 +30,17 @@ interface IZeroBTC is IERC4626, IGovernable, InitializationErrors {
     bytes memory renSignature
   ) external;
 
+  function closeExpiredLoan(
+    address module,
+    address borrower,
+    uint256 borrowAmount,
+    uint256 nonce,
+    bytes memory data,
+    address lender
+  ) external;
+
+  function earn() external;
+
   function setGlobalFees(
     uint256 zeroBorrowFeeBips,
     uint256 renBorrowFeeBips,
