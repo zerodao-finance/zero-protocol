@@ -136,7 +136,7 @@ interface IZeroBTC is IERC4626, IGovernable, InitializationErrors {
       uint256 expiry
     );
 
-  function calculateLoanID(
+  function calculateLoanId(
     address module,
     address borrower,
     uint256 borrowAmount,

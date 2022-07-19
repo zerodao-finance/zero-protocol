@@ -192,7 +192,7 @@ abstract contract ZeroBTCLoans is ZeroBTCCache {
    * pHash, derived from the loan parameters (module, borrower,
    * borrowAmount, nonce, data), and the lender's address.
    */
-  function calculateLoanID(
+  function calculateLoanId(
     address module,
     address borrower,
     uint256 borrowAmount,
