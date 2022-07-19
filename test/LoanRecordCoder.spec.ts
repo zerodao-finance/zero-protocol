@@ -82,4 +82,62 @@ describe('LoanRecordCoder.sol', () => {
 			expect(expiry).to.eq("0x00");
 		});
 	})
+
+	describe('getSharesAndDebt', () => {
+		it('Should be able to get min/max values', async () => {
+			await externalLoanRecord.encode("0xffffffffffff", "0x00", "0x00", "0x00", "0x00");
+			const { sharesLocked, lenderDebt } = await externalLoanRecord.getSharesAndDebt()
+			expect(sharesLocked).to.eq("0xffffffffffff");
+			expect(lenderDebt).to.eq("0x00");
+		});
+
+		it('Should be able to get max/min values', async () => {
+			await externalLoanRecord.encode("0x00", "0xffffffffffff", "0xffffffffffff", "0xffffffffffff", "0xffffffff");
+			const { sharesLocked, lenderDebt } = await externalLoanRecord.getSharesAndDebt()
+			expect(sharesLocked).to.eq("0x00");
+			expect(lenderDebt).to.eq("0xffffffffffff");
+		});
+	})
+
+	describe('getActualBorrowAmount', () => {
+		it('Should be able to get min value', async () => {
+			await externalLoanRecord.encode("0x00", "0xffffffffffff", "0x00", "0x00", "0x00");
+			const actualBorrowAmount = await externalLoanRecord.getActualBorrowAmount()
+			expect(actualBorrowAmount).to.eq("0xffffffffffff");
+		});
+
+		it('Should be able to get max value', async () => {
+			await externalLoanRecord.encode("0xffffffffffff", "0x00", "0xffffffffffff", "0xffffffffffff", "0xffffffff");
+			const actualBorrowAmount = await externalLoanRecord.getActualBorrowAmount()
+			expect(actualBorrowAmount).to.eq("0x00");
+		});
+	})
+
+	describe('getBtcFeeForLoanGas', () => {
+		it('Should be able to get min value', async () => {
+			await externalLoanRecord.encode("0x00", "0x00", "0x00", "0xffffffffffff", "0x00");
+			const btcFeeForLoanGas = await externalLoanRecord.getBtcFeeForLoanGas()
+			expect(btcFeeForLoanGas).to.eq("0xffffffffffff");
+		});
+
+		it('Should be able to get max value', async () => {
+			await externalLoanRecord.encode("0xffffffffffff", "0xffffffffffff", "0xffffffffffff", "0x00", "0xffffffff");
+			const btcFeeForLoanGas = await externalLoanRecord.getBtcFeeForLoanGas()
+			expect(btcFeeForLoanGas).to.eq("0x00");
+		});
+	})
+
+	describe('getExpiry', () => {
+		it('Should be able to get min value', async () => {
+			await externalLoanRecord.encode("0x00", "0x00", "0x00", "0x00", "0xffffffff");
+			const expiry = await externalLoanRecord.getExpiry()
+			expect(expiry).to.eq("0xffffffff");
+		});
+
+		it('Should be able to get max value', async () => {
+			await externalLoanRecord.encode("0xffffffffffff", "0xffffffffffff", "0xffffffffffff", "0xffffffffffff", "0x00");
+			const expiry = await externalLoanRecord.getExpiry()
+			expect(expiry).to.eq("0x00");
+		});
+	})
 })

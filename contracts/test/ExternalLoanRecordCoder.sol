@@ -47,4 +47,44 @@ contract ExternalLoanRecordCoder {
       expiry
     );
   }
+
+  function getSharesAndDebt()
+    external
+    view
+    returns (
+      uint256 sharesLocked,
+      uint256 lenderDebt
+    )
+  {
+    (sharesLocked, lenderDebt) = LoanRecordCoder
+      .getSharesAndDebt(_loanRecord);
+  }
+
+  function getActualBorrowAmount()
+    external
+    view
+    returns (uint256 actualBorrowAmount)
+  {
+    (actualBorrowAmount) = LoanRecordCoder
+      .getActualBorrowAmount(_loanRecord);
+  }
+
+  function getBtcFeeForLoanGas()
+    external
+    view
+    returns (uint256 btcFeeForLoanGas)
+  {
+    (btcFeeForLoanGas) = LoanRecordCoder
+      .getBtcFeeForLoanGas(_loanRecord);
+  }
+
+  function getExpiry()
+    external
+    view
+    returns (uint256 expiry)
+  {
+    (expiry) = LoanRecordCoder.getExpiry(
+      _loanRecord
+    );
+  }
 }
