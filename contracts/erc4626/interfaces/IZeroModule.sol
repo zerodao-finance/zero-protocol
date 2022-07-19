@@ -16,5 +16,5 @@ interface IZeroModule {
     uint256 borrowAmount,
     uint256 loanId,
     bytes calldata data
-  ) external returns (uint256 collateralToLock);
+  ) external;
 }
