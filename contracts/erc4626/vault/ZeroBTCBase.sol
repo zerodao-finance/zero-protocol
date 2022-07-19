@@ -110,19 +110,23 @@ abstract contract ZeroBTCBase is ZeroBTCStorage, ERC4626, Governable, IZeroBTC {
       address gatewayRegistry,
       address btcEthPriceOracle,
       address gasPriceOracle,
+      address renBtcConverter,
       uint256 cacheTimeToLive,
       uint256 maxLoanDuration,
       uint256 targetEthReserve,
-      uint256 maxGasProfitShareBips
+      uint256 maxGasProfitShareBips,
+      address zeroFeeRecipient
     )
   {
     gatewayRegistry = address(_gatewayRegistry);
     btcEthPriceOracle = address(_btcEthPriceOracle);
     gasPriceOracle = address(_gasPriceOracle);
+    renBtcConverter = address(_renBtcConverter);
     cacheTimeToLive = _cacheTimeToLive;
     maxLoanDuration = _maxLoanDuration;
     targetEthReserve = _targetEthReserve;
     maxGasProfitShareBips = _maxGasProfitShareBips;
+    zeroFeeRecipient = _zeroFeeRecipient;
   }
 
   function getGlobalState()
