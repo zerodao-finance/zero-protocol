@@ -13,7 +13,7 @@ struct LoanRecord {
   uint48 btcFeeForLoanGas { get; }
 
   // Time at which the loan expires
-  uint32 expiry {}
+  uint32 expiry { get; }
 
   group SharesAndDebt {
     get;
