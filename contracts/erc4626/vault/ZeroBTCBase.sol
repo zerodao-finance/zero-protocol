@@ -7,6 +7,7 @@ import "../token/ERC4626.sol";
 import "../utils/Governable.sol";
 import "../interfaces/IZeroModule.sol";
 import "../interfaces/IZeroBTC.sol";
+import "../interfaces/IRenBtcEthConverter.sol";
 import { IGateway, IGatewayRegistry } from "../../interfaces/IGatewayRegistry.sol";
 import { IChainlinkOracle } from "../../interfaces/IChainlinkOracle.sol";
 
@@ -33,6 +34,8 @@ abstract contract ZeroBTCBase is ZeroBTCStorage, ERC4626, Governable, IZeroBTC {
   IChainlinkOracle internal immutable _btcEthPriceOracle;
   // _gasPriceOracle MUST return gas prices expressed as wei per unit of gas
   IChainlinkOracle internal immutable _gasPriceOracle;
+  // Contract for swapping renBTC to ETH
+  IRenBtcEthConverter internal immutable _renBtcConverter;
   // TTL for global cache
   uint256 internal immutable _cacheTimeToLive;
   // Maximum time a loan can remain outstanding
@@ -41,25 +44,31 @@ abstract contract ZeroBTCBase is ZeroBTCStorage, ERC4626, Governable, IZeroBTC {
   uint256 internal immutable _targetEthReserve;
   // Target ETH reserves for gas refunds
   uint256 internal immutable _maxGasProfitShareBips;
+  // Recipient of Zero DAO fees
+  address internal immutable _zeroFeeRecipient;
 
   constructor(
     IGatewayRegistry gatewayRegistry,
     IChainlinkOracle btcEthPriceOracle,
     IChainlinkOracle gasPriceOracle,
+    IRenBtcEthConverter renBtcConverter,
     uint256 cacheTimeToLive,
     uint256 maxLoanDuration,
     uint256 targetEthReserve,
     uint256 maxGasProfitShareBips,
+    address zeroFeeRecipient,
     address _asset,
     address _proxyContract
   ) ERC4626(_asset, "ZeroBTC", "ZBTC", 8, _proxyContract, "v1") {
     _gatewayRegistry = gatewayRegistry;
     _btcEthPriceOracle = btcEthPriceOracle;
     _gasPriceOracle = gasPriceOracle;
+    _renBtcConverter = renBtcConverter;
     _cacheTimeToLive = cacheTimeToLive;
     _maxLoanDuration = maxLoanDuration;
     _targetEthReserve = targetEthReserve;
     _maxGasProfitShareBips = maxGasProfitShareBips;
+    _zeroFeeRecipient = zeroFeeRecipient;
   }
 
   /*//////////////////////////////////////////////////////////////
