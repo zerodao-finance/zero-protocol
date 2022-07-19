@@ -49,8 +49,7 @@ abstract contract ZeroBTCLoans is ZeroBTCCache {
    * @param module Module to use for conversion
    * @param borrower Account to receive loan
    * @param borrowAmount Amount of vault's underlying asset to borrow
-   * @param nonce Nonce for the loan, provided by Zero network
-   * @param signature User's EIP712 signature
+   * @param nonce Nonce for the loan, provided by keeper
    * @param data User provided data
    */
   function loan(
@@ -58,12 +57,11 @@ abstract contract ZeroBTCLoans is ZeroBTCCache {
     address borrower,
     uint256 borrowAmount,
     uint256 nonce,
-    bytes memory signature,
     bytes memory data
   ) external override nonReentrant {
     (GlobalState state, ModuleState moduleState) = _getUpdatedGlobalAndModuleState(module);
 
-    bytes32 loanId = _verifyTransferRequestSignature(borrower, asset, borrowAmount, module, nonce, data, signature);
+    uint256 loanId = _deriveLoanId(msg.sender, _deriveLoanPHash(data));
 
     (uint256 actualBorrowAmount, uint256 lenderDebt, uint256 btcFeeForLoanGas) = _calculateLoanFees(
       state,
@@ -87,47 +85,48 @@ abstract contract ZeroBTCLoans is ZeroBTCCache {
   }
 
   /**
-   * @param lender Address of account that gave the loan
+   * @param module Module used for the loan
    * @param borrower Address of account that took out the loan
    * @param borrowAmount Original loan amount before fees
    * @param nonce Nonce for the loan
-   * @param module Module used for the loan
+   * @param data Extra data used by module
+   * @param lender Address of account that gave the loan
    * @param nHash Nonce hash from RenVM deposit
    * @param renSignature Signature from RenVM
-   * @param data Extra data used by module
    */
   function repay(
-    address lender,
+    address module,
     address borrower,
     uint256 borrowAmount,
     uint256 nonce,
-    address module,
+    bytes memory data,
+    address lender,
     bytes32 nHash,
-    bytes memory renSignature,
-    bytes memory data
+    bytes memory renSignature
   ) external override nonReentrant {
-    (, ModuleState moduleState) = _getUpdatedGlobalAndModuleState(module);
+    (GlobalState state, ModuleState moduleState) = _getUpdatedGlobalAndModuleState(module);
 
-    bytes32 loanId = _digestTransferRequest(borrower, asset, borrowAmount, module, nonce, data);
-    uint256 repaidAmount = _getGateway().mint(loanId, borrowAmount, nHash, renSignature);
+    bytes32 pHash = _deriveLoanPHash(data);
+    uint256 repaidAmount = _getGateway().mint(pHash, borrowAmount, nHash, renSignature);
 
-    (ModuleType moduleType, uint256 ethRefundForRepayGas, ) = moduleState.getRepayParams();
-    uint256 collateralToUnlock = repaidAmount;
+    ModuleType moduleType = moduleState.getModuleType();
 
+    uint256 loanId = _deriveLoanId(lender, pHash);
     if (moduleType == ModuleType.LoanAndRepayOverride) {
-      collateralToUnlock = _executeRepayLoan(module, borrower, loanId, repaidAmount, data);
+      repaidAmount = _executeRepayLoan(module, borrower, loanId, repaidAmount, data);
     }
+    LoanRecord loanRecord = _deleteLoan(loanId);
 
-    _repayTo(_state, moduleState, lender, uint256(loanId), collateralToUnlock);
+    _repayTo(state, moduleState, loanRecord, lender, loanId, repaidAmount);
 
-    tx.origin.safeTransferETH(ethRefundForRepayGas);
+    tx.origin.safeTransferETH(moduleState.getEthRefundForRepayGas());
   }
 
   /*//////////////////////////////////////////////////////////////
                           External Getters
   //////////////////////////////////////////////////////////////*/
 
-  function getOutstandingLoan(address lender, uint256 loanId)
+  function getOutstandingLoan(uint256 loanId)
     external
     view
     override
@@ -139,7 +138,23 @@ abstract contract ZeroBTCLoans is ZeroBTCCache {
       uint256 expiry
     )
   {
-    return _outstandingLoans[lender][loanId].decode();
+    return _outstandingLoans[loanId].decode();
+  }
+
+  /**
+   * @dev Derives a loan ID from the combination of the loan's
+   * pHash, derived from the loan parameters (module, borrower,
+   * borrowAmount, nonce, data), and the lender's address.
+   */
+  function calculateLoanID(
+    address module,
+    address borrower,
+    uint256 borrowAmount,
+    uint256 nonce,
+    bytes memory data,
+    address lender
+  ) external view returns (uint256) {
+    return _deriveLoanId(lender, _deriveLoanPHash(data));
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -149,7 +164,7 @@ abstract contract ZeroBTCLoans is ZeroBTCCache {
   function _prepareModuleCalldata(
     uint256 selector,
     address borrower,
-    bytes32 loanId,
+    uint256 loanId,
     uint256 amount,
     bytes memory data
   ) internal pure {
@@ -171,7 +186,7 @@ abstract contract ZeroBTCLoans is ZeroBTCCache {
   function _executeReceiveLoan(
     address module,
     address borrower,
-    bytes32 loanId,
+    uint256 loanId,
     uint256 borrowAmount,
     bytes memory data
   ) internal RestoreFiveWordsBefore(data) {
@@ -206,7 +221,7 @@ abstract contract ZeroBTCLoans is ZeroBTCCache {
   function _executeRepayLoan(
     address module,
     address borrower,
-    bytes32 loanId,
+    uint256 loanId,
     uint256 repaidAmount,
     bytes memory data
   ) internal RestoreFiveWordsBefore(data) returns (uint256 collateralToUnlock) {
@@ -243,19 +258,49 @@ abstract contract ZeroBTCLoans is ZeroBTCCache {
                        Internal Loan Handling
   //////////////////////////////////////////////////////////////*/
 
-  function _getAndSetLoan(
-    address lender,
-    uint256 loanId,
-    LoanRecord newRecord
-  ) internal returns (LoanRecord oldRecord) {
+  function _deriveLoanPHash(bytes memory data)
+    internal
+    view
+    RestoreFreeMemoryPointer
+    RestoreZeroSlot
+    RestoreFirstTwoUnreservedSlots
+    returns (bytes32 pHash)
+  {
+    assembly {
+      // Write data hash first, since its buffer will be overwritten by the following section
+      mstore(0xa0, keccak256(add(data, 0x20), mload(data)))
+      // Write vault address
+      mstore(0, address())
+      // Copy module, borrower, borrowAmount, nonce to hash buffer
+      calldatacopy(0x20, 0x04, 0x80)
+      pHash := keccak256(0, 0xc0)
+    }
+  }
+
+  function _deriveLoanId(address lender, bytes32 pHash) internal pure returns (uint256 loanId) {
     assembly {
       mstore(0, lender)
-      mstore(0x20, _outstandingLoans.slot)
-      mstore(0x20, keccak256(0, 0x40))
+      mstore(0x20, pHash)
+      loanId := keccak256(0, 0x40)
+    }
+  }
+
+  function _getAndSetLoan(uint256 loanId, LoanRecord newRecord) internal returns (LoanRecord oldRecord) {
+    assembly {
       mstore(0, loanId)
+      mstore(0x20, _outstandingLoans.slot)
       let loanSlot := keccak256(0, 0x40)
       oldRecord := sload(loanSlot)
       sstore(loanSlot, newRecord)
+    }
+  }
+
+  function _deleteLoan(uint256 loanId) internal returns (LoanRecord loanRecord) {
+    loanRecord = _getAndSetLoan(loanId, DefaultLoanRecord);
+
+    // Ensure the loan exists
+    if (loanRecord.isNull()) {
+      revert LoanDoesNotExist(loanId);
     }
   }
 
@@ -295,7 +340,6 @@ abstract contract ZeroBTCLoans is ZeroBTCCache {
     }
 
     LoanRecord oldRecord = _getAndSetLoan(
-      lender,
       loanId,
       LoanRecordCoder.encode(
         shares,
@@ -333,6 +377,7 @@ abstract contract ZeroBTCLoans is ZeroBTCCache {
    *
    * @param state Global state
    * @param moduleState Module state
+   * @param loanRecord Loan record
    * @param lender Account that gave the loan
    * @param loanId Identifier for the loan
    * @param repaidAmount Amount of underlying repaid
@@ -340,17 +385,11 @@ abstract contract ZeroBTCLoans is ZeroBTCCache {
   function _repayTo(
     GlobalState state,
     ModuleState moduleState,
+    LoanRecord loanRecord,
     address lender,
     uint256 loanId,
     uint256 repaidAmount
   ) internal {
-    LoanRecord loanRecord = _getAndSetLoan(lender, loanId, DefaultLoanRecord);
-
-    // Ensure the loan exists
-    if (loanRecord.isNull()) {
-      revert LoanDoesNotExist(loanId);
-    }
-
     // Unlock/burn shares for repaid amount
     (uint256 sharesUnlocked, uint256 sharesBurned) = _unlockSharesForLoan(loanRecord, lender, repaidAmount);
 
