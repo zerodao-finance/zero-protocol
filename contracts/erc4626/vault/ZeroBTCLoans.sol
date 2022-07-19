@@ -122,6 +122,52 @@ abstract contract ZeroBTCLoans is ZeroBTCCache {
     tx.origin.safeTransferETH(moduleState.getEthRefundForRepayGas());
   }
 
+  function closeExpiredLoan(
+    address module,
+    address borrower,
+    uint256 borrowAmount,
+    uint256 nonce,
+    bytes memory data,
+    address lender
+  ) external override nonReentrant {
+    uint256 loanId = _deriveLoanId(lender, _deriveLoanPHash(data));
+    LoanRecord loanRecord = _deleteLoan(loanId);
+    if (loanRecord.getExpiry() >= block.timestamp) {
+      revert LoanNotExpired(loanId);
+    }
+    (GlobalState state, ModuleState moduleState) = _getUpdatedGlobalAndModuleState(module);
+    ModuleType moduleType = moduleState.getModuleType();
+    uint256 repaidAmount = 0;
+    if (moduleType == ModuleType.LoanAndRepayOverride) {
+      repaidAmount = _executeRepayLoan(module, borrower, loanId, repaidAmount, data);
+    }
+
+    _repayTo(state, moduleState, loanRecord, lender, loanId, repaidAmount);
+
+    tx.origin.safeTransferETH(moduleState.getEthRefundForRepayGas());
+  }
+
+  function earn() external override nonReentrant {
+    (GlobalState state, ) = _getUpdatedGlobalState();
+    (uint256 unburnedGasReserveShares, uint256 unburnedZeroFeeShares) = state.getUnburnedShares();
+    _state = state.setUnburnedShares(0, 0);
+    uint256 totalFeeShares;
+    uint256 totalFees;
+    uint256 supply = _totalSupply;
+    uint256 assets = totalAssets();
+    unchecked {
+      totalFeeShares = unburnedGasReserveShares + unburnedZeroFeeShares;
+      totalFees = totalFeeShares.mulDivDown(assets, supply);
+      _totalSupply = supply - totalFeeShares;
+    }
+    uint256 minimumEthOut = (_btcToEth(totalFees, state.getSatoshiPerEth()) * 98) / 100;
+    asset.safeTransfer(address(_renBtcConverter), totalFees);
+    uint256 actualEthOut = _renBtcConverter.convertToEth(minimumEthOut);
+    uint256 ethForZero = unburnedZeroFeeShares.mulDivDown(actualEthOut, totalFeeShares);
+    _zeroFeeRecipient.safeTransferETH(ethForZero);
+    emit FeeSharesBurned(actualEthOut - ethForZero, unburnedGasReserveShares, ethForZero, unburnedZeroFeeShares);
+  }
+
   /*//////////////////////////////////////////////////////////////
                           External Getters
   //////////////////////////////////////////////////////////////*/
