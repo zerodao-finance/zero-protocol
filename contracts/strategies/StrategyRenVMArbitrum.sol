@@ -79,22 +79,37 @@ contract StrategyRenVMArbitrum {
     if (_gasWant < gasReserve) {
       // if ETH balance < ETH reserve
       _gasWant = gasReserve.sub(_gasWant);
-      address _converter = IController(controller).converters(nativeWrapper, vaultWant);
+      address _converter = IController(controller).converters(
+        nativeWrapper,
+        vaultWant
+      );
       uint256 _vaultWant = IConverter(_converter).estimate(_gasWant); //_gasWant is estimated from wETH to wBTC
       uint256 _sharesDeficit = estimateShares(_vaultWant); //Estimate shares of wBTC
       // Works up to this point
-      require(IERC20(vault).balanceOf(address(this)) > _sharesDeficit, "!enough"); //revert if shares needed > shares held
+      require(
+        IERC20(vault).balanceOf(address(this)) > _sharesDeficit,
+        "!enough"
+      ); //revert if shares needed > shares held
       uint256 _amountOut = IyVault(vault).withdraw(_sharesDeficit);
-      address converter = IController(controller).converters(vaultWant, nativeWrapper);
+      address converter = IController(controller).converters(
+        vaultWant,
+        nativeWrapper
+      );
       IERC20(vaultWant).transfer(converter, _amountOut);
       _amountOut = IConverter(converter).convert(address(this));
-      address _unwrapper = IController(controller).converters(nativeWrapper, address(0x0));
+      address _unwrapper = IController(controller).converters(
+        nativeWrapper,
+        address(0x0)
+      );
       IERC20(nativeWrapper).transfer(_unwrapper, _amountOut);
       IConverter(_unwrapper).convert(address(this));
     }
   }
 
-  function _withdraw(uint256 _amount, address _asset) private returns (uint256) {
+  function _withdraw(uint256 _amount, address _asset)
+    private
+    returns (uint256)
+  {
     require(_asset == want || _asset == vaultWant, "asset not supported");
     if (_amount == 0) {
       return 0;
@@ -110,21 +125,35 @@ contract StrategyRenVMArbitrum {
     _amount = IyVault(vault).withdraw(_shares);
     if (_asset == want) {
       // if asset is what the strategy wants
-      IConverter toWant = IConverter(IController(controller).converters(vaultWant, want));
+      IConverter toWant = IConverter(
+        IController(controller).converters(vaultWant, want)
+      );
       IERC20(vaultWant).transfer(address(toWant), _amount);
       _amount = toWant.convert(address(0x0));
     }
     return _amount;
   }
 
-  function permissionedEther(address payable _target, uint256 _amount) external virtual onlyController {
+  function permissionedEther(address payable _target, uint256 _amount)
+    external
+    virtual
+    onlyController
+  {
     // _amount is the amount of ETH to refund
     if (_amount > gasReserve) {
-      _amount = IConverter(IController(controller).converters(nativeWrapper, vaultWant)).estimate(_amount);
+      _amount = IConverter(
+        IController(controller).converters(nativeWrapper, vaultWant)
+      ).estimate(_amount);
       uint256 _sharesDeficit = estimateShares(_amount);
       uint256 _amountOut = IyVault(vault).withdraw(_sharesDeficit);
-      address _vaultConverter = IController(controller).converters(vaultWant, nativeWrapper);
-      address _converter = IController(controller).converters(nativeWrapper, address(0x0));
+      address _vaultConverter = IController(controller).converters(
+        vaultWant,
+        nativeWrapper
+      );
+      address _converter = IController(controller).converters(
+        nativeWrapper,
+        address(0x0)
+      );
       IERC20(vaultWant).transfer(_vaultConverter, _amountOut);
       _amount = IConverter(_vaultConverter).convert(address(this));
       IERC20(nativeWrapper).transfer(_converter, _amount);
@@ -138,7 +167,10 @@ contract StrategyRenVMArbitrum {
   }
 
   function withdrawAll() external virtual onlyController {
-    IERC20(want).safeTransfer(address(controller), _withdraw(IERC20(vault).balanceOf(address(this)), want));
+    IERC20(want).safeTransfer(
+      address(controller),
+      _withdraw(IERC20(vault).balanceOf(address(this)), want)
+    );
   }
 
   function balanceOf() external view virtual returns (uint256) {
@@ -146,10 +178,18 @@ contract StrategyRenVMArbitrum {
   }
 
   function estimateShares(uint256 _amount) internal virtual returns (uint256) {
-    return _amount.mul(10**IyVault(vault).decimals()).div(IyVault(vault).pricePerShare());
+    return
+      _amount.mul(10**IyVault(vault).decimals()).div(
+        IyVault(vault).pricePerShare()
+      );
   }
 
-  function permissionedSend(address _module, uint256 _amount) external virtual onlyController returns (uint256) {
+  function permissionedSend(address _module, uint256 _amount)
+    external
+    virtual
+    onlyController
+    returns (uint256)
+  {
     uint256 _reserve = IERC20(want).balanceOf(address(this));
     address _want = IZeroModule(_module).want();
     if (_amount > _reserve || _want != want) {

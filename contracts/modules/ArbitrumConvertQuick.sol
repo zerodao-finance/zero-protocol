@@ -16,8 +16,10 @@ contract ArbitrumConvertQuick {
   address public constant weth = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
   address public constant wbtc = 0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f;
   address public constant want = 0xDBf31dF14B66535aF65AaC99C32e9eA844e14501;
-  address public constant renCrvArbitrum = 0x3E01dD8a5E1fb3481F0F589056b428Fc308AF0Fb;
-  address public constant tricryptoArbitrum = 0x960ea3e3C7FB317332d990873d354E18d7645590;
+  address public constant renCrvArbitrum =
+    0x3E01dD8a5E1fb3481F0F589056b428Fc308AF0Fb;
+  address public constant tricryptoArbitrum =
+    0x960ea3e3C7FB317332d990873d354E18d7645590;
   uint256 public capacity;
   struct ConvertRecord {
     uint128 volume;
@@ -58,16 +60,25 @@ contract ArbitrumConvertQuick {
     bytes memory _data
   ) public onlyController {
     uint256 ratio = abi.decode(_data, (uint256));
-    (uint256 amountSwappedETH, uint256 amountSwappedBTC) = swapTokens(_actual, ratio);
+    (uint256 amountSwappedETH, uint256 amountSwappedBTC) = swapTokens(
+      _actual,
+      ratio
+    );
     IERC20(want).safeTransfer(_to, amountSwappedBTC);
     address payable to = address(uint160(_to));
     to.transfer(amountSwappedETH);
-    records[_nonce] = ConvertRecord({ volume: uint128(_actual), when: uint128(block.number) });
+    records[_nonce] = ConvertRecord({
+      volume: uint128(_actual),
+      when: uint128(block.number)
+    });
     capacity = capacity.sub(_actual);
   }
 
   function defaultLoan(uint256 _nonce) public {
-    require(uint256(records[_nonce].when) + blockTimeout <= block.number, "!expired");
+    require(
+      uint256(records[_nonce].when) + blockTimeout <= block.number,
+      "!expired"
+    );
     capacity = capacity.sub(uint256(records[_nonce].volume));
     delete records[_nonce];
   }
@@ -78,12 +89,25 @@ contract ArbitrumConvertQuick {
   {
     uint256 amountToETH = _ratio.mul(_amountIn).div(uint256(1 ether));
     uint256 wbtcOut = amountToETH != 0
-      ? IRenCrvArbitrum(renCrvArbitrum).exchange(1, 0, amountToETH, 0, address(this))
+      ? IRenCrvArbitrum(renCrvArbitrum).exchange(
+        1,
+        0,
+        amountToETH,
+        0,
+        address(this)
+      )
       : 0;
     if (wbtcOut != 0) {
       uint256 _amountStart = address(this).balance;
       (bool success, ) = tricryptoArbitrum.call(
-        abi.encodeWithSelector(ICurveETHUInt256.exchange.selector, 1, 2, wbtcOut, 0, true)
+        abi.encodeWithSelector(
+          ICurveETHUInt256.exchange.selector,
+          1,
+          2,
+          wbtcOut,
+          0,
+          true
+        )
       );
       require(success, "!exchange");
       amountSwappedETH = address(this).balance.sub(_amountStart);
@@ -108,7 +132,11 @@ contract ArbitrumConvertQuick {
     delete records[_nonce];
   }
 
-  function computeReserveRequirement(uint256 _in) external view returns (uint256) {
+  function computeReserveRequirement(uint256 _in)
+    external
+    view
+    returns (uint256)
+  {
     return _in.mul(12e17).div(1e18); // 120% collateralized
   }
 }

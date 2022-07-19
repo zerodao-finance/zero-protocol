@@ -4,7 +4,11 @@ pragma solidity >=0.8.13;
 import "../interfaces/CompactStringErrors.sol";
 
 contract CompactStrings is CompactStringErrors {
-  function packString(string memory unpackedString) internal pure returns (bytes32 packedString) {
+  function packString(string memory unpackedString)
+    internal
+    pure
+    returns (bytes32 packedString)
+  {
     if (bytes(unpackedString).length > 31) {
       revert InvalidCompactString();
     }
@@ -13,7 +17,11 @@ contract CompactStrings is CompactStringErrors {
     }
   }
 
-  function unpackString(bytes32 packedString) internal pure returns (string memory unpackedString) {
+  function unpackString(bytes32 packedString)
+    internal
+    pure
+    returns (string memory unpackedString)
+  {
     assembly {
       // Get free memory pointer
       let freeMemPtr := mload(0x40)

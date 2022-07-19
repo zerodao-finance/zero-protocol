@@ -151,9 +151,21 @@ interface IZeroBTC is IERC4626, IGovernable, InitializationErrors {
 
   error ModuleDoesNotExist();
 
-  error ReceiveLoanError(address module, address borrower, uint256 borrowAmount, uint256 loanId, bytes data);
+  error ReceiveLoanError(
+    address module,
+    address borrower,
+    uint256 borrowAmount,
+    uint256 loanId,
+    bytes data
+  );
 
-  error RepayLoanError(address module, address borrower, uint256 repaidAmount, uint256 loanId, bytes data);
+  error RepayLoanError(
+    address module,
+    address borrower,
+    uint256 repaidAmount,
+    uint256 loanId,
+    bytes data
+  );
 
   error ModuleAssetDoesNotMatch(address moduleAsset);
 
@@ -175,17 +187,46 @@ interface IZeroBTC is IERC4626, IGovernable, InitializationErrors {
                                 Events
   //////////////////////////////////////////////////////////////*/
 
-  event LoanCreated(address lender, address borrower, uint256 loanId, uint256 assetsBorrowed, uint256 sharesLocked);
+  event LoanCreated(
+    address lender,
+    address borrower,
+    uint256 loanId,
+    uint256 assetsBorrowed,
+    uint256 sharesLocked
+  );
 
-  event LoanClosed(uint256 loanId, uint256 assetsRepaid, uint256 sharesUnlocked, uint256 sharesBurned);
+  event LoanClosed(
+    uint256 loanId,
+    uint256 assetsRepaid,
+    uint256 sharesUnlocked,
+    uint256 sharesBurned
+  );
 
-  event ModuleStateUpdated(address module, ModuleType moduleType, uint256 loanGasE4, uint256 repayGasE4);
+  event ModuleStateUpdated(
+    address module,
+    ModuleType moduleType,
+    uint256 loanGasE4,
+    uint256 repayGasE4
+  );
 
-  event GlobalStateConfigUpdated(uint256 dynamicBorrowFee, uint256 staticBorrowFee);
+  event GlobalStateConfigUpdated(
+    uint256 dynamicBorrowFee,
+    uint256 staticBorrowFee
+  );
 
   event GlobalStateCacheUpdated(uint256 satoshiPerEth, uint256 getGweiPerGas);
 
-  event FeeSharesMinted(uint256 gasReserveFees, uint256 gasReserveShares, uint256 zeroFees, uint256 zeroFeeShares);
+  event FeeSharesMinted(
+    uint256 gasReserveFees,
+    uint256 gasReserveShares,
+    uint256 zeroFees,
+    uint256 zeroFeeShares
+  );
 
-  event FeeSharesBurned(uint256 gasReserveFees, uint256 gasReserveShares, uint256 zeroFees, uint256 zeroFeeShares);
+  event FeeSharesBurned(
+    uint256 gasReserveFees,
+    uint256 gasReserveShares,
+    uint256 zeroFees,
+    uint256 zeroFeeShares
+  );
 }

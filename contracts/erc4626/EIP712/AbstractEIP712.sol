@@ -44,13 +44,19 @@ abstract contract AbstractEIP712 is MemoryRestoration, EIP712Errors {
       mstore(add(ptr, DomainSeparator_nameHash_offset), nameHash)
       mstore(add(ptr, DomainSeparator_versionHash_offset), versionHash)
       mstore(add(ptr, DomainSeparator_chainId_offset), chainid())
-      mstore(add(ptr, DomainSeparator_verifyingContract_offset), verifyingContract)
+      mstore(
+        add(ptr, DomainSeparator_verifyingContract_offset),
+        verifyingContract
+      )
       separator := keccak256(ptr, DomainSeparator_length)
     }
   }
 
   function getDomainSeparator() internal view virtual returns (bytes32) {
-    return block.chainid == _CHAIN_ID ? _DOMAIN_SEPARATOR : _computeDomainSeparator();
+    return
+      block.chainid == _CHAIN_ID
+        ? _DOMAIN_SEPARATOR
+        : _computeDomainSeparator();
   }
 
   function _verifyingContract() internal view virtual returns (address);

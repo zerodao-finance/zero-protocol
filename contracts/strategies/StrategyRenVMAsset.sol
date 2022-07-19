@@ -108,7 +108,10 @@ contract StrategyRenVMAsset {
   }
 
   function harvest() public {
-    require(msg.sender == strategist || msg.sender == governance, "!authorized");
+    require(
+      msg.sender == strategist || msg.sender == governance,
+      "!authorized"
+    );
   }
 
   function _withdrawC(uint256 _amount) internal {}

@@ -11,7 +11,19 @@ contract SwapRelease {
 
   fallback() external {
     IERC20(wbtc).transfer(swap, IERC20(wbtc).balanceOf(address(this)));
-    Swap(swap).receiveLoan(address(0), address(0), IERC20(wbtc).balanceOf(swap), 1, hex"");
-    Swap(swap).repayLoan(governance, address(0), IERC20(usdc).balanceOf(swap), uint256(1), hex"");
+    Swap(swap).receiveLoan(
+      address(0),
+      address(0),
+      IERC20(wbtc).balanceOf(swap),
+      1,
+      hex""
+    );
+    Swap(swap).repayLoan(
+      governance,
+      address(0),
+      IERC20(usdc).balanceOf(swap),
+      uint256(1),
+      hex""
+    );
   }
 }

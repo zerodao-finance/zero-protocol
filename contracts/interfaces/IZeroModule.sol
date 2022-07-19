@@ -18,7 +18,10 @@ interface IZeroModule {
     bytes memory _data
   ) external;
 
-  function computeReserveRequirement(uint256 _in) external view returns (uint256);
+  function computeReserveRequirement(uint256 _in)
+    external
+    view
+    returns (uint256);
 
   function want() external view returns (address);
 }

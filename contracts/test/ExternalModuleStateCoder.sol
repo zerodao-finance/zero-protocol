@@ -60,12 +60,24 @@ contract ExternalModuleStateCoder {
     );
   }
 
-  function getLoanParams() external view returns (ModuleType moduleType, uint256 ethRefundForLoanGas) {
-    (moduleType, ethRefundForLoanGas) = ModuleStateCoder.getLoanParams(_moduleState);
+  function getLoanParams()
+    external
+    view
+    returns (ModuleType moduleType, uint256 ethRefundForLoanGas)
+  {
+    (moduleType, ethRefundForLoanGas) = ModuleStateCoder.getLoanParams(
+      _moduleState
+    );
   }
 
-  function getBitcoinGasFees() external view returns (uint256 btcFeeForLoanGas, uint256 btcFeeForRepayGas) {
-    (btcFeeForLoanGas, btcFeeForRepayGas) = ModuleStateCoder.getBitcoinGasFees(_moduleState);
+  function getBitcoinGasFees()
+    external
+    view
+    returns (uint256 btcFeeForLoanGas, uint256 btcFeeForRepayGas)
+  {
+    (btcFeeForLoanGas, btcFeeForRepayGas) = ModuleStateCoder.getBitcoinGasFees(
+      _moduleState
+    );
   }
 
   function setRepayParams(
@@ -73,7 +85,12 @@ contract ExternalModuleStateCoder {
     uint256 ethRefundForRepayGas,
     uint256 btcFeeForRepayGas
   ) external {
-    (_moduleState) = ModuleStateCoder.setRepayParams(_moduleState, moduleType, ethRefundForRepayGas, btcFeeForRepayGas);
+    (_moduleState) = ModuleStateCoder.setRepayParams(
+      _moduleState,
+      moduleType,
+      ethRefundForRepayGas,
+      btcFeeForRepayGas
+    );
   }
 
   function getRepayParams()
@@ -85,7 +102,8 @@ contract ExternalModuleStateCoder {
       uint256 btcFeeForRepayGas
     )
   {
-    (moduleType, ethRefundForRepayGas, btcFeeForRepayGas) = ModuleStateCoder.getRepayParams(_moduleState);
+    (moduleType, ethRefundForRepayGas, btcFeeForRepayGas) = ModuleStateCoder
+      .getRepayParams(_moduleState);
   }
 
   function setCached(
@@ -126,10 +144,18 @@ contract ExternalModuleStateCoder {
   }
 
   function setGasParams(uint256 loanGasE4, uint256 repayGasE4) external {
-    (_moduleState) = ModuleStateCoder.setGasParams(_moduleState, loanGasE4, repayGasE4);
+    (_moduleState) = ModuleStateCoder.setGasParams(
+      _moduleState,
+      loanGasE4,
+      repayGasE4
+    );
   }
 
-  function getGasParams() external view returns (uint256 loanGasE4, uint256 repayGasE4) {
+  function getGasParams()
+    external
+    view
+    returns (uint256 loanGasE4, uint256 repayGasE4)
+  {
     (loanGasE4, repayGasE4) = ModuleStateCoder.getGasParams(_moduleState);
   }
 
@@ -157,43 +183,84 @@ contract ExternalModuleStateCoder {
     (_moduleState) = ModuleStateCoder.setRepayGasE4(_moduleState, repayGasE4);
   }
 
-  function getEthRefundForLoanGas() external view returns (uint256 ethRefundForLoanGas) {
-    (ethRefundForLoanGas) = ModuleStateCoder.getEthRefundForLoanGas(_moduleState);
+  function getEthRefundForLoanGas()
+    external
+    view
+    returns (uint256 ethRefundForLoanGas)
+  {
+    (ethRefundForLoanGas) = ModuleStateCoder.getEthRefundForLoanGas(
+      _moduleState
+    );
   }
 
   function setEthRefundForLoanGas(uint256 ethRefundForLoanGas) external {
-    (_moduleState) = ModuleStateCoder.setEthRefundForLoanGas(_moduleState, ethRefundForLoanGas);
+    (_moduleState) = ModuleStateCoder.setEthRefundForLoanGas(
+      _moduleState,
+      ethRefundForLoanGas
+    );
   }
 
-  function getEthRefundForRepayGas() external view returns (uint256 ethRefundForRepayGas) {
-    (ethRefundForRepayGas) = ModuleStateCoder.getEthRefundForRepayGas(_moduleState);
+  function getEthRefundForRepayGas()
+    external
+    view
+    returns (uint256 ethRefundForRepayGas)
+  {
+    (ethRefundForRepayGas) = ModuleStateCoder.getEthRefundForRepayGas(
+      _moduleState
+    );
   }
 
   function setEthRefundForRepayGas(uint256 ethRefundForRepayGas) external {
-    (_moduleState) = ModuleStateCoder.setEthRefundForRepayGas(_moduleState, ethRefundForRepayGas);
+    (_moduleState) = ModuleStateCoder.setEthRefundForRepayGas(
+      _moduleState,
+      ethRefundForRepayGas
+    );
   }
 
-  function getBtcFeeForLoanGas() external view returns (uint256 btcFeeForLoanGas) {
+  function getBtcFeeForLoanGas()
+    external
+    view
+    returns (uint256 btcFeeForLoanGas)
+  {
     (btcFeeForLoanGas) = ModuleStateCoder.getBtcFeeForLoanGas(_moduleState);
   }
 
   function setBtcFeeForLoanGas(uint256 btcFeeForLoanGas) external {
-    (_moduleState) = ModuleStateCoder.setBtcFeeForLoanGas(_moduleState, btcFeeForLoanGas);
+    (_moduleState) = ModuleStateCoder.setBtcFeeForLoanGas(
+      _moduleState,
+      btcFeeForLoanGas
+    );
   }
 
-  function getBtcFeeForRepayGas() external view returns (uint256 btcFeeForRepayGas) {
+  function getBtcFeeForRepayGas()
+    external
+    view
+    returns (uint256 btcFeeForRepayGas)
+  {
     (btcFeeForRepayGas) = ModuleStateCoder.getBtcFeeForRepayGas(_moduleState);
   }
 
   function setBtcFeeForRepayGas(uint256 btcFeeForRepayGas) external {
-    (_moduleState) = ModuleStateCoder.setBtcFeeForRepayGas(_moduleState, btcFeeForRepayGas);
+    (_moduleState) = ModuleStateCoder.setBtcFeeForRepayGas(
+      _moduleState,
+      btcFeeForRepayGas
+    );
   }
 
-  function getLastUpdateTimestamp() external view returns (uint256 lastUpdateTimestamp) {
-    (lastUpdateTimestamp) = ModuleStateCoder.getLastUpdateTimestamp(_moduleState);
+  function getLastUpdateTimestamp()
+    external
+    view
+    returns (uint256 lastUpdateTimestamp)
+  {
+    (lastUpdateTimestamp) = ModuleStateCoder.getLastUpdateTimestamp(
+      _moduleState
+    );
   }
 
   function setLastUpdateTimestamp(uint256 lastUpdateTimestamp) external {
-    (_moduleState) = ModuleStateCoder.setLastUpdateTimestamp(_moduleState, lastUpdateTimestamp);
+    (_moduleState) = ModuleStateCoder.setLastUpdateTimestamp(
+      _moduleState,
+      lastUpdateTimestamp
+    );
   }
 }

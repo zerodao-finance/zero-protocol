@@ -46,7 +46,12 @@ contract ERC20 is ERC20Storage, CompactStrings, IERC20 {
     return _totalSupply;
   }
 
-  function allowance(address owner, address spender) external view override returns (uint256) {
+  function allowance(address owner, address spender)
+    external
+    view
+    override
+    returns (uint256)
+  {
     return _allowance[owner][spender];
   }
 
@@ -58,7 +63,12 @@ contract ERC20 is ERC20Storage, CompactStrings, IERC20 {
                                Actions
   //////////////////////////////////////////////////////////////*/
 
-  function approve(address spender, uint256 amount) external virtual override returns (bool) {
+  function approve(address spender, uint256 amount)
+    external
+    virtual
+    override
+    returns (bool)
+  {
     _allowance[msg.sender][spender] = amount;
 
     emit Approval(msg.sender, spender, amount);
@@ -66,7 +76,12 @@ contract ERC20 is ERC20Storage, CompactStrings, IERC20 {
     return true;
   }
 
-  function transfer(address to, uint256 amount) external virtual override returns (bool) {
+  function transfer(address to, uint256 amount)
+    external
+    virtual
+    override
+    returns (bool)
+  {
     _balanceOf[msg.sender] -= amount;
 
     // Cannot overflow because the sum of all user
