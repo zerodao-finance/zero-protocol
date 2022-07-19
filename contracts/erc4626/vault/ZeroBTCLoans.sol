@@ -199,7 +199,7 @@ abstract contract ZeroBTCLoans is ZeroBTCCache {
     uint256 nonce,
     bytes memory data,
     address lender
-  ) external view returns (uint256) {
+  ) external view override returns (uint256) {
     return _deriveLoanId(lender, _deriveLoanPHash(data));
   }
 
