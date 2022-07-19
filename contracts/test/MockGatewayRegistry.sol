@@ -3,9 +3,11 @@ pragma solidity >=0.8.13;
 import "./TestERC20.sol";
 
 contract MockGatewayRegistry {
-  mapping(address => MockGateway) public getGatewayByToken;
+  mapping(TestERC20 => MockGateway) public getGatewayByToken;
 
-  constructor(TestERC20 wbtc) {}
+  constructor(TestERC20 wbtc) {
+    getGatewayByToken[wbtc] = new MockGateway(wbtc);
+  }
 }
 
 uint256 constant BasisPointsOne = 1e4;
@@ -20,11 +22,12 @@ contract MockGateway {
   }
 
   function mint(
-    bytes32,
-    uint256 mintAmount,
-    bytes32,
-    bytes memory
+    bytes32 _pHash,
+    uint256 _amount,
+    bytes32 _nHash,
+    bytes memory _sig
   ) external {
-    wbtc.mint(msg.sender, mintAmount);
+    require(keccak256(_sig) == keccak256(abi.encodePacked(_pHash, _amount, _nHash)));
+    wbtc.mint(msg.sender, _amount);
   }
 }
