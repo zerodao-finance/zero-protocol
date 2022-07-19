@@ -19,7 +19,8 @@ contract BadgerBridge is IZeroModule {
   address public constant wbtc = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
   address public constant override want = wbtc;
   address public constant renCrv = 0x93054188d876f558f4a66B2EF1d97d16eDf0895B;
-  address public constant tricrypto = 0x80466c64868E1ab14a1Ddf27A676C3fcBE638Fe5;
+  address public constant tricrypto =
+    0x80466c64868E1ab14a1Ddf27A676C3fcBE638Fe5;
   modifier onlyController() {
     require(msg.sender == controller, "!controller");
     _;
@@ -37,7 +38,11 @@ contract BadgerBridge is IZeroModule {
     blockTimeout = _ct;
   }
 
-  function isActive(BadgerBridgeLib.ConvertRecord storage record) internal view returns (bool) {
+  function isActive(BadgerBridgeLib.ConvertRecord storage record)
+    internal
+    view
+    returns (bool)
+  {
     return record.qty != 0;
   }
 
@@ -56,7 +61,10 @@ contract BadgerBridge is IZeroModule {
     uint256 _nonce,
     bytes memory /* _data */
   ) public override onlyController {
-    outstanding[_nonce] = BadgerBridgeLib.ConvertRecord({ qty: uint128(_actual), when: uint128(block.timestamp) });
+    outstanding[_nonce] = BadgerBridgeLib.ConvertRecord({
+      qty: uint128(_actual),
+      when: uint128(block.timestamp)
+    });
   }
 
   receive() external payable {
@@ -75,7 +83,12 @@ contract BadgerBridge is IZeroModule {
     delete outstanding[_nonce];
   }
 
-  function computeReserveRequirement(uint256 _in) external view override returns (uint256) {
+  function computeReserveRequirement(uint256 _in)
+    external
+    view
+    override
+    returns (uint256)
+  {
     return _in.mul(uint256(1e17)).div(uint256(1 ether));
   }
 }

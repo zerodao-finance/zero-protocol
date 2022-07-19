@@ -30,7 +30,9 @@ contract TestModule {
     useEscrow = _useEscrow;
   }
 
-  function setReturnLessThanFullAmount(bool _returnLessThanFullAmount) external {
+  function setReturnLessThanFullAmount(bool _returnLessThanFullAmount)
+    external
+  {
     returnLessThanFullAmount = _returnLessThanFullAmount;
   }
 

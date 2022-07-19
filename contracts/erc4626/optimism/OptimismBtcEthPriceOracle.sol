@@ -15,7 +15,10 @@ contract OptimismBtcEthPriceOracle {
   // Oracle for price of BTC in USD with 8 decimals.
   IChainlinkOracle internal immutable _btcUsdPriceOracle;
 
-  constructor(IChainlinkOracle ethUsdPriceOracle, IChainlinkOracle btcUsdPriceOracle) {
+  constructor(
+    IChainlinkOracle ethUsdPriceOracle,
+    IChainlinkOracle btcUsdPriceOracle
+  ) {
     _ethUsdPriceOracle = ethUsdPriceOracle;
     _btcUsdPriceOracle = btcUsdPriceOracle;
   }
@@ -25,6 +28,8 @@ contract OptimismBtcEthPriceOracle {
    * in wei per bitcoin.
    */
   function latestAnswer() external view returns (uint256) {
-    return (_btcUsdPriceOracle.latestAnswer() * 1e18) / _ethUsdPriceOracle.latestAnswer();
+    return
+      (_btcUsdPriceOracle.latestAnswer() * 1e18) /
+      _ethUsdPriceOracle.latestAnswer();
   }
 }

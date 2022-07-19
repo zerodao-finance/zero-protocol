@@ -24,10 +24,17 @@ library Math {
     }
   }
 
-  function uncheckedMulBipsUp(uint256 x, uint256 bips) internal pure returns (uint256 y) {
+  function uncheckedMulBipsUp(uint256 x, uint256 bips)
+    internal
+    pure
+    returns (uint256 y)
+  {
     assembly {
       let numerator := mul(x, bips)
-      y := mul(iszero(iszero(numerator)), add(div(sub(numerator, 1), TenThousand), 1))
+      y := mul(
+        iszero(iszero(numerator)),
+        add(div(sub(numerator, 1), TenThousand), 1)
+      )
     }
   }
 
@@ -38,7 +45,11 @@ library Math {
     }
   }
 
-  function mulBips(uint256 n, uint256 bips) internal pure returns (uint256 result) {
+  function mulBips(uint256 n, uint256 bips)
+    internal
+    pure
+    returns (uint256 result)
+  {
     result = (n * bips) / TenThousand;
   }
 

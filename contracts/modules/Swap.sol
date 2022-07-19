@@ -54,7 +54,11 @@ contract Swap is IZeroModule {
   function defaultLoan(uint256 _nonce) public {
     require(block.number >= outstanding[_nonce].when + blockTimeout);
     require(outstanding[_nonce].qty != 0, "!outstanding");
-    uint256 _amountSwapped = swapTokens(fiat, controllerWant, outstanding[_nonce].qty);
+    uint256 _amountSwapped = swapTokens(
+      fiat,
+      controllerWant,
+      outstanding[_nonce].qty
+    );
     IERC20(controllerWant).safeTransfer(controller, _amountSwapped);
     delete outstanding[_nonce];
   }
@@ -67,7 +71,11 @@ contract Swap is IZeroModule {
     bytes memory _data
   ) public override onlyController {
     uint256 amountSwapped = swapTokens(want, fiat, _actual);
-    outstanding[_nonce] = SwapLib.SwapRecord({ qty: amountSwapped, when: uint64(block.timestamp), token: _asset });
+    outstanding[_nonce] = SwapLib.SwapRecord({
+      qty: amountSwapped,
+      when: uint64(block.timestamp),
+      token: _asset
+    });
   }
 
   function swapTokens(
@@ -102,7 +110,12 @@ contract Swap is IZeroModule {
     delete outstanding[_nonce];
   }
 
-  function computeReserveRequirement(uint256 _in) external view override returns (uint256) {
+  function computeReserveRequirement(uint256 _in)
+    external
+    view
+    override
+    returns (uint256)
+  {
     return _in.mul(uint256(1e17)).div(uint256(1 ether));
   }
 }

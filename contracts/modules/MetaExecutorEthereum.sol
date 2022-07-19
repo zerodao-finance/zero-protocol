@@ -18,8 +18,10 @@ contract MetaExecutorEthereum is IZeroMeta {
   address public constant weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
   address public constant wbtc = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
   address public constant want = 0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D;
-  address public constant renCrvArbitrum = 0x93054188d876f558f4a66B2EF1d97d16eDf0895B;
-  address public constant tricryptoArbitrum = 0x80466c64868E1ab14a1Ddf27A676C3fcBE638Fe5;
+  address public constant renCrvArbitrum =
+    0x93054188d876f558f4a66B2EF1d97d16eDf0895B;
+  address public constant tricryptoArbitrum =
+    0x80466c64868E1ab14a1Ddf27A676C3fcBE638Fe5;
   uint256 public capacity;
   struct ConvertRecord {
     uint128 volume;
@@ -72,7 +74,11 @@ contract MetaExecutorEthereum is IZeroMeta {
     console.log(want, value);
   }
 
-  function computeReserveRequirement(uint256 _in) external view returns (uint256) {
+  function computeReserveRequirement(uint256 _in)
+    external
+    view
+    returns (uint256)
+  {
     return _in.mul(12e17).div(1e18); // 120% collateralized
   }
 }

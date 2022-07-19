@@ -90,11 +90,21 @@ abstract contract ZeroBTCBase is ZeroBTCStorage, ERC4626, Governable, IZeroBTC {
     // Initialize reentrancy guard mutex
     ReentrancyGuard._initialize();
     // Ensure fees are valid
-    if (zeroBorrowFeeBips > 2000 || renBorrowFeeBips > 2000 || zeroBorrowFeeBips == 0 || renBorrowFeeBips == 0) {
+    if (
+      zeroBorrowFeeBips > 2000 ||
+      renBorrowFeeBips > 2000 ||
+      zeroBorrowFeeBips == 0 ||
+      renBorrowFeeBips == 0
+    ) {
       revert InvalidDynamicBorrowFee();
     }
     // Set initial global state
-    _state = _state.setFees(zeroBorrowFeeBips, renBorrowFeeBips, zeroBorrowFeeStatic, renBorrowFeeStatic);
+    _state = _state.setFees(
+      zeroBorrowFeeBips,
+      renBorrowFeeBips,
+      zeroBorrowFeeStatic,
+      renBorrowFeeStatic
+    );
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -168,7 +178,13 @@ abstract contract ZeroBTCBase is ZeroBTCStorage, ERC4626, Governable, IZeroBTC {
     return _getExistingModuleState(module).decode();
   }
 
-  function totalAssets() public view virtual override(ERC4626, IERC4626) returns (uint256) {
+  function totalAssets()
+    public
+    view
+    virtual
+    override(ERC4626, IERC4626)
+    returns (uint256)
+  {
     return ERC4626.totalAssets() + _state.getTotalBitcoinBorrowed();
   }
 
@@ -190,7 +206,11 @@ abstract contract ZeroBTCBase is ZeroBTCStorage, ERC4626, Governable, IZeroBTC {
     gateway = IGateway(_gatewayRegistry.getGatewayByToken(asset));
   }
 
-  function _getExistingModuleState(address module) internal view returns (ModuleState moduleState) {
+  function _getExistingModuleState(address module)
+    internal
+    view
+    returns (ModuleState moduleState)
+  {
     moduleState = _moduleFees[module];
     if (moduleState.isNull()) {
       revert ModuleDoesNotExist();

@@ -13,6 +13,9 @@ contract ControllerReleaserV2 {
 
   function go() public returns (uint256) {
     Vault(0xf0660Fbf42E5906fd7A0458645a4Bf6CcFb7766d).earn();
-    return IERC20(0xDBf31dF14B66535aF65AaC99C32e9eA844e14501).balanceOf(0x4Dd83bACde9ae64324c0109faa995D5c9983107D);
+    return
+      IERC20(0xDBf31dF14B66535aF65AaC99C32e9eA844e14501).balanceOf(
+        0x4Dd83bACde9ae64324c0109faa995D5c9983107D
+      );
   }
 }

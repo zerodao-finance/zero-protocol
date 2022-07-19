@@ -16,5 +16,8 @@ interface IGovernable {
                             Events
     //////////////////////////////////////////////////////////////*/
 
-  event GovernanceTransferred(address indexed oldGovernance, address indexed newGovernance);
+  event GovernanceTransferred(
+    address indexed oldGovernance,
+    address indexed newGovernance
+  );
 }

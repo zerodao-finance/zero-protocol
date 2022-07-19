@@ -17,7 +17,10 @@ contract ERC2612 is ERC2612Storage, ERC20, SignatureVerification, IERC2612 {
     string memory _symbol,
     uint8 _decimals,
     string memory _version
-  ) ERC20(_name, _symbol, _decimals) SignatureVerification(_proxyContract, _name, _version) {}
+  )
+    ERC20(_name, _symbol, _decimals)
+    SignatureVerification(_proxyContract, _name, _version)
+  {}
 
   /*//////////////////////////////////////////////////////////////
                                Queries

@@ -40,11 +40,19 @@ contract SignatureVerification is UpgradeableEIP712 {
                                Permit
   //////////////////////////////////////////////////////////////*/
 
-  function _digestPermit(uint256 nonce, uint256 deadline) internal view returns (bytes32 digest) {
+  function _digestPermit(uint256 nonce, uint256 deadline)
+    internal
+    view
+    returns (bytes32 digest)
+  {
     bytes32 domainSeparator = getDomainSeparator();
     assembly {
       mstore(Permit_typeHash_ptr, Permit_typeHash)
-      calldatacopy(Permit_owner_ptr, Permit_owner_cdPtr, Permit_calldata_params_length)
+      calldatacopy(
+        Permit_owner_ptr,
+        Permit_owner_cdPtr,
+        Permit_calldata_params_length
+      )
       mstore(Permit_nonce_ptr, nonce)
       mstore(Permit_deadline_ptr, deadline)
       let permitHash := keccak256(Permit_typeHash_ptr, Permit_length)
@@ -59,7 +67,13 @@ contract SignatureVerification is UpgradeableEIP712 {
     address owner,
     uint256 nonce,
     uint256 deadline
-  ) internal view RestoreFirstTwoUnreservedSlots RestoreFreeMemoryPointer RestoreZeroSlot {
+  )
+    internal
+    view
+    RestoreFirstTwoUnreservedSlots
+    RestoreFreeMemoryPointer
+    RestoreZeroSlot
+  {
     bytes32 digest = _digestPermit(nonce, deadline);
     bool validSignature;
     assembly {

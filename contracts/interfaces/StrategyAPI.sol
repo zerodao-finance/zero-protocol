@@ -26,5 +26,10 @@ interface StrategyAPI {
 
   function harvest() external;
 
-  event Harvested(uint256 profit, uint256 loss, uint256 debtPayment, uint256 debtOutstanding);
+  event Harvested(
+    uint256 profit,
+    uint256 loss,
+    uint256 debtPayment,
+    uint256 debtOutstanding
+  );
 }

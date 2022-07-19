@@ -46,7 +46,11 @@ abstract contract BaseModule {
     uint256 repaidAmount,
     uint256 loanId,
     bytes calldata data
-  ) external virtual returns (uint256 collateralToUnlock, uint256 gasCostEther) {
+  )
+    external
+    virtual
+    returns (uint256 collateralToUnlock, uint256 gasCostEther)
+  {
     // Get gas price in ETH
     gasCostEther = maxRepayGas() * getGasPrice();
     // Handle loan using module's logic, reducing borrow amount by the value of gas used
@@ -79,7 +83,12 @@ abstract contract BaseModule {
     // Get gas price in `asset`
     uint256 gasCostAsset = gasCostEther.mulDivUp(getEthPrice(), 1e18);
     // Handle loan using module's logic, reducing borrow amount by the value of gas used
-    collateralToLock = _receiveLoan(borrower, borrowAmount - gasCostAsset, loanId, data);
+    collateralToLock = _receiveLoan(
+      borrower,
+      borrowAmount - gasCostAsset,
+      loanId,
+      data
+    );
   }
 
   /* ---- Override These In Child ---- */
@@ -129,7 +138,13 @@ abstract contract BaseModule {
 contract ABC {
   function x(uint256 a) external pure {
     assembly {
-      a := or(shr(96, a), or(shr(96, a), or(shr(96, a), or(shr(96, a), or(shr(96, a), shr(96, a))))))
+      a := or(
+        shr(96, a),
+        or(
+          shr(96, a),
+          or(shr(96, a), or(shr(96, a), or(shr(96, a), shr(96, a))))
+        )
+      )
     }
   }
 }

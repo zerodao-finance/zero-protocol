@@ -24,7 +24,13 @@ contract UpgradeableEIP712 is ProxyImmutable, AbstractEIP712 {
     string memory _version
   ) ProxyImmutable(_proxyContract) AbstractEIP712(_name, _version) {}
 
-  function _verifyingContract() internal view virtual override returns (address) {
+  function _verifyingContract()
+    internal
+    view
+    virtual
+    override
+    returns (address)
+  {
     return proxyContract;
   }
 }

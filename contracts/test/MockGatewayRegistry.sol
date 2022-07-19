@@ -27,7 +27,9 @@ contract MockGateway {
     bytes32 _nHash,
     bytes memory _sig
   ) external {
-    require(keccak256(_sig) == keccak256(abi.encodePacked(_pHash, _amount, _nHash)));
+    require(
+      keccak256(_sig) == keccak256(abi.encodePacked(_pHash, _amount, _nHash))
+    );
     wbtc.mint(msg.sender, _amount);
   }
 }
