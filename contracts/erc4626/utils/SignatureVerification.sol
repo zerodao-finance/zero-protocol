@@ -16,17 +16,6 @@ uint256 constant Permit_signature_length = 0x60;
 uint256 constant Permit_calldata_params_length = 0x60;
 uint256 constant Permit_length = 0xc0;
 
-bytes constant TransferRequest_typeString = "TransferRequest(address borrower,address asset,uint256 amount,address module,uint256 nonce,bytes data)";
-bytes32 constant TransferRequest_typeHash = 0xa7e9a880a2374f7c9f63e0bad628db064af52a719ca2ef7e894c8b5141e13ab0;
-uint256 constant TransferRequest_typeHash_ptr = 0x0;
-uint256 constant TransferRequest_borrower_ptr = 0x20;
-uint256 constant TransferRequest_asset_ptr = 0x40;
-uint256 constant TransferRequest_amount_ptr = 0x60;
-uint256 constant TransferRequest_module_ptr = 0x80;
-uint256 constant TransferRequest_nonce_ptr = 0xa0;
-uint256 constant TransferRequest_data_offset = 0xc0;
-uint256 constant TransferRequest_length = 0xe0;
-
 uint256 constant ECRecover_precompile = 0x01;
 uint256 constant ECRecover_digest_ptr = 0x0;
 uint256 constant ECRecover_v_ptr = 0x20;
@@ -42,10 +31,7 @@ contract SignatureVerification is UpgradeableEIP712 {
     string memory _name,
     string memory _version
   ) UpgradeableEIP712(_proxyContract, _name, _version) {
-    if (
-      TransferRequest_typeHash != keccak256(TransferRequest_typeString) ||
-      Permit_typeHash != keccak256(Permit_typeString)
-    ) {
+    if (Permit_typeHash != keccak256(Permit_typeString)) {
       revert InvalidTypeHash();
     }
   }
@@ -98,64 +84,6 @@ contract SignatureVerification is UpgradeableEIP712 {
       )
     }
     if (!validSignature) {
-      revert InvalidSigner();
-    }
-  }
-
-  /*//////////////////////////////////////////////////////////////
-                          Transfer Request
-  //////////////////////////////////////////////////////////////*/
-
-  function _digestTransferRequest(
-    address borrower,
-    address asset,
-    uint256 amount,
-    address module,
-    uint256 nonce,
-    bytes memory data
-  ) internal view RestoreFreeMemoryPointer RestoreZeroSlot RestoreFirstTwoUnreservedSlots returns (bytes32 digest) {
-    bytes32 domainSeparator = getDomainSeparator();
-    assembly {
-      mstore(TransferRequest_typeHash_ptr, TransferRequest_typeHash)
-      mstore(TransferRequest_borrower_ptr, borrower)
-      mstore(TransferRequest_asset_ptr, asset)
-      mstore(TransferRequest_amount_ptr, amount)
-      mstore(TransferRequest_module_ptr, module)
-      mstore(TransferRequest_nonce_ptr, nonce)
-      mstore(TransferRequest_data_offset, keccak256(add(data, 0x20), mload(data)))
-
-      let transferRequestHash := keccak256(0, TransferRequest_length)
-      mstore(0, EIP712Signature_prefix)
-      mstore(EIP712Signature_domainSeparator_ptr, domainSeparator)
-      mstore(EIP712Signature_digest_ptr, transferRequestHash)
-      digest := keccak256(0, EIP712Signature_length)
-    }
-  }
-
-  function _verifyTransferRequestSignature(
-    address borrower,
-    address asset,
-    uint256 borrowAmount,
-    address module,
-    uint256 nonce,
-    bytes memory data,
-    bytes memory signature
-  ) internal view returns (bytes32 digest) {
-    digest = _digestTransferRequest(borrower, asset, borrowAmount, module, nonce, data);
-    _verifySignature(borrower, digest, signature);
-  }
-
-  /*//////////////////////////////////////////////////////////////
-                    Generic Signature Validation
-  //////////////////////////////////////////////////////////////*/
-
-  function _verifySignature(
-    address signer,
-    bytes32 digest,
-    bytes memory signature
-  ) internal pure {
-    address recoveredAddress = ECDSA.recover(digest, signature);
-    if (recoveredAddress == address(0) || recoveredAddress != signer) {
       revert InvalidSigner();
     }
   }
