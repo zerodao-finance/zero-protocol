@@ -16,19 +16,18 @@ interface IZeroBTC is IERC4626, IGovernable, InitializationErrors {
     address borrower,
     uint256 borrowAmount,
     uint256 nonce,
-    bytes memory signature,
     bytes memory data
   ) external;
 
   function repay(
-    address lender,
+    address module,
     address borrower,
     uint256 borrowAmount,
     uint256 nonce,
-    address module,
+    bytes memory data,
+    address lender,
     bytes32 nHash,
-    bytes memory renSignature,
-    bytes memory data
+    bytes memory renSignature
   ) external;
 
   function setGlobalFees(
@@ -76,8 +75,12 @@ interface IZeroBTC is IERC4626, IGovernable, InitializationErrors {
       address gatewayRegistry,
       address btcEthPriceOracle,
       address gasPriceOracle,
+      address renBtcConverter,
       uint256 cacheTimeToLive,
-      uint256 maxLoanDuration
+      uint256 maxLoanDuration,
+      uint256 targetEthReserve,
+      uint256 maxGasProfitShareBips,
+      address zeroFeeRecipient
     );
 
   function getGlobalState()
@@ -86,13 +89,15 @@ interface IZeroBTC is IERC4626, IGovernable, InitializationErrors {
     returns (
       uint256 zeroBorrowFeeBips,
       uint256 renBorrowFeeBips,
+      uint256 zeroFeeShareBips,
       uint256 zeroBorrowFeeStatic,
       uint256 renBorrowFeeStatic,
-      uint256 zeroFeeShareBips,
-      uint256 totalBitcoinBorrowed,
       uint256 satoshiPerEth,
       uint256 gweiPerGas,
-      uint256 lastUpdateTimestamp
+      uint256 lastUpdateTimestamp,
+      uint256 totalBitcoinBorrowed,
+      uint256 unburnedGasReserveShares,
+      uint256 unburnedZeroFeeShares
     );
 
   function getModuleState(address module)
@@ -109,7 +114,7 @@ interface IZeroBTC is IERC4626, IGovernable, InitializationErrors {
       uint256 lastUpdateTimestamp
     );
 
-  function getOutstandingLoan(address lender, uint256 loanId)
+  function getOutstandingLoan(uint256 loanId)
     external
     view
     returns (
@@ -144,6 +149,8 @@ interface IZeroBTC is IERC4626, IGovernable, InitializationErrors {
 
   error InvalidSelector();
 
+  error LoanNotExpired(uint256 loanId);
+
   /*//////////////////////////////////////////////////////////////
                                 Events
   //////////////////////////////////////////////////////////////*/
@@ -157,4 +164,8 @@ interface IZeroBTC is IERC4626, IGovernable, InitializationErrors {
   event GlobalStateConfigUpdated(uint256 dynamicBorrowFee, uint256 staticBorrowFee);
 
   event GlobalStateCacheUpdated(uint256 satoshiPerEth, uint256 getGweiPerGas);
+
+  event FeeSharesMinted(uint256 gasReserveFees, uint256 gasReserveShares, uint256 zeroFees, uint256 zeroFeeShares);
+
+  event FeeSharesBurned(uint256 gasReserveFees, uint256 gasReserveShares, uint256 zeroFees, uint256 zeroFeeShares);
 }
