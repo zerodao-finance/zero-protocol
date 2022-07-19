@@ -11,111 +11,131 @@ describe('GlobalStateCoder.sol', () => {
 
 	describe('decode', () => {
 		it('Should be able to get min/max values', async () => {
-			await externalGlobalState.encode("0x07ff", "0x00", "0x1fff", "0x00", "0x7fffff", "0x00", "0xffffffffff", "0x00", "0xffffffff");
-			const { zeroBorrowFeeBips, renBorrowFeeBips, zeroFeeShareBips, zeroBorrowFeeStatic, renBorrowFeeStatic, totalBitcoinBorrowed, satoshiPerEth, gweiPerGas, lastUpdateTimestamp } = await externalGlobalState.decode()
+			await externalGlobalState.encode("0x07ff", "0x00", "0x1fff", "0x00", "0x7fffff", "0x00", "0xffff", "0x00", "0xffffffffff", "0x00", "0x0fffffff");
+			const { zeroBorrowFeeBips, renBorrowFeeBips, zeroFeeShareBips, zeroBorrowFeeStatic, renBorrowFeeStatic, satoshiPerEth, gweiPerGas, lastUpdateTimestamp, totalBitcoinBorrowed, unburnedGasReserveShares, unburnedZeroFeeShares } = await externalGlobalState.decode()
 			expect(zeroBorrowFeeBips).to.eq("0x07ff");
 			expect(renBorrowFeeBips).to.eq("0x00");
 			expect(zeroFeeShareBips).to.eq("0x1fff");
 			expect(zeroBorrowFeeStatic).to.eq("0x00");
 			expect(renBorrowFeeStatic).to.eq("0x7fffff");
-			expect(totalBitcoinBorrowed).to.eq("0x00");
-			expect(satoshiPerEth).to.eq("0xffffffffff");
-			expect(gweiPerGas).to.eq("0x00");
-			expect(lastUpdateTimestamp).to.eq("0xffffffff");
+			expect(satoshiPerEth).to.eq("0x00");
+			expect(gweiPerGas).to.eq("0xffff");
+			expect(lastUpdateTimestamp).to.eq("0x00");
+			expect(totalBitcoinBorrowed).to.eq("0xffffffffff");
+			expect(unburnedGasReserveShares).to.eq("0x00");
+			expect(unburnedZeroFeeShares).to.eq("0x0fffffff");
 		});
 
 		it('Should be able to get max/min values', async () => {
-			await externalGlobalState.encode("0x00", "0x07ff", "0x00", "0x7fffff", "0x00", "0xffffffffffff", "0x00", "0xffff", "0x00");
-			const { zeroBorrowFeeBips, renBorrowFeeBips, zeroFeeShareBips, zeroBorrowFeeStatic, renBorrowFeeStatic, totalBitcoinBorrowed, satoshiPerEth, gweiPerGas, lastUpdateTimestamp } = await externalGlobalState.decode()
+			await externalGlobalState.encode("0x00", "0x07ff", "0x00", "0x7fffff", "0x00", "0x3fffffff", "0x00", "0xffffffff", "0x00", "0x0fffffff", "0x00");
+			const { zeroBorrowFeeBips, renBorrowFeeBips, zeroFeeShareBips, zeroBorrowFeeStatic, renBorrowFeeStatic, satoshiPerEth, gweiPerGas, lastUpdateTimestamp, totalBitcoinBorrowed, unburnedGasReserveShares, unburnedZeroFeeShares } = await externalGlobalState.decode()
 			expect(zeroBorrowFeeBips).to.eq("0x00");
 			expect(renBorrowFeeBips).to.eq("0x07ff");
 			expect(zeroFeeShareBips).to.eq("0x00");
 			expect(zeroBorrowFeeStatic).to.eq("0x7fffff");
 			expect(renBorrowFeeStatic).to.eq("0x00");
-			expect(totalBitcoinBorrowed).to.eq("0xffffffffffff");
-			expect(satoshiPerEth).to.eq("0x00");
-			expect(gweiPerGas).to.eq("0xffff");
-			expect(lastUpdateTimestamp).to.eq("0x00");
+			expect(satoshiPerEth).to.eq("0x3fffffff");
+			expect(gweiPerGas).to.eq("0x00");
+			expect(lastUpdateTimestamp).to.eq("0xffffffff");
+			expect(totalBitcoinBorrowed).to.eq("0x00");
+			expect(unburnedGasReserveShares).to.eq("0x0fffffff");
+			expect(unburnedZeroFeeShares).to.eq("0x00");
 		});
 	})
 
 	describe('encode', () => {
 		it('Reverts when zeroBorrowFeeStatic overflows', async () => {
 			await expect(
-			externalGlobalState.encode("0x00", "0x00", "0x00", "0xffffff", "0x00", "0x00", "0x00", "0x00", "0x00")
+			externalGlobalState.encode("0x00", "0x00", "0x00", "0xffffff", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00")
 			).to.be.revertedWith("0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)");
 		});
 
 		it('Reverts when renBorrowFeeStatic overflows', async () => {
 			await expect(
-			externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0xffffff", "0x00", "0x00", "0x00", "0x00")
-			).to.be.revertedWith("0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)");
-		});
-
-		it('Reverts when totalBitcoinBorrowed overflows', async () => {
-			await expect(
-			externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x01ffffffffffff", "0x00", "0x00", "0x00")
+			externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0xffffff", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00")
 			).to.be.revertedWith("0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)");
 		});
 
 		it('Reverts when satoshiPerEth overflows', async () => {
 			await expect(
-			externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x01ffffffffff", "0x00", "0x00")
+			externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x7fffffff", "0x00", "0x00", "0x00", "0x00", "0x00")
 			).to.be.revertedWith("0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)");
 		});
 
 		it('Reverts when gweiPerGas overflows', async () => {
 			await expect(
-			externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x01ffff", "0x00")
+			externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x01ffff", "0x00", "0x00", "0x00", "0x00")
 			).to.be.revertedWith("0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)");
 		});
 
 		it('Reverts when lastUpdateTimestamp overflows', async () => {
 			await expect(
-			externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x01ffffffff")
+			externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x01ffffffff", "0x00", "0x00", "0x00")
+			).to.be.revertedWith("0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)");
+		});
+
+		it('Reverts when totalBitcoinBorrowed overflows', async () => {
+			await expect(
+			externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x01ffffffffff", "0x00", "0x00")
+			).to.be.revertedWith("0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)");
+		});
+
+		it('Reverts when unburnedGasReserveShares overflows', async () => {
+			await expect(
+			externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x1fffffff", "0x00")
+			).to.be.revertedWith("0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)");
+		});
+
+		it('Reverts when unburnedZeroFeeShares overflows', async () => {
+			await expect(
+			externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x1fffffff")
 			).to.be.revertedWith("0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)");
 		});
 
 		it('Should be able to set min/max values', async () => {
-			externalGlobalState.encode("0x07ff", "0x00", "0x1fff", "0x00", "0x7fffff", "0x00", "0xffffffffff", "0x00", "0xffffffff")
-			const { zeroBorrowFeeBips, renBorrowFeeBips, zeroFeeShareBips, zeroBorrowFeeStatic, renBorrowFeeStatic, totalBitcoinBorrowed, satoshiPerEth, gweiPerGas, lastUpdateTimestamp } = await externalGlobalState.decode();
+			externalGlobalState.encode("0x07ff", "0x00", "0x1fff", "0x00", "0x7fffff", "0x00", "0xffff", "0x00", "0xffffffffff", "0x00", "0x0fffffff")
+			const { zeroBorrowFeeBips, renBorrowFeeBips, zeroFeeShareBips, zeroBorrowFeeStatic, renBorrowFeeStatic, satoshiPerEth, gweiPerGas, lastUpdateTimestamp, totalBitcoinBorrowed, unburnedGasReserveShares, unburnedZeroFeeShares } = await externalGlobalState.decode();
 			expect(zeroBorrowFeeBips).to.eq("0x07ff");
 			expect(renBorrowFeeBips).to.eq("0x00");
 			expect(zeroFeeShareBips).to.eq("0x1fff");
 			expect(zeroBorrowFeeStatic).to.eq("0x00");
 			expect(renBorrowFeeStatic).to.eq("0x7fffff");
-			expect(totalBitcoinBorrowed).to.eq("0x00");
-			expect(satoshiPerEth).to.eq("0xffffffffff");
-			expect(gweiPerGas).to.eq("0x00");
-			expect(lastUpdateTimestamp).to.eq("0xffffffff");
+			expect(satoshiPerEth).to.eq("0x00");
+			expect(gweiPerGas).to.eq("0xffff");
+			expect(lastUpdateTimestamp).to.eq("0x00");
+			expect(totalBitcoinBorrowed).to.eq("0xffffffffff");
+			expect(unburnedGasReserveShares).to.eq("0x00");
+			expect(unburnedZeroFeeShares).to.eq("0x0fffffff");
 		});
 
 		it('Should be able to set max/min values', async () => {
-			externalGlobalState.encode("0x00", "0x07ff", "0x00", "0x7fffff", "0x00", "0xffffffffffff", "0x00", "0xffff", "0x00")
-			const { zeroBorrowFeeBips, renBorrowFeeBips, zeroFeeShareBips, zeroBorrowFeeStatic, renBorrowFeeStatic, totalBitcoinBorrowed, satoshiPerEth, gweiPerGas, lastUpdateTimestamp } = await externalGlobalState.decode();
+			externalGlobalState.encode("0x00", "0x07ff", "0x00", "0x7fffff", "0x00", "0x3fffffff", "0x00", "0xffffffff", "0x00", "0x0fffffff", "0x00")
+			const { zeroBorrowFeeBips, renBorrowFeeBips, zeroFeeShareBips, zeroBorrowFeeStatic, renBorrowFeeStatic, satoshiPerEth, gweiPerGas, lastUpdateTimestamp, totalBitcoinBorrowed, unburnedGasReserveShares, unburnedZeroFeeShares } = await externalGlobalState.decode();
 			expect(zeroBorrowFeeBips).to.eq("0x00");
 			expect(renBorrowFeeBips).to.eq("0x07ff");
 			expect(zeroFeeShareBips).to.eq("0x00");
 			expect(zeroBorrowFeeStatic).to.eq("0x7fffff");
 			expect(renBorrowFeeStatic).to.eq("0x00");
-			expect(totalBitcoinBorrowed).to.eq("0xffffffffffff");
-			expect(satoshiPerEth).to.eq("0x00");
-			expect(gweiPerGas).to.eq("0xffff");
-			expect(lastUpdateTimestamp).to.eq("0x00");
+			expect(satoshiPerEth).to.eq("0x3fffffff");
+			expect(gweiPerGas).to.eq("0x00");
+			expect(lastUpdateTimestamp).to.eq("0xffffffff");
+			expect(totalBitcoinBorrowed).to.eq("0x00");
+			expect(unburnedGasReserveShares).to.eq("0x0fffffff");
+			expect(unburnedZeroFeeShares).to.eq("0x00");
 		});
 	})
 
 	describe('setLoanInfo', () => {
 		it('Reverts when totalBitcoinBorrowed overflows', async () => {
 			await expect(
-			externalGlobalState.setLoanInfo("0x01ffffffffffff")
+			externalGlobalState.setLoanInfo("0x01ffffffffff")
 			).to.be.revertedWith("0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)");
 		});
 
 		it('Should be able to set min value', async () => {
-			externalGlobalState.setLoanInfo("0xffffffffffff")
+			externalGlobalState.setLoanInfo("0xffffffffff")
 			const { totalBitcoinBorrowed } = await externalGlobalState.decode();
-			expect(totalBitcoinBorrowed).to.eq("0xffffffffffff");
+			expect(totalBitcoinBorrowed).to.eq("0xffffffffff");
 		});
 
 		it('Should be able to set max value', async () => {
@@ -127,13 +147,13 @@ describe('GlobalStateCoder.sol', () => {
 
 	describe('getLoanInfo', () => {
 		it('Should be able to get min value', async () => {
-			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0xffffffffffff", "0x00", "0x00", "0x00");
+			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0xffffffffff", "0x00", "0x00");
 			const totalBitcoinBorrowed = await externalGlobalState.getLoanInfo()
-			expect(totalBitcoinBorrowed).to.eq("0xffffffffffff");
+			expect(totalBitcoinBorrowed).to.eq("0xffffffffff");
 		});
 
 		it('Should be able to get max value', async () => {
-			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x7fffff", "0x7fffff", "0x00", "0xffffffffff", "0xffff", "0xffffffff");
+			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x7fffff", "0x7fffff", "0x3fffffff", "0xffff", "0xffffffff", "0x00", "0x0fffffff", "0x0fffffff");
 			const totalBitcoinBorrowed = await externalGlobalState.getLoanInfo()
 			expect(totalBitcoinBorrowed).to.eq("0x00");
 		});
@@ -173,7 +193,7 @@ describe('GlobalStateCoder.sol', () => {
 
 	describe('getFees', () => {
 		it('Should be able to get min/max values', async () => {
-			await externalGlobalState.encode("0x07ff", "0x00", "0x00", "0x7fffff", "0x00", "0x00", "0x00", "0x00", "0x00");
+			await externalGlobalState.encode("0x07ff", "0x00", "0x00", "0x7fffff", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00");
 			const { zeroBorrowFeeBips, renBorrowFeeBips, zeroBorrowFeeStatic, renBorrowFeeStatic } = await externalGlobalState.getFees()
 			expect(zeroBorrowFeeBips).to.eq("0x07ff");
 			expect(renBorrowFeeBips).to.eq("0x00");
@@ -182,7 +202,7 @@ describe('GlobalStateCoder.sol', () => {
 		});
 
 		it('Should be able to get max/min values', async () => {
-			await externalGlobalState.encode("0x00", "0x07ff", "0x1fff", "0x00", "0x7fffff", "0xffffffffffff", "0xffffffffff", "0xffff", "0xffffffff");
+			await externalGlobalState.encode("0x00", "0x07ff", "0x1fff", "0x00", "0x7fffff", "0x3fffffff", "0xffff", "0xffffffff", "0xffffffffff", "0x0fffffff", "0x0fffffff");
 			const { zeroBorrowFeeBips, renBorrowFeeBips, zeroBorrowFeeStatic, renBorrowFeeStatic } = await externalGlobalState.getFees()
 			expect(zeroBorrowFeeBips).to.eq("0x00");
 			expect(renBorrowFeeBips).to.eq("0x07ff");
@@ -194,7 +214,7 @@ describe('GlobalStateCoder.sol', () => {
 	describe('setCached', () => {
 		it('Reverts when satoshiPerEth overflows', async () => {
 			await expect(
-			externalGlobalState.setCached("0x01ffffffffff", "0x00", "0x00")
+			externalGlobalState.setCached("0x7fffffff", "0x00", "0x00")
 			).to.be.revertedWith("0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)");
 		});
 
@@ -211,9 +231,9 @@ describe('GlobalStateCoder.sol', () => {
 		});
 
 		it('Should be able to set min/max values', async () => {
-			externalGlobalState.setCached("0xffffffffff", "0x00", "0xffffffff")
+			externalGlobalState.setCached("0x3fffffff", "0x00", "0xffffffff")
 			const { satoshiPerEth, gweiPerGas, lastUpdateTimestamp } = await externalGlobalState.decode();
-			expect(satoshiPerEth).to.eq("0xffffffffff");
+			expect(satoshiPerEth).to.eq("0x3fffffff");
 			expect(gweiPerGas).to.eq("0x00");
 			expect(lastUpdateTimestamp).to.eq("0xffffffff");
 		});
@@ -230,7 +250,7 @@ describe('GlobalStateCoder.sol', () => {
 	describe('setParamsForModuleFees', () => {
 		it('Reverts when satoshiPerEth overflows', async () => {
 			await expect(
-			externalGlobalState.setParamsForModuleFees("0x01ffffffffff", "0x00")
+			externalGlobalState.setParamsForModuleFees("0x7fffffff", "0x00")
 			).to.be.revertedWith("0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)");
 		});
 
@@ -241,9 +261,9 @@ describe('GlobalStateCoder.sol', () => {
 		});
 
 		it('Should be able to set min/max values', async () => {
-			externalGlobalState.setParamsForModuleFees("0xffffffffff", "0x00")
+			externalGlobalState.setParamsForModuleFees("0x3fffffff", "0x00")
 			const { satoshiPerEth, gweiPerGas } = await externalGlobalState.decode();
-			expect(satoshiPerEth).to.eq("0xffffffffff");
+			expect(satoshiPerEth).to.eq("0x3fffffff");
 			expect(gweiPerGas).to.eq("0x00");
 		});
 
@@ -257,29 +277,73 @@ describe('GlobalStateCoder.sol', () => {
 
 	describe('getParamsForModuleFees', () => {
 		it('Should be able to get min/max values', async () => {
-			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0xffffffffff", "0x00", "0x00");
+			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x3fffffff", "0x00", "0x00", "0x00", "0x00", "0x00");
 			const { satoshiPerEth, gweiPerGas } = await externalGlobalState.getParamsForModuleFees()
-			expect(satoshiPerEth).to.eq("0xffffffffff");
+			expect(satoshiPerEth).to.eq("0x3fffffff");
 			expect(gweiPerGas).to.eq("0x00");
 		});
 
 		it('Should be able to get max/min values', async () => {
-			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x7fffff", "0x7fffff", "0xffffffffffff", "0x00", "0xffff", "0xffffffff");
+			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x7fffff", "0x7fffff", "0x00", "0xffff", "0xffffffff", "0xffffffffff", "0x0fffffff", "0x0fffffff");
 			const { satoshiPerEth, gweiPerGas } = await externalGlobalState.getParamsForModuleFees()
 			expect(satoshiPerEth).to.eq("0x00");
 			expect(gweiPerGas).to.eq("0xffff");
 		});
 	})
 
+	describe('setUnburnedShares', () => {
+		it('Reverts when unburnedGasReserveShares overflows', async () => {
+			await expect(
+			externalGlobalState.setUnburnedShares("0x1fffffff", "0x00")
+			).to.be.revertedWith("0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)");
+		});
+
+		it('Reverts when unburnedZeroFeeShares overflows', async () => {
+			await expect(
+			externalGlobalState.setUnburnedShares("0x00", "0x1fffffff")
+			).to.be.revertedWith("0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)");
+		});
+
+		it('Should be able to set min/max values', async () => {
+			externalGlobalState.setUnburnedShares("0x0fffffff", "0x00")
+			const { unburnedGasReserveShares, unburnedZeroFeeShares } = await externalGlobalState.decode();
+			expect(unburnedGasReserveShares).to.eq("0x0fffffff");
+			expect(unburnedZeroFeeShares).to.eq("0x00");
+		});
+
+		it('Should be able to set max/min values', async () => {
+			externalGlobalState.setUnburnedShares("0x00", "0x0fffffff")
+			const { unburnedGasReserveShares, unburnedZeroFeeShares } = await externalGlobalState.decode();
+			expect(unburnedGasReserveShares).to.eq("0x00");
+			expect(unburnedZeroFeeShares).to.eq("0x0fffffff");
+		});
+	})
+
+	describe('getUnburnedShares', () => {
+		it('Should be able to get min/max values', async () => {
+			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x0fffffff", "0x00");
+			const { unburnedGasReserveShares, unburnedZeroFeeShares } = await externalGlobalState.getUnburnedShares()
+			expect(unburnedGasReserveShares).to.eq("0x0fffffff");
+			expect(unburnedZeroFeeShares).to.eq("0x00");
+		});
+
+		it('Should be able to get max/min values', async () => {
+			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x7fffff", "0x7fffff", "0x3fffffff", "0xffff", "0xffffffff", "0xffffffffff", "0x00", "0x0fffffff");
+			const { unburnedGasReserveShares, unburnedZeroFeeShares } = await externalGlobalState.getUnburnedShares()
+			expect(unburnedGasReserveShares).to.eq("0x00");
+			expect(unburnedZeroFeeShares).to.eq("0x0fffffff");
+		});
+	})
+
 	describe('getZeroBorrowFeeBips', () => {
 		it('Should be able to get min value', async () => {
-			await externalGlobalState.encode("0x07ff", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00");
+			await externalGlobalState.encode("0x07ff", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00");
 			const zeroBorrowFeeBips = await externalGlobalState.getZeroBorrowFeeBips()
 			expect(zeroBorrowFeeBips).to.eq("0x07ff");
 		});
 
 		it('Should be able to get max value', async () => {
-			await externalGlobalState.encode("0x00", "0x07ff", "0x1fff", "0x7fffff", "0x7fffff", "0xffffffffffff", "0xffffffffff", "0xffff", "0xffffffff");
+			await externalGlobalState.encode("0x00", "0x07ff", "0x1fff", "0x7fffff", "0x7fffff", "0x3fffffff", "0xffff", "0xffffffff", "0xffffffffff", "0x0fffffff", "0x0fffffff");
 			const zeroBorrowFeeBips = await externalGlobalState.getZeroBorrowFeeBips()
 			expect(zeroBorrowFeeBips).to.eq("0x00");
 		});
@@ -301,13 +365,13 @@ describe('GlobalStateCoder.sol', () => {
 
 	describe('getRenBorrowFeeBips', () => {
 		it('Should be able to get min value', async () => {
-			await externalGlobalState.encode("0x00", "0x07ff", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00");
+			await externalGlobalState.encode("0x00", "0x07ff", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00");
 			const renBorrowFeeBips = await externalGlobalState.getRenBorrowFeeBips()
 			expect(renBorrowFeeBips).to.eq("0x07ff");
 		});
 
 		it('Should be able to get max value', async () => {
-			await externalGlobalState.encode("0x07ff", "0x00", "0x1fff", "0x7fffff", "0x7fffff", "0xffffffffffff", "0xffffffffff", "0xffff", "0xffffffff");
+			await externalGlobalState.encode("0x07ff", "0x00", "0x1fff", "0x7fffff", "0x7fffff", "0x3fffffff", "0xffff", "0xffffffff", "0xffffffffff", "0x0fffffff", "0x0fffffff");
 			const renBorrowFeeBips = await externalGlobalState.getRenBorrowFeeBips()
 			expect(renBorrowFeeBips).to.eq("0x00");
 		});
@@ -329,13 +393,13 @@ describe('GlobalStateCoder.sol', () => {
 
 	describe('getZeroFeeShareBips', () => {
 		it('Should be able to get min value', async () => {
-			await externalGlobalState.encode("0x00", "0x00", "0x1fff", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00");
+			await externalGlobalState.encode("0x00", "0x00", "0x1fff", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00");
 			const zeroFeeShareBips = await externalGlobalState.getZeroFeeShareBips()
 			expect(zeroFeeShareBips).to.eq("0x1fff");
 		});
 
 		it('Should be able to get max value', async () => {
-			await externalGlobalState.encode("0x07ff", "0x07ff", "0x00", "0x7fffff", "0x7fffff", "0xffffffffffff", "0xffffffffff", "0xffff", "0xffffffff");
+			await externalGlobalState.encode("0x07ff", "0x07ff", "0x00", "0x7fffff", "0x7fffff", "0x3fffffff", "0xffff", "0xffffffff", "0xffffffffff", "0x0fffffff", "0x0fffffff");
 			const zeroFeeShareBips = await externalGlobalState.getZeroFeeShareBips()
 			expect(zeroFeeShareBips).to.eq("0x00");
 		});
@@ -357,13 +421,13 @@ describe('GlobalStateCoder.sol', () => {
 
 	describe('getZeroBorrowFeeStatic', () => {
 		it('Should be able to get min value', async () => {
-			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x7fffff", "0x00", "0x00", "0x00", "0x00", "0x00");
+			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x7fffff", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00");
 			const zeroBorrowFeeStatic = await externalGlobalState.getZeroBorrowFeeStatic()
 			expect(zeroBorrowFeeStatic).to.eq("0x7fffff");
 		});
 
 		it('Should be able to get max value', async () => {
-			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x00", "0x7fffff", "0xffffffffffff", "0xffffffffff", "0xffff", "0xffffffff");
+			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x00", "0x7fffff", "0x3fffffff", "0xffff", "0xffffffff", "0xffffffffff", "0x0fffffff", "0x0fffffff");
 			const zeroBorrowFeeStatic = await externalGlobalState.getZeroBorrowFeeStatic()
 			expect(zeroBorrowFeeStatic).to.eq("0x00");
 		});
@@ -391,13 +455,13 @@ describe('GlobalStateCoder.sol', () => {
 
 	describe('getRenBorrowFeeStatic', () => {
 		it('Should be able to get min value', async () => {
-			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x7fffff", "0x00", "0x00", "0x00", "0x00");
+			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x7fffff", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00");
 			const renBorrowFeeStatic = await externalGlobalState.getRenBorrowFeeStatic()
 			expect(renBorrowFeeStatic).to.eq("0x7fffff");
 		});
 
 		it('Should be able to get max value', async () => {
-			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x7fffff", "0x00", "0xffffffffffff", "0xffffffffff", "0xffff", "0xffffffff");
+			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x7fffff", "0x00", "0x3fffffff", "0xffff", "0xffffffff", "0xffffffffff", "0x0fffffff", "0x0fffffff");
 			const renBorrowFeeStatic = await externalGlobalState.getRenBorrowFeeStatic()
 			expect(renBorrowFeeStatic).to.eq("0x00");
 		});
@@ -423,15 +487,57 @@ describe('GlobalStateCoder.sol', () => {
 		});
 	})
 
-	describe('getTotalBitcoinBorrowed', () => {
+	describe('getSatoshiPerEth', () => {
 		it('Should be able to get min value', async () => {
-			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0xffffffffffff", "0x00", "0x00", "0x00");
-			const totalBitcoinBorrowed = await externalGlobalState.getTotalBitcoinBorrowed()
-			expect(totalBitcoinBorrowed).to.eq("0xffffffffffff");
+			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x3fffffff", "0x00", "0x00", "0x00", "0x00", "0x00");
+			const satoshiPerEth = await externalGlobalState.getSatoshiPerEth()
+			expect(satoshiPerEth).to.eq("0x3fffffff");
 		});
 
 		it('Should be able to get max value', async () => {
-			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x7fffff", "0x7fffff", "0x00", "0xffffffffff", "0xffff", "0xffffffff");
+			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x7fffff", "0x7fffff", "0x00", "0xffff", "0xffffffff", "0xffffffffff", "0x0fffffff", "0x0fffffff");
+			const satoshiPerEth = await externalGlobalState.getSatoshiPerEth()
+			expect(satoshiPerEth).to.eq("0x00");
+		});
+	})
+
+	describe('getGweiPerGas', () => {
+		it('Should be able to get min value', async () => {
+			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0xffff", "0x00", "0x00", "0x00", "0x00");
+			const gweiPerGas = await externalGlobalState.getGweiPerGas()
+			expect(gweiPerGas).to.eq("0xffff");
+		});
+
+		it('Should be able to get max value', async () => {
+			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x7fffff", "0x7fffff", "0x3fffffff", "0x00", "0xffffffff", "0xffffffffff", "0x0fffffff", "0x0fffffff");
+			const gweiPerGas = await externalGlobalState.getGweiPerGas()
+			expect(gweiPerGas).to.eq("0x00");
+		});
+	})
+
+	describe('getLastUpdateTimestamp', () => {
+		it('Should be able to get min value', async () => {
+			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0xffffffff", "0x00", "0x00", "0x00");
+			const lastUpdateTimestamp = await externalGlobalState.getLastUpdateTimestamp()
+			expect(lastUpdateTimestamp).to.eq("0xffffffff");
+		});
+
+		it('Should be able to get max value', async () => {
+			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x7fffff", "0x7fffff", "0x3fffffff", "0xffff", "0x00", "0xffffffffff", "0x0fffffff", "0x0fffffff");
+			const lastUpdateTimestamp = await externalGlobalState.getLastUpdateTimestamp()
+			expect(lastUpdateTimestamp).to.eq("0x00");
+		});
+	})
+
+	describe('getTotalBitcoinBorrowed', () => {
+		it('Should be able to get min value', async () => {
+			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0xffffffffff", "0x00", "0x00");
+			const totalBitcoinBorrowed = await externalGlobalState.getTotalBitcoinBorrowed()
+			expect(totalBitcoinBorrowed).to.eq("0xffffffffff");
+		});
+
+		it('Should be able to get max value', async () => {
+			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x7fffff", "0x7fffff", "0x3fffffff", "0xffff", "0xffffffff", "0x00", "0x0fffffff", "0x0fffffff");
 			const totalBitcoinBorrowed = await externalGlobalState.getTotalBitcoinBorrowed()
 			expect(totalBitcoinBorrowed).to.eq("0x00");
 		});
@@ -440,14 +546,14 @@ describe('GlobalStateCoder.sol', () => {
 	describe('setTotalBitcoinBorrowed', () => {
 		it('Reverts when totalBitcoinBorrowed overflows', async () => {
 			await expect(
-			externalGlobalState.setTotalBitcoinBorrowed("0x01ffffffffffff")
+			externalGlobalState.setTotalBitcoinBorrowed("0x01ffffffffff")
 			).to.be.revertedWith("0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)");
 		});
 
 		it('Should be able to set min value', async () => {
-			externalGlobalState.setTotalBitcoinBorrowed("0xffffffffffff")
+			externalGlobalState.setTotalBitcoinBorrowed("0xffffffffff")
 			const { totalBitcoinBorrowed } = await externalGlobalState.decode();
-			expect(totalBitcoinBorrowed).to.eq("0xffffffffffff");
+			expect(totalBitcoinBorrowed).to.eq("0xffffffffff");
 		});
 
 		it('Should be able to set max value', async () => {
@@ -457,45 +563,71 @@ describe('GlobalStateCoder.sol', () => {
 		});
 	})
 
-	describe('getSatoshiPerEth', () => {
+	describe('getUnburnedGasReserveShares', () => {
 		it('Should be able to get min value', async () => {
-			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0xffffffffff", "0x00", "0x00");
-			const satoshiPerEth = await externalGlobalState.getSatoshiPerEth()
-			expect(satoshiPerEth).to.eq("0xffffffffff");
+			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x0fffffff", "0x00");
+			const unburnedGasReserveShares = await externalGlobalState.getUnburnedGasReserveShares()
+			expect(unburnedGasReserveShares).to.eq("0x0fffffff");
 		});
 
 		it('Should be able to get max value', async () => {
-			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x7fffff", "0x7fffff", "0xffffffffffff", "0x00", "0xffff", "0xffffffff");
-			const satoshiPerEth = await externalGlobalState.getSatoshiPerEth()
-			expect(satoshiPerEth).to.eq("0x00");
+			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x7fffff", "0x7fffff", "0x3fffffff", "0xffff", "0xffffffff", "0xffffffffff", "0x00", "0x0fffffff");
+			const unburnedGasReserveShares = await externalGlobalState.getUnburnedGasReserveShares()
+			expect(unburnedGasReserveShares).to.eq("0x00");
 		});
 	})
 
-	describe('getGweiPerGas', () => {
-		it('Should be able to get min value', async () => {
-			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0xffff", "0x00");
-			const gweiPerGas = await externalGlobalState.getGweiPerGas()
-			expect(gweiPerGas).to.eq("0xffff");
+	describe('setUnburnedGasReserveShares', () => {
+		it('Reverts when unburnedGasReserveShares overflows', async () => {
+			await expect(
+			externalGlobalState.setUnburnedGasReserveShares("0x1fffffff")
+			).to.be.revertedWith("0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)");
 		});
 
-		it('Should be able to get max value', async () => {
-			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x7fffff", "0x7fffff", "0xffffffffffff", "0xffffffffff", "0x00", "0xffffffff");
-			const gweiPerGas = await externalGlobalState.getGweiPerGas()
-			expect(gweiPerGas).to.eq("0x00");
+		it('Should be able to set min value', async () => {
+			externalGlobalState.setUnburnedGasReserveShares("0x0fffffff")
+			const { unburnedGasReserveShares } = await externalGlobalState.decode();
+			expect(unburnedGasReserveShares).to.eq("0x0fffffff");
+		});
+
+		it('Should be able to set max value', async () => {
+			externalGlobalState.setUnburnedGasReserveShares("0x00")
+			const { unburnedGasReserveShares } = await externalGlobalState.decode();
+			expect(unburnedGasReserveShares).to.eq("0x00");
 		});
 	})
 
-	describe('getLastUpdateTimestamp', () => {
+	describe('getUnburnedZeroFeeShares', () => {
 		it('Should be able to get min value', async () => {
-			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0xffffffff");
-			const lastUpdateTimestamp = await externalGlobalState.getLastUpdateTimestamp()
-			expect(lastUpdateTimestamp).to.eq("0xffffffff");
+			await externalGlobalState.encode("0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x0fffffff");
+			const unburnedZeroFeeShares = await externalGlobalState.getUnburnedZeroFeeShares()
+			expect(unburnedZeroFeeShares).to.eq("0x0fffffff");
 		});
 
 		it('Should be able to get max value', async () => {
-			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x7fffff", "0x7fffff", "0xffffffffffff", "0xffffffffff", "0xffff", "0x00");
-			const lastUpdateTimestamp = await externalGlobalState.getLastUpdateTimestamp()
-			expect(lastUpdateTimestamp).to.eq("0x00");
+			await externalGlobalState.encode("0x07ff", "0x07ff", "0x1fff", "0x7fffff", "0x7fffff", "0x3fffffff", "0xffff", "0xffffffff", "0xffffffffff", "0x0fffffff", "0x00");
+			const unburnedZeroFeeShares = await externalGlobalState.getUnburnedZeroFeeShares()
+			expect(unburnedZeroFeeShares).to.eq("0x00");
+		});
+	})
+
+	describe('setUnburnedZeroFeeShares', () => {
+		it('Reverts when unburnedZeroFeeShares overflows', async () => {
+			await expect(
+			externalGlobalState.setUnburnedZeroFeeShares("0x1fffffff")
+			).to.be.revertedWith("0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)");
+		});
+
+		it('Should be able to set min value', async () => {
+			externalGlobalState.setUnburnedZeroFeeShares("0x0fffffff")
+			const { unburnedZeroFeeShares } = await externalGlobalState.decode();
+			expect(unburnedZeroFeeShares).to.eq("0x0fffffff");
+		});
+
+		it('Should be able to set max value', async () => {
+			externalGlobalState.setUnburnedZeroFeeShares("0x00")
+			const { unburnedZeroFeeShares } = await externalGlobalState.decode();
+			expect(unburnedZeroFeeShares).to.eq("0x00");
 		});
 	})
 })
