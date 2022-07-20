@@ -23,27 +23,15 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import { ECDSA } from "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import { EIP712Upgradeable } from "@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol";
 
-contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
+contract BadgerBridgeZeroControllerOptimism is EIP712Upgradeable {
   using SafeERC20 for IERC20;
   using SafeMath for *;
   uint256 public fee;
   address public governance;
   address public strategist;
 
-  address constant btcGateway = 0x05Cadbf3128BcB7f2b89F3dD55E5B0a036a49e20;
-  address constant routerv3 = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
-  address constant usdc = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
-  address constant weth = 0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619;
-  address constant wbtc = 0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6;
-  address constant renbtc = 0xDBf31dF14B66535aF65AaC99C32e9eA844e14501;
-  address constant renCrv = 0xC2d95EEF97Ec6C17551d45e77B590dc1F9117C67;
-  address constant tricrypto = 0x960ea3e3C7FB317332d990873d354E18d7645590;
-  address constant wmatic = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
-  address constant quoter = 0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6;
-  address constant renCrvLp = 0xf8a57c1d3b9629b77b6726a042ca48990A84Fb49;
-  uint24 constant wethWbtcFee = 500;
-  uint24 constant wethMaticFee = 500;
-  uint24 constant usdcWethFee = 500;
+  address constant btcGateway = 0xB538901719936e628A9b9AF64A5a4Dbc273305cd;
+  address constant renbtc = 0x85f6583762Bc76d775eAB9A7456db344f12409F7;
   uint256 public governanceFee;
   bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
   bytes32 constant LOCK_SLOT = keccak256("upgrade-lock-v2");
@@ -54,8 +42,6 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
   uint256 public keeperReward;
   uint256 public constant REPAY_GAS_DIFF = 41510;
   uint256 public constant BURN_GAS_DIFF = 41118;
-  mapping(address => uint256) public nonces;
-  bytes32 internal PERMIT_DOMAIN_SEPARATOR_WBTC;
 
   function setStrategist(address _strategist) public {
     require(msg.sender == governance, "!governance");
@@ -114,113 +100,13 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
     governance = _governance;
     strategist = _strategist;
     keeperReward = uint256(1 ether).div(1000);
-    //IERC20(renbtc).safeApprove(btcGateway, ~uint256(0) >> 2);
-    IERC20(renbtc).safeApprove(renCrv, ~uint256(0) >> 2);
-    IERC20(wbtc).safeApprove(renCrv, ~uint256(0) >> 2);
-    IERC20(wbtc).safeApprove(tricrypto, ~uint256(0) >> 2);
-    IERC20(wbtc).safeApprove(routerv3, ~uint256(0) >> 2);
-    IERC20(usdc).safeApprove(routerv3, ~uint256(0) >> 2);
-    PERMIT_DOMAIN_SEPARATOR_WBTC = keccak256(
-      abi.encode(
-        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-        keccak256("WBTC"),
-        keccak256("1"),
-        getChainId(),
-        wbtc
-      )
-    );
   }
 
   function applyRatio(uint256 v, uint256 n) internal pure returns (uint256 result) {
     result = v.mul(n).div(uint256(1 ether));
   }
 
-  function toWBTC(uint256 amount) internal returns (uint256 amountOut) {
-    return ICurveInt128(renCrv).exchange_underlying(1, 0, amount, 1);
-  }
-
-  function toUSDC(
-    uint256 minOut,
-    uint256 amountIn,
-    address out
-  ) internal returns (uint256 amountOut) {
-    uint256 wbtcAmountIn = toWBTC(amountIn);
-    bytes memory path = abi.encodePacked(wbtc, wethWbtcFee, weth, usdcWethFee, usdc);
-    ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
-      recipient: out,
-      deadline: block.timestamp + 1,
-      amountIn: wbtcAmountIn,
-      amountOutMinimum: minOut,
-      path: path
-    });
-    amountOut = ISwapRouter(routerv3).exactInput(params);
-  }
-
-  function quote() internal {
-    bytes memory path = abi.encodePacked(wmatic, wethMaticFee, weth, wethWbtcFee, wbtc);
-    uint256 amountOut = IQuoter(quoter).quoteExactInput(path, 1 ether);
-    renbtcForOneETHPrice = ICurveInt128(renCrv).get_dy_underlying(1, 0, amountOut);
-  }
-
-  function renBTCtoETH(
-    uint256 minOut,
-    uint256 amountIn,
-    address out
-  ) internal returns (uint256 amountOut) {
-    uint256 wbtcAmountOut = toWBTC(amountIn);
-    bytes memory path = abi.encodePacked(wbtc, wethWbtcFee, weth, wethMaticFee, wmatic);
-    ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
-      recipient: address(this),
-      deadline: block.timestamp + 1,
-      amountIn: wbtcAmountOut,
-      amountOutMinimum: minOut,
-      path: path
-    });
-    amountOut = ISwapRouter(routerv3).exactInput(params);
-    address payable to = address(uint160(out));
-    IWETH9(wmatic).withdraw(amountOut);
-    to.transfer(amountOut);
-  }
-
-  function fromUSDC(uint256 minOut, uint256 amountIn) internal returns (uint256 amountOut) {
-    bytes memory path = abi.encodePacked(usdc, usdcWethFee, weth, wethWbtcFee, wbtc);
-    ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
-      recipient: address(this),
-      deadline: block.timestamp + 1,
-      amountIn: amountIn,
-      amountOutMinimum: minOut,
-      path: path
-    });
-    amountOut = ISwapRouter(routerv3).exactInput(params);
-    amountOut = toRenBTC(amountOut);
-  }
-
-  function toRenBTC(uint256 amountIn) internal returns (uint256 amountOut) {
-    return ICurveInt128(renCrv).exchange_underlying(0, 1, amountIn, 1);
-  }
-
-  function fromETHToRenBTC(uint256 minOut, uint256 amountIn) internal returns (uint256 amountOut) {
-    bytes memory path = abi.encodePacked(wmatic, wethMaticFee, weth, wethWbtcFee, wbtc);
-    ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
-      recipient: address(this),
-      deadline: block.timestamp + 1,
-      amountIn: amountIn,
-      amountOutMinimum: minOut,
-      path: path
-    });
-    amountOut = ISwapRouter(routerv3).exactInput{ value: amountIn }(params);
-    return toRenBTC(amountOut);
-  }
-
-  function toETH() internal returns (uint256 amountOut) {
-    uint256 wbtcStart = IERC20(wbtc).balanceOf(address(this));
-
-    uint256 amountStart = address(this).balance;
-    (bool success, ) = tricrypto.call(
-      abi.encodeWithSelector(ICurveETHUInt256.exchange.selector, 1, 2, wbtcStart, 0, true)
-    );
-    amountOut = address(this).balance.sub(amountStart);
-  }
+  function quote() internal {}
 
   receive() external payable {
     // no-op
@@ -228,8 +114,6 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
 
   function earn() public {
     quote();
-    toWBTC(IERC20(renbtc).balanceOf(address(this)));
-    toETH();
     uint256 balance = address(this).balance;
     if (balance > ETH_RESERVE) {
       uint256 output = balance - ETH_RESERVE;
@@ -311,7 +195,7 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
     uint256 _gasBefore = gasleft();
     LoanParams memory params;
     {
-      require(module == wbtc || module == usdc || module == renbtc || module == address(0x0), "!approved-module");
+      require(module == renbtc, "!approved-module");
       params = LoanParams({
         to: to,
         asset: asset,
@@ -335,14 +219,10 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
       signature
     );
     {
-      amountOut = module == wbtc ? toWBTC(deductMintFee(params._mintAmount, 1)) : module == address(0x0)
-        ? renBTCtoETH(params.minOut, deductMintFee(params._mintAmount, 1), to)
-        : module == usdc
-        ? toUSDC(params.minOut, deductMintFee(params._mintAmount, 1), to)
-        : deductMintFee(params._mintAmount, 1);
+      amountOut = deductMintFee(params._mintAmount, 1);
     }
     {
-      if (module != usdc && module != address(0x0)) IERC20(module).safeTransfer(to, amountOut);
+      IERC20(module).safeTransfer(to, amountOut);
     }
     {
       tx.origin.transfer(
@@ -431,18 +311,7 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
     }
     require(block.timestamp < params.deadline, "!deadline");
 
-    if (params.asset == wbtc) {
-      params.nonce = nonces[to];
-      nonces[params.to]++;
-      require(
-        params.to == ECDSA.recover(computeERC20PermitDigest(PERMIT_DOMAIN_SEPARATOR_WBTC, params), params.signature),
-        "!signature"
-      ); //  wbtc does not implement ERC20Permit
-      {
-        IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
-        amountToBurn = toRenBTC(deductBurnFee(params.amount, 1));
-      }
-    } else if (params.asset == renbtc) {
+    if (params.asset == renbtc) {
       {
         params.nonce = IERC2612Permit(params.asset).nonces(params.to);
         params.burnNonce = computeBurnNonce(params);
@@ -464,27 +333,6 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
         IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
       }
       amountToBurn = deductBurnFee(params.amount, 1);
-    } else if (params.asset == usdc) {
-      {
-        params.nonce = IERC2612Permit(params.asset).nonces(params.to);
-        params.burnNonce = computeBurnNonce(params);
-      }
-      {
-        (params.v, params.r, params.s) = SplitSignatureLib.splitSignature(params.signature);
-        IERC2612Permit(params.asset).permit(
-          params.to,
-          address(this),
-          params.amount,
-          params.burnNonce,
-          params.v,
-          params.r,
-          params.s
-        );
-      }
-      {
-        IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
-      }
-      amountToBurn = deductBurnFee(fromUSDC(params.minOut, params.amount), 1);
     } else revert("!supported-asset");
     {
       IGateway(btcGateway).burn(params.destination, amountToBurn);
@@ -497,28 +345,6 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
         )
       );
     }
-  }
-
-  function burnETH(uint256 minOut, bytes memory destination) public payable returns (uint256 amountToBurn) {
-    amountToBurn = fromETHToRenBTC(minOut, msg.value.sub(applyRatio(msg.value, burnFee)));
-    IGateway(btcGateway).burn(destination, amountToBurn);
-  }
-
-  function burnApproved(
-    address from,
-    address asset,
-    uint256 amount,
-    uint256 minOut,
-    bytes memory destination
-  ) public payable returns (uint256 amountToBurn) {
-    require(asset == wbtc || asset == usdc || asset == renbtc || asset == address(0x0), "!approved-module");
-    if (asset != address(0x0)) IERC20(asset).transferFrom(msg.sender, address(this), amount);
-    amountToBurn = asset == wbtc ? toRenBTC(amount.sub(applyRatio(amount, burnFee))) : asset == usdc
-      ? fromUSDC(minOut, amount.sub(applyRatio(amount, burnFee)))
-      : asset == renbtc
-      ? amount
-      : fromETHToRenBTC(minOut, msg.value.sub(applyRatio(msg.value, burnFee)));
-    IGateway(btcGateway).burn(destination, amountToBurn);
   }
 
   function fallbackMint(

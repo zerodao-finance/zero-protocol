@@ -16,6 +16,8 @@ const getControllerName = () => {
       return "BadgerBridgeZeroController";
     case "AVALANCHE":
       return "BadgerBridgeZeroControllerAvax";
+    case "OPTIMISM":
+      return "BadgerBridgeZeroControllerOptimism";
     default:
       return "ZeroController";
   }

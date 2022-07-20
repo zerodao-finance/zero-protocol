@@ -11,7 +11,7 @@ import { BigNumberish, ethers } from "ethers";
 import { signTypedDataUtils } from "@0x/utils";
 import { EIP712TypedData } from "@0x/types";
 import { Bitcoin } from "@renproject/chains";
-import RenJS, { BurnAndRelease } from "@renproject/ren";
+import RenJS from "@renproject/ren";
 import { EthArgs } from "@renproject/interfaces";
 import {
   CONTROLLER_DEPLOYMENTS,
@@ -117,8 +117,10 @@ export class BurnRequest {
     console.log("submitToRenVM");
     console.log(this);
     if (this._burn) return this._burn;
+    //@ts-ignore
     const result = (this._burn = await this._ren.burnAndRelease({
       asset: "BTC",
+      //@ts-ignore
       to: Bitcoin().Address(this.destination),
       from: getProvider(this).Contract((btcAddress) => ({
         sendTo: this.contractAddress,
@@ -129,7 +131,7 @@ export class BurnRequest {
     //    result.params.nonce = this.nonce;
     return result;
   }
-  async waitForTxNonce(burn: ReturnType<BurnAndRelease["burn"]>) {
+  async waitForTxNonce(burn) {
     if (this._queryTxResult) return this._queryTxResult;
     const burnt: any = await new Promise((resolve, reject) => {
       burn.on("transactionHash", resolve);
@@ -248,10 +250,6 @@ export class BurnRequest {
       },
     };
   }
-  async toGatewayAddress(input: GatewayAddressInput): Promise<string> {
-    const burn = await this.submitToRenVM(false);
-    return burn.gatewayAddress;
-  }
   async sign(
     signer: Wallet & Signer,
     contractAddress?: string
@@ -294,11 +292,12 @@ export class BurnRequest {
     }
   }
   async waitForHostTransaction() {
-     var deployment_chain = CONTROLLER_DEPLOYMENTS[
-      ethers.utils.getAddress(this.contractAddress)
-    ].toLowerCase();
-    deployment_chain = deployment_chain == "polygon" ? "matic" : deployment_chain;
-
+    var deployment_chain =
+      CONTROLLER_DEPLOYMENTS[
+        ethers.utils.getAddress(this.contractAddress)
+      ].toLowerCase();
+    deployment_chain =
+      deployment_chain == "polygon" ? "matic" : deployment_chain;
 
     const network = ((v) => (v === "ethereum" ? "mainnet" : v))(
       deployment_chain
