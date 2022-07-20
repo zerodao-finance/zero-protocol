@@ -7,10 +7,6 @@ require("@nomiclabs/hardhat-etherscan");
 require("dotenv").config();
 require("./tasks/multisig");
 require("./tasks/init-multisig");
-const validate = require("@openzeppelin/upgrades-core/dist/validate/index");
-[validate].forEach((v) => Object.defineProperty(v, "assertUpgradeSafe", {
-  value: () => {},
-}));
 
 import { ethers } from "ethers";
 import { readFileSync } from "fs";
@@ -32,8 +28,7 @@ const RPC_ENDPOINTS = {
     "https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2",
   AVALANCHE: "https://api.avax.network/ext/bc/C/rpc",
   ETHEREUM: "https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2",
-  OPTIMISM:
-    "https://opt-mainnet.g.alchemy.com/v2/gwejuQPu4C8X59h-kHpELOdYZWvUNXxQ",
+  OPTIMISM: "https://mainnet.optimism.io",
 };
 
 var deployParameters = require("./lib/fixtures");
@@ -137,7 +132,7 @@ module.exports = {
       blockGasLimit: 700000,
     },
     optimism: {
-      url: "https://opt-mainnet.g.alchemy.com/v2/gwejuQPu4C8X59h-kHpELOdYZWvUNXxQ",
+      url: "https://mainnet.optimism.io",
       accounts,
       chainId: 10,
       live: true,
