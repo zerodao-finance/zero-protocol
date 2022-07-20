@@ -7,6 +7,10 @@ require("@nomiclabs/hardhat-etherscan");
 require("dotenv").config();
 require("./tasks/multisig");
 require("./tasks/init-multisig");
+const validate = require("@openzeppelin/upgrades-core/dist/validate/index");
+[validate].forEach((v) => Object.defineProperty(v, "assertUpgradeSafe", {
+  value: () => {},
+}));
 
 import { ethers } from "ethers";
 import { readFileSync } from "fs";
