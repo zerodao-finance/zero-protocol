@@ -2,7 +2,7 @@ import { Buffer } from 'safe-buffer';
 import { defaultAbiCoder as abi, Interface } from '@ethersproject/abi';
 import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
 import { BYTES_TYPES } from '../config/constants';
-import { fromHex, generateNHash } from "@renproject/utils";
+import { fromHex, generateNHash } from "@renproject/utils"; // fromHex is no longer available on renjsV3
 import { PHashInput, GHashInput, NHashInput, DarknodeSignatureInput } from "../types";
 
 /*
