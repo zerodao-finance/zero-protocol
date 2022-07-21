@@ -195,6 +195,9 @@ exports.makeCompute = function (CHAIN) {
                     if (zeroFee == burnFee) {
                         totalFees = totalFees.add(ethers.utils.parseUnits(".001", 8));
                     }
+                    else if (zeroFee == mintFee) {
+                        totalFees = totalFees.add(ethers.utils.parseUnits("0.002", 8));
+                    }
                     return [2 /*return*/, { gasFee: gasFee, zeroProtocolFeeAmt: zeroProtocolFeeAmt, renVmFeeAmt: renVmFeeAmt, opFee: opFee, totalFees: totalFees }];
             }
         });
