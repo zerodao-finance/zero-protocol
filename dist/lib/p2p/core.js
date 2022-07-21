@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -76,14 +76,14 @@ require("buffer");
 var peerId = require("peer-id");
 require("peer-info");
 var events_1 = require("events");
-var ethers_1 = require("ethers");
+require("ethers");
 var properties_1 = require("@ethersproject/properties");
-var deployment_utils_1 = require("../deployment-utils");
-var ZeroController_json_1 = __importDefault(require("../../deployments/arbitrum/ZeroController.json"));
+require("../deployment-utils");
+require("../../deployments/arbitrum/ZeroController.json");
 var listeners = {
-    burn: ['burn'],
-    meta: ['meta'],
-    transfer: ['repay', 'loan']
+    burn: ["burn"],
+    meta: ["meta"],
+    transfer: ["repay", "loan"]
 };
 var ZeroConnection = /** @class */ (function (_super) {
     __extends(ZeroConnection, _super);
@@ -121,7 +121,9 @@ function addContractWait(iface, tx, provider) {
                                     event.eventSignature = parsed.signature;
                                     event.removeListener = function () { return provider; };
                                     event.getBlock = function () { return provider.getBlock(receipt.blockHash); };
-                                    event.getTransaction = function () { return provider.getTransaction(receipt.transactionHash); };
+                                    event.getTransaction = function () {
+                                        return provider.getTransaction(receipt.transactionHash);
+                                    };
                                     event.getTransactionReceipt = function () { return Promise.resolve(receipt); };
                                 }
                                 return event;
@@ -147,33 +149,18 @@ var ZeroUser = /** @class */ (function (_super) {
     function ZeroUser(connection, persistence) {
         var _this = _super.call(this) || this;
         _this.conn = connection;
-        _this.conn.on('peer:discovery', function () { return console.log('discovered!'); });
+        _this.conn.on("peer:discovery", function () { return console.log("discovered!"); });
         _this.keepers = [];
-        _this.log = (0, logger_1["default"])('zero.user');
+        _this.log = (0, logger_1["default"])("zero.user");
         _this.storage = persistence !== null && persistence !== void 0 ? persistence : new persistence_1.InMemoryPersistenceAdapter();
         _this._pending = {};
-        _this.conn.handle("/zero/user/update", _this.handleConnection(function (tx) {
-            var request = tx.request, data = tx.data;
-            if (data.nonce) {
-                data.wait = function (confirms) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0: return [4 /*yield*/, (0, deployment_utils_1.getProvider)(request)];
-                        case 1: return [4 /*yield*/, (_a.sent()).waitForTransaction(data.hash, confirms)];
-                        case 2: return [2 /*return*/, _a.sent()];
-                    }
-                }); }); };
-                addContractWait(new ethers_1.utils.Interface(ZeroController_json_1["default"].abi), data, (0, deployment_utils_1.getProvider)(request));
-            }
-            if (_this._pending[request])
-                _this._pending[request].emit('update', data);
-        }));
         return _this;
     }
     ZeroUser.prototype.subscribeKeepers = function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
-                this.conn.pubsub.on('zero.keepers', function (message) { return __awaiter(_this, void 0, void 0, function () {
+                this.conn.pubsub.on("zero.keepers", function (message) { return __awaiter(_this, void 0, void 0, function () {
                     var data, from, address;
                     return __generator(this, function (_a) {
                         data = message.data, from = message.from;
@@ -181,7 +168,7 @@ var ZeroUser = /** @class */ (function (_super) {
                         if (!this.keepers.includes(from)) {
                             try {
                                 this.keepers.push(from);
-                                this.emit('keeper', from);
+                                this.emit("keeper", from);
                                 this.log.debug("Keeper Details: ", {
                                     from: from
                                 });
@@ -195,8 +182,8 @@ var ZeroUser = /** @class */ (function (_super) {
                         return [2 /*return*/];
                     });
                 }); });
-                this.conn.pubsub.subscribe('zero.keepers');
-                this.log.info('Subscribed to keeper broadcasts');
+                this.conn.pubsub.subscribe("zero.keepers");
+                this.log.info("Subscribed to keeper broadcasts");
                 return [2 /*return*/];
             });
         });
@@ -207,21 +194,21 @@ var ZeroUser = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        this.log.debug('Keepers before unsubscription', this.keepers);
+                        this.log.debug("Keepers before unsubscription", this.keepers);
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, this.conn.pubsub.unsubscribe('zero.keepers')];
+                        return [4 /*yield*/, this.conn.pubsub.unsubscribe("zero.keepers")];
                     case 2:
                         _a.sent();
                         return [3 /*break*/, 4];
                     case 3:
                         e_1 = _a.sent();
-                        this.log.error('Could not unsubscribe to keeper broadcasts');
+                        this.log.error("Could not unsubscribe to keeper broadcasts");
                         this.log.debug(e_1.message);
                         return [3 /*break*/, 4];
                     case 4:
-                        this.log.info('Unsubscribed to keeper broadcasts');
+                        this.log.info("Unsubscribed to keeper broadcasts");
                         this.keepers = [];
                         return [2 /*return*/];
                 }
@@ -269,7 +256,7 @@ var ZeroUser = /** @class */ (function (_super) {
                             return [7 /*endfinally*/];
                         case 11: return [7 /*endfinally*/];
                         case 12:
-                            callback(JSON.parse(string.join('')));
+                            callback(JSON.parse(string.join("")));
                             return [2 /*return*/];
                     }
                 });
@@ -277,7 +264,7 @@ var ZeroUser = /** @class */ (function (_super) {
         };
     };
     ZeroUser.prototype.publishRequest = function (request, requestTemplate, requestType) {
-        if (requestType === void 0) { requestType = 'transfer'; }
+        if (requestType === void 0) { requestType = "transfer"; }
         return __awaiter(this, void 0, void 0, function () {
             var requestFromTemplate, digest, result, key, ackReceived, _i, _a, keeper, peer, stream, e_3, e_4;
             return __generator(this, function (_b) {
@@ -315,7 +302,7 @@ var ZeroUser = /** @class */ (function (_super) {
                         return [4 /*yield*/, peerId.createFromB58String(keeper)];
                     case 5:
                         peer = _b.sent();
-                        return [4 /*yield*/, this.conn.dialProtocol(peer, '/zero/1.1.0/dispatch')];
+                        return [4 /*yield*/, this.conn.dialProtocol(peer, "/zero/1.1.0/dispatch")];
                     case 6:
                         stream = (_b.sent()).stream;
                         (0, it_pipe_1["default"])(JSON.stringify(requestFromTemplate), it_length_prefixed_1["default"].encode(), stream.sink);
@@ -345,21 +332,21 @@ var ZeroUser = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.publishRequest(burnRequest, [
-                            'asset',
-                            'chainId',
-                            'contractAddress',
-                            'data',
-                            'module',
-                            'nonce',
-                            'pNonce',
-                            'signature',
-                            'underwriter',
-                            'owner',
-                            'amount',
-                            'deadline',
-                            'destination',
-                            'requestType',
-                        ], 'burn')];
+                            "asset",
+                            "chainId",
+                            "contractAddress",
+                            "data",
+                            "module",
+                            "nonce",
+                            "pNonce",
+                            "signature",
+                            "underwriter",
+                            "owner",
+                            "amount",
+                            "deadline",
+                            "destination",
+                            "requestType",
+                        ], "burn")];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -370,18 +357,18 @@ var ZeroUser = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.publishRequest(metaRequest, [
-                            'asset',
-                            'chainId',
-                            'contractAddress',
-                            'data',
-                            'module',
-                            'nonce',
-                            'pNonce',
-                            'signature',
-                            'underwriter',
-                            'addressFrom',
-                            'requestType',
-                        ], 'meta')];
+                            "asset",
+                            "chainId",
+                            "contractAddress",
+                            "data",
+                            "module",
+                            "nonce",
+                            "pNonce",
+                            "signature",
+                            "underwriter",
+                            "addressFrom",
+                            "requestType",
+                        ], "meta")];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -392,18 +379,18 @@ var ZeroUser = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.publishRequest(transferRequest, [
-                            'amount',
-                            'asset',
-                            'chainId',
-                            'contractAddress',
-                            'data',
-                            'module',
-                            'nonce',
-                            'pNonce',
-                            'signature',
-                            'to',
-                            'underwriter',
-                            'requestType',
+                            "amount",
+                            "asset",
+                            "chainId",
+                            "contractAddress",
+                            "data",
+                            "module",
+                            "nonce",
+                            "pNonce",
+                            "signature",
+                            "to",
+                            "underwriter",
+                            "requestType",
                         ])];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
@@ -416,9 +403,11 @@ exports.ZeroUser = ZeroUser;
 var ZeroKeeper = /** @class */ (function () {
     function ZeroKeeper(connection, persistence) {
         this.conn = connection;
-        this.conn.on('peer:discovery', function () { return console.log('discovered from keeper!'); });
+        this.conn.on("peer:discovery", function () {
+            return console.log("discovered from keeper!");
+        });
         this.dispatches = [];
-        this.log = (0, logger_1["default"])('zero.keeper');
+        this.log = (0, logger_1["default"])("zero.keeper");
         this.storage = persistence !== null && persistence !== void 0 ? persistence : new persistence_1.InMemoryPersistenceAdapter();
     }
     ZeroKeeper.prototype.setPersistence = function (adapter) {
@@ -434,7 +423,7 @@ var ZeroKeeper = /** @class */ (function () {
                         switch (_a.label) {
                             case 0:
                                 _a.trys.push([0, 2, , 3]);
-                                return [4 /*yield*/, this.conn.pubsub.publish('zero.keepers', (0, util_1.fromJSONtoBuffer)({
+                                return [4 /*yield*/, this.conn.pubsub.publish("zero.keepers", (0, util_1.fromJSONtoBuffer)({
                                         address: address
                                     }))];
                             case 1:
@@ -444,14 +433,14 @@ var ZeroKeeper = /** @class */ (function () {
                             case 2:
                                 e_5 = _a.sent();
                                 console.debug(e_5);
-                                this.log.info('Could not make presence known. Retrying in 1s');
+                                this.log.info("Could not make presence known. Retrying in 1s");
                                 this.log.debug(e_5.message);
                                 return [3 /*break*/, 3];
                             case 3: return [2 /*return*/];
                         }
                     });
                 }); }, 1000);
-                this.log.info('Started to listen for tx dispatch requests');
+                this.log.info("Started to listen for tx dispatch requests");
                 return [2 /*return*/];
             });
         });
@@ -535,7 +524,7 @@ var ZeroKeeper = /** @class */ (function () {
                                                 return [7 /*endfinally*/];
                                             case 11: return [7 /*endfinally*/];
                                             case 12:
-                                                transferRequest = JSON.parse(string.join(''));
+                                                transferRequest = JSON.parse(string.join(""));
                                                 return [4 /*yield*/, (this.storage || {
                                                         set: function () {
                                                             return __awaiter(this, void 0, void 0, function () {
@@ -544,7 +533,8 @@ var ZeroKeeper = /** @class */ (function () {
                                                                 });
                                                             });
                                                         }
-                                                    }).set(transferRequest)["catch"](function (e) {
+                                                    })
+                                                        .set(transferRequest)["catch"](function (e) {
                                                         _this.log.error(e.toString());
                                                         errors = e;
                                                     })];
@@ -558,10 +548,10 @@ var ZeroKeeper = /** @class */ (function () {
                                 return [2 /*return*/];
                             });
                         }); };
-                        return [4 /*yield*/, this.conn.handle('/zero/1.1.0/dispatch', handler)];
+                        return [4 /*yield*/, this.conn.handle("/zero/1.1.0/dispatch", handler)];
                     case 1:
                         _a.sent();
-                        this.log.info('Set the tx dispatcher');
+                        this.log.info("Set the tx dispatcher");
                         return [2 /*return*/];
                 }
             });

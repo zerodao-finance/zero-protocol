@@ -43,7 +43,7 @@ var ethers_1 = require("ethers");
 var events_1 = require("events");
 var UnderwriterRequest_1 = require("./UnderwriterRequest");
 var keepers = [];
-exports.TEST_KEEPER_ADDRESS = '0xec5d65739c722a46cd79951e069753c2fc879b27';
+exports.TEST_KEEPER_ADDRESS = "0xec5d65739c722a46cd79951e069753c2fc879b27";
 var keeperSigner;
 var pending = {};
 function waitForMint(trivial) {
@@ -56,7 +56,7 @@ function waitForMint(trivial) {
                 case 1:
                     mint = _a.sent();
                     return [4 /*yield*/, new Promise(function (resolve, reject) {
-                            return mint.on('deposit', function (deposit) { return __awaiter(_this, void 0, void 0, function () {
+                            return mint.on("deposit", function (deposit) { return __awaiter(_this, void 0, void 0, function () {
                                 var hash, _a, _b, confirmed, status;
                                 var _this = this;
                                 return __generator(this, function (_c) {
@@ -67,7 +67,7 @@ function waitForMint(trivial) {
                                             return [4 /*yield*/, deposit.txHash()];
                                         case 2:
                                             hash = _c.sent();
-                                            console.log('hash', hash);
+                                            console.log("hash", hash);
                                             _b = (_a = console).log;
                                             return [4 /*yield*/, deposit];
                                         case 3:
@@ -76,10 +76,10 @@ function waitForMint(trivial) {
                                         case 4:
                                             confirmed = _c.sent();
                                             confirmed
-                                                .on('target', function (target) {
+                                                .on("target", function (target) {
                                                 console.log("0/" + target + " confirmations");
                                             })
-                                                .on('confirmation', function (confs, target) { return __awaiter(_this, void 0, void 0, function () {
+                                                .on("confirmation", function (confs, target) { return __awaiter(_this, void 0, void 0, function () {
                                                 var repayTx;
                                                 return __generator(this, function (_a) {
                                                     switch (_a.label) {
@@ -95,7 +95,10 @@ function waitForMint(trivial) {
                                                         case 2:
                                                             repayTx = _a.sent();
                                                             if (pending[trivial.signature])
-                                                                pending[trivial.signature].emit('update', { request: trivial.signature, data: repayTx });
+                                                                pending[trivial.signature].emit("update", {
+                                                                    request: trivial.signature,
+                                                                    data: repayTx
+                                                                });
                                                             _a.label = 3;
                                                         case 3: return [2 /*return*/];
                                                     }
@@ -104,7 +107,7 @@ function waitForMint(trivial) {
                                             return [4 /*yield*/, deposit.signed()];
                                         case 5:
                                             status = _c.sent();
-                                            status.on('status', function (status) { return console.log('status', status); });
+                                            status.on("status", function (status) { return console.log("status", status); });
                                             return [2 /*return*/];
                                     }
                                 });
@@ -121,7 +124,8 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
     var keeper;
     return __generator(this, function (_a) {
         keeper = zero_1.createZeroKeeper({ on: function () { } });
-        provider = provider || new ethers_1.ethers.providers.JsonRpcProvider('http://localhost:8545');
+        provider =
+            provider || new ethers_1.ethers.providers.JsonRpcProvider("http://localhost:8545");
         keeperSigner = keeperSigner || provider.getSigner(exports.TEST_KEEPER_ADDRESS);
         keepers.push(keeper);
         keeper.advertiseAsKeeper = function () { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
@@ -134,47 +138,47 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
             });
         }); };
         keeper.setTxDispatcher(function (request, requestType) {
-            if (requestType === void 0) { requestType = 'TRANSFER'; }
+            if (requestType === void 0) { requestType = "TRANSFER"; }
             return __awaiter(void 0, void 0, void 0, function () {
                 var _a, trivial, func, loan_result, err_1, tx;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
                             _a = (function () {
-                                console.log('requestType', requestType);
+                                console.log("requestType", requestType);
                                 switch (requestType) {
-                                    case 'META':
+                                    case "META":
                                         return {
                                             trivial: new UnderwriterRequest_1.UnderwriterMetaRequest(request),
-                                            func: 'meta'
+                                            func: "meta"
                                         };
-                                    case 'BURN':
+                                    case "BURN":
                                         return {
                                             trivial: new UnderwriterRequest_1.UnderwriterBurnRequest(request),
-                                            func: 'burn'
+                                            func: "burn"
                                         };
                                     default:
                                         return {
                                             trivial: new zero_1.UnderwriterTransferRequest(request),
-                                            func: 'loan'
+                                            func: "loan"
                                         };
                                 }
                             })(), trivial = _a.trivial, func = _a.func;
                             _b.label = 1;
                         case 1:
                             _b.trys.push([1, 3, , 4]);
-                            console.log('dry');
+                            console.log("dry");
                             return [4 /*yield*/, trivial.dry(keeperSigner)];
                         case 2:
                             loan_result = _b.sent();
-                            console.log('Loan Result', loan_result);
+                            console.log("Loan Result", loan_result);
                             return [3 /*break*/, 4];
                         case 3:
                             err_1 = _b.sent();
-                            console.log('ERROR', err_1);
+                            console.log("ERROR", err_1);
                             return [3 /*break*/, 4];
                         case 4:
-                            if (!(requestType == 'TRANSFER')) return [3 /*break*/, 6];
+                            if (!(requestType == "TRANSFER")) return [3 /*break*/, 6];
                             return [4 /*yield*/, waitForMint(trivial)];
                         case 5:
                             _b.sent();
@@ -192,9 +196,11 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
                                         case 1:
                                             _a.sent();
                                             return [2 /*return*/, {
-                                                    amount: requestType == 'TRANSFER' &&
+                                                    amount: requestType == "TRANSFER" &&
                                                         //@ts-ignore
-                                                        ethers_1.ethers.BigNumber.from(trivial.amount).sub(ethers_1.ethers.utils.parseUnits('0.0015', 8)).toString(),
+                                                        ethers_1.ethers.BigNumber.from(trivial.amount)
+                                                            .sub(ethers_1.ethers.utils.parseUnits("0.0015", 8))
+                                                            .toString(),
                                                     nHash: ethers_1.ethers.utils.hexlify(ethers_1.ethers.utils.randomBytes(32)),
                                                     signature: ethers_1.ethers.utils.hexlify(ethers_1.ethers.utils.randomBytes(65))
                                                 }];
@@ -202,7 +208,10 @@ var createMockKeeper = function (provider) { return __awaiter(void 0, void 0, vo
                                 });
                             }); };
                             if (pending[trivial.signature])
-                                pending[trivial.signature].emit('update', { request: trivial.signature, data: tx });
+                                pending[trivial.signature].emit("update", {
+                                    request: trivial.signature,
+                                    data: tx
+                                });
                             return [2 /*return*/];
                     }
                 });
@@ -221,7 +230,7 @@ var enableGlobalMockRuntime = function () {
                 if (!this.keepers.includes(exports.TEST_KEEPER_ADDRESS)) {
                     setTimeout(function () {
                         me.keepers.push(exports.TEST_KEEPER_ADDRESS);
-                        me.emit('keeper', exports.TEST_KEEPER_ADDRESS);
+                        me.emit("keeper", exports.TEST_KEEPER_ADDRESS);
                     }, 500);
                 }
                 return [2 /*return*/];
@@ -265,7 +274,7 @@ var enableGlobalMockRuntime = function () {
                                     switch (_a.label) {
                                         case 0:
                                             if (!v._txDispatcher) return [3 /*break*/, 2];
-                                            return [4 /*yield*/, v._txDispatcher(metaRequest, 'META')];
+                                            return [4 /*yield*/, v._txDispatcher(metaRequest, "META")];
                                         case 1: return [2 /*return*/, _a.sent()];
                                         case 2: return [2 /*return*/];
                                     }
@@ -296,7 +305,7 @@ var enableGlobalMockRuntime = function () {
                                     switch (_a.label) {
                                         case 0:
                                             if (!v._txDispatcher) return [3 /*break*/, 2];
-                                            return [4 /*yield*/, v._txDispatcher(burnRequest, 'BURN')];
+                                            return [4 /*yield*/, v._txDispatcher(burnRequest, "BURN")];
                                         case 1: return [2 /*return*/, _a.sent()];
                                         case 2: return [2 /*return*/];
                                     }
@@ -314,14 +323,15 @@ var enableGlobalMockRuntime = function () {
             });
         });
     };
+    //@ts-ignore
     zero_1.UnderwriterTransferRequest.prototype.submitToRenVM = function () {
         return __awaiter(this, void 0, void 0, function () {
             var confirmed, gatewayAddress, _signed, target, timeout, txHash, mint, deposit;
             var _this = this;
             return __generator(this, function (_a) {
                 confirmed = new events_1.EventEmitter();
-                gatewayAddress = '39WeCoGbNNk5gVNPx9j4mSrw3tvf1WfRz7';
-                confirmed.on('deposit', function (count) {
+                gatewayAddress = "39WeCoGbNNk5gVNPx9j4mSrw3tvf1WfRz7";
+                confirmed.on("deposit", function (count) {
                     if (count === target)
                         _signed = true;
                 });
@@ -332,8 +342,8 @@ var enableGlobalMockRuntime = function () {
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
-                                confirmed.emit('target', target);
-                                confirmed.emit('confirmation', 0);
+                                confirmed.emit("target", target);
+                                confirmed.emit("confirmation", 0);
                                 i = 1;
                                 _a.label = 1;
                             case 1:
@@ -341,7 +351,7 @@ var enableGlobalMockRuntime = function () {
                                 return [4 /*yield*/, timeout(2000)];
                             case 2:
                                 _a.sent();
-                                confirmed.emit('confirmation', i, target);
+                                confirmed.emit("confirmation", i, target);
                                 _a.label = 3;
                             case 3:
                                 i++;
@@ -350,7 +360,7 @@ var enableGlobalMockRuntime = function () {
                         }
                     });
                 }); }, 100);
-                txHash = ethers_1.ethers.utils.randomBytes(32).toString('base64');
+                txHash = ethers_1.ethers.utils.randomBytes(32).toString("base64");
                 mint = new events_1.EventEmitter();
                 deposit = {
                     txHash: function () {
@@ -379,15 +389,15 @@ var enableGlobalMockRuntime = function () {
                                         switch (_a.label) {
                                             case 0: return [4 /*yield*/, new Promise(function (resolve) {
                                                     if (_signed)
-                                                        return resolve('signed');
-                                                    confirmed.on('confirmation', function (count) {
+                                                        return resolve("signed");
+                                                    confirmed.on("confirmation", function (count) {
                                                         if (count === target)
-                                                            resolve('signed');
+                                                            resolve("signed");
                                                     });
                                                 })];
                                             case 1:
                                                 result = _a.sent();
-                                                ee.emit('status', result);
+                                                ee.emit("status", result);
                                                 return [2 /*return*/];
                                         }
                                     });
@@ -398,7 +408,7 @@ var enableGlobalMockRuntime = function () {
                     }
                 };
                 setTimeout(function () {
-                    mint.emit('deposit', deposit);
+                    mint.emit("deposit", deposit);
                 }, 5000);
                 mint.gatewayAddress = gatewayAddress;
                 return [2 /*return*/, mint];
@@ -406,87 +416,87 @@ var enableGlobalMockRuntime = function () {
         });
     };
     /*
-      (ReleaseRequest as any).prototype.submitReleaseRequest = async function (flag) {
-          // TODO implement confirmed event listener
-          const _confirm = new EventEmitter();
-          const target = 6
-          const timeout = (n) => new Promise((resolve) => setTimeout(resolve, n))
-          const txHash = (ethers.utils.randomBytes(32).toString as any)('base64');
-  
-          setTimeout(async () => {
-              _confirm.emit("target", target)
-              _confirm.emit("confirmation", 0)
-              _confirm.emit("transactionHash", txHash)
-  
-              for (let i = 1; 1 <= target; i++) {
-                  await timeout(500);
-                  _confirm.emit('confirmation', i, target);
-              }
-          }, 3000)
-  
-          const _burnAndRelease = {
-              async burn(){
-                  return _confirm
-              },
-  
-              async release(){
-                  const _release = new EventEmitter();
-                  _confirm.on("confirmation", (confs, target) => {
-                      setTimeout(async () => {
-                          const result = await new Promise((resolve) => {
-                              if (confs === target) resolve("done")
-                              if (confs > 0) resolve("confirming")
-                              else resolve("pending")
-                          })
-                          _release.emit("status", result)
-                      }, 100)
-                  })
-                  _confirm.on("transactionHash", (txHash) => {
-                      setTimeout(async () => {
-                          _release.emit("txHash", txHash)
-                      }, 100)
-                  })
-                  return _release
-              }
-          }
-  
-          return _burnAndRelease
-      }
-  
-      (ReleaseRequest as any).prototype.sign = async function () {
-          this.signature = ethers.utils.hexlify(ethers.utils.randomBytes(65))
-          return this.signature
-      }
-  
-  
-      (ZeroUser as any).prototype.publishReleaseRequest = async function (_releaseRequest) {
-          setTimeout(() => {
-              (async () => {
-                  try {
-                      Promise.all(keepers.map(async (v) => v._txDispatch && v._txDispatcher(_releaseRequest))).catch(
-                          console.error
-                      )
-                  } catch (e) {
-                      console.error(e)
-                  }
-              })();
-          }, 500)
-      }
-  
-  
-      ZeroUser.prototype.publishTransferRequest = async function (transferRequest) {
-          setTimeout(() => {
-              (async () => {
-                  try {
-                      Promise.all(keepers.map(async (v) => v._txDispatcher && v._txDispatcher(transferRequest))).catch(
-                          console.error,
-                      );
-                  } catch (e) {
-                      console.error(e);
-                  }
-              })();
-          }, 3000);
-      };
-   */
+        (ReleaseRequest as any).prototype.submitReleaseRequest = async function (flag) {
+            // TODO implement confirmed event listener
+            const _confirm = new EventEmitter();
+            const target = 6
+            const timeout = (n) => new Promise((resolve) => setTimeout(resolve, n))
+            const txHash = (ethers.utils.randomBytes(32).toString as any)('base64');
+    
+            setTimeout(async () => {
+                _confirm.emit("target", target)
+                _confirm.emit("confirmation", 0)
+                _confirm.emit("transactionHash", txHash)
+    
+                for (let i = 1; 1 <= target; i++) {
+                    await timeout(500);
+                    _confirm.emit('confirmation', i, target);
+                }
+            }, 3000)
+    
+            const _burnAndRelease = {
+                async burn(){
+                    return _confirm
+                },
+    
+                async release(){
+                    const _release = new EventEmitter();
+                    _confirm.on("confirmation", (confs, target) => {
+                        setTimeout(async () => {
+                            const result = await new Promise((resolve) => {
+                                if (confs === target) resolve("done")
+                                if (confs > 0) resolve("confirming")
+                                else resolve("pending")
+                            })
+                            _release.emit("status", result)
+                        }, 100)
+                    })
+                    _confirm.on("transactionHash", (txHash) => {
+                        setTimeout(async () => {
+                            _release.emit("txHash", txHash)
+                        }, 100)
+                    })
+                    return _release
+                }
+            }
+    
+            return _burnAndRelease
+        }
+    
+        (ReleaseRequest as any).prototype.sign = async function () {
+            this.signature = ethers.utils.hexlify(ethers.utils.randomBytes(65))
+            return this.signature
+        }
+    
+    
+        (ZeroUser as any).prototype.publishReleaseRequest = async function (_releaseRequest) {
+            setTimeout(() => {
+                (async () => {
+                    try {
+                        Promise.all(keepers.map(async (v) => v._txDispatch && v._txDispatcher(_releaseRequest))).catch(
+                            console.error
+                        )
+                    } catch (e) {
+                        console.error(e)
+                    }
+                })();
+            }, 500)
+        }
+    
+    
+        ZeroUser.prototype.publishTransferRequest = async function (transferRequest) {
+            setTimeout(() => {
+                (async () => {
+                    try {
+                        Promise.all(keepers.map(async (v) => v._txDispatcher && v._txDispatcher(transferRequest))).catch(
+                            console.error,
+                        );
+                    } catch (e) {
+                        console.error(e);
+                    }
+                })();
+            }, 3000);
+        };
+     */
 };
 exports.enableGlobalMockRuntime = enableGlobalMockRuntime;
