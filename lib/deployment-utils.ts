@@ -10,6 +10,7 @@ import {
   Arbitrum,
   Avalanche,
   EthereumBaseChain,
+  Optimism
 } from "@renproject/chains";
 
 export const CONTROLLER_DEPLOYMENTS = {
@@ -25,6 +26,9 @@ export const CONTROLLER_DEPLOYMENTS = {
   [ethers.utils.getAddress(
     require("../deployments/mainnet/BadgerBridgeZeroController.json").address
   )]: "Ethereum",
+  [ethers.utils.getAddress(
+    require("../deployments/optimism/BadgerBridgeZeroController.json").address
+  )]: "Optimism",
 };
 
 export const RPC_ENDPOINTS = {
@@ -34,6 +38,7 @@ export const RPC_ENDPOINTS = {
   Polygon:
     "https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2",
   Ethereum: "https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2",
+  Optimism: "https://optimism-mainnet.infura.io/v3/ca0da016dedf4c5a9ee90bfdbafee233",
   localhost: "http://localhost:8545",
 };
 
@@ -42,6 +47,7 @@ export const RENVM_PROVIDERS = {
   Polygon,
   Ethereum,
   Avalanche,
+  Optimism,
 };
 
 export const getVanillaProvider = (request) => {

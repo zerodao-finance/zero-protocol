@@ -13,19 +13,22 @@ exports.CONTROLLER_DEPLOYMENTS = (_a = {},
     _a[ethers_1.ethers.utils.getAddress(require("../deployments/avalanche/BadgerBridgeZeroController.json").address)] = "Avalanche",
     _a[ethers_1.ethers.utils.getAddress(require("../deployments/matic/BadgerBridgeZeroController.json").address)] = "Polygon",
     _a[ethers_1.ethers.utils.getAddress(require("../deployments/mainnet/BadgerBridgeZeroController.json").address)] = "Ethereum",
+    _a[ethers_1.ethers.utils.getAddress(require("../deployments/optimism/BadgerBridgeZeroController.json").address)] = "Optimism",
     _a);
 exports.RPC_ENDPOINTS = {
     Arbitrum: "https://arbitrum-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2",
     Avalanche: "https://api.avax.network/ext/bc/C/rpc",
     Polygon: "https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2",
     Ethereum: "https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2",
+    Optimism: "https://optimism-mainnet.infura.io/v3/ca0da016dedf4c5a9ee90bfdbafee233",
     localhost: "http://localhost:8545"
 };
 exports.RENVM_PROVIDERS = {
     Arbitrum: chains_1.Arbitrum,
     Polygon: chains_1.Polygon,
     Ethereum: chains_1.Ethereum,
-    Avalanche: chains_1.Avalanche
+    Avalanche: chains_1.Avalanche,
+    Optimism: chains_1.Optimism
 };
 var getVanillaProvider = function (request) {
     var checkSummedContractAddr = ethers_1.ethers.utils.getAddress(request.contractAddress);
