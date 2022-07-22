@@ -2,5 +2,14 @@
 src = 'contracts'
 out = 'out'
 libs = ["foundry_lib"]
+remappings = [
+  "@openzeppelin=node_modules/@openzeppelin",
+  "oz410=node_modules/oz410",
+  "oz460=node_modules/oz460",
+  "@uniswap/v3-periphery=node_modules/@uniswap/v3-periphery/contracts",
+  "@uniswap/v2-periphery=node_modules/@uniswap/v2-periphery",
+  "@rari-capital/solmate=node_modules/@rari-capital/solmate",
+  "@gnosis.pm/safe-contracts=node_modules/@gnosis.pm/safe-contracts",
+]
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
