@@ -92,6 +92,11 @@ abstract contract BaseModule {
   }
 
   /* ---- Override These In Child ---- */
+  function swap(bytes32) internal virtual returns (uint256 amountOut);
+
+  function swapBack(bytes32) internal virtual returns (uint256 amountOut);
+
+  function transfer(address to, uint256 amount) internal virtual;
 
   function _receiveLoan(
     address borrower,
