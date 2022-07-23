@@ -52,7 +52,7 @@ var buffer_1 = require("buffer");
 var ethers_1 = require("ethers");
 var utils_1 = require("@0x/utils");
 require("@0x/types");
-var chains_1 = require("@renproject/chains");
+require("@renproject/chains");
 var ren_1 = __importDefault(require("@renproject/ren"));
 require("@renproject/interfaces");
 var deployment_utils_1 = require("./deployment-utils");
@@ -111,68 +111,6 @@ var BurnRequest = /** @class */ (function () {
     BurnRequest.prototype.setProvider = function (provider) {
         this.provider = provider;
         return this;
-    };
-    BurnRequest.prototype.submitToRenVM = function (isTest) {
-        return __awaiter(this, void 0, void 0, function () {
-            var result, _a;
-            var _this = this;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        console.log("submitToRenVM");
-                        console.log(this);
-                        if (this._burn)
-                            return [2 /*return*/, this._burn];
-                        _a = this;
-                        return [4 /*yield*/, this._ren.burnAndRelease({
-                                asset: "BTC",
-                                to: (0, chains_1.Bitcoin)().Address(this.destination),
-                                from: (0, deployment_utils_1.getProvider)(this).Contract(function (btcAddress) { return ({
-                                    sendTo: _this.contractAddress,
-                                    contractFn: _this._contractFn,
-                                    contractParams: _this._contractParams
-                                }); })
-                            })];
-                    case 1:
-                        result = (_a._burn = _b.sent());
-                        //    result.params.nonce = this.nonce;
-                        return [2 /*return*/, result];
-                }
-            });
-        });
-    };
-    BurnRequest.prototype.waitForTxNonce = function (burn) {
-        return __awaiter(this, void 0, void 0, function () {
-            var burnt, tx, parsed;
-            var _this = this;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (this._queryTxResult)
-                            return [2 /*return*/, this._queryTxResult];
-                        return [4 /*yield*/, new Promise(function (resolve, reject) {
-                                burn.on("transactionHash", resolve);
-                                burn.on("error", reject);
-                            })];
-                    case 1:
-                        burnt = _a.sent();
-                        return [4 /*yield*/, this.provider.waitForTransaction(burnt)];
-                    case 2:
-                        tx = _a.sent();
-                        parsed = tx.logs.reduce(function (v, d) {
-                            if (v)
-                                return v;
-                            try {
-                                return _this.gatewayIface.parseLog(d);
-                            }
-                            catch (e) { }
-                        }, null);
-                        this.nonce = parsed._n;
-                        this._queryTxResult = parsed;
-                        return [2 /*return*/, parsed];
-                }
-            });
-        });
     };
     BurnRequest.prototype.setUnderwriter = function (underwriter) {
         if (!ethers_1.ethers.utils.isAddress(underwriter))
@@ -267,19 +205,6 @@ var BurnRequest = /** @class */ (function () {
             }
         };
     };
-    BurnRequest.prototype.toGatewayAddress = function (input) {
-        return __awaiter(this, void 0, void 0, function () {
-            var burn;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.submitToRenVM(false)];
-                    case 1:
-                        burn = _a.sent();
-                        return [2 /*return*/, burn.gatewayAddress];
-                }
-            });
-        });
-    };
     BurnRequest.prototype.sign = function (signer, contractAddress) {
         return __awaiter(this, void 0, void 0, function () {
             var provider, chainId, token, _a, _b, _c, _d, payload, sig, e_1, _e, _f, _g, _h;
@@ -341,7 +266,8 @@ var BurnRequest = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         deployment_chain = deployment_utils_1.CONTROLLER_DEPLOYMENTS[ethers_1.ethers.utils.getAddress(this.contractAddress)].toLowerCase();
-                        deployment_chain = deployment_chain == "polygon" ? "matic" : deployment_chain;
+                        deployment_chain =
+                            deployment_chain == "polygon" ? "matic" : deployment_chain;
                         network = (function (v) { return (v === "ethereum" ? "mainnet" : v); })(deployment_chain);
                         provider = (0, deployment_utils_1.getVanillaProvider)(this);
                         renbtc = new ethers_1.ethers.Contract(fixtures_1["default"][(function (v) { return (v === "mainnet" ? "ethereum" : v); })(network).toUpperCase()].renBTC, [

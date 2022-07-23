@@ -2,7 +2,6 @@ import { Buffer } from 'safe-buffer';
 import { defaultAbiCoder as abi, Interface } from '@ethersproject/abi';
 import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
 import { BYTES_TYPES } from '../config/constants';
-import { fromHex, generateNHash } from "@renproject/utils";
 import { PHashInput, GHashInput, NHashInput, DarknodeSignatureInput } from "../types";
 
 /*
@@ -80,19 +79,4 @@ export const computeShiftInTxHash = ({ renContract, utxo, g }: any) =>
 			['string'],
 			[`txHash_${renContract}_${toBase64(maybeCoerceToGHash(g))}_${toBase64(utxo.txHash)}_${utxo.vOut}`],
 		),
-	);
-
-export const computeNHash = (input: NHashInput) => (generateNHash as any)(fromHex(input.nonce), fromHex(input.txHash), input.vOut, true);
-const maybeCoerceToNHash = (input: NHashInput | string) => (typeof input === 'object' ? computeNHash(input) : input);
-
-export const computeHashForDarknodeSignature = (input: DarknodeSignatureInput) =>
-	keccakAbiEncoded(
-		['bytes32', 'uint256', 'address', 'address', 'bytes32'],
-		[
-			typeof input.p === 'string' ? computePHashFromP(input.p) : computePHash(input.p),
-			input.amount,
-			input.tokenAddress,
-			input.to,
-			maybeCoerceToNHash(input.n),
-		],
 	);

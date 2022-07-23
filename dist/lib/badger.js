@@ -193,7 +193,7 @@ exports.makeCompute = function (CHAIN) {
                     opFee = zeroProtocolFeeAmt.add(renVmFeeAmt);
                     totalFees = gasFee.add(opFee);
                     if (zeroFee == burnFee) {
-                        totalFees = totalFees.add(ethers.utils.parseUnits(".001", 8));
+                        totalFees = totalFees.add(ethers.utils.parseUnits(".002", 8));
                     }
                     else if (zeroFee == mintFee) {
                         totalFees = totalFees.add(ethers.utils.parseUnits("0.002", 8));
