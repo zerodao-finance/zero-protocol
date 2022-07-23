@@ -129,6 +129,7 @@
     "ethers-gasnow": "https://github.com/kungfuflex/ethers-gasnow",
     "gun": "^0.2020.1232",
     "hardhat-deploy-ethers": "^0.3.0-beta.13",
+    "hardhat-preprocessor": "^0.1.4",
     "is-browser": "^2.1.0",
     "keccak256": "^1.0.6",
     "level": "^7.0.1",

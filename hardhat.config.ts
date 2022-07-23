@@ -1,16 +1,23 @@
-require("@nomiclabs/hardhat-ethers");
-require("hardhat-deploy");
-require("hardhat-deploy-ethers");
-require("hardhat-gas-reporter");
-require("@openzeppelin/hardhat-upgrades");
-require("@nomiclabs/hardhat-etherscan");
+import "@nomiclabs/hardhat-waffle";
+import "@typechain/hardhat";
+// import "@nomiclabs/hardhat-ethers";
+import "hardhat-deploy";
+import "hardhat-deploy-ethers";
+import "hardhat-gas-reporter";
+import "@nomiclabs/hardhat-etherscan";
+import "hardhat-preprocessor";
+import { readFileSync } from "fs";
+import { ethers } from "ethers";
 require("dotenv").config();
 require("./tasks/multisig");
 require("./tasks/init-multisig");
 
-import { ethers } from "ethers";
-import { readFileSync } from "fs";
-
+function getRemappings() {
+  return readFileSync("remappings.txt", "utf8")
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => line.trim().split("="));
+}
 const chains = {
   ARBITRUM: 42161,
   MATIC: 137,
@@ -209,5 +216,19 @@ module.exports = {
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
+  },
+  preprocess: {
+    eachLine: (hre) => ({
+      transform: (line: string) => {
+        if (line.match(/^\s*import /i)) {
+          getRemappings().forEach(([find, replace]) => {
+            if (line.match(find)) {
+              line = line.replace(find, replace);
+            }
+          });
+        }
+        return line;
+      },
+    }),
   },
 };
