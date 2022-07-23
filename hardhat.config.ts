@@ -5,12 +5,20 @@ import "hardhat-deploy";
 import "hardhat-deploy-ethers";
 import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
+import "hardhat-preprocessor";
 import { readFileSync } from "fs";
 import { ethers } from "ethers";
 import { randomBytes } from "crypto";
 require("dotenv").config();
 require("./tasks/multisig");
 require("./tasks/init-multisig");
+
+function getRemappings() {
+  return readFileSync("remappings.txt", "utf8")
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => line.trim().split("="));
+}
 
 if (!process.env.CHAIN_ID && process.env.CHAIN === "ARBITRUM")
   process.env.CHAIN_ID = "42161";
@@ -198,5 +206,19 @@ module.exports = {
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
+  },
+  preprocess: {
+    eachLine: (hre) => ({
+      transform: (line: string) => {
+        if (line.match(/^\s*import /i)) {
+          getRemappings().forEach(([find, replace]) => {
+            if (line.match(find)) {
+              line = line.replace(find, replace);
+            }
+          });
+        }
+        return line;
+      },
+    }),
   },
 };
