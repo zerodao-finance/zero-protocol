@@ -9,3 +9,4 @@ deployments/localhost/
 dist/deployments/localhost/
 **/.DS_Store
 typechain-types
+out/
