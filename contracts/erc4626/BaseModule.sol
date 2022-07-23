@@ -52,7 +52,7 @@ abstract contract BaseModule {
     returns (uint256 collateralToUnlock, uint256 gasCostEther)
   {
     // Get gas price in ETH
-    gasCostEther = maxRepayGas() * getGasPrice();
+    gasCostEther = this.maxRepayGas() * getGasPrice();
     // Handle loan using module's logic, reducing borrow amount by the value of gas used
     collateralToUnlock = _repayLoan(borrower, repaidAmount, loanId, data);
   }
@@ -79,7 +79,7 @@ abstract contract BaseModule {
     bytes calldata data
   ) external virtual returns (uint256 collateralToLock, uint256 gasCostEther) {
     // Get gas price in ETH
-    gasCostEther = maxLoanGas() * getGasPrice();
+    gasCostEther = this.maxLoanGas() * getGasPrice();
     // Get gas price in `asset`
     uint256 gasCostAsset = gasCostEther.mulDivUp(getEthPrice(), 1e18);
     // Handle loan using module's logic, reducing borrow amount by the value of gas used
@@ -115,17 +115,17 @@ abstract contract BaseModule {
   /// @notice Returns the maximum amount of gas that will be used by
   /// a burn call. This should simply be a constant set in the
   /// inheriting contract.
-  function maxBurnGas() public pure virtual returns (uint256);
+  function maxBurnGas() external virtual returns (uint256);
 
   /// @notice Returns the maximum amount of gas that will be used by
   /// a burn call. This should simply be a constant set in the
   /// inheriting contract.
-  function maxLoanGas() public pure virtual returns (uint256);
+  function maxLoanGas() external virtual returns (uint256);
 
   /// @notice Returns the maximum amount of gas that will be used by
   /// a burn call. This should simply be a constant set in the
   /// inheriting contract.
-  function maxRepayGas() public pure virtual returns (uint256);
+  function maxRepayGas() external virtual returns (uint256);
 
   /* ---- Leave Empty For Now ---- */
 
