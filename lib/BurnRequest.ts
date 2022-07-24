@@ -113,41 +113,6 @@ export class BurnRequest {
     this.provider = provider;
     return this;
   }
-  async submitToRenVM(isTest) {
-    console.log("submitToRenVM");
-    console.log(this);
-    if (this._burn) return this._burn;
-    //@ts-ignore
-    const result = (this._burn = await this._ren.burnAndRelease({
-      asset: "BTC",
-      //@ts-ignore
-      to: Bitcoin().Address(this.destination),
-      from: getProvider(this).Contract((btcAddress) => ({
-        sendTo: this.contractAddress,
-        contractFn: this._contractFn,
-        contractParams: this._contractParams,
-      })),
-    }));
-    //    result.params.nonce = this.nonce;
-    return result;
-  }
-  async waitForTxNonce(burn) {
-    if (this._queryTxResult) return this._queryTxResult;
-    const burnt: any = await new Promise((resolve, reject) => {
-      burn.on("transactionHash", resolve);
-      (burn as any).on("error", reject);
-    });
-    const tx = await this.provider.waitForTransaction(burnt);
-    const parsed = tx.logs.reduce((v, d) => {
-      if (v) return v;
-      try {
-        return this.gatewayIface.parseLog(d);
-      } catch (e) {}
-    }, null);
-    this.nonce = parsed._n;
-    this._queryTxResult = parsed;
-    return parsed;
-  }
   setUnderwriter(underwriter: string): boolean {
     if (!ethers.utils.isAddress(underwriter)) return false;
     this.underwriter = ethers.utils.getAddress(underwriter);

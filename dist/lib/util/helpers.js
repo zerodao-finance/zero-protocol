@@ -36,12 +36,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.computeHashForDarknodeSignature = exports.computeNHash = exports.computeShiftInTxHash = exports.encodeInitializationActions = exports.maybeCoerceToGHash = exports.computeP = exports.computePHashFromP = exports.computePHash = exports.fetchData = exports.toHex = exports.fromBase64 = exports.toBase64 = exports.addHexPrefix = exports.stripHexPrefix = void 0;
+exports.computeShiftInTxHash = exports.encodeInitializationActions = exports.maybeCoerceToGHash = exports.computeP = exports.computePHashFromP = exports.computePHash = exports.fetchData = exports.toHex = exports.fromBase64 = exports.toBase64 = exports.addHexPrefix = exports.stripHexPrefix = void 0;
 var safe_buffer_1 = require("safe-buffer");
 var abi_1 = require("@ethersproject/abi");
 var solidity_1 = require("@ethersproject/solidity");
 var constants_1 = require("../config/constants");
-var utils_1 = require("@renproject/utils");
 require("../types");
 /*
 ===========================================
@@ -130,16 +129,3 @@ var computeShiftInTxHash = function (_a) {
     return (0, exports.toBase64)((0, solidity_1.keccak256)(['string'], ["txHash_" + renContract + "_" + (0, exports.toBase64)((0, exports.maybeCoerceToGHash)(g)) + "_" + (0, exports.toBase64)(utxo.txHash) + "_" + utxo.vOut]));
 };
 exports.computeShiftInTxHash = computeShiftInTxHash;
-var computeNHash = function (input) { return utils_1.generateNHash((0, utils_1.fromHex)(input.nonce), (0, utils_1.fromHex)(input.txHash), input.vOut, true); };
-exports.computeNHash = computeNHash;
-var maybeCoerceToNHash = function (input) { return (typeof input === 'object' ? (0, exports.computeNHash)(input) : input); };
-var computeHashForDarknodeSignature = function (input) {
-    return keccakAbiEncoded(['bytes32', 'uint256', 'address', 'address', 'bytes32'], [
-        typeof input.p === 'string' ? (0, exports.computePHashFromP)(input.p) : (0, exports.computePHash)(input.p),
-        input.amount,
-        input.tokenAddress,
-        input.to,
-        maybeCoerceToNHash(input.n),
-    ]);
-};
-exports.computeHashForDarknodeSignature = computeHashForDarknodeSignature;

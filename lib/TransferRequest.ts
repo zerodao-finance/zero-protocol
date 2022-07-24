@@ -1,6 +1,6 @@
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
-import { hexlify } from "@ethersproject/bytes";
+import { hexlify, arrayify } from "@ethersproject/bytes";
 import { randomBytes } from "@ethersproject/random";
 import { _TypedDataEncoder } from "@ethersproject/hash";
 import { GatewayAddressInput } from "./types";
@@ -11,7 +11,8 @@ import { signTypedDataUtils } from "@0x/utils";
 import { EIP712TypedData } from "@0x/types";
 import { EIP712_TYPES } from "./config/constants";
 import { Bitcoin } from "@renproject/chains";
-import RenJS from "@renproject/ren";
+import { utils } from "@renproject/utils";
+import RenJS, { Gateway, GatewayTransaction } from "@renproject/ren";
 import { EthArgs } from "@renproject/interfaces";
 import { getProvider } from "./deployment-utils";
 
@@ -37,6 +38,7 @@ export class TransferRequest {
   public provider: any;
   public _mint: any;
   public requestType = "transfer";
+  private bitcoin: Bitcoin;
 
   constructor(params: {
     module: string;
@@ -50,6 +52,7 @@ export class TransferRequest {
     contractAddress?: string;
     chainId?: string | number;
     signature?: string;
+    network?: "mainnet" | "testnet";
   }) {
     this.module = params.module;
     this.to = params.to;
@@ -72,10 +75,9 @@ export class TransferRequest {
     this.chainId = params.chainId;
     this.contractAddress = params.contractAddress;
     this.signature = params.signature;
-    const networkName = "mainnet";
-    this._ren = new (RenJS as any)(networkName, {
-      loadCompletedDeposits: true,
-    });
+    const networkName = params.network || "mainnet";
+    this.bitcoin = new Bitcoin({ network: networkName });
+    this._ren = new RenJS(networkName).withChain(this.bitcoin);
     this._contractFn = "zeroCall";
     this._contractParams = [
       {
@@ -128,31 +130,49 @@ export class TransferRequest {
     return this;
   }
 
-  async submitToRenVM() {
+  async submitToRenVM(): Promise<Gateway> {
     if (this._mint) return this._mint;
-    const result = (this._mint = await this._ren.lockAndMint({
+    const eth = getProvider(this);
+    this._ren = this._ren.withChain(eth);
+    const result = (this._mint = this._ren.gateway({
       asset: "BTC",
-      from: Bitcoin(),
-      nonce: this.nonce,
-      to: getProvider(this).Contract({
-        sendTo: ethers.utils.getAddress(this.contractAddress),
-        contractFn: this._contractFn,
-        contractParams: this._contractParams,
+      from: this.bitcoin.GatewayAddress(),
+      to: eth.Contract({
+        to: this.contractAddress,
+        method: this._contractFn,
+        params: this._contractParams,
+        withRenParams: true,
       }),
+      //@ts-ignore
+      nonce: arrayify(this.nonce),
     }));
+
     return result;
   }
 
   async waitForSignature() {
     if (this._queryTxResult) return this._queryTxResult;
     const mint = await this.submitToRenVM();
-    const deposit: any = await new Promise((resolve, reject) => {
-      mint.on("deposit", resolve);
-      (mint as any).on("error", reject);
+    console.log("Gateway: ", mint.gatewayAddress);
+    const deposit: GatewayTransaction<any> = await new Promise((resolve) => {
+      mint.on("transaction", (tx) => {
+        console.log("transaction received");
+        resolve(tx);
+      });
     });
-    await deposit.signed();
-    const { signature, nhash, phash, amount } =
-      deposit._state.queryTxResult.out;
+    await deposit.in.wait();
+
+    await deposit.renVM.submit();
+    await deposit.renVM.wait();
+
+    console.log((deposit as any).queryTxResult);
+    const queryTx = (deposit as any).queryTxResult.tx;
+    const { amount, sig: signature } = queryTx.out;
+    const { nhash, phash } = queryTx.in;
+    console.log(hexlify(deposit.pHash), hexlify(phash));
+    console.log(hexlify(deposit.nHash), hexlify(nhash));
+    // const { signature, nhash, phash, amount } =
+    //   deposit._state.queryTxResult.out;
     const result = (this._queryTxResult = {
       amount: String(amount),
       nHash: hexlify(nhash),

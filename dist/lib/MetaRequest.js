@@ -52,10 +52,10 @@ var ethers_1 = require("ethers");
 var utils_1 = require("@0x/utils");
 require("@0x/types");
 require("./config/constants");
-var chains_1 = require("@renproject/chains");
+require("@renproject/chains");
 var ren_1 = __importDefault(require("@renproject/ren"));
 require("@renproject/interfaces");
-var deployment_utils_1 = require("./deployment-utils");
+require("./deployment-utils");
 /**
  * Supposed to provide a way to execute other functions while using renBTC to pay for the gas fees
  * what a flow to test would look like:
@@ -64,40 +64,44 @@ var deployment_utils_1 = require("./deployment-utils");
  */
 var MetaRequest = /** @class */ (function () {
     function MetaRequest(params) {
-        this.requestType = 'meta';
+        this.requestType = "meta";
         this.module = params.module;
         this.addressFrom = params.addressFrom;
         this.underwriter = params.underwriter;
         this.asset = params.asset;
         this.data = params.data;
-        console.log('params.nonce', params.nonce);
-        this.nonce = params.nonce ? (0, bytes_1.hexlify)(params.nonce) : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
-        this.pNonce = params.pNonce ? (0, bytes_1.hexlify)(params.pNonce) : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
+        console.log("params.nonce", params.nonce);
+        this.nonce = params.nonce
+            ? (0, bytes_1.hexlify)(params.nonce)
+            : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
+        this.pNonce = params.pNonce
+            ? (0, bytes_1.hexlify)(params.pNonce)
+            : (0, bytes_1.hexlify)((0, random_1.randomBytes)(32));
         this.chainId = params.chainId;
         this.contractAddress = params.contractAddress;
         this.signature = params.signature;
         //this._config =
-        this._ren = new ren_1["default"]('mainnet', { loadCompletedDeposits: true });
-        this._contractFn = 'zeroCall';
+        this._ren = new ren_1["default"]("mainnet", { loadCompletedDeposits: true });
+        this._contractFn = "zeroCall";
         this._contractParams = [
             {
-                name: 'from',
-                type: 'address',
+                name: "from",
+                type: "address",
                 value: this.addressFrom
             },
             {
-                name: 'pNonce',
-                type: 'uint256',
+                name: "pNonce",
+                type: "uint256",
                 value: this.pNonce
             },
             {
-                name: 'module',
-                type: 'address',
+                name: "module",
+                type: "address",
                 value: this.module
             },
             {
-                name: 'data',
-                type: 'bytes',
+                name: "data",
+                type: "bytes",
                 value: this.data
             },
         ];
@@ -113,66 +117,6 @@ var MetaRequest = /** @class */ (function () {
     MetaRequest.prototype.setProvider = function (provider) {
         this.provider = provider;
         return this;
-    };
-    MetaRequest.prototype.submitToRenVM = function (isTest) {
-        return __awaiter(this, void 0, void 0, function () {
-            var result, _a;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        console.log('submitToRenVM this.nonce', this.nonce);
-                        if (this._mint)
-                            return [2 /*return*/, this._mint];
-                        _a = this;
-                        return [4 /*yield*/, this._ren.lockAndMint({
-                                asset: 'BTC',
-                                from: (0, chains_1.Bitcoin)(),
-                                nonce: this.nonce,
-                                to: (0, deployment_utils_1.getProvider)(this).Contract({
-                                    sendTo: this.contractAddress,
-                                    contractFn: this._contractFn,
-                                    contractParams: this._contractParams
-                                })
-                            })];
-                    case 1:
-                        result = (_a._mint = _b.sent());
-                        //    result.params.nonce = this.nonce;
-                        return [2 /*return*/, result];
-                }
-            });
-        });
-    };
-    MetaRequest.prototype.waitForSignature = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var mint, deposit, _a, signature, nhash, phash, amount, result;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        if (this._queryTxResult)
-                            return [2 /*return*/, this._queryTxResult];
-                        return [4 /*yield*/, this.submitToRenVM(false)];
-                    case 1:
-                        mint = _b.sent();
-                        return [4 /*yield*/, new Promise(function (resolve, reject) {
-                                mint.on('deposit', resolve);
-                                mint.on('error', reject);
-                            })];
-                    case 2:
-                        deposit = _b.sent();
-                        return [4 /*yield*/, deposit.signed()];
-                    case 3:
-                        _b.sent();
-                        _a = deposit._state.queryTxResult.out, signature = _a.signature, nhash = _a.nhash, phash = _a.phash, amount = _a.amount;
-                        result = (this._queryTxResult = {
-                            amount: String(amount),
-                            nHash: (0, bytes_1.hexlify)(nhash),
-                            pHash: (0, bytes_1.hexlify)(phash),
-                            signature: (0, bytes_1.hexlify)(signature)
-                        });
-                        return [2 /*return*/, result];
-                }
-            });
-        });
     };
     MetaRequest.prototype.setUnderwriter = function (underwriter) {
         if (!ethers_1.ethers.utils.isAddress(underwriter))
@@ -191,31 +135,31 @@ var MetaRequest = /** @class */ (function () {
             types: {
                 MetaRequest: [
                     {
-                        name: 'asset',
-                        type: 'address'
+                        name: "asset",
+                        type: "address"
                     },
                     {
-                        name: 'underwriter',
-                        type: 'address'
+                        name: "underwriter",
+                        type: "address"
                     },
                     {
-                        name: 'module',
-                        type: 'address'
+                        name: "module",
+                        type: "address"
                     },
                     {
-                        name: 'nonce',
-                        type: 'uint256'
+                        name: "nonce",
+                        type: "uint256"
                     },
                     {
-                        name: 'data',
-                        type: 'bytes'
+                        name: "data",
+                        type: "bytes"
                     },
                 ]
             },
             domain: {
-                name: 'ZeroController',
-                version: '1',
-                chainId: String(this.chainId) || '1',
+                name: "ZeroController",
+                version: "1",
+                chainId: String(this.chainId) || "1",
                 verifyingContract: this.contractAddress || ethers_1.ethers.constants.AddressZero
             },
             message: {
@@ -225,21 +169,8 @@ var MetaRequest = /** @class */ (function () {
                 nonce: this.pNonce,
                 data: this.data
             },
-            primaryType: 'MetaRequest'
+            primaryType: "MetaRequest"
         };
-    };
-    MetaRequest.prototype.toGatewayAddress = function (input) {
-        return __awaiter(this, void 0, void 0, function () {
-            var mint;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.submitToRenVM(false)];
-                    case 1:
-                        mint = _a.sent();
-                        return [2 /*return*/, mint.gatewayAddress];
-                }
-            });
-        });
     };
     MetaRequest.prototype.sign = function (signer, contractAddress) {
         return __awaiter(this, void 0, void 0, function () {
@@ -264,7 +195,7 @@ var MetaRequest = /** @class */ (function () {
                         console.error(e_1);
                         _b = this;
                         _d = (_c = provider).send;
-                        _e = ['eth_signTypedData_v4'];
+                        _e = ["eth_signTypedData_v4"];
                         return [4 /*yield*/, signer.getAddress()];
                     case 5: return [4 /*yield*/, _d.apply(_c, _e.concat([[
                                 _f.sent(),

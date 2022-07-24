@@ -64,6 +64,7 @@ var utils_1 = require("@0x/utils");
 require("@0x/types");
 var constants_1 = require("./config/constants");
 var chains_1 = require("@renproject/chains");
+require("@renproject/utils");
 var ren_1 = __importDefault(require("@renproject/ren"));
 require("@renproject/interfaces");
 var deployment_utils_1 = require("./deployment-utils");
@@ -95,10 +96,9 @@ var TransferRequest = /** @class */ (function () {
         this.chainId = params.chainId;
         this.contractAddress = params.contractAddress;
         this.signature = params.signature;
-        var networkName = "mainnet";
-        this._ren = new ren_1["default"](networkName, {
-            loadCompletedDeposits: true
-        });
+        var networkName = params.network || "mainnet";
+        this.bitcoin = new chains_1.Bitcoin({ network: networkName });
+        this._ren = new ren_1["default"](networkName).withChain(this.bitcoin);
         this._contractFn = "zeroCall";
         this._contractParams = [
             {
@@ -137,51 +137,63 @@ var TransferRequest = /** @class */ (function () {
     };
     TransferRequest.prototype.submitToRenVM = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var result, _a;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        if (this._mint)
-                            return [2 /*return*/, this._mint];
-                        _a = this;
-                        return [4 /*yield*/, this._ren.lockAndMint({
-                                asset: "BTC",
-                                from: (0, chains_1.Bitcoin)(),
-                                nonce: this.nonce,
-                                to: (0, deployment_utils_1.getProvider)(this).Contract({
-                                    sendTo: ethers_1.ethers.utils.getAddress(this.contractAddress),
-                                    contractFn: this._contractFn,
-                                    contractParams: this._contractParams
-                                })
-                            })];
-                    case 1:
-                        result = (_a._mint = _b.sent());
-                        return [2 /*return*/, result];
-                }
+            var eth, result;
+            return __generator(this, function (_a) {
+                if (this._mint)
+                    return [2 /*return*/, this._mint];
+                eth = (0, deployment_utils_1.getProvider)(this);
+                this._ren = this._ren.withChain(eth);
+                result = (this._mint = this._ren.gateway({
+                    asset: "BTC",
+                    from: this.bitcoin.GatewayAddress(),
+                    to: eth.Contract({
+                        to: this.contractAddress,
+                        method: this._contractFn,
+                        params: this._contractParams,
+                        withRenParams: true
+                    }),
+                    //@ts-ignore
+                    nonce: (0, bytes_1.arrayify)(this.nonce)
+                }));
+                return [2 /*return*/, result];
             });
         });
     };
     TransferRequest.prototype.waitForSignature = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var mint, deposit, _a, signature, nhash, phash, amount, result;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var mint, deposit, queryTx, _a, amount, signature, _b, nhash, phash, result;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0:
                         if (this._queryTxResult)
                             return [2 /*return*/, this._queryTxResult];
                         return [4 /*yield*/, this.submitToRenVM()];
                     case 1:
-                        mint = _b.sent();
-                        return [4 /*yield*/, new Promise(function (resolve, reject) {
-                                mint.on("deposit", resolve);
-                                mint.on("error", reject);
+                        mint = _c.sent();
+                        console.log("Gateway: ", mint.gatewayAddress);
+                        return [4 /*yield*/, new Promise(function (resolve) {
+                                mint.on("transaction", function (tx) {
+                                    console.log("transaction received");
+                                    resolve(tx);
+                                });
                             })];
                     case 2:
-                        deposit = _b.sent();
-                        return [4 /*yield*/, deposit.signed()];
+                        deposit = _c.sent();
+                        return [4 /*yield*/, deposit["in"].wait()];
                     case 3:
-                        _b.sent();
-                        _a = deposit._state.queryTxResult.out, signature = _a.signature, nhash = _a.nhash, phash = _a.phash, amount = _a.amount;
+                        _c.sent();
+                        return [4 /*yield*/, deposit.renVM.submit()];
+                    case 4:
+                        _c.sent();
+                        return [4 /*yield*/, deposit.renVM.wait()];
+                    case 5:
+                        _c.sent();
+                        console.log(deposit.queryTxResult);
+                        queryTx = deposit.queryTxResult.tx;
+                        _a = queryTx.out, amount = _a.amount, signature = _a.sig;
+                        _b = queryTx["in"], nhash = _b.nhash, phash = _b.phash;
+                        console.log((0, bytes_1.hexlify)(deposit.pHash), (0, bytes_1.hexlify)(phash));
+                        console.log((0, bytes_1.hexlify)(deposit.nHash), (0, bytes_1.hexlify)(nhash));
                         result = (this._queryTxResult = {
                             amount: String(amount),
                             nHash: (0, bytes_1.hexlify)(nhash),

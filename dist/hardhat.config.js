@@ -47,19 +47,21 @@ require("./tasks/multisig");
 require("./tasks/init-multisig");
 var ethers_1 = require("ethers");
 var fs_1 = require("fs");
-if (!process.env.CHAIN_ID && process.env.CHAIN === "ARBITRUM")
-    process.env.CHAIN_ID = "42161";
-if (!process.env.CHAIN_ID && process.env.CHAIN === "MATIC")
-    process.env.CHAIN_ID = "137";
-if (!process.env.CHAIN_ID && process.env.CHAIN === "ETHEREUM")
-    process.env.CHAIN_ID = "1";
-if (!process.env.CHAIN_ID && process.env.CHAIN === "AVALANCHE")
-    process.env.CHAIN_ID = "43114";
+var chains = {
+    ARBITRUM: 42161,
+    MATIC: 137,
+    ETHEREUM: 1,
+    AVALANCHE: 43114,
+    OPTIMISM: 10
+};
+if (!process.env.CHAIN_ID && typeof chains[process.env.CHAIN] === "number")
+    process.env.CHAIN_ID = chains[process.env.CHAIN];
 var RPC_ENDPOINTS = {
     ARBITRUM: "https://arb1.arbitrum.io/rpc",
     MATIC: "https://polygon-mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2",
     AVALANCHE: "https://api.avax.network/ext/bc/C/rpc",
-    ETHEREUM: "https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2"
+    ETHEREUM: "https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2",
+    OPTIMISM: "https://mainnet.optimism.io"
 };
 var deployParameters = require("./lib/fixtures");
 extendEnvironment(function (hre) { return __awaiter(void 0, void 0, void 0, function () {
@@ -158,6 +160,13 @@ module.exports = {
             live: true,
             saveDeployments: true,
             blockGasLimit: 700000
+        },
+        optimism: {
+            url: "https://mainnet.optimism.io",
+            accounts: accounts,
+            chainId: 10,
+            live: true,
+            saveDeployments: true
         }
     },
     gasReporter: {
