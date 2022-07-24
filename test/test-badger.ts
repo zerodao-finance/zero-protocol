@@ -11,7 +11,7 @@ var deploymentUtils = require("../dist/lib/deployment-utils");
 enableGlobalMockRuntime();
 
 const produceTestSignature = async () => {
-  return await (ethers.Wallet.createRandom()).signMessage('test');
+  return await ethers.Wallet.createRandom().signMessage("test");
 };
 UnderwriterTransferRequest.prototype.waitForSignature = async function () {
   await new Promise((resolve) => setTimeout(resolve, 500));
@@ -23,7 +23,7 @@ UnderwriterTransferRequest.prototype.waitForSignature = async function () {
     //@ts-ignore
     nHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     //@ts-ignore
-    signature: await produceTestSignature()
+    signature: await produceTestSignature(),
   };
 };
 
@@ -136,7 +136,11 @@ describe("BadgerBridgeZeroController", () => {
   before(async () => {
     await deployments.fixture();
     const [signer] = await hre.ethers.getSigners();
-    const artifact = await deployments.getArtifact(process.env.CHAIN === 'OPTIMISM' ? 'MockMintGatewayV3' : 'MockGatewayLogicV1');
+    const artifact = await deployments.getArtifact(
+      process.env.CHAIN === "OPTIMISM"
+        ? "MockMintGatewayV3"
+        : "MockGatewayLogicV1"
+    );
     //@ts-ignore
     await hre.network.provider.send("hardhat_setCode", [
       //@ts-ignore
@@ -147,7 +151,7 @@ describe("BadgerBridgeZeroController", () => {
       deployParameters[process.env.CHAIN].btcGateway,
       [
         "function mint(bytes32, uint256, bytes32, bytes) returns (uint256)",
-        "function mintFee() view returns (uint256)"
+        "function mintFee() view returns (uint256)",
       ],
       signer
     );
@@ -558,6 +562,15 @@ describe("BadgerBridgeZeroController", () => {
       from: await signer.getAddress(),
       args: [contractAddress, deployParameters[process.env.CHAIN].renBTC],
     });
+    const renbtc = new ethers.Contract(
+      deployParameters[process.env.CHAIN].renBTC,
+      ["function transfer(address, uint256)"],
+      signer
+    );
+    await renbtc.transfer(
+      Dummy.receipt.contractAddress,
+      utils.hexlify(utils.parseUnits("0.005", 8))
+    );
     const transferRequest = new UnderwriterTransferRequest({
       contractAddress,
       nonce: utils.hexlify(utils.randomBytes(32)),

@@ -50,6 +50,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
   address constant settPeak = 0x41671BA1abcbA387b9b2B752c205e22e916BE6e3;
   address constant ibbtc = 0xc4E15973E6fF2A35cC804c2CF9D2a1b817a8b40F;
   uint256 public governanceFee;
+  uint256 constant gasPrice = 26500000000;
   bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
   uint256 constant GAS_COST = uint256(124e4);
   uint256 constant IBBTC_GAS_COST = uint256(7e5);
@@ -287,7 +288,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
   }
 
   function computeRenBTCGasFee(uint256 gasCost, uint256 gasPrice) internal view returns (uint256 result) {
-    result = gasCost.mul(tx.gasprice).mul(renbtcForOneETHPrice).div(uint256(1 ether));
+    result = gasCost.mul(gasPrice).mul(renbtcForOneETHPrice).div(uint256(1 ether));
   }
 
   function deductMintFee(uint256 amountIn, uint256 multiplier) internal view returns (uint256 amount) {
@@ -311,9 +312,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     uint256 _fee,
     uint256 multiplier
   ) internal view returns (uint256 amount) {
-    amount = computeRenBTCGasFee(GAS_COST.add(keeperReward.div(tx.gasprice)), tx.gasprice).add(
-      applyRatio(amountIn, _fee)
-    );
+    amount = computeRenBTCGasFee(GAS_COST.add(keeperReward.div(gasPrice)), gasPrice).add(applyRatio(amountIn, _fee));
   }
 
   function applyIBBTCFee(
@@ -321,7 +320,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     uint256 _fee,
     uint256 multiplier
   ) internal view returns (uint256 amount) {
-    amount = computeRenBTCGasFee(IBBTC_GAS_COST.add(keeperReward.div(tx.gasprice)), tx.gasprice).add(
+    amount = computeRenBTCGasFee(IBBTC_GAS_COST.add(keeperReward.div(gasPrice)), gasPrice).add(
       applyRatio(amountIn, _fee)
     );
   }
@@ -415,7 +414,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     {
       tx.origin.transfer(
         Math.min(
-          _gasBefore.sub(gasleft()).add(REPAY_GAS_DIFF).add(params.gasDiff).mul(tx.gasprice).add(keeperReward),
+          _gasBefore.sub(gasleft()).add(REPAY_GAS_DIFF).add(params.gasDiff).mul(gasPrice).add(keeperReward),
           address(this).balance
         )
       );
@@ -561,7 +560,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     {
       tx.origin.transfer(
         Math.min(
-          params.gasBefore.sub(gasleft()).add(BURN_GAS_DIFF).add(params.gasDiff).mul(tx.gasprice).add(keeperReward),
+          params.gasBefore.sub(gasleft()).add(BURN_GAS_DIFF).add(params.gasDiff).mul(gasPrice).add(keeperReward),
           address(this).balance
         )
       );

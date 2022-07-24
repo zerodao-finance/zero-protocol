@@ -71,10 +71,13 @@ module.exports = async ({ getNamedAccounts }) => {
     getControllerName(),
     {}
   );
-  const zeroController = await upgrades.deployProxy(zeroControllerFactory, [
-    deployer,
-    deployer,
-  ]);
+  const zeroController = await upgrades.deployProxy(
+    zeroControllerFactory,
+    [deployer, deployer],
+    {
+      unsafeAllow: ["delegatecall"],
+    }
+  );
   const zeroControllerArtifact = await deployments.getArtifact(
     getControllerName()
   );
