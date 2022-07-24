@@ -23,9 +23,7 @@ contract DummyBurnCaller {
     (uint8 v, bytes32 r, bytes32 s) = SplitSignatureLib.splitSignature(signature);
     uint256 nonce = IERC2612Permit(asset).nonces(from);
     IERC2612Permit(asset).permit(from, address(this), nonce, deadline, true, v, r, s);
-    (bool success, bytes memory data) = controller.call(
-      abi.encodeWithSelector(BadgerBridgeZeroController.burnApproved.selector, from, asset, amount, 1, destination)
-    );
-    require(success, "failing");
+    address payable _controller = address(uint160(controller));
+    BadgerBridgeZeroController(_controller).burnApproved(from, asset, amount, 1, destination);
   }
 }
