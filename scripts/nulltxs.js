@@ -7,21 +7,23 @@ const getGasPrice = createGetGasPrice();
 const hre = require('hardhat');
 const { BaseProvider } = hre.ethers.providers;
 
+/*
 BaseProvider.prototype.getGasPrice = async () => {
   const p = await getGasPrice();
-  return p.mul(20);
+  return p.mul(200);
 };
+*/
 
 const main = async () => {
   // const [ signer ] = await ethers.getSigners();
-  const provider = new ethers.providers.InfuraProvider('mainnet');
+  const [ { provider }  ] = await hre.ethers.getSigners();
   const signer = await new ethers.Wallet(process.env.WALLET, provider)
   console.log(signer.address)
   const tx = await signer.sendTransaction({
     value: '0x0',
     to: hre.ethers.constants.AddressZero,
     gasLimit: 2000000,
-    nonce: 53
+    nonce: 0
   });
   console.log(tx);
   console.log('sent tx, waiting');
