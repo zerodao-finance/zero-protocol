@@ -91,11 +91,12 @@ export const getProvider: ({ contractAddress: string }) => EthereumBaseChain = (
   );
   const ethersProvider = getVanillaProvider(transferRequest);
   const chain_key = CONTROLLER_DEPLOYMENTS[checkSummedContractAddr];
-  if (chain_key == "localhost")
+  if (chain_key == "localhost") {
     return new RENVM_PROVIDERS.Ethereum({
       network: "mainnet",
       provider: ethersProvider,
     });
+  }
   return new RENVM_PROVIDERS[chain_key]({
     provider: ethersProvider,
     network: "mainnet",

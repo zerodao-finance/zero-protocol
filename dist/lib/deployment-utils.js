@@ -61,11 +61,12 @@ var getProvider = function (transferRequest) {
     var checkSummedContractAddr = ethers_1.ethers.utils.getAddress(transferRequest.contractAddress);
     var ethersProvider = (0, exports.getVanillaProvider)(transferRequest);
     var chain_key = exports.CONTROLLER_DEPLOYMENTS[checkSummedContractAddr];
-    if (chain_key == "localhost")
+    if (chain_key == "localhost") {
         return new exports.RENVM_PROVIDERS.Ethereum({
             network: "mainnet",
             provider: ethersProvider
         });
+    }
     return new exports.RENVM_PROVIDERS[chain_key]({
         provider: ethersProvider,
         network: "mainnet"

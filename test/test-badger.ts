@@ -9,6 +9,10 @@ var deployParameters = require("../lib/fixtures");
 var deploymentUtils = require("../dist/lib/deployment-utils");
 
 enableGlobalMockRuntime();
+
+const produceTestSignature = async () => {
+  return await (ethers.Wallet.createRandom()).signMessage('test');
+};
 UnderwriterTransferRequest.prototype.waitForSignature = async function () {
   await new Promise((resolve) => setTimeout(resolve, 500));
   return {
@@ -19,7 +23,7 @@ UnderwriterTransferRequest.prototype.waitForSignature = async function () {
     //@ts-ignore
     nHash: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
     //@ts-ignore
-    signature: ethers.utils.hexlify(ethers.utils.randomBytes(65)),
+    signature: await produceTestSignature()
   };
 };
 
@@ -37,6 +41,8 @@ const getContractName = () => {
       return "BadgerBridgeZeroControllerArb";
     case "AVALANCHE":
       return "BadgerBridgeZeroControllerAvax";
+    case "OPTIMISM":
+      return "BadgerBridgeZeroControllerOptimism";
     default:
       return "BadgerBridgeZeroController";
   }
@@ -130,7 +136,7 @@ describe("BadgerBridgeZeroController", () => {
   before(async () => {
     await deployments.fixture();
     const [signer] = await hre.ethers.getSigners();
-    const artifact = await deployments.getArtifact("MockGatewayLogicV1");
+    const artifact = await deployments.getArtifact(process.env.CHAIN === 'OPTIMISM' ? 'MockMintGatewayV3' : 'MockGatewayLogicV1');
     //@ts-ignore
     await hre.network.provider.send("hardhat_setCode", [
       //@ts-ignore
@@ -141,7 +147,7 @@ describe("BadgerBridgeZeroController", () => {
       deployParameters[process.env.CHAIN].btcGateway,
       [
         "function mint(bytes32, uint256, bytes32, bytes) returns (uint256)",
-        "function mintFee() view returns (uint256)",
+        "function mintFee() view returns (uint256)"
       ],
       signer
     );
@@ -149,7 +155,7 @@ describe("BadgerBridgeZeroController", () => {
       utils.randomBytes(32),
       utils.parseUnits("50", 8),
       utils.randomBytes(32),
-      "0x"
+      await produceTestSignature()
     ); //mint renBTC to signer
     const renbtc = new hre.ethers.Contract(
       deployParameters[process.env.CHAIN].renBTC,

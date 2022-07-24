@@ -1,10 +1,12 @@
 const hre = require("hardhat");
 const { TEST_KEEPER_ADDRESS } = require("../lib/mock");
 const deployParameters = require("../lib/fixtures");
+/*
 const validate = require("@openzeppelin/upgrades-core/dist/validate/index");
 Object.defineProperty(validate, "assertUpgradeSafe", {
   value: () => {},
 });
+*/
 const { ethers, deployments, upgrades } = hre;
 const getControllerName = () => {
   switch (process.env.CHAIN) {
@@ -16,6 +18,8 @@ const getControllerName = () => {
       return "BadgerBridgeZeroController";
     case "AVALANCHE":
       return "BadgerBridgeZeroControllerAvax";
+    case "OPTIMISM":
+      return "BadgerBridgeZeroControllerOptimism";
     default:
       return "ZeroController";
   }

@@ -11,6 +11,8 @@ const getControllerName = () => {
       return "BadgerBridgeZeroControllerAvax";
     case "MATIC":
       return "BadgerBridgeZeroControllerMatic";
+    case "OPTIMISM":
+      return "BadgerBridgeZeroControllerOptimism";
     default:
       mixinGetGasPrice(ethers.providers.BaseProvider.prototype, "rapid");
       return "BadgerBridgeZeroController";

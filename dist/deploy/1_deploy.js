@@ -38,10 +38,12 @@ var _this = this;
 var hre = require("hardhat");
 var TEST_KEEPER_ADDRESS = require("../lib/mock").TEST_KEEPER_ADDRESS;
 var deployParameters = require("../lib/fixtures");
-var validate = require("@openzeppelin/upgrades-core/dist/validate/index");
+/*
+const validate = require("@openzeppelin/upgrades-core/dist/validate/index");
 Object.defineProperty(validate, "assertUpgradeSafe", {
-    value: function () { }
+  value: () => {},
 });
+*/
 var ethers = hre.ethers, deployments = hre.deployments, upgrades = hre.upgrades;
 var getControllerName = function () {
     switch (process.env.CHAIN) {
@@ -53,6 +55,8 @@ var getControllerName = function () {
             return "BadgerBridgeZeroController";
         case "AVALANCHE":
             return "BadgerBridgeZeroControllerAvax";
+        case "OPTIMISM":
+            return "BadgerBridgeZeroControllerOptimism";
         default:
             return "ZeroController";
     }

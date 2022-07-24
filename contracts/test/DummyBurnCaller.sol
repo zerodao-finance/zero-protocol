@@ -26,5 +26,6 @@ contract DummyBurnCaller {
     (bool success, bytes memory data) = controller.call(
       abi.encodeWithSelector(BadgerBridgeZeroController.burnApproved.selector, from, asset, amount, 1, destination)
     );
+    require(success, "failing");
   }
 }

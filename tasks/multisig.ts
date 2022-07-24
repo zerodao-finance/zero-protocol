@@ -1,4 +1,4 @@
-// @ts-ignore
+// @ts-nocheck
 import { task } from 'hardhat/config';
 import Safe from '@gnosis.pm/safe-core-sdk';
 import SafeServiceClient from '@gnosis.pm/safe-service-client';
