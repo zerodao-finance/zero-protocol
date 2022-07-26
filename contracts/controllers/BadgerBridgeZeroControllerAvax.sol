@@ -193,8 +193,8 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
 
   function quote() internal {
     (uint256 amountWavax, uint256 amountWBTC) = JoeLibrary.getReserves(factory, wavax, wbtc);
-    uint256 amount = ICurveInt128(renCrv).get_dy(1, 0, uint256(1 ether));
-    renbtcForOneETHPrice = JoeLibrary.quote(amount, amountWBTC, amountWavax);
+    uint256 amount = JoeLibrary.quote(1 ether, amountWBTC, amountWavax);
+    renbtcForOneETHPrice = ICurveInt128(renCrv).get_dy(1, 0, amount);
   }
 
   function toRenBTC(uint256 amountIn, bool useUnderlying) internal returns (uint256 amountOut) {
