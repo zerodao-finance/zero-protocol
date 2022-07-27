@@ -1,6 +1,8 @@
 "use strict";
 exports.__esModule = true;
+exports.Logger = void 0;
 var winston_1 = require("winston");
+exports.Logger = winston_1.Logger;
 require("./types");
 var createLogger = function (userType) {
     return (0, winston_1.createLogger)({
