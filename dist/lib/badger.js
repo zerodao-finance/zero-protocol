@@ -38,7 +38,29 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 var ethers = require("ethers");
 var fixtures = require("./fixtures");
 var Quotes = require("./quotes");
+var RenJS = require('@renproject/ren');
+var _a = require("@renproject/chains"), Bitcoin = _a.Bitcoin, Arbitrum = _a.Arbitrum, Avalanche = _a.Avalanche, Polygon = _a.Polygon, Ethereum = _a.Ethereum, Optimism = _a.Optimism;
+var RPC_ENDPOINTS = require('../dist/lib/deployment-utils').RPC_ENDPOINTS;
 var keeperReward = ethers.utils.parseEther("0.001");
+var getProvider = function (chainName) {
+    return new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chainName]);
+};
+var getChainName = function (chainId) {
+    switch (chainId) {
+        case "42161":
+            return "Arbitrum";
+        case "43114":
+            return "Avalanche";
+        case "137":
+            return "Polygon";
+        case "1":
+            return "Mainnet";
+        case "10":
+            return "Optimism";
+        default:
+            return "Unsupported Chain";
+    }
+};
 var applyRatio = function (amount, ratio) {
     return ethers.BigNumber.from(amount)
         .mul(ratio)
@@ -59,6 +81,13 @@ exports.makeCompute = function (CHAIN) {
                 return "420000";
         }
     })());
+    var bitcoin = new Bitcoin({ network: "mainnet" });
+    var arbitrum = new Arbitrum({ provider: getProvider('Arbitrum'), network: "mainnet" });
+    var avalanche = new Avalanche({ provider: getProvider('Avalanche'), network: "mainnet" });
+    var polygon = new Polygon({ provider: getProvider('Polygon'), network: "mainnet" });
+    var optimism = new Optimism({ provider: getProvider('Optimism'), network: "mainnet" });
+    var ethereum = new Ethereum({ provider: getProvider('Ethereum'), network: "mainnet" });
+    var renJS = new RenJS.RenJS("mainnet").withChains(bitcoin, arbitrum, avalanche, polygon, optimism, ethereum);
     var computeTransferOutput = function (_a) {
         var module = _a.module, amount = _a.amount;
         return __awaiter(void 0, void 0, void 0, function () {
@@ -179,7 +208,7 @@ exports.makeCompute = function (CHAIN) {
         });
     }); };
     var applyFee = function (amountIn, zeroFee, renVmFee) { return __awaiter(void 0, void 0, void 0, function () {
-        var gasPrice, gasFee, zeroProtocolFeeAmt, renVmFeeAmt, opFee, totalFees;
+        var gasPrice, gasFee, evmChain, renVmFees, renOutput, zeroProtocolFeeAmt, renVmFeeAmt, renVmBtcNetworkFee, opFee, totalFees;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, quotes.chain.provider.getGasPrice()];
@@ -188,17 +217,22 @@ exports.makeCompute = function (CHAIN) {
                     return [4 /*yield*/, computeRenBTCGasFee(GAS_COST.add(keeperReward.div(gasPrice)), gasPrice)];
                 case 2:
                     gasFee = _a.sent();
+                    evmChain = getChainName(CHAIN) == 'Mainnet' ? 'Ethereum' : getChainName(CHAIN);
+                    return [4 /*yield*/, renJS.getFees({
+                            asset: "BTC",
+                            from: zeroFee == mintFee ? "Bitcoin" : evmChain,
+                            to: zeroFee == burnFee ? "Bitcoin" : evmChain
+                        })];
+                case 3:
+                    renVmFees = _a.sent();
+                    renOutput = ethers.BigNumber.from(renVmFees.estimateOutput(amountIn.toString()).toFixed());
                     zeroProtocolFeeAmt = applyRatio(amountIn, zeroFee);
                     renVmFeeAmt = applyRatio(amountIn, renVmFee);
+                    renVmBtcNetworkFee = amountIn.sub(renOutput).sub(renVmFeeAmt);
                     opFee = zeroProtocolFeeAmt.add(renVmFeeAmt);
                     totalFees = gasFee.add(opFee);
-                    if (zeroFee == burnFee) {
-                        totalFees = totalFees.add(ethers.utils.parseUnits(".002", 8));
-                    }
-                    else if (zeroFee == mintFee) {
-                        totalFees = totalFees.add(ethers.utils.parseUnits("0.002", 8));
-                    }
-                    return [2 /*return*/, { gasFee: gasFee, zeroProtocolFeeAmt: zeroProtocolFeeAmt, renVmFeeAmt: renVmFeeAmt, opFee: opFee, totalFees: totalFees }];
+                    totalFees = totalFees.add(renVmBtcNetworkFee);
+                    return [2 /*return*/, { gasFee: gasFee, zeroProtocolFeeAmt: zeroProtocolFeeAmt, renVmFeeAmt: renVmFeeAmt, renVmBtcNetworkFee: renVmBtcNetworkFee, opFee: opFee, totalFees: totalFees }];
             }
         });
     }); };

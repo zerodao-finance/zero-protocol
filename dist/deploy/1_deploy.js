@@ -136,10 +136,9 @@ module.exports = function (_a) {
                     return [4 /*yield*/, hre.ethers.getContractFactory(getControllerName(), {})];
                 case 13:
                     zeroControllerFactory = _e.sent();
-                    return [4 /*yield*/, upgrades.deployProxy(zeroControllerFactory, [
-                            deployer,
-                            deployer,
-                        ])];
+                    return [4 /*yield*/, upgrades.deployProxy(zeroControllerFactory, [deployer, deployer], {
+                            unsafeAllow: ["delegatecall"]
+                        })];
                 case 14:
                     zeroController = _e.sent();
                     return [4 /*yield*/, deployments.getArtifact(getControllerName())];

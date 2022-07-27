@@ -67,6 +67,12 @@ var returnChainDetails = function (CHAINID, _provider) {
                 provider: provider("arbitrum"),
                 uniswapName: "ARBITRUM"
             };
+        case "10":
+            return {
+                name: "OPTIMISM",
+                provider: provider("optimism"),
+                uniswapName: "OPTIMISM"
+            };
         case "43114":
             return {
                 name: "AVALANCHE",
@@ -170,8 +176,11 @@ module.exports = function makeQuoter(CHAIN, provider) {
                     route = new Route([pair], UNISWAP.WETH[renBTC.chainId]);
                     renBTCForOneEth = route.midPrice.toSignificant(7);
                     return [2 /*return*/, ethers.utils.parseUnits(renBTCForOneEth, 8)];
-                case 4: return [4 /*yield*/, ETHtoRenBTC(ethers.utils.parseEther("1"))];
-                case 5: return [2 /*return*/, _a.sent()];
+                case 4:
+                    if (!(chain.name === "OPTIMISM")) return [3 /*break*/, 5];
+                    return [2 /*return*/, ethers.utils.parseUnits("0", 8)];
+                case 5: return [4 /*yield*/, ETHtoRenBTC(ethers.utils.parseEther("1"))];
+                case 6: return [2 /*return*/, _a.sent()];
             }
         });
     }); };
