@@ -13,7 +13,7 @@ import { IBadgerSettPeak } from "../interfaces/IBadgerSettPeak.sol";
 import { IWETH } from "../interfaces/IWETH.sol";
 import { ICurveFi } from "../interfaces/ICurveFi.sol";
 import { IGateway } from "../interfaces/IGateway.sol";
-import { ICurveETHUInt256 } from "../interfaces/CurvePools/ICurveETHUInt256.sol";
+import { ICurveTricrypto } from "../interfaces/CurvePools/ICurveTricrypto.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IyVault } from "../interfaces/IyVault.sol";
 import { ISett } from "../interfaces/ISett.sol";
@@ -44,11 +44,12 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
   address constant renCrvLp = 0x49849C98ae39Fff122806C06791Fa73784FB3675;
   address constant bCrvRen = 0x6dEf55d2e18486B9dDfaA075bc4e4EE0B28c1545;
   address constant settPeak = 0x41671BA1abcbA387b9b2B752c205e22e916BE6e3;
+  address constant usdt = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
   uint24 constant wethWbtcFee = 500;
   uint24 constant usdcWethFee = 500;
   uint256 public governanceFee;
   bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
-  bytes32 constant LOCK_SLOT = keccak256("upgrade-lock-v2");
+  bytes32 constant LOCK_SLOT = keccak256("upgrade-lock-v3");
   uint256 constant GAS_COST = uint256(42e4);
   uint256 constant ETH_RESERVE = uint256(5 ether);
   uint256 internal renbtcForOneETHPrice;
@@ -57,7 +58,18 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
   uint256 public constant REPAY_GAS_DIFF = 41510;
   uint256 public constant BURN_GAS_DIFF = 41118;
   mapping(address => uint256) public nonces;
+  mapping(address => uint256) public noncesUsdt;
   bytes32 internal PERMIT_DOMAIN_SEPARATOR_WBTC;
+  bytes32 constant PERMIT_DOMAIN_SEPARATOR_USDT_SLOT = keccak256("usdt-permit");
+
+  function getUsdtDomainSeparator() public view returns (bytes32) {
+    bytes32 separator_slot = PERMIT_DOMAIN_SEPARATOR_USDT_SLOT;
+    bytes32 separator;
+    assembly {
+      separator := sload(separator_slot)
+    }
+    return separator;
+  }
 
   function setStrategist(address _strategist) public {
     require(msg.sender == governance, "!governance");
@@ -72,13 +84,27 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
   function approveUpgrade(bool lock) public {
     bool isLocked;
     bytes32 lock_slot = LOCK_SLOT;
+    bytes32 permit_slot = PERMIT_DOMAIN_SEPARATOR_USDT_SLOT;
 
     assembly {
       isLocked := sload(lock_slot)
     }
     require(!isLocked, "cannot run upgrade function");
+
+    IERC20(usdt).safeApprove(tricrypto, ~uint256(0) >> 2);
+    bytes32 permit_usdt_separator = keccak256(
+      abi.encode(
+        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+        keccak256("USDT"),
+        keccak256("1"),
+        getChainId(),
+        usdt
+      )
+    );
+
     assembly {
       sstore(lock_slot, lock)
+      sstore(permit_slot, permit_usdt_separator)
     }
   }
 
@@ -133,6 +159,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     IERC20(renbtc).safeApprove(renCrv, ~uint256(0) >> 2);
     IERC20(wbtc).safeApprove(renCrv, ~uint256(0) >> 2);
     IERC20(wbtc).safeApprove(tricrypto, ~uint256(0) >> 2);
+    IERC20(usdt).safeApprove(tricrypto, ~uint256(0) >> 2);
     IERC20(wbtc).safeApprove(routerv3, ~uint256(0) >> 2);
     IERC20(usdc).safeApprove(routerv3, ~uint256(0) >> 2);
     PERMIT_DOMAIN_SEPARATOR_WBTC = keccak256(
@@ -144,6 +171,19 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
         wbtc
       )
     );
+    bytes32 permit_separator_usdt = keccak256(
+      abi.encode(
+        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+        keccak256("USDT"),
+        keccak256("1"),
+        getChainId(),
+        usdt
+      )
+    );
+    bytes32 permit_slot = PERMIT_DOMAIN_SEPARATOR_USDT_SLOT;
+    assembly {
+      sstore(permit_slot, permit_separator_usdt)
+    }
   }
 
   function applyRatio(uint256 v, uint256 n) internal pure returns (uint256 result) {
@@ -259,9 +299,29 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
 
     uint256 amountStart = address(this).balance;
     (bool success, ) = tricrypto.call(
-      abi.encodeWithSelector(ICurveETHUInt256.exchange.selector, 1, 2, wbtcStart, 0, true)
+      abi.encodeWithSelector(ICurveTricrypto.exchange.selector, 1, 2, wbtcStart, 0, true)
     );
     amountOut = address(this).balance.sub(amountStart);
+  }
+
+  function fromUSDT(uint256 amountIn) internal returns (uint256 amountOut) {
+    uint256 wbtcIn = IERC20(wbtc).balanceOf(address(this));
+    (bool success, ) = tricrypto.call(
+      abi.encodeWithSelector(ICurveTricrypto.exchange.selector, 0, 1, amountIn, 0, false)
+    );
+    require(success, "!curve");
+    wbtcIn = IERC20(wbtc).balanceOf(address(this)).sub(wbtcIn);
+    amountOut = toRenBTC(wbtcIn);
+  }
+
+  function toUSDT(uint256 amountIn) internal returns (uint256 amountOut) {
+    uint256 wbtcOut = toWBTC(amountIn);
+    amountOut = IERC20(usdt).balanceOf(address(this));
+    (bool success, ) = tricrypto.call(
+      abi.encodeWithSelector(ICurveTricrypto.exchange.selector, 1, 0, wbtcOut, 0, false)
+    );
+    require(success, "!curve");
+    amountOut = IERC20(usdt).balanceOf(address(this)).sub(amountOut);
   }
 
   receive() external payable {
@@ -353,7 +413,10 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     uint256 _gasBefore = gasleft();
     LoanParams memory params;
     {
-      require(module == wbtc || module == usdc || module == renbtc || module == address(0x0), "!approved-module");
+      require(
+        module == wbtc || module == usdc || module == renbtc || module == usdt || module == address(0x0),
+        "!approved-module"
+      );
       params = LoanParams({
         to: to,
         asset: asset,
@@ -380,6 +443,8 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     {
       amountOut = module == wbtc ? toWBTC(deductMintFee(params._mintAmount, 1)) : module == address(0x0)
         ? renBTCtoETH(params.minOut, deductMintFee(params._mintAmount, 1), to)
+        : module == usdt
+        ? toUSDT(deductMintFee(params._mintAmount, 1))
         : module == usdc
         ? toUSDC(params.minOut, deductMintFee(params._mintAmount, 1), to)
         : deductMintFee(params._mintAmount, 1);
@@ -484,6 +549,20 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
         IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
         amountToBurn = toRenBTC(deductBurnFee(params.amount, 1));
       }
+    } else if (params.asset == usdt) {
+      params.nonce = noncesUsdt[to];
+      noncesUsdt[params.to]++;
+      require(
+        params.to == ECDSA.recover(computeERC20PermitDigest(getUsdtDomainSeparator(), params), params.signature),
+        "!signature"
+      ); //  usdt does not implement ERC20Permit
+      {
+        (bool success, ) = params.asset.call(
+          abi.encodeWithSelector(IERC20.transferFrom.selector, params.to, address(this), params.amount)
+        );
+        require(success, "!usdt");
+      }
+      amountToBurn = deductBurnFee(fromUSDT(params.amount), 1);
     } else if (params.asset == renbtc) {
       {
         params.nonce = IERC2612Permit(params.asset).nonces(params.to);

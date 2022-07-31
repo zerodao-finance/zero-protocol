@@ -67,6 +67,7 @@ module.exports = async ({ getNamedAccounts }) => {
   console.log("RUNNING");
 
   console.log("deploying controller");
+  console.log(getControllerName());
   const zeroControllerFactory = await hre.ethers.getContractFactory(
     getControllerName(),
     {}
