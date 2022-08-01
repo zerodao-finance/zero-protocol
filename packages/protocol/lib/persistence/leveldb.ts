@@ -72,7 +72,7 @@ export class LevelDBPersistenceAdapter implements PersistenceAdapter<LocalStorag
 	backend: any;
 	constructor() {
 		let db = process.env.ZERO_PERSISTENCE_DB;
-		if (db === '::memory') this.backend = levelup(memdown());
+		if (db === '::memory') this.backend = levelup(memdown("./"));
 		else this.backend = level(db);
 	}
 	async length() {

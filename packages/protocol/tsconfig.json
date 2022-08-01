@@ -17,13 +17,9 @@
     "types": ["@nomiclabs/hardhat-ethers", "@nomiclabs/hardhat-waffle"]
   },
   "include": [
-    "./deployments/**/*.json",
-    "./deploy",
     "./lib",
     "./lib/**/*",
-    "./test"
   ],
   "exclude": ["node_modules"],
   "typeAcquisition": { "enable": true },
-  "files": ["./hardhat.config.ts"]
 }

@@ -16,7 +16,7 @@ import { EventEmitter } from 'events';
 import { utils } from 'ethers';
 import { deepCopy } from '@ethersproject/properties';
 import { getProvider } from '../deployment-utils';
-import ZeroControllerDeploy from '../../deployments/arbitrum/ZeroController.json';
+import ZeroControllerDeploy from '@zerodao/contracts/deployments/arbitrum/ZeroController.json';
 
 const listeners = {
 	burn: ['burn'],
