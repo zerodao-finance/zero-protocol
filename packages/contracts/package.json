@@ -72,7 +72,7 @@
     "solhint": "^3.3.7",
     "solhint-plugin-prettier": "^0.0.5",
     "stack-packer": "^1.1.6",
-    "ts-node": "^10.1.0",
+    "ts-node": "^10.9.1",
     "typechain": "^8.1.0",
     "typescript": "4.4.4",
     "yargs": "^17.3.1"

@@ -9,6 +9,7 @@ import "hardhat-preprocessor";
 import { readFileSync } from "fs";
 import { ethers } from "ethers";
 import { randomBytes } from "crypto";
+import * as deployParameters from "@zerodao/protocol/lib/fixtures";
 require("dotenv").config();
 require("./tasks/multisig");
 require("./tasks/init-multisig");
@@ -34,7 +35,6 @@ const RPC_ENDPOINTS = {
   ETHEREUM: "https://mainnet.infura.io/v3/816df2901a454b18b7df259e61f92cd2",
 };
 
-var deployParameters = require("./lib/fixtures");
 declare var extendEnvironment;
 extendEnvironment(async (hre) => {
   if (process.argv.slice(1).includes("node")) {
