@@ -12,6 +12,9 @@ remappings = [
   "@rari-capital/solmate=../../node_modules/@rari-capital/solmate",
   "@gnosis.pm/safe-contracts=../../node_modules/@gnosis.pm/safe-contracts",
 ]
+allow_paths = [
+  "../../"
+]
 via_ir = true
 optimizer = true
 optimizer_runs = 50000
