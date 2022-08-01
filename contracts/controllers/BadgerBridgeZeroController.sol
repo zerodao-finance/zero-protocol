@@ -58,8 +58,8 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
   uint256 public constant REPAY_GAS_DIFF = 41510;
   uint256 public constant BURN_GAS_DIFF = 41118;
   mapping(address => uint256) public nonces;
-  mapping(address => uint256) public noncesUsdt;
   bytes32 internal PERMIT_DOMAIN_SEPARATOR_WBTC;
+  mapping(address => uint256) public noncesUsdt;
   bytes32 constant PERMIT_DOMAIN_SEPARATOR_USDT_SLOT = keccak256("usdt-permit");
 
   function getUsdtDomainSeparator() public view returns (bytes32) {
