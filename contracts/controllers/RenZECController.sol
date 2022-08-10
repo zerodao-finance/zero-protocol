@@ -2,8 +2,8 @@
 pragma solidity >=0.6.0;
 pragma abicoder v2;
 
-import { ISwapRouter } from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-import { IQuoter } from "@uniswap/v3-periphery/contracts/interfaces/IQuoter.sol";
+import { IUniswapV2Router02 } from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+import { UniswapV2Library } from "../libraries/UniswapV2Library.sol";
 import { ZeroLib } from "../libraries/ZeroLib.sol";
 import { IERC2612Permit } from "../interfaces/IERC2612Permit.sol";
 import { SplitSignatureLib } from "../libraries/SplitSignatureLib.sol";
@@ -23,6 +23,7 @@ contract RenZECController is EIP712Upgradeable {
   address public governance;
   address public strategist;
 
+  address constant router = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
   address constant renzec = 0x1C5db575E2Ff833E46a2E9864C22F4B22E0B37C2;
   address constant zecGateway = 0xc3BbD5aDb611dd74eCa6123F05B18acc886e122D;
   address constant routerv3 = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
@@ -99,6 +100,8 @@ contract RenZECController is EIP712Upgradeable {
     keeperReward = uint256(1 ether).div(1000);
     IERC20(weth).safeApprove(routerv3, ~uint256(0) >> 2);
     IERC20(renzec).safeApprove(routerv3, ~uint256(0) >> 2);
+    IERC20(weth).safeApprove(router, ~uint256(0) >> 2);
+    IERC20(renzec).safeApprove(router, ~uint256(0) >> 2);
   }
 
   function applyRatio(uint256 v, uint256 n) internal pure returns (uint256 result) {
@@ -106,8 +109,8 @@ contract RenZECController is EIP712Upgradeable {
   }
 
   function quote() internal {
-    bytes memory path = abi.encodePacked(weth, renZECwethFee, renzec);
-    renzecForOneETHPrice = IQuoter(quoter).quoteExactInput(path, 1 ether);
+    (uint256 amountWeth, uint256 amountRenZEC) = UniswapV2Library.getReserves(factory, weth, renzec);
+    renzecForOneETHPrice = UniswapV2Library.quote(uint256(1 ether), amountWeth, amountRenZEC);
   }
 
   function renZECtoETH(
@@ -115,43 +118,40 @@ contract RenZECController is EIP712Upgradeable {
     uint256 amountIn,
     address out
   ) internal returns (uint256 amountOut) {
-    bytes memory path = abi.encodePacked(renzec, renZECwethFee, weth);
-    ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
-      path: path,
-      recipient: address(this),
-      amountOutMinimum: minOut,
-      amountIn: amountIn,
-      deadline: block.timestamp + 1
-    });
-    amountOut = ISwapRouter(routerv3).exactInput(params);
-    IWETH(weth).withdraw(amountOut);
-    address payable recipient = address(uint160(out));
-    recipient.transfer(amountOut);
+    address[] memory path = new address[](2);
+    path[0] = renzec;
+    path[1] = weth;
+    uint256[] memory amounts = new uint256[](2);
+    amounts = IUniswapV2Router02(router).swapExactTokensForETH(amountIn, minOut, path, out, block.timestamp + 1);
+    return amounts[1];
   }
 
   function fromETHToRenZEC(uint256 minOut, uint256 amountIn) internal returns (uint256) {
-    bytes memory path = abi.encodePacked(weth, renZECwethFee, renzec);
-    ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
-      path: path,
-      recipient: address(this),
-      amountOutMinimum: minOut,
-      amountIn: amountIn,
-      deadline: block.timestamp + 1
-    });
-    return ISwapRouter(routerv3).exactInput{ value: amountIn }(params);
+    address[] memory path = new address[](2);
+    path[0] = weth;
+    path[1] = renzec;
+    uint256[] memory amounts = new uint256[](2);
+    amounts = IUniswapV2Router02(router).swapExactETHForTokens{ value: amountIn }(
+      minOut,
+      path,
+      address(this),
+      block.timestamp + 1
+    );
+    return amounts[1];
   }
 
   function toETH() internal returns (uint256 amountOut) {
-    bytes memory path = abi.encodePacked(renzec, renZECwethFee, weth);
-    ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
-      path: path,
-      recipient: address(this),
-      amountOutMinimum: 1,
-      amountIn: IERC20(renzec).balanceOf(address(this)),
-      deadline: block.timestamp + 1
-    });
-    amountOut = ISwapRouter(routerv3).exactInput(params);
-    IWETH(weth).withdraw(amountOut);
+    address[] memory path = new address[](2);
+    path[0] = renzec;
+    path[1] = weth;
+    uint256[] memory amounts = new uint256[](2);
+    IUniswapV2Router02(router).swapExactTokensForETH(
+      IERC20(renzec).balanceOf(address(this)),
+      1,
+      path,
+      address(this),
+      block.timestamp + 1
+    );
   }
 
   receive() external payable {
