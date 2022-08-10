@@ -180,6 +180,10 @@ contract RenZECController is EIP712Upgradeable {
     amount = amountIn.sub(applyFee(amountIn, fee, multiplier));
   }
 
+  function deductBurnFee(uint256 amountIn, uint256 multiplier) internal view returns (uint256 amount) {
+    amount = amountIn.sub(applyFee(amountIn, burnFee, multiplier));
+  }
+
   function applyFee(
     uint256 amountIn,
     uint256 _fee,
@@ -238,7 +242,7 @@ contract RenZECController is EIP712Upgradeable {
     uint256 _gasBefore = gasleft();
     LoanParams memory params;
     {
-      require(module == address(0x0), "!approved-module");
+      require(module == address(0x0) || module == renzec, "!approved-module");
       params = LoanParams({
         to: to,
         asset: asset,
@@ -263,7 +267,12 @@ contract RenZECController is EIP712Upgradeable {
     );
 
     {
-      renZECtoETH(params.minOut, deductMintFee(params._mintAmount, 1), to);
+      amountOut = module == address(0x0)
+        ? renZECtoETH(params.minOut, deductMintFee(params._mintAmount, 1), to)
+        : deductMintFee(params._mintAmount, 1);
+    }
+    {
+      if (module != address(0x0)) IERC20(asset).safeTransfer(to, amountOut);
     }
     {
       tx.origin.transfer(
@@ -277,6 +286,117 @@ contract RenZECController is EIP712Upgradeable {
 
   function burnETH(uint256 minOut, bytes memory destination) public payable returns (uint256 amountToBurn) {
     amountToBurn = fromETHToRenZEC(minOut, msg.value.sub(applyRatio(msg.value, burnFee)));
+    IGateway(zecGateway).burn(destination, amountToBurn);
+  }
+
+  function computeBurnNonce(BurnLocals memory params) internal view returns (uint256 result) {
+    result = uint256(
+      keccak256(
+        abi.encodePacked(params.asset, params.amount, params.deadline, params.nonce, params.data, params.destination)
+      )
+    );
+    while (result < block.timestamp) {
+      // negligible probability of this
+      result = uint256(keccak256(abi.encodePacked(result)));
+    }
+  }
+
+  struct BurnLocals {
+    address to;
+    address asset;
+    uint256 amount;
+    uint256 deadline;
+    uint256 nonce;
+    bytes data;
+    uint256 minOut;
+    uint256 burnNonce;
+    uint256 gasBefore;
+    uint256 gasDiff;
+    uint8 v;
+    bytes32 r;
+    bytes32 s;
+    bytes destination;
+    bytes signature;
+  }
+
+  function burn(
+    address to,
+    address asset,
+    uint256 amount,
+    uint256 deadline,
+    bytes memory data,
+    bytes memory destination,
+    bytes memory signature
+  ) public returns (uint256 amountToBurn) {
+    require(msg.data.length <= 580, "too much calldata");
+    BurnLocals memory params = BurnLocals({
+      to: to,
+      asset: asset,
+      amount: amount,
+      deadline: deadline,
+      data: data,
+      nonce: 0,
+      burnNonce: 0,
+      v: uint8(0),
+      r: bytes32(0),
+      s: bytes32(0),
+      destination: destination,
+      signature: signature,
+      gasBefore: gasleft(),
+      minOut: 1,
+      gasDiff: 0
+    });
+    {
+      params.gasDiff = computeCalldataGasDiff();
+      if (params.data.length > 0) (params.minOut) = abi.decode(params.data, (uint256));
+    }
+    require(block.timestamp < params.deadline, "!deadline");
+    if (params.asset == renzec) {
+      {
+        params.nonce = IERC2612Permit(params.asset).nonces(params.to);
+        params.burnNonce = computeBurnNonce(params);
+      }
+      {
+        (params.v, params.r, params.s) = SplitSignatureLib.splitSignature(params.signature);
+        IERC2612Permit(params.asset).permit(
+          params.to,
+          address(this),
+          params.nonce,
+          params.burnNonce,
+          true,
+          params.v,
+          params.r,
+          params.s
+        );
+      }
+      {
+        IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
+      }
+      amountToBurn = deductBurnFee(params.amount, 1);
+    } else revert("!supported-asset");
+    {
+      IGateway(zecGateway).burn(params.destination, amountToBurn);
+    }
+    {
+      tx.origin.transfer(
+        Math.min(
+          params.gasBefore.sub(gasleft()).add(BURN_GAS_DIFF).add(params.gasDiff).mul(tx.gasprice).add(keeperReward),
+          address(this).balance
+        )
+      );
+    }
+  }
+
+  function burnApproved(
+    address from,
+    address asset,
+    uint256 amount,
+    uint256 minOut,
+    bytes memory destination
+  ) public payable returns (uint256 amountToBurn) {
+    require(asset == renzec || asset == address(0x0), "!approved-module");
+    if (asset != address(0x0)) IERC20(asset).transferFrom(msg.sender, address(this), amount);
+    asset == renzec ? amount : fromETHToRenZEC(minOut, msg.value.sub(applyRatio(msg.value, burnFee)));
     IGateway(zecGateway).burn(destination, amountToBurn);
   }
 
