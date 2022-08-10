@@ -29,6 +29,9 @@ import { EIP712_TYPES } from "./config/constants";
  * -> underwriter sends request to perform some operation on some contract somewhere
  * -> check if renBTC amount is debited correctly
  */
+
+const isZcashAddress = (hex) => Buffer.from(ethers.utils.hexlify(hex).substr(2), 'hex').toString('utf8').substr(0, 2) === 't1';
+
 export class BurnRequest {
   public amount: string;
   public underwriter: string;
