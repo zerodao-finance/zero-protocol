@@ -32,7 +32,7 @@ contract RenZECController is EIP712Upgradeable {
   uint24 constant renZECwethFee = 10000;
   uint256 public governanceFee;
   bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
-  uint256 constant GAS_COST = uint256(42e4);
+  uint256 constant GAS_COST = uint256(23e4);
   uint256 constant ETH_RESERVE = uint256(5 ether);
   uint256 internal renzecForOneETHPrice;
   uint256 internal burnFee;
