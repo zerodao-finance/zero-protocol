@@ -10,11 +10,32 @@ import { BigNumberish, ethers } from "ethers";
 import { signTypedDataUtils } from "@0x/utils";
 import { EIP712TypedData } from "@0x/types";
 import { EIP712_TYPES } from "./config/constants";
-import { Bitcoin } from "@renproject/chains";
+import { Zcash, Bitcoin } from "@renproject/chains";
 import { utils } from "@renproject/utils";
 import RenJS, { Gateway, GatewayTransaction } from "@renproject/ren";
 import { EthArgs } from "@renproject/interfaces";
 import { getProvider } from "./deployment-utils";
+
+import fixtures from './fixtures';
+
+const assetToRenVMChain = (assetName) => {
+  switch (assetName) {
+    case 'renBTC': return Bitcoin;
+    case 'renZEC': return Zcash;
+    default:
+      return Bitcoin;
+  }
+};
+
+const renVMChainToAssetName = (chain) => {
+  switch (chain) {
+    case Bitcoin:
+      return 'BTC';
+    case Zcash:
+      return 'ZEC';
+  }
+};
+
 
 export class ReleaseRequest {}
 
@@ -38,8 +59,14 @@ export class TransferRequest {
   public provider: any;
   public _mint: any;
   public requestType = "transfer";
-  private bitcoin: Bitcoin;
+  private network: string;
 
+  _getNetwork() {
+    return new (assetToRenVMChain(['renBTC', 'renZEC'].find((v) => Object.entries(fixtures).find(([key, value]) => key === v && ethers.utils.getAddress(value) === ethers.utils.getAddress(this.asset)))))({ network: this.network });
+  }
+  _getNetworkName() {
+    return renVMChainToAssetName(this._getNetwork().constructor);
+  }
   constructor(params: {
     module: string;
     to: string;
@@ -75,9 +102,8 @@ export class TransferRequest {
     this.chainId = params.chainId;
     this.contractAddress = params.contractAddress;
     this.signature = params.signature;
-    const networkName = params.network || "mainnet";
-    this.bitcoin = new Bitcoin({ network: networkName });
-    this._ren = new RenJS(networkName).withChain(this.bitcoin);
+    this.network = params.network || 'mainnet';
+    this._ren = new RenJS(this.network).withChain(this._getNetwork());
     this._contractFn = "zeroCall";
     this._contractParams = [
       {
@@ -135,8 +161,8 @@ export class TransferRequest {
     const eth = getProvider(this);
     this._ren = this._ren.withChain(eth);
     const result = (this._mint = this._ren.gateway({
-      asset: "BTC",
-      from: this.bitcoin.GatewayAddress(),
+      asset: this._getNetworkName(),
+      from: this._getNetwork().GatewayAddress(),
       to: eth.Contract({
         to: this.contractAddress,
         method: this._contractFn,
