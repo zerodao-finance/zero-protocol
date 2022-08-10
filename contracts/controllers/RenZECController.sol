@@ -28,6 +28,7 @@ contract RenZECController is EIP712Upgradeable {
   address constant routerv3 = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
   address constant factory = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
   address constant weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+  address constant quoter = 0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6;
   uint24 constant renZECwethFee = 1000;
   uint256 public governanceFee;
   bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
