@@ -107,7 +107,7 @@ contract RenZECController is EIP712Upgradeable {
 
   function quote() internal {
     bytes memory path = abi.encodePacked(weth, renZECwethFee, renzec);
-    renzecForOneETHPrice = IQuoter.quoteExactInput(path, 1 ether);
+    renzecForOneETHPrice = IQuoter(quoter).quoteExactInput(path, 1 ether);
   }
 
   function renZECtoETH(
