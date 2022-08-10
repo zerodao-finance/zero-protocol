@@ -68,7 +68,7 @@ describe("ZEC Controller", () => {
     //@ts-ignore
     await hre.network.provider.send("hardhat_setCode", [
       //@ts-ignore
-      utils.getAddress(deployParameters[process.env.CHAIN].btcGateway),
+      utils.getAddress(deployParameters[process.env.CHAIN].zecGateway),
       artifact.deployedBytecode,
     ]);
     const gateway = new hre.ethers.Contract(
@@ -95,7 +95,7 @@ describe("ZEC Controller", () => {
       "0xcf7346a5e41b0821b80d5b3fdc385eeb6dc59f44",
     ]);
   });
-  it("should do a transfer", async () => {
+  it("should do a transfer of renzec", async () => {
     const contractAddress = (await getController()).address;
     deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
     const [signer] = await hre.ethers.getSigners();
@@ -119,8 +119,7 @@ describe("ZEC Controller", () => {
     const tx = await transferRequest.repay(signer);
     console.log("Gas Used:", (await tx.wait()).gasUsed.toString());
   });
-
-  it("should do a renbtc burn", async () => {
+  it("should do a renzec burn", async () => {
     const contractAddress = (await getController()).address;
     deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
     const [signer] = await hre.ethers.getSigners();
@@ -213,7 +212,7 @@ describe("ZEC Controller", () => {
       nonce: utils.hexlify(utils.randomBytes(32)),
       to: await signer.getAddress(),
       pNonce: utils.hexlify(utils.randomBytes(32)),
-      module: deployParameters[process.env.CHAIN].renBTC,
+      module: deployParameters[process.env.CHAIN].renZEC,
       amount: utils.hexlify(utils.parseUnits("0.005", 8)),
       asset: deployParameters[process.env.CHAIN].WBTC,
       chainId,
@@ -227,8 +226,8 @@ describe("ZEC Controller", () => {
     const burnRequest = new UnderwriterBurnRequest({
       contractAddress: Dummy.receipt.contractAddress,
       owner: await signer.getAddress(),
-      amount: utils.hexlify(utils.parseUnits("0.005", 8)),
-      asset: deployParameters[process.env.CHAIN].renBTC,
+      amount: utils.hexlify(utils.parseUnits("0.1", 8)),
+      asset: deployParameters[process.env.CHAIN].renZEC,
       chainId,
       underwriter: contractAddress,
       deadline: Math.floor((+new Date() + 1000 * 60 * 60 * 24) / 1000),

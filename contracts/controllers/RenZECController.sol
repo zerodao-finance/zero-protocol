@@ -29,7 +29,7 @@ contract RenZECController is EIP712Upgradeable {
   address constant factory = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
   address constant weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
   address constant quoter = 0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6;
-  uint24 constant renZECwethFee = 1000;
+  uint24 constant renZECwethFee = 10000;
   uint256 public governanceFee;
   bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
   uint256 constant GAS_COST = uint256(42e4);
@@ -138,7 +138,7 @@ contract RenZECController is EIP712Upgradeable {
       amountIn: amountIn,
       deadline: block.timestamp + 1
     });
-    return ISwapRouter(routerv3).exactInput(params);
+    return ISwapRouter(routerv3).exactInput{ value: amountIn }(params);
   }
 
   function toETH() internal returns (uint256 amountOut) {
@@ -272,7 +272,7 @@ contract RenZECController is EIP712Upgradeable {
         : deductMintFee(params._mintAmount, 1);
     }
     {
-      if (module != address(0x0)) IERC20(asset).safeTransfer(to, amountOut);
+      if (module != address(0x0)) IERC20(module).safeTransfer(to, amountOut);
     }
     {
       tx.origin.transfer(
