@@ -205,7 +205,7 @@ describe("ZEC Controller", () => {
     );
     await renbtc.transfer(
       Dummy.receipt.contractAddress,
-      utils.hexlify(utils.parseUnits("0.005", 8))
+      utils.hexlify(utils.parseUnits("0.1", 8))
     );
     const transferRequest = new UnderwriterTransferRequest({
       contractAddress,
@@ -213,7 +213,7 @@ describe("ZEC Controller", () => {
       to: await signer.getAddress(),
       pNonce: utils.hexlify(utils.randomBytes(32)),
       module: deployParameters[process.env.CHAIN].renZEC,
-      amount: utils.hexlify(utils.parseUnits("0.005", 8)),
+      amount: utils.hexlify(utils.parseUnits("0.1", 8)),
       asset: deployParameters[process.env.CHAIN].WBTC,
       chainId,
       data: utils.defaultAbiCoder.encode(["uint256"], ["1"]),

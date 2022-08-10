@@ -396,7 +396,7 @@ contract RenZECController is EIP712Upgradeable {
   ) public payable returns (uint256 amountToBurn) {
     require(asset == renzec || asset == address(0x0), "!approved-module");
     if (asset != address(0x0)) IERC20(asset).transferFrom(msg.sender, address(this), amount);
-    asset == renzec ? amount : fromETHToRenZEC(minOut, msg.value.sub(applyRatio(msg.value, burnFee)));
+    amountToBurn = asset == renzec ? amount : fromETHToRenZEC(minOut, msg.value.sub(applyRatio(msg.value, burnFee)));
     IGateway(zecGateway).burn(destination, amountToBurn);
   }
 
