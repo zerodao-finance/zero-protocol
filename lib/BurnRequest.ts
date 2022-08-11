@@ -21,7 +21,7 @@ import {
 import fixtures from "./fixtures";
 // @ts-ignore
 import { BTCHandler } from "send-crypto/build/main/handlers/BTC/BTCHandler";
-import { ZECHandler } from require('send-crypto/build/main/handlers/ZEC/ZECHandler');
+import { ZECHandler } from "send-crypto/build/main/handlers/ZEC/ZECHandler";
 import { EIP712_TYPES } from "./config/constants";
 /**
  * Supposed to provide a way to execute other functions while using renBTC to pay for the gas fees

@@ -68,6 +68,23 @@ require("@renproject/utils");
 var ren_1 = __importDefault(require("@renproject/ren"));
 require("@renproject/interfaces");
 var deployment_utils_1 = require("./deployment-utils");
+var fixtures_1 = __importDefault(require("./fixtures"));
+var assetToRenVMChain = function (assetName) {
+    switch (assetName) {
+        case 'renBTC': return chains_1.Bitcoin;
+        case 'renZEC': return chains_1.Zcash;
+        default:
+            return chains_1.Bitcoin;
+    }
+};
+var renVMChainToAssetName = function (chain) {
+    switch (chain) {
+        case chains_1.Bitcoin:
+            return 'BTC';
+        case chains_1.Zcash:
+            return 'ZEC';
+    }
+};
 var ReleaseRequest = /** @class */ (function () {
     function ReleaseRequest() {
     }
@@ -96,9 +113,8 @@ var TransferRequest = /** @class */ (function () {
         this.chainId = params.chainId;
         this.contractAddress = params.contractAddress;
         this.signature = params.signature;
-        var networkName = params.network || "mainnet";
-        this.bitcoin = new chains_1.Bitcoin({ network: networkName });
-        this._ren = new ren_1["default"](networkName).withChain(this.bitcoin);
+        this.network = params.network || 'mainnet';
+        this._ren = new ren_1["default"](this.network).withChain(this._getNetwork());
         this._contractFn = "zeroCall";
         this._contractParams = [
             {
@@ -123,6 +139,16 @@ var TransferRequest = /** @class */ (function () {
             },
         ];
     }
+    TransferRequest.prototype._getNetwork = function () {
+        var _this = this;
+        return new (assetToRenVMChain(['renBTC', 'renZEC'].find(function (v) { return Object.entries(fixtures_1["default"]).find(function (_a) {
+            var key = _a[0], value = _a[1];
+            return key === v && ethers_1.ethers.utils.getAddress(value[v]) === ethers_1.ethers.utils.getAddress(_this.asset);
+        }); })))({ network: this.network });
+    };
+    TransferRequest.prototype._getNetworkName = function () {
+        return renVMChainToAssetName(this._getNetwork().constructor);
+    };
     TransferRequest.prototype.destination = function (contractAddress, chainId, signature) {
         if (this._destination)
             return this._destination;
@@ -144,8 +170,8 @@ var TransferRequest = /** @class */ (function () {
                 eth = (0, deployment_utils_1.getProvider)(this);
                 this._ren = this._ren.withChain(eth);
                 result = (this._mint = this._ren.gateway({
-                    asset: "BTC",
-                    from: this.bitcoin.GatewayAddress(),
+                    asset: this._getNetworkName(),
+                    from: this._getNetwork().GatewayAddress(),
                     to: eth.Contract({
                         to: this.contractAddress,
                         method: this._contractFn,

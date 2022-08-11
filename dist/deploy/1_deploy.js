@@ -61,6 +61,14 @@ var getControllerName = function () {
             return "ZeroController";
     }
 };
+var getZECControllerName = function () {
+    switch (process.env.CHAIN) {
+        case "ETHEREUM":
+            return "RenZECController";
+        default:
+            return undefined;
+    }
+};
 var isLocalhost = !hre.network.config.live;
 var SIGNER_ADDRESS = "0x0F4ee9631f4be0a63756515141281A3E2B293Bbe";
 var getController = function () { return __awaiter(_this, void 0, void 0, function () {
@@ -80,7 +88,7 @@ var network = process.env.CHAIN || "ETHEREUM";
 module.exports = function (_a) {
     var getNamedAccounts = _a.getNamedAccounts;
     return __awaiter(_this, void 0, void 0, function () {
-        var deployer, ethersSigner, provider, _b, _c, _d, chainId, signer, deployerSigner, zeroControllerFactory, zeroController, zeroControllerArtifact;
+        var deployer, ethersSigner, provider, _b, _c, _d, chainId, signer, deployerSigner, zeroControllerFactory, zeroController, zecControllerName, zecControllerFactory, zecController, zecControllerArtifact, zeroControllerArtifact;
         return __generator(this, function (_e) {
             switch (_e.label) {
                 case 0: return [4 /*yield*/, getNamedAccounts()];
@@ -133,6 +141,7 @@ module.exports = function (_a) {
                     deployerSigner = (_e.sent())[0];
                     console.log("RUNNING");
                     console.log("deploying controller");
+                    console.log(getControllerName());
                     return [4 /*yield*/, hre.ethers.getContractFactory(getControllerName(), {})];
                 case 13:
                     zeroControllerFactory = _e.sent();
@@ -141,8 +150,34 @@ module.exports = function (_a) {
                         })];
                 case 14:
                     zeroController = _e.sent();
-                    return [4 /*yield*/, deployments.getArtifact(getControllerName())];
+                    zecControllerName = getZECControllerName();
+                    if (!zecControllerName) return [3 /*break*/, 20];
+                    console.log("deploying zec controller");
+                    return [4 /*yield*/, hre.ethers.getContractFactory(zecControllerName, {})];
                 case 15:
+                    zecControllerFactory = _e.sent();
+                    return [4 /*yield*/, upgrades.deployProxy(zecControllerFactory, [deployer, deployer], {
+                            unsafeAllow: ["delegatecall"]
+                        })];
+                case 16:
+                    zecController = _e.sent();
+                    return [4 /*yield*/, deployments.getArtifact(getControllerName())];
+                case 17:
+                    zecControllerArtifact = _e.sent();
+                    return [4 /*yield*/, deployments.save(zecControllerName, {
+                            contractName: zecControllerName,
+                            address: zecController.address,
+                            bytecode: zecControllerArtifact.bytecode,
+                            abi: zecControllerArtifact.abi
+                        })];
+                case 18:
+                    _e.sent();
+                    return [4 /*yield*/, zecController.deployTransaction.wait()];
+                case 19:
+                    _e.sent();
+                    _e.label = 20;
+                case 20: return [4 /*yield*/, deployments.getArtifact(getControllerName())];
+                case 21:
                     zeroControllerArtifact = _e.sent();
                     return [4 /*yield*/, deployments.save(getControllerName(), {
                             contractName: getControllerName(),
@@ -150,11 +185,11 @@ module.exports = function (_a) {
                             bytecode: zeroControllerArtifact.bytecode,
                             abi: zeroControllerArtifact.abi
                         })];
-                case 16:
+                case 22:
                     _e.sent();
                     console.log("waiting on proxy deploy to mine ...");
                     return [4 /*yield*/, zeroController.deployTransaction.wait()];
-                case 17:
+                case 23:
                     _e.sent();
                     return [2 /*return*/];
             }

@@ -182,42 +182,53 @@ exports.makeCompute = function (CHAIN) {
             }
         });
     }); };
-    var getConvertedAmount = (exports.getConvertedAmount = function (asset, amount) { return __awaiter(void 0, void 0, void 0, function () {
-        var _a;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+    var getConvertedAmount = (exports.getConvertedAmount = function (asset, amount, primaryToken) { return __awaiter(void 0, void 0, void 0, function () {
+        var _a, _b;
+        return __generator(this, function (_c) {
+            switch (_c.label) {
                 case 0:
+                    if (!(primaryToken == "ZEC")) return [3 /*break*/, 5];
                     _a = asset;
                     switch (_a) {
-                        case fixtures[quotes.chain.name].WBTC: return [3 /*break*/, 1];
-                        case fixtures[quotes.chain.name].renBTC: return [3 /*break*/, 3];
-                        case fixtures[quotes.chain.name].USDC: return [3 /*break*/, 4];
-                        case fixtures["ETHEREUM"].renZEC: return [3 /*break*/, 6];
-                        case ethers.constants.AddressZero: return [3 /*break*/, 8];
+                        case fixtures["ETHEREUM"].renZEC: return [3 /*break*/, 1];
+                        case fixtures["ETHEREUM"].ETH: return [3 /*break*/, 2];
                     }
-                    return [3 /*break*/, 10];
-                case 1: return [4 /*yield*/, quotes.getWbtcQuote(false, amount)];
-                case 2: return [2 /*return*/, _b.sent()];
-                case 3: return [2 /*return*/, amount];
-                case 4: return [4 /*yield*/, quotes.fromUSDC(amount)];
-                case 5: return [2 /*return*/, _b.sent()];
-                case 6: return [4 /*yield*/, quotes.renZECToETH(amount)];
-                case 7: return [2 /*return*/, _b.sent()];
-                case 8: return [4 /*yield*/, quotes.ETHtoRenBTC(amount)];
-                case 9: return [2 /*return*/, _b.sent()];
-                case 10:
+                    return [3 /*break*/, 4];
+                case 1: return [2 /*return*/, amount];
+                case 2: return [4 /*yield*/, quotes.ETHToRenZEC(amount)];
+                case 3: return [2 /*return*/, _c.sent()];
+                case 4:
+                    console.error("no asset found for getConvertedAmount:" + asset);
+                    return [2 /*return*/, amount];
+                case 5:
+                    _b = asset;
+                    switch (_b) {
+                        case fixtures[quotes.chain.name].WBTC: return [3 /*break*/, 6];
+                        case fixtures[quotes.chain.name].renBTC: return [3 /*break*/, 8];
+                        case fixtures[quotes.chain.name].USDC: return [3 /*break*/, 9];
+                        case ethers.constants.AddressZero: return [3 /*break*/, 11];
+                    }
+                    return [3 /*break*/, 13];
+                case 6: return [4 /*yield*/, quotes.getWbtcQuote(false, amount)];
+                case 7: return [2 /*return*/, _c.sent()];
+                case 8: return [2 /*return*/, amount];
+                case 9: return [4 /*yield*/, quotes.fromUSDC(amount)];
+                case 10: return [2 /*return*/, _c.sent()];
+                case 11: return [4 /*yield*/, quotes.ETHtoRenBTC(amount)];
+                case 12: return [2 /*return*/, _c.sent()];
+                case 13:
                     console.error("no asset found for getConvertedAmount:" + asset);
                     return [2 /*return*/, amount];
             }
         });
     }); });
     var computeOutputBTC = function (burnRequest) { return __awaiter(void 0, void 0, void 0, function () {
-        var asset, amount, convertedAmount;
+        var asset, amount, primaryToken, convertedAmount;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    asset = burnRequest.asset, amount = burnRequest.amount;
-                    return [4 /*yield*/, getConvertedAmount(asset, amount)];
+                    asset = burnRequest.asset, amount = burnRequest.amount, primaryToken = burnRequest.primaryToken;
+                    return [4 /*yield*/, getConvertedAmount(asset, amount, primaryToken)];
                 case 1:
                     convertedAmount = _a.sent();
                     return [4 /*yield*/, deductBurnFee(convertedAmount)];

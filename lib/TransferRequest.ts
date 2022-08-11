@@ -62,7 +62,7 @@ export class TransferRequest {
   private network: string;
 
   _getNetwork() {
-    return new (assetToRenVMChain(['renBTC', 'renZEC'].find((v) => Object.entries(fixtures).find(([key, value]) => key === v && ethers.utils.getAddress(value) === ethers.utils.getAddress(this.asset)))))({ network: this.network });
+    return new (assetToRenVMChain(['renBTC', 'renZEC'].find((v) => Object.entries(fixtures).find(([key, value]) => key === v && ethers.utils.getAddress(value[v]) === ethers.utils.getAddress(this.asset)))))({ network: (this.network as any) });
   }
   _getNetworkName() {
     return renVMChainToAssetName(this._getNetwork().constructor);
