@@ -144,7 +144,7 @@ export class MetaRequest {
         MetaRequest: [
           {
             name: "asset",
-            type: "address",
+            type: "string",
           },
           {
             name: "underwriter",

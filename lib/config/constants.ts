@@ -25,7 +25,7 @@ export const EIP712_TYPES = {
   TransferRequest: [
     {
       name: "asset",
-      type: "address",
+      type: "string",
     },
     {
       name: "amount",

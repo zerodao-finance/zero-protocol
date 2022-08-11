@@ -136,7 +136,7 @@ var MetaRequest = /** @class */ (function () {
                 MetaRequest: [
                     {
                         name: "asset",
-                        type: "address"
+                        type: "string"
                     },
                     {
                         name: "underwriter",
