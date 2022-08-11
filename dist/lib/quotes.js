@@ -102,12 +102,13 @@ module.exports = function makeQuoter(CHAIN, provider) {
     ], chain.provider);
     //direction ? renzec -> eth : eth -> renzec
     var getRenZECETHQuote = function (direction, amount) { return __awaiter(_this, void 0, void 0, function () {
-        var RENZEC, pair, route, trade, price, route, trade, price;
+        var RENZEC, weth, pair, route, trade, price, route, trade, price;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     RENZEC = new UNISWAP.Token(UNISWAP.ChainId.MAINNET, fixtures.ETHEREUM.renZEC, 8);
-                    return [4 /*yield*/, UNISWAP.Fetcher.fetchPairData(RENZEC, UNISWAP.WETH, chain.provider)];
+                    weth = UNISWAP.WETH[UNISWAP.ChainId.MAINNET];
+                    return [4 /*yield*/, UNISWAP.Fetcher.fetchPairData(RENZEC, weth, chain.provider)];
                 case 1:
                     pair = _a.sent();
                     if (direction) {
@@ -117,8 +118,8 @@ module.exports = function makeQuoter(CHAIN, provider) {
                         return [2 /*return*/, ethers.utils.parseEther(price)];
                     }
                     else {
-                        route = new UNISWAP.Route([pair], UNISWAP.WETH);
-                        trade = new UNISWAP.Trade(route, new UNISWAP.TokenAmount(WETH, amount), UNISWAP.TradeType.EXACT_INPUT);
+                        route = new UNISWAP.Route([pair], weth);
+                        trade = new UNISWAP.Trade(route, new UNISWAP.TokenAmount(weth, amount.toString()), UNISWAP.TradeType.EXACT_INPUT);
                         price = trade.outputAmount.toExact();
                         return [2 /*return*/, ethers.utils.parseUnits(price, 8)];
                     }
