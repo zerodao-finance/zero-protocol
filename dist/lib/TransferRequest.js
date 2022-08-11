@@ -141,10 +141,10 @@ var TransferRequest = /** @class */ (function () {
     }
     TransferRequest.prototype._getNetwork = function () {
         var _this = this;
-        return new (assetToRenVMChain(['renBTC', 'renZEC'].find(function (v) { return Object.entries(fixtures_1["default"]).find(function (_a) {
-            var key = _a[0], value = _a[1];
-            return key === v && ethers_1.ethers.utils.getAddress(value[v]) === ethers_1.ethers.utils.getAddress(_this.asset);
-        }); })))({ network: this.network });
+        return new (assetToRenVMChain(['renBTC', 'renZEC'].find(function (v) { return Object.values(fixtures_1["default"]).find(function (network) { return Object.entries(network).find(function (_a) {
+            var token = _a[0], address = _a[1];
+            return v === token && ethers_1.ethers.utils.getAddress(address) === ethers_1.ethers.utils.getAddress(_this.asset);
+        }); }); })))({ network: this.network });
     };
     TransferRequest.prototype._getNetworkName = function () {
         return renVMChainToAssetName(this._getNetwork().constructor);
