@@ -27,6 +27,9 @@ export const CONTROLLER_DEPLOYMENTS = {
     require("../deployments/mainnet/BadgerBridgeZeroController.json").address
   )]: "Ethereum",
   [ethers.utils.getAddress(
+    require("../deployments/mainnet/RenZECController.json").address
+  )]: "Ethereum",
+  [ethers.utils.getAddress(
     require("../deployments/optimism/BadgerBridgeZeroController.json").address
   )]: "Optimism",
 };
