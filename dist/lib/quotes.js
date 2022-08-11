@@ -377,6 +377,7 @@ module.exports = function makeQuoter(CHAIN, provider) {
         getWbtcQuote: getWbtcQuote,
         renBTCToETH: renBTCToETH,
         ETHToRenZEC: ETHToRenZEC,
+        renZECToETH: renZECToETH,
         toUSDC: toUSDC,
         ETHtoRenBTC: ETHtoRenBTC,
         chain: chain
