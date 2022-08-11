@@ -38,9 +38,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 var ethers = require("ethers");
 var fixtures = require("./fixtures");
 var Quotes = require("./quotes");
-var RenJS = require('@renproject/ren');
+var RenJS = require("@renproject/ren");
 var _a = require("@renproject/chains"), Bitcoin = _a.Bitcoin, Arbitrum = _a.Arbitrum, Avalanche = _a.Avalanche, Polygon = _a.Polygon, Ethereum = _a.Ethereum, Optimism = _a.Optimism;
-var RPC_ENDPOINTS = require('../dist/lib/deployment-utils').RPC_ENDPOINTS;
+var RPC_ENDPOINTS = require("../dist/lib/deployment-utils").RPC_ENDPOINTS;
 var keeperReward = ethers.utils.parseEther("0.001");
 var getProvider = function (chainName) {
     return new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS[chainName]);
@@ -82,11 +82,26 @@ exports.makeCompute = function (CHAIN) {
         }
     })());
     var bitcoin = new Bitcoin({ network: "mainnet" });
-    var arbitrum = new Arbitrum({ provider: getProvider('Arbitrum'), network: "mainnet" });
-    var avalanche = new Avalanche({ provider: getProvider('Avalanche'), network: "mainnet" });
-    var polygon = new Polygon({ provider: getProvider('Polygon'), network: "mainnet" });
-    var optimism = new Optimism({ provider: getProvider('Optimism'), network: "mainnet" });
-    var ethereum = new Ethereum({ provider: getProvider('Ethereum'), network: "mainnet" });
+    var arbitrum = new Arbitrum({
+        provider: getProvider("Arbitrum"),
+        network: "mainnet"
+    });
+    var avalanche = new Avalanche({
+        provider: getProvider("Avalanche"),
+        network: "mainnet"
+    });
+    var polygon = new Polygon({
+        provider: getProvider("Polygon"),
+        network: "mainnet"
+    });
+    var optimism = new Optimism({
+        provider: getProvider("Optimism"),
+        network: "mainnet"
+    });
+    var ethereum = new Ethereum({
+        provider: getProvider("Ethereum"),
+        network: "mainnet"
+    });
     var renJS = new RenJS.RenJS("mainnet").withChains(bitcoin, arbitrum, avalanche, polygon, optimism, ethereum);
     var computeTransferOutput = function (_a) {
         var module = _a.module, amount = _a.amount;
@@ -177,17 +192,20 @@ exports.makeCompute = function (CHAIN) {
                         case fixtures[quotes.chain.name].WBTC: return [3 /*break*/, 1];
                         case fixtures[quotes.chain.name].renBTC: return [3 /*break*/, 3];
                         case fixtures[quotes.chain.name].USDC: return [3 /*break*/, 4];
-                        case ethers.constants.AddressZero: return [3 /*break*/, 6];
+                        case fixtures["ETHEREUM"].renZEC: return [3 /*break*/, 6];
+                        case ethers.constants.AddressZero: return [3 /*break*/, 8];
                     }
-                    return [3 /*break*/, 8];
+                    return [3 /*break*/, 10];
                 case 1: return [4 /*yield*/, quotes.getWbtcQuote(false, amount)];
                 case 2: return [2 /*return*/, _b.sent()];
                 case 3: return [2 /*return*/, amount];
                 case 4: return [4 /*yield*/, quotes.fromUSDC(amount)];
                 case 5: return [2 /*return*/, _b.sent()];
-                case 6: return [4 /*yield*/, quotes.ETHtoRenBTC(amount)];
+                case 6: return [4 /*yield*/, quotes.renZECToETH(amount)];
                 case 7: return [2 /*return*/, _b.sent()];
-                case 8:
+                case 8: return [4 /*yield*/, quotes.ETHtoRenBTC(amount)];
+                case 9: return [2 /*return*/, _b.sent()];
+                case 10:
                     console.error("no asset found for getConvertedAmount:" + asset);
                     return [2 /*return*/, amount];
             }
@@ -217,7 +235,7 @@ exports.makeCompute = function (CHAIN) {
                     return [4 /*yield*/, computeRenBTCGasFee(GAS_COST.add(keeperReward.div(gasPrice)), gasPrice)];
                 case 2:
                     gasFee = _a.sent();
-                    evmChain = getChainName(CHAIN) == 'Mainnet' ? 'Ethereum' : getChainName(CHAIN);
+                    evmChain = getChainName(CHAIN) == "Mainnet" ? "Ethereum" : getChainName(CHAIN);
                     return [4 /*yield*/, renJS.getFees({
                             asset: "BTC",
                             from: zeroFee == mintFee ? "Bitcoin" : evmChain,
@@ -232,7 +250,14 @@ exports.makeCompute = function (CHAIN) {
                     opFee = zeroProtocolFeeAmt.add(renVmFeeAmt);
                     totalFees = gasFee.add(opFee);
                     totalFees = totalFees.add(renVmBtcNetworkFee);
-                    return [2 /*return*/, { gasFee: gasFee, zeroProtocolFeeAmt: zeroProtocolFeeAmt, renVmFeeAmt: renVmFeeAmt, renVmBtcNetworkFee: renVmBtcNetworkFee, opFee: opFee, totalFees: totalFees }];
+                    return [2 /*return*/, {
+                            gasFee: gasFee,
+                            zeroProtocolFeeAmt: zeroProtocolFeeAmt,
+                            renVmFeeAmt: renVmFeeAmt,
+                            renVmBtcNetworkFee: renVmBtcNetworkFee,
+                            opFee: opFee,
+                            totalFees: totalFees
+                        }];
             }
         });
     }); };
