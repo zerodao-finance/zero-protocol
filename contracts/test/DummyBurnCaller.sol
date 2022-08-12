@@ -7,8 +7,8 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../libraries/SplitSignatureLib.sol";
 
 contract DummyBurnCaller {
-  constructor(address controller, address renbtc) {
-    IERC20(renbtc).approve(controller, ~uint256(0) >> 2);
+  constructor(address controller, address renzec) {
+    IERC20(renzec).approve(controller, ~uint256(0) >> 2);
   }
 
   function callBurn(
