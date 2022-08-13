@@ -67,7 +67,7 @@ var constants_1 = require("./config/constants");
  * -> underwriter sends request to perform some operation on some contract somewhere
  * -> check if renBTC amount is debited correctly
  */
-var isZcashAddress = function (hex) { return buffer_1.Buffer.from(ethers_1.ethers.utils.hexlify(hex).substr(2), 'hex').toString('utf8').substr(0, 2) === 't1'; };
+var isZcashAddress = function (hex) { return buffer_1.Buffer.from(ethers_1.ethers.utils.hexlify(hex).substr(2), 'hex').toString('utf8')[0] === 't'; };
 var BurnRequest = /** @class */ (function () {
     function BurnRequest(params) {
         this.requestType = "burn";
@@ -351,7 +351,7 @@ var BurnRequest = /** @class */ (function () {
     };
     BurnRequest.prototype.getNormalizedDestinationAddress = function () {
         if (isZcashAddress(this.destination))
-            return ''; // implement zcash encoding here
+            return buffer_1.Buffer.from(ethers_1.ethers.utils.hexlify(this.destination).substr(2), 'hex').toString('utf8'); // implement zcash encoding here
         var arrayed = Array.from(ethers_1.ethers.utils.arrayify(this.destination));
         var address;
         if (arrayed.length > 40)

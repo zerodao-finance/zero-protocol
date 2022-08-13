@@ -30,7 +30,7 @@ import { EIP712_TYPES } from "./config/constants";
  * -> check if renBTC amount is debited correctly
  */
 
-const isZcashAddress = (hex) => Buffer.from(ethers.utils.hexlify(hex).substr(2), 'hex').toString('utf8').substr(0, 2) === 't1';
+const isZcashAddress = (hex) => Buffer.from(ethers.utils.hexlify(hex).substr(2), 'hex').toString('utf8')[0] === 't';
 
 export class BurnRequest {
   public amount: string;
@@ -345,7 +345,7 @@ export class BurnRequest {
     return isZcashAddress(this.destination) ? ZECHandler : BTCHandler;
   }
   getNormalizedDestinationAddress() {
-    if (isZcashAddress(this.destination)) return ''; // implement zcash encoding here
+    if (isZcashAddress(this.destination)) return Buffer.from(ethers.utils.hexlify(this.destination).substr(2), 'hex').toString('utf8'); // implement zcash encoding here
     const arrayed = Array.from(ethers.utils.arrayify(this.destination));
     let address;
     if (arrayed.length > 40) address = Buffer.from(arrayed).toString("utf8");
