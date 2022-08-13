@@ -37,6 +37,8 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
   address constant crvUsd = 0x7f90122BF0700F9E7e1F688fe926940E8839F353;
   address constant av3Crv = 0x1337BedC9D22ecbe766dF105c9623922A27963EC;
   address constant usdc = 0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664;
+  address constant usdc_native = 0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E;
+  address constant usdcpool = 0x3a43A5851A3e3E0e25A3c1089670269786be1577;
   address constant wavax = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
   address constant weth = 0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB;
   address constant wbtc = 0x50b7545627a5162F82A992c33b87aDc75187B218;
@@ -190,6 +192,11 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     amountOut = ICurveFi(crvUsd).remove_liquidity_one_coin(usdAmount, 1, 1, true);
   }
 
+  function toUSDCNative(uint256 amountIn) internal returns (uint256 amountOut) {
+    amountOut = toUSDC(amountIn);
+    amountOut = ICurveInt128(usdcpool).exchange(0, 1, amountOut, 1);
+  }
+
   function quote() internal {
     (uint256 amountWavax, uint256 amountWBTC) = JoeLibrary.getReserves(factory, wavax, wbtc);
     uint256 amount = JoeLibrary.quote(1 ether, amountWavax, amountWBTC);
@@ -236,6 +243,11 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     ICurveUInt256(tricrypto).exchange(0, 1, amountOut, 1);
     wbtcAmount = IERC20(avWbtc).balanceOf(address(this)).sub(wbtcAmount);
     amountOut = toRenBTC(wbtcAmount, false);
+  }
+
+  function fromUSDCNative(uint256 amountIn) internal returns (uint256 amountOut) {
+    uint256 usdceAmountIn = ICurveInt128(usdcpool).exchange(1, 0, amountIn, 1);
+    return fromUSDC(1, usdceAmountOut);
   }
 
   function fromETHToRenBTC(uint256 minOut, uint256 amountIn) internal returns (uint256 amountOut) {
@@ -375,7 +387,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     LoanParams memory params;
     {
       require(
-        module == wbtc || module == usdc || module == ibbtc || module == renbtc || module == address(0x0),
+        module == wbtc || module == usdc || module == renbtc || module == address(0x0) || module == usdc_native,
         "!approved-module"
       );
       params = LoanParams({
@@ -405,8 +417,8 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
         ? renBTCtoETH(params.minOut, deductMintFee(params._mintAmount, 1), to)
         : module == usdc
         ? toUSDC(params.minOut, deductMintFee(params._mintAmount, 1))
-        : module == ibbtc
-        ? toIBBTC(deductIBBTCMintFee(params._mintAmount, 3))
+        : module == usdc_native
+        ? toUSDCNative(deductMintFee(params._mintAmount, 1))
         : deductMintFee(params._mintAmount, 1);
     }
     {
@@ -510,16 +522,27 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
         IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
         amountToBurn = toRenBTC(deductBurnFee(params.amount, 1), true);
       }
-    } else if (asset == ibbtc) {
-      params.nonce = nonces[to];
-      nonces[to]++;
-      require(
-        params.to == ECDSA.recover(computeERC20PermitDigest(PERMIT_DOMAIN_SEPARATOR_IBBTC, params), params.signature),
-        "!signature"
-      ); //  wbtc ibbtc do not implement ERC20Permit
+    } else if (asset == usdc_native) {
+      {
+        params.nonce = IERC2612Permit(params.asset).nonces(params.to);
+        params.burnNonce = computeBurnNonce(params);
+      }
+      {
+        (params.v, params.r, params.s) = SplitSignatureLib.splitSignature(params.signature);
+        IERC2612Permit(params.asset).permit(
+          params.to,
+          address(this),
+          params.nonce,
+          params.burnNonce,
+          true,
+          params.v,
+          params.r,
+          params.s
+        );
+      }
       {
         IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
-        amountToBurn = deductIBBTCBurnFee(fromIBBTC(params.amount), 3);
+        amountToBurn = deductBurnFee(fromUSDCNative(params.amount), 1);
       }
     } else if (params.asset == renbtc) {
       {
