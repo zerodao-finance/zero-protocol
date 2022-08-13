@@ -286,7 +286,7 @@ exports.makeCompute = function (CHAIN) {
         }
     };
     var applyFee = function (amountIn, zeroFee, renVmFee, primaryToken) { return __awaiter(void 0, void 0, void 0, function () {
-        var gasPrice, _a, network, asset, gasFee, evmChain, renVmFees, renOutput, zeroProtocolFeeAmt, renVmFeeAmt, renVmBtcNetworkFee, opFee, totalFees;
+        var gasPrice, _a, network, asset, gasFee, evmChain, renOutput, renVmFees, e_1, zeroProtocolFeeAmt, renVmFeeAmt, renVmBtcNetworkFee, opFee, totalFees;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0: return [4 /*yield*/, quotes.chain.provider.getGasPrice()];
@@ -297,14 +297,25 @@ exports.makeCompute = function (CHAIN) {
                 case 2:
                     gasFee = _b.sent();
                     evmChain = getChainName(CHAIN) == "Mainnet" ? "Ethereum" : getChainName(CHAIN);
+                    renOutput = ethers.utils.parseUnits("0", 8);
+                    _b.label = 3;
+                case 3:
+                    _b.trys.push([3, 5, , 6]);
                     return [4 /*yield*/, renJS.getFees({
                             asset: asset,
                             from: zeroFee == mintFee ? network : evmChain,
                             to: zeroFee == burnFee ? network : evmChain
                         })];
-                case 3:
+                case 4:
                     renVmFees = _b.sent();
                     renOutput = ethers.BigNumber.from(renVmFees.estimateOutput(amountIn.toString()).toFixed());
+                    return [3 /*break*/, 6];
+                case 5:
+                    e_1 = _b.sent();
+                    console.error("error getting renVM fees", e_1);
+                    renOutput = amountIn.sub(ethers.utils.parseUnits("0.004", 8));
+                    return [3 /*break*/, 6];
+                case 6:
                     zeroProtocolFeeAmt = applyRatio(amountIn, zeroFee);
                     renVmFeeAmt = applyRatio(amountIn, renVmFee);
                     renVmBtcNetworkFee = amountIn.sub(renOutput).sub(renVmFeeAmt);
