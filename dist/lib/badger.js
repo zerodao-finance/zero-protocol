@@ -312,6 +312,7 @@ exports.makeCompute = function (CHAIN) {
                     return [3 /*break*/, 6];
                 case 5:
                     e_1 = _b.sent();
+                    console.error("error getting renVM fees", e_1);
                     renOutput = amountIn.sub(ethers.utils.parseUnits("0.004", 8));
                     return [3 /*break*/, 6];
                 case 6:
