@@ -193,7 +193,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
   }
 
   function toUSDCNative(uint256 amountIn) internal returns (uint256 amountOut) {
-    amountOut = toUSDC(amountIn);
+    amountOut = toUSDC(1, amountIn);
     amountOut = ICurveInt128(usdcpool).exchange(0, 1, amountOut, 1);
   }
 
@@ -247,7 +247,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
 
   function fromUSDCNative(uint256 amountIn) internal returns (uint256 amountOut) {
     uint256 usdceAmountIn = ICurveInt128(usdcpool).exchange(1, 0, amountIn, 1);
-    return fromUSDC(1, usdceAmountOut);
+    return fromUSDC(1, usdceAmountIn);
   }
 
   function fromETHToRenBTC(uint256 minOut, uint256 amountIn) internal returns (uint256 amountOut) {

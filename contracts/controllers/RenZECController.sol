@@ -3,6 +3,7 @@ pragma solidity >=0.6.0;
 pragma abicoder v2;
 
 import { IUniswapV2Router02 } from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+import { ISwapRouter } from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import { UniswapV2Library } from "../libraries/UniswapV2Library.sol";
 import { ZeroLib } from "../libraries/ZeroLib.sol";
 import { IERC2612Permit } from "../interfaces/IERC2612Permit.sol";
@@ -14,6 +15,7 @@ import { Math } from "@openzeppelin/contracts/math/Math.sol";
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import { ECDSA } from "@openzeppelin/contracts/cryptography/ECDSA.sol";
+import "hardhat/console.sol";
 import { EIP712Upgradeable } from "@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol";
 
 contract RenZECController is EIP712Upgradeable {
@@ -103,7 +105,8 @@ contract RenZECController is EIP712Upgradeable {
     strategist = _strategist;
     keeperReward = uint256(1 ether).div(1000);
     IERC20(weth).safeApprove(routerv3, ~uint256(0) >> 2);
-    IERC20(renzec).safeApprove(routerv3, ~uint256(0) >> 2);
+    IERC20(usdc).safeApprove(routerv3, ~uint256(0) >> 2);
+    IERC20(usdt).safeApprove(routerv3, ~uint256(0) >> 2);
     IERC20(weth).safeApprove(router, ~uint256(0) >> 2);
     IERC20(renzec).safeApprove(router, ~uint256(0) >> 2);
     PERMIT_DOMAIN_SEPARATOR_USDT = keccak256(
@@ -127,6 +130,8 @@ contract RenZECController is EIP712Upgradeable {
         usdt
       )
     );
+    IERC20(usdc).safeApprove(routerv3, ~uint256(0) >> 2);
+    IERC20(usdt).safeApprove(routerv3, ~uint256(0) >> 2);
   }
 
   function applyRatio(uint256 v, uint256 n) internal pure returns (uint256 result) {
@@ -197,7 +202,7 @@ contract RenZECController is EIP712Upgradeable {
     address out
   ) internal returns (uint256 amountOut) {
     bytes memory path = abi.encodePacked(weth, uniswapv3Fee, usdc);
-    amountOut = renZECtoETH(1, amountIn);
+    amountOut = renZECtoETH(1, amountIn, address(this));
     ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
       recipient: out,
       deadline: block.timestamp + 1,
@@ -214,7 +219,7 @@ contract RenZECController is EIP712Upgradeable {
     address out
   ) internal returns (uint256 amountOut) {
     bytes memory path = abi.encodePacked(weth, uniswapv3Fee, usdt);
-    amountOut = renZECtoETH(1, amountIn);
+    amountOut = renZECtoETH(1, amountIn, address(this));
     ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
       recipient: out,
       deadline: block.timestamp + 1,
@@ -390,6 +395,20 @@ contract RenZECController is EIP712Upgradeable {
     }
   }
 
+  function computeERC20PermitDigest(bytes32 domainSeparator, BurnLocals memory params)
+    internal
+    view
+    returns (bytes32 result)
+  {
+    result = keccak256(
+      abi.encodePacked(
+        "\x19\x01",
+        domainSeparator,
+        keccak256(abi.encode(PERMIT_TYPEHASH, params.to, address(this), params.nonce, computeBurnNonce(params), true))
+      )
+    );
+  }
+
   struct BurnLocals {
     address to;
     address asset;
@@ -445,6 +464,7 @@ contract RenZECController is EIP712Upgradeable {
         params.nonce = IERC2612Permit(params.asset).nonces(params.to);
         params.burnNonce = computeBurnNonce(params);
       }
+      console.log("before permit");
       {
         (params.v, params.r, params.s) = SplitSignatureLib.splitSignature(params.signature);
         IERC2612Permit(params.asset).permit(
@@ -459,6 +479,7 @@ contract RenZECController is EIP712Upgradeable {
         );
       }
       {
+        console.log("before transferfrom");
         IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
       }
       amountToBurn = deductBurnFee(params.amount, 1);
@@ -497,7 +518,7 @@ contract RenZECController is EIP712Upgradeable {
         );
         require(success, "!usdt");
       }
-      amountToBurn = deductBurnFee(fromUSDT(params.amount), 1);
+      amountToBurn = deductBurnFee(fromUSDT(params.minOut, params.amount), 1);
     } else revert("!supported-asset");
     {
       IGateway(zecGateway).burn(params.destination, amountToBurn);
