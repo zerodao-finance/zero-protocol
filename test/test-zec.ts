@@ -395,7 +395,7 @@ describe("ZEC Controller", () => {
     const transferRequest = new UnderwriterBurnRequest({
       contractAddress,
       owner: await signer.getAddress(),
-      amount: utils.hexlify(utils.parseUnits("1000", 6)),
+      amount: utils.hexlify(utils.parseUnits("100", 6)),
       asset: deployParameters[process.env.CHAIN].USDC,
       chainId,
       underwriter: contractAddress,

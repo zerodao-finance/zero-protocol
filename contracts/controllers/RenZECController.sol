@@ -15,7 +15,6 @@ import { Math } from "@openzeppelin/contracts/math/Math.sol";
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import { ECDSA } from "@openzeppelin/contracts/cryptography/ECDSA.sol";
-import "hardhat/console.sol";
 import { EIP712Upgradeable } from "@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol";
 
 contract RenZECController is EIP712Upgradeable {
@@ -38,6 +37,7 @@ contract RenZECController is EIP712Upgradeable {
   uint256 public governanceFee;
   bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
   uint256 constant GAS_COST = uint256(23e4);
+  bytes32 constant LOCK_SLOT = keccak256("upgrade-v1");
   uint256 constant ETH_RESERVE = uint256(5 ether);
   uint256 internal renzecForOneETHPrice;
   uint256 internal burnFee;
@@ -120,7 +120,15 @@ contract RenZECController is EIP712Upgradeable {
     );
   }
 
-  function afterUpgrade() public {
+  function postUpgrade() public {
+    bool isLocked;
+    bytes32 upgradeSlot = LOCK_SLOT;
+
+    assembly {
+      isLocked := sload(upgradeSlot)
+    }
+
+    require(isLocked, "already upgraded");
     PERMIT_DOMAIN_SEPARATOR_USDT = keccak256(
       abi.encode(
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
@@ -132,6 +140,11 @@ contract RenZECController is EIP712Upgradeable {
     );
     IERC20(usdc).safeApprove(routerv3, ~uint256(0) >> 2);
     IERC20(usdt).safeApprove(routerv3, ~uint256(0) >> 2);
+
+    isLocked = true;
+    assembly {
+      sstore(upgradeSlot, isLocked)
+    }
   }
 
   function applyRatio(uint256 v, uint256 n) internal pure returns (uint256 result) {
@@ -180,6 +193,7 @@ contract RenZECController is EIP712Upgradeable {
       path: path
     });
     amountOut = ISwapRouter(routerv3).exactInput(params);
+    IWETH(weth).withdraw(amountOut);
     amountOut = fromETHToRenZEC(minOut, amountOut);
   }
 
@@ -193,6 +207,7 @@ contract RenZECController is EIP712Upgradeable {
       path: path
     });
     amountOut = ISwapRouter(routerv3).exactInput(params);
+    IWETH(weth).withdraw(amountOut);
     amountOut = fromETHToRenZEC(minOut, amountOut);
   }
 
@@ -464,7 +479,6 @@ contract RenZECController is EIP712Upgradeable {
         params.nonce = IERC2612Permit(params.asset).nonces(params.to);
         params.burnNonce = computeBurnNonce(params);
       }
-      console.log("before permit");
       {
         (params.v, params.r, params.s) = SplitSignatureLib.splitSignature(params.signature);
         IERC2612Permit(params.asset).permit(
@@ -479,7 +493,6 @@ contract RenZECController is EIP712Upgradeable {
         );
       }
       {
-        console.log("before transferfrom");
         IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
       }
       amountToBurn = deductBurnFee(params.amount, 1);
@@ -493,16 +506,15 @@ contract RenZECController is EIP712Upgradeable {
         IERC2612Permit(params.asset).permit(
           params.to,
           address(this),
-          params.nonce,
+          params.amount,
           params.burnNonce,
-          true,
           params.v,
           params.r,
           params.s
         );
       }
       {
-        IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
+        IERC20(params.asset).safeTransferFrom(params.to, address(this), params.amount);
       }
       amountToBurn = deductBurnFee(fromUSDC(params.minOut, params.amount), 1);
     } else if (params.asset == usdt) {
