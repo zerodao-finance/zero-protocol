@@ -13,7 +13,7 @@ import { IBadgerSettPeak } from "../interfaces/IBadgerSettPeak.sol";
 import { ICurveFi } from "../interfaces/ICurveFiAvax.sol";
 import { IGateway } from "../interfaces/IGateway.sol";
 import { ICurveUInt256 } from "../interfaces/CurvePools/ICurveUInt256.sol";
-import { ICurveInt128 } from "../interfaces/CurvePools/ICurveInt128.sol";
+import { ICurveInt128 } from "../interfaces/CurvePools/ICurveInt128Avax.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IyVault } from "../interfaces/IyVault.sol";
 import { ISett } from "../interfaces/ISett.sol";
@@ -194,7 +194,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
 
   function toUSDCNative(uint256 amountIn) internal returns (uint256 amountOut) {
     amountOut = toUSDC(1, amountIn);
-    amountOut = ICurveInt128(usdcpool).exchange(0, 1, amountOut, 1);
+    amountOut = ICurveInt128(usdcpool).exchange(0, 1, amountOut, 1, address(this));
   }
 
   function quote() internal {
@@ -246,7 +246,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
   }
 
   function fromUSDCNative(uint256 amountIn) internal returns (uint256 amountOut) {
-    uint256 usdceAmountIn = ICurveInt128(usdcpool).exchange(1, 0, amountIn, 1);
+    uint256 usdceAmountIn = ICurveInt128(usdcpool).exchange(1, 0, amountIn, 1, address(this));
     return fromUSDC(1, usdceAmountIn);
   }
 
