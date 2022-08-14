@@ -128,7 +128,7 @@ contract RenZECController is EIP712Upgradeable {
       isLocked := sload(upgradeSlot)
     }
 
-    require(isLocked, "already upgraded");
+    require(!isLocked, "already upgraded");
     PERMIT_DOMAIN_SEPARATOR_USDT = keccak256(
       abi.encode(
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),

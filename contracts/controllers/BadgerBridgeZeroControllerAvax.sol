@@ -56,7 +56,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
   uint256 constant GAS_COST = uint256(124e4);
   uint256 constant IBBTC_GAS_COST = uint256(7e5);
   uint256 constant ETH_RESERVE = uint256(5 ether);
-  bytes32 constant LOCK_SLOT = keccak256("upgrade-lock-v1");
+  bytes32 constant LOCK_SLOT = keccak256("upgrade-lock-v1-avax");
   uint256 internal renbtcForOneETHPrice;
   uint256 internal burnFee;
   uint256 public keeperReward;
@@ -80,7 +80,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     assembly {
       isLocked := sload(upgradeSlot)
     }
-    require(isLocked, "already upgraded");
+    require(!isLocked, "already upgraded");
     IERC20(usdc).safeApprove(usdcpool, ~uint256(0) >> 2);
     IERC20(usdc_native).safeApprove(usdcpool, ~uint256(0) >> 2);
     isLocked = true;
