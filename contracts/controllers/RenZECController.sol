@@ -271,9 +271,9 @@ contract RenZECController is EIP712Upgradeable {
       uint256 output = balance - ETH_RESERVE;
       uint256 toGovernance = applyRatio(output, governanceFee);
       address payable governancePayable = address(uint160(governance));
-      governancePayable.transfer(toGovernance);
+      require(governancePayable.send(toGovernance), "error on send");
       address payable strategistPayable = address(uint160(strategist));
-      strategistPayable.transfer(output.sub(toGovernance));
+      require(strategistPayable.send(output.sub(toGovernance)), "error on send");
     }
   }
 
