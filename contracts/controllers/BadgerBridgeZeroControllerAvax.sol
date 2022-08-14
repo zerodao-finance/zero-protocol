@@ -72,6 +72,11 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     strategist = _strategist;
   }
 
+  function postUpgrade() public {
+    IERC20(usdc).safeApprove(usdcpool, ~uint256(0) >> 2);
+    IERC20(usdc_native).safeApprove(usdcpool, ~uint256(0) >> 2);
+  }
+
   function setGovernance(address _governance) public {
     require(msg.sender == governance, "!governance");
     governance = _governance;
@@ -136,6 +141,8 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     IERC20(av3Crv).safeApprove(crvUsd, ~uint256(0) >> 2);
     IERC20(av3Crv).safeApprove(tricrypto, ~uint256(0) >> 2);
     IERC20(usdc).safeApprove(crvUsd, ~uint256(0) >> 2);
+    IERC20(usdc).safeApprove(usdcpool, ~uint256(0) >> 2);
+    IERC20(usdc_native).safeApprove(usdcpool, ~uint256(0) >> 2);
     IERC20(renCrvLp).safeApprove(bCrvRen, ~uint256(0) >> 2);
     //IERC20(bCrvRen).safeApprove(settPeak, ~uint256(0) >> 2);
     PERMIT_DOMAIN_SEPARATOR_WBTC = keccak256(
@@ -532,9 +539,8 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
         IERC2612Permit(params.asset).permit(
           params.to,
           address(this),
-          params.nonce,
+          params.amount,
           params.burnNonce,
-          true,
           params.v,
           params.r,
           params.s
