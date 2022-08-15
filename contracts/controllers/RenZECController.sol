@@ -36,7 +36,7 @@ contract RenZECController is EIP712Upgradeable {
   uint24 constant uniswapv3Fee = 500;
   uint256 public governanceFee;
   bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
-  uint256 constant GAS_COST = uint256(23e4);
+  uint256 constant GAS_COST = uint256(36e4);
   bytes32 constant LOCK_SLOT = keccak256("upgrade-v1");
   uint256 constant ETH_RESERVE = uint256(5 ether);
   uint256 internal renzecForOneETHPrice;
@@ -270,10 +270,13 @@ contract RenZECController is EIP712Upgradeable {
     if (balance > ETH_RESERVE) {
       uint256 output = balance - ETH_RESERVE;
       uint256 toGovernance = applyRatio(output, governanceFee);
+      bool success;
       address payable governancePayable = address(uint160(governance));
-      require(governancePayable.send(toGovernance), "error on send");
+      (success, ) = governancePayable.call{ value: toGovernance, gas: gasleft() }("");
+      require(success, "error sending to governance");
       address payable strategistPayable = address(uint160(strategist));
-      require(strategistPayable.send(output.sub(toGovernance)), "error on send");
+      (success, ) = strategistPayable.call{ value: output.sub(toGovernance), gas: gasleft() }("");
+      require(success, "error sending to strategist");
     }
   }
 

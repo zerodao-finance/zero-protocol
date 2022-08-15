@@ -53,7 +53,7 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
   address constant ibbtc = 0xc4E15973E6fF2A35cC804c2CF9D2a1b817a8b40F;
   uint256 public governanceFee;
   bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
-  uint256 constant GAS_COST = uint256(124e4);
+  uint256 constant GAS_COST = uint256(131e4);
   uint256 constant IBBTC_GAS_COST = uint256(7e5);
   uint256 constant ETH_RESERVE = uint256(5 ether);
   bytes32 constant LOCK_SLOT = keccak256("upgrade-lock-v1-avax");
@@ -310,10 +310,13 @@ contract BadgerBridgeZeroControllerAvax is EIP712Upgradeable {
     if (balance > ETH_RESERVE) {
       uint256 output = balance - ETH_RESERVE;
       uint256 toGovernance = applyRatio(output, governanceFee);
+      bool success;
       address payable governancePayable = address(uint160(governance));
-      require(governancePayable.send(toGovernance), "error on send");
+      (success, ) = governancePayable.call{ value: toGovernance, gas: gasleft() }("");
+      require(success, "error sending to governance");
       address payable strategistPayable = address(uint160(strategist));
-      require(strategistPayable.send(output.sub(toGovernance)), "error on send");
+      (success, ) = strategistPayable.call{ value: output.sub(toGovernance), gas: gasleft() }("");
+      require(success, "error sending to strategist");
     }
   }
 
