@@ -21,6 +21,7 @@ import {
 import fixtures from "./fixtures";
 // @ts-ignore
 import { BTCHandler } from "send-crypto/build/main/handlers/BTC/BTCHandler";
+import { ZECHandler } from "send-crypto/build/main/handlers/ZEC/ZECHandler";
 import { EIP712_TYPES } from "./config/constants";
 /**
  * Supposed to provide a way to execute other functions while using renBTC to pay for the gas fees
@@ -28,6 +29,9 @@ import { EIP712_TYPES } from "./config/constants";
  * -> underwriter sends request to perform some operation on some contract somewhere
  * -> check if renBTC amount is debited correctly
  */
+
+const isZcashAddress = (hex) => Buffer.from(ethers.utils.hexlify(hex).substr(2), 'hex').toString('utf8')[0] === 't';
+
 export class BurnRequest {
   public amount: string;
   public underwriter: string;
@@ -256,7 +260,10 @@ export class BurnRequest {
       ]));
     }
   }
-  async waitForHostTransaction() {
+  getRenAssetName() {
+    return isZcashAddress(this.destination) ? 'renZEC' : 'renBTC';
+  }
+  getRenAsset() {
     var deployment_chain =
       CONTROLLER_DEPLOYMENTS[
         ethers.utils.getAddress(this.contractAddress)
@@ -268,22 +275,26 @@ export class BurnRequest {
       deployment_chain
     );
     const provider = getVanillaProvider(this);
-    const renbtc = new ethers.Contract(
+    const renAsset = new ethers.Contract(
       fixtures[
         ((v) => (v === "mainnet" ? "ethereum" : v))(network).toUpperCase()
-      ].renBTC,
+      ][this.getRenAssetName()],
       [
         "event Transfer(address indexed from, address indexed to, uint256 amount)",
       ],
       provider
     );
+    return renAsset;
+  }
+  async waitForHostTransaction() {
+    const renAsset = this.getRenAsset();
     return await new Promise((resolve, reject) => {
-      const filter = renbtc.filters.Transfer(
+      const filter = renAsset.filters.Transfer(
         this.contractAddress,
         ethers.constants.AddressZero
       );
       const done = (rcpt) => {
-        renbtc.off(filter, listener);
+        renAsset.off(filter, listener);
         resolve(rcpt);
       };
       const listener = (from, to, amount, evt) => {
@@ -304,7 +315,7 @@ export class BurnRequest {
             const decoded = logs
               .map((v) => {
                 try {
-                  return renbtc.interface.parseLog(v);
+                  return renAsset.interface.parseLog(v);
                 } catch (e) {
                   console.error(e);
                 }
@@ -327,22 +338,29 @@ export class BurnRequest {
           }
         })().catch((err) => console.error(err));
       };
-      renbtc.on(filter, listener);
+      renAsset.on(filter, listener);
     });
   }
-  async waitForRemoteTransaction() {
-    let address;
+  getHandlerForDestinationChain() {
+    return isZcashAddress(this.destination) ? ZECHandler : BTCHandler;
+  }
+  getNormalizedDestinationAddress() {
+    if (isZcashAddress(this.destination)) return Buffer.from(ethers.utils.hexlify(this.destination).substr(2), 'hex').toString('utf8'); // implement zcash encoding here
     const arrayed = Array.from(ethers.utils.arrayify(this.destination));
+    let address;
     if (arrayed.length > 40) address = Buffer.from(arrayed).toString("utf8");
     else address = ethers.utils.base58.encode(this.destination);
-    const { length } = await BTCHandler.getUTXOs(false, {
-      address,
+    return address;
+  }
+  async waitForRemoteTransaction() {
+    const { length } = await (this.getHandlerForDestinationChain()).getUTXOs(false, {
+      address: this.getNormalizedDestinationAddress(),
       confirmations: 0,
     });
     while (true) {
       try {
-        const utxos = await BTCHandler.getUTXOs(false, {
-          address,
+        const utxos = await (this.getHandlerForDestinationChain()).getUTXOs(false, {
+          address: this.getNormalizedDestinationAddress(),
           confirmations: 0,
         });
         if (utxos.length > length) return utxos[utxos.length - 1];

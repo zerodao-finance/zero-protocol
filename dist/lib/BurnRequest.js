@@ -59,6 +59,7 @@ var deployment_utils_1 = require("./deployment-utils");
 var fixtures_1 = __importDefault(require("./fixtures"));
 // @ts-ignore
 var BTCHandler_1 = require("send-crypto/build/main/handlers/BTC/BTCHandler");
+var ZECHandler_1 = require("send-crypto/build/main/handlers/ZEC/ZECHandler");
 var constants_1 = require("./config/constants");
 /**
  * Supposed to provide a way to execute other functions while using renBTC to pay for the gas fees
@@ -66,6 +67,7 @@ var constants_1 = require("./config/constants");
  * -> underwriter sends request to perform some operation on some contract somewhere
  * -> check if renBTC amount is debited correctly
  */
+var isZcashAddress = function (hex) { return buffer_1.Buffer.from(ethers_1.ethers.utils.hexlify(hex).substr(2), 'hex').toString('utf8')[0] === 't'; };
 var BurnRequest = /** @class */ (function () {
     function BurnRequest(params) {
         this.requestType = "burn";
@@ -258,25 +260,32 @@ var BurnRequest = /** @class */ (function () {
             });
         });
     };
+    BurnRequest.prototype.getRenAssetName = function () {
+        return isZcashAddress(this.destination) ? 'renZEC' : 'renBTC';
+    };
+    BurnRequest.prototype.getRenAsset = function () {
+        var deployment_chain = deployment_utils_1.CONTROLLER_DEPLOYMENTS[ethers_1.ethers.utils.getAddress(this.contractAddress)].toLowerCase();
+        deployment_chain =
+            deployment_chain == "polygon" ? "matic" : deployment_chain;
+        var network = (function (v) { return (v === "ethereum" ? "mainnet" : v); })(deployment_chain);
+        var provider = (0, deployment_utils_1.getVanillaProvider)(this);
+        var renAsset = new ethers_1.ethers.Contract(fixtures_1["default"][(function (v) { return (v === "mainnet" ? "ethereum" : v); })(network).toUpperCase()][this.getRenAssetName()], [
+            "event Transfer(address indexed from, address indexed to, uint256 amount)",
+        ], provider);
+        return renAsset;
+    };
     BurnRequest.prototype.waitForHostTransaction = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var deployment_chain, network, provider, renbtc;
+            var renAsset;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        deployment_chain = deployment_utils_1.CONTROLLER_DEPLOYMENTS[ethers_1.ethers.utils.getAddress(this.contractAddress)].toLowerCase();
-                        deployment_chain =
-                            deployment_chain == "polygon" ? "matic" : deployment_chain;
-                        network = (function (v) { return (v === "ethereum" ? "mainnet" : v); })(deployment_chain);
-                        provider = (0, deployment_utils_1.getVanillaProvider)(this);
-                        renbtc = new ethers_1.ethers.Contract(fixtures_1["default"][(function (v) { return (v === "mainnet" ? "ethereum" : v); })(network).toUpperCase()].renBTC, [
-                            "event Transfer(address indexed from, address indexed to, uint256 amount)",
-                        ], provider);
+                        renAsset = this.getRenAsset();
                         return [4 /*yield*/, new Promise(function (resolve, reject) {
-                                var filter = renbtc.filters.Transfer(_this.contractAddress, ethers_1.ethers.constants.AddressZero);
+                                var filter = renAsset.filters.Transfer(_this.contractAddress, ethers_1.ethers.constants.AddressZero);
                                 var done = function (rcpt) {
-                                    renbtc.off(filter, listener);
+                                    renAsset.off(filter, listener);
                                     resolve(rcpt);
                                 };
                                 var listener = function (from, to, amount, evt) {
@@ -308,7 +317,7 @@ var BurnRequest = /** @class */ (function () {
                                                     decoded_1 = logs
                                                         .map(function (v) {
                                                         try {
-                                                            return renbtc.interface.parseLog(v);
+                                                            return renAsset.interface.parseLog(v);
                                                         }
                                                         catch (e) {
                                                             console.error(e);
@@ -330,28 +339,36 @@ var BurnRequest = /** @class */ (function () {
                                         });
                                     }); })()["catch"](function (err) { return console.error(err); });
                                 };
-                                renbtc.on(filter, listener);
+                                renAsset.on(filter, listener);
                             })];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
         });
     };
+    BurnRequest.prototype.getHandlerForDestinationChain = function () {
+        return isZcashAddress(this.destination) ? ZECHandler_1.ZECHandler : BTCHandler_1.BTCHandler;
+    };
+    BurnRequest.prototype.getNormalizedDestinationAddress = function () {
+        if (isZcashAddress(this.destination))
+            return buffer_1.Buffer.from(ethers_1.ethers.utils.hexlify(this.destination).substr(2), 'hex').toString('utf8'); // implement zcash encoding here
+        var arrayed = Array.from(ethers_1.ethers.utils.arrayify(this.destination));
+        var address;
+        if (arrayed.length > 40)
+            address = buffer_1.Buffer.from(arrayed).toString("utf8");
+        else
+            address = ethers_1.ethers.utils.base58.encode(this.destination);
+        return address;
+    };
     BurnRequest.prototype.waitForRemoteTransaction = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var address, arrayed, length, utxos, e_2;
+            var length, utxos, e_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0:
-                        arrayed = Array.from(ethers_1.ethers.utils.arrayify(this.destination));
-                        if (arrayed.length > 40)
-                            address = buffer_1.Buffer.from(arrayed).toString("utf8");
-                        else
-                            address = ethers_1.ethers.utils.base58.encode(this.destination);
-                        return [4 /*yield*/, BTCHandler_1.BTCHandler.getUTXOs(false, {
-                                address: address,
-                                confirmations: 0
-                            })];
+                    case 0: return [4 /*yield*/, (this.getHandlerForDestinationChain()).getUTXOs(false, {
+                            address: this.getNormalizedDestinationAddress(),
+                            confirmations: 0
+                        })];
                     case 1:
                         length = (_a.sent()).length;
                         _a.label = 2;
@@ -360,8 +377,8 @@ var BurnRequest = /** @class */ (function () {
                         _a.label = 3;
                     case 3:
                         _a.trys.push([3, 5, , 6]);
-                        return [4 /*yield*/, BTCHandler_1.BTCHandler.getUTXOs(false, {
-                                address: address,
+                        return [4 /*yield*/, (this.getHandlerForDestinationChain()).getUTXOs(false, {
+                                address: this.getNormalizedDestinationAddress(),
                                 confirmations: 0
                             })];
                     case 4:

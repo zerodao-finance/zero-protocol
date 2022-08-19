@@ -24,6 +24,14 @@ const getControllerName = () => {
       return "ZeroController";
   }
 };
+const getZECControllerName = () => {
+  switch (process.env.CHAIN) {
+    case "ETHEREUM":
+      return "RenZECController";
+    default:
+      return undefined;
+  }
+};
 const isLocalhost = !hre.network.config.live;
 const SIGNER_ADDRESS = "0x0F4ee9631f4be0a63756515141281A3E2B293Bbe";
 
@@ -79,6 +87,32 @@ module.exports = async ({ getNamedAccounts }) => {
       unsafeAllow: ["delegatecall"],
     }
   );
+  const zecControllerName = getZECControllerName();
+  if (zecControllerName) {
+    console.log("deploying zec controller");
+    const zecControllerFactory = await hre.ethers.getContractFactory(
+      zecControllerName,
+      {}
+    );
+    const zecController = await upgrades.deployProxy(
+      zecControllerFactory,
+      [deployer, deployer],
+      {
+        unsafeAllow: ["delegatecall"],
+      }
+    );
+    const zecControllerArtifact = await deployments.getArtifact(
+      getControllerName()
+    );
+    await deployments.save(zecControllerName, {
+      contractName: zecControllerName,
+      address: zecController.address,
+      bytecode: zecControllerArtifact.bytecode,
+      abi: zecControllerArtifact.abi,
+    });
+    await zecController.deployTransaction.wait();
+  }
+
   const zeroControllerArtifact = await deployments.getArtifact(
     getControllerName()
   );

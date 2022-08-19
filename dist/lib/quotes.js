@@ -100,6 +100,33 @@ module.exports = function makeQuoter(CHAIN, provider) {
         "function quoteExactInputSingle(address tokenIn, address tokenOut, uint24 fee, uint256 amountIn, uint160 sqrtPriceLimitX96) public view returns (uint256 amountOut)",
         "function quoteExactInput(bytes path, uint256 amountIn) public view returns (uint256 amountOut)",
     ], chain.provider);
+    //direction ? renzec -> eth : eth -> renzec
+    var getRenZECETHQuote = function (direction, amount) { return __awaiter(_this, void 0, void 0, function () {
+        var RENZEC, weth, pair, route, trade, price, route, trade, price;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    RENZEC = new UNISWAP.Token(UNISWAP.ChainId.MAINNET, fixtures.ETHEREUM.renZEC, 8);
+                    weth = UNISWAP.WETH[UNISWAP.ChainId.MAINNET];
+                    return [4 /*yield*/, UNISWAP.Fetcher.fetchPairData(RENZEC, weth, chain.provider)];
+                case 1:
+                    pair = _a.sent();
+                    if (direction) {
+                        route = new UNISWAP.Route([pair], RENZEC);
+                        trade = new UNISWAP.Trade(route, new UNISWAP.TokenAmount(RENZEC, amount), UNISWAP.TradeType.EXACT_INPUT);
+                        price = trade.outputAmount.toExact();
+                        return [2 /*return*/, ethers.utils.parseEther(price)];
+                    }
+                    else {
+                        route = new UNISWAP.Route([pair], weth);
+                        trade = new UNISWAP.Trade(route, new UNISWAP.TokenAmount(weth, amount.toString()), UNISWAP.TradeType.EXACT_INPUT);
+                        price = trade.outputAmount.toExact();
+                        return [2 /*return*/, ethers.utils.parseUnits(price, 8)];
+                    }
+                    return [2 /*return*/];
+            }
+        });
+    }); };
     // direction ? renbtc -> avax : avax -> renbtc
     var getAVAXQuote = function (direction, amount) { return __awaiter(_this, void 0, void 0, function () {
         var WBTC, pair, wbtcAmount, route, trade, price, route, trade;
@@ -298,6 +325,22 @@ module.exports = function makeQuoter(CHAIN, provider) {
             }
         });
     }); };
+    var ETHToRenZEC = function (amount) { return __awaiter(_this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, getRenZECETHQuote(false, amount)];
+                case 1: return [2 /*return*/, _a.sent()];
+            }
+        });
+    }); };
+    var renZECToETH = function (amount) { return __awaiter(_this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, getRenZECETHQuote(true, amount)];
+                case 1: return [2 /*return*/, _a.sent()];
+            }
+        });
+    }); };
     var renBTCToETH = function (amount) { return __awaiter(_this, void 0, void 0, function () {
         var path, wbtcOut, quote;
         return __generator(this, function (_a) {
@@ -333,6 +376,8 @@ module.exports = function makeQuoter(CHAIN, provider) {
         wNativeToUSDC: wNativeToUSDC,
         getWbtcQuote: getWbtcQuote,
         renBTCToETH: renBTCToETH,
+        ETHToRenZEC: ETHToRenZEC,
+        renZECToETH: renZECToETH,
         toUSDC: toUSDC,
         ETHtoRenBTC: ETHtoRenBTC,
         chain: chain

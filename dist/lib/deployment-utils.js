@@ -13,6 +13,7 @@ exports.CONTROLLER_DEPLOYMENTS = (_a = {},
     _a[ethers_1.ethers.utils.getAddress(require("../deployments/avalanche/BadgerBridgeZeroController.json").address)] = "Avalanche",
     _a[ethers_1.ethers.utils.getAddress(require("../deployments/matic/BadgerBridgeZeroController.json").address)] = "Polygon",
     _a[ethers_1.ethers.utils.getAddress(require("../deployments/mainnet/BadgerBridgeZeroController.json").address)] = "Ethereum",
+    _a[ethers_1.ethers.utils.getAddress(require("../deployments/mainnet/RenZECController.json").address)] = "Ethereum",
     _a[ethers_1.ethers.utils.getAddress(require("../deployments/optimism/BadgerBridgeZeroController.json").address)] = "Optimism",
     _a);
 exports.RPC_ENDPOINTS = {
