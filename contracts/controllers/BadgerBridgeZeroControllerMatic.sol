@@ -215,11 +215,16 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
   function toETH() internal returns (uint256 amountOut) {
     uint256 wbtcStart = IERC20(wbtc).balanceOf(address(this));
 
-    uint256 amountStart = address(this).balance;
-    (bool success, ) = tricrypto.call(
-      abi.encodeWithSelector(ICurveETHUInt256.exchange.selector, 1, 2, wbtcStart, 0, true)
-    );
-    amountOut = address(this).balance.sub(amountStart);
+    bytes memory path = abi.encodePacked(wbtc, wethWbtcFee, weth, wethMaticFee, wmatic);
+    ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
+      recipient: address(this),
+      deadline: block.timestamp + 1,
+      amountIn: wbtcStart,
+      amountOutMinimum: minOut,
+      path: path
+    });
+    amountOut = ISwapRouter(routerv3).exactInput(params);
+    IWETH9(wmatic).withdraw(amountOut);
   }
 
   receive() external payable {
