@@ -3,6 +3,7 @@ pragma solidity >=0.6.0;
 pragma abicoder v2;
 
 import { IUniswapV2Router02 } from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+import { ISwapRouter } from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import { UniswapV2Library } from "../libraries/UniswapV2Library.sol";
 import { ZeroLib } from "../libraries/ZeroLib.sol";
 import { IERC2612Permit } from "../interfaces/IERC2612Permit.sol";
@@ -29,17 +30,22 @@ contract RenZECController is EIP712Upgradeable {
   address constant routerv3 = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
   address constant factory = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
   address constant weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+  address constant usdt = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
+  address constant usdc = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
   address constant quoter = 0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6;
-  uint24 constant renZECwethFee = 10000;
+  uint24 constant uniswapv3Fee = 500;
   uint256 public governanceFee;
   bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
-  uint256 constant GAS_COST = uint256(23e4);
+  uint256 constant GAS_COST = uint256(36e4);
+  bytes32 constant LOCK_SLOT = keccak256("upgrade-v1");
   uint256 constant ETH_RESERVE = uint256(5 ether);
   uint256 internal renzecForOneETHPrice;
   uint256 internal burnFee;
   uint256 public keeperReward;
   uint256 public constant REPAY_GAS_DIFF = 41510;
   uint256 public constant BURN_GAS_DIFF = 41118;
+  bytes32 internal PERMIT_DOMAIN_SEPARATOR_USDT;
+  mapping(address => uint256) public noncesUsdt;
 
   function setStrategist(address _strategist) public {
     require(msg.sender == governance, "!governance");
@@ -99,9 +105,46 @@ contract RenZECController is EIP712Upgradeable {
     strategist = _strategist;
     keeperReward = uint256(1 ether).div(1000);
     IERC20(weth).safeApprove(routerv3, ~uint256(0) >> 2);
-    IERC20(renzec).safeApprove(routerv3, ~uint256(0) >> 2);
+    IERC20(usdc).safeApprove(routerv3, ~uint256(0) >> 2);
+    IERC20(usdt).safeApprove(routerv3, ~uint256(0) >> 2);
     IERC20(weth).safeApprove(router, ~uint256(0) >> 2);
     IERC20(renzec).safeApprove(router, ~uint256(0) >> 2);
+    PERMIT_DOMAIN_SEPARATOR_USDT = keccak256(
+      abi.encode(
+        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+        keccak256("USDT"),
+        keccak256("1"),
+        getChainId(),
+        usdt
+      )
+    );
+  }
+
+  function postUpgrade() public {
+    bool isLocked;
+    bytes32 upgradeSlot = LOCK_SLOT;
+
+    assembly {
+      isLocked := sload(upgradeSlot)
+    }
+
+    require(!isLocked, "already upgraded");
+    PERMIT_DOMAIN_SEPARATOR_USDT = keccak256(
+      abi.encode(
+        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+        keccak256("USDT"),
+        keccak256("1"),
+        getChainId(),
+        usdt
+      )
+    );
+    IERC20(usdc).safeApprove(routerv3, ~uint256(0) >> 2);
+    IERC20(usdt).safeApprove(routerv3, ~uint256(0) >> 2);
+
+    isLocked = true;
+    assembly {
+      sstore(upgradeSlot, isLocked)
+    }
   }
 
   function applyRatio(uint256 v, uint256 n) internal pure returns (uint256 result) {
@@ -140,6 +183,68 @@ contract RenZECController is EIP712Upgradeable {
     return amounts[1];
   }
 
+  function fromUSDC(uint256 minOut, uint256 amountIn) internal returns (uint256 amountOut) {
+    bytes memory path = abi.encodePacked(usdc, uniswapv3Fee, weth);
+    ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
+      recipient: address(this),
+      deadline: block.timestamp + 1,
+      amountIn: amountIn,
+      amountOutMinimum: 1,
+      path: path
+    });
+    amountOut = ISwapRouter(routerv3).exactInput(params);
+    IWETH(weth).withdraw(amountOut);
+    amountOut = fromETHToRenZEC(minOut, amountOut);
+  }
+
+  function fromUSDT(uint256 minOut, uint256 amountIn) internal returns (uint256 amountOut) {
+    bytes memory path = abi.encodePacked(usdt, uniswapv3Fee, weth);
+    ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
+      recipient: address(this),
+      deadline: block.timestamp + 1,
+      amountIn: amountIn,
+      amountOutMinimum: 1,
+      path: path
+    });
+    amountOut = ISwapRouter(routerv3).exactInput(params);
+    IWETH(weth).withdraw(amountOut);
+    amountOut = fromETHToRenZEC(minOut, amountOut);
+  }
+
+  function toUSDC(
+    uint256 minOut,
+    uint256 amountIn,
+    address out
+  ) internal returns (uint256 amountOut) {
+    bytes memory path = abi.encodePacked(weth, uniswapv3Fee, usdc);
+    amountOut = renZECtoETH(1, amountIn, address(this));
+    ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
+      recipient: out,
+      deadline: block.timestamp + 1,
+      amountIn: amountOut,
+      amountOutMinimum: minOut,
+      path: path
+    });
+    amountOut = ISwapRouter(routerv3).exactInput{ value: amountOut }(params);
+  }
+
+  function toUSDT(
+    uint256 minOut,
+    uint256 amountIn,
+    address out
+  ) internal returns (uint256 amountOut) {
+    bytes memory path = abi.encodePacked(weth, uniswapv3Fee, usdt);
+    amountOut = renZECtoETH(1, amountIn, address(this));
+    ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
+      recipient: out,
+      deadline: block.timestamp + 1,
+      amountIn: amountOut,
+      amountOutMinimum: minOut,
+      path: path
+    });
+    amountOut = ISwapRouter(routerv3).exactInput{ value: amountOut }(params);
+  }
+
   function toETH() internal returns (uint256 amountOut) {
     address[] memory path = new address[](2);
     path[0] = renzec;
@@ -165,10 +270,13 @@ contract RenZECController is EIP712Upgradeable {
     if (balance > ETH_RESERVE) {
       uint256 output = balance - ETH_RESERVE;
       uint256 toGovernance = applyRatio(output, governanceFee);
+      bool success;
       address payable governancePayable = address(uint160(governance));
-      governancePayable.transfer(toGovernance);
+      (success, ) = governancePayable.call{ value: toGovernance, gas: gasleft() }("");
+      require(success, "error sending to governance");
       address payable strategistPayable = address(uint160(strategist));
-      strategistPayable.transfer(output.sub(toGovernance));
+      (success, ) = strategistPayable.call{ value: output.sub(toGovernance), gas: gasleft() }("");
+      require(success, "error sending to strategist");
     }
   }
 
@@ -242,7 +350,7 @@ contract RenZECController is EIP712Upgradeable {
     uint256 _gasBefore = gasleft();
     LoanParams memory params;
     {
-      require(module == address(0x0) || module == renzec, "!approved-module");
+      require(module == usdc || module == usdt || module == address(0x0) || module == renzec, "!approved-module");
       params = LoanParams({
         to: to,
         asset: asset,
@@ -269,10 +377,14 @@ contract RenZECController is EIP712Upgradeable {
     {
       amountOut = module == address(0x0)
         ? renZECtoETH(params.minOut, deductMintFee(params._mintAmount, 1), to)
+        : module == usdc
+        ? toUSDC(params.minOut, deductMintFee(params._mintAmount, 1), to)
+        : module == usdt
+        ? toUSDT(params.minOut, deductMintFee(params._mintAmount, 1), to)
         : deductMintFee(params._mintAmount, 1);
     }
     {
-      if (module != address(0x0)) IERC20(module).safeTransfer(to, amountOut);
+      if (module == renzec) IERC20(module).safeTransfer(to, amountOut);
     }
     {
       tx.origin.transfer(
@@ -299,6 +411,20 @@ contract RenZECController is EIP712Upgradeable {
       // negligible probability of this
       result = uint256(keccak256(abi.encodePacked(result)));
     }
+  }
+
+  function computeERC20PermitDigest(bytes32 domainSeparator, BurnLocals memory params)
+    internal
+    view
+    returns (bytes32 result)
+  {
+    result = keccak256(
+      abi.encodePacked(
+        "\x19\x01",
+        domainSeparator,
+        keccak256(abi.encode(PERMIT_TYPEHASH, params.to, address(this), params.nonce, computeBurnNonce(params), true))
+      )
+    );
   }
 
   struct BurnLocals {
@@ -373,6 +499,41 @@ contract RenZECController is EIP712Upgradeable {
         IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
       }
       amountToBurn = deductBurnFee(params.amount, 1);
+    } else if (params.asset == usdc) {
+      {
+        params.nonce = IERC2612Permit(params.asset).nonces(params.to);
+        params.burnNonce = computeBurnNonce(params);
+      }
+      {
+        (params.v, params.r, params.s) = SplitSignatureLib.splitSignature(params.signature);
+        IERC2612Permit(params.asset).permit(
+          params.to,
+          address(this),
+          params.amount,
+          params.burnNonce,
+          params.v,
+          params.r,
+          params.s
+        );
+      }
+      {
+        IERC20(params.asset).safeTransferFrom(params.to, address(this), params.amount);
+      }
+      amountToBurn = deductBurnFee(fromUSDC(params.minOut, params.amount), 1);
+    } else if (params.asset == usdt) {
+      params.nonce = noncesUsdt[to];
+      noncesUsdt[params.to]++;
+      require(
+        params.to == ECDSA.recover(computeERC20PermitDigest(PERMIT_DOMAIN_SEPARATOR_USDT, params), params.signature),
+        "!signature"
+      ); //  usdt does not implement ERC20Permit
+      {
+        (bool success, ) = params.asset.call(
+          abi.encodeWithSelector(IERC20.transferFrom.selector, params.to, address(this), params.amount)
+        );
+        require(success, "!usdt");
+      }
+      amountToBurn = deductBurnFee(fromUSDT(params.minOut, params.amount), 1);
     } else revert("!supported-asset");
     {
       IGateway(zecGateway).burn(params.destination, amountToBurn);
