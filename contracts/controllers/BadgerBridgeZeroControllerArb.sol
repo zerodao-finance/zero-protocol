@@ -199,7 +199,7 @@ contract BadgerBridgeZeroControllerArb is EIP712Upgradeable {
   }
 
   function quote() internal {
-    bytes memory path = abi.encodePacked(wbtc, uint24(500), weth);
+    bytes memory path = abi.encodePacked(weth, uint24(500), wbtc);
     uint256 wbtcForEthPrice = IQuoter(quoter).quoteExactInput(path, 1 ether);
     renbtcForOneETHPrice = ICurveInt128(renCrv).get_dy(1, 0, wbtcForEthPrice);
   }
