@@ -40,7 +40,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
   address constant renbtc = 0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D;
   address constant renCrv = 0x93054188d876f558f4a66B2EF1d97d16eDf0895B;
   address constant threepool = 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7;
-  address constant tricrypto = 0x80466c64868E1ab14a1Ddf27A676C3fcBE638Fe5;
+  address constant tricrypto = 0xD51a44d3FaE010294C616388b506AcdA1bfAAE46;
   address constant renCrvLp = 0x49849C98ae39Fff122806C06791Fa73784FB3675;
   address constant bCrvRen = 0x6dEf55d2e18486B9dDfaA075bc4e4EE0B28c1545;
   address constant settPeak = 0x41671BA1abcbA387b9b2B752c205e22e916BE6e3;
