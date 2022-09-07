@@ -158,7 +158,8 @@ contract BadgerBridgeZeroControllerMatic is EIP712Upgradeable {
 
   function quote() internal {
     bytes memory path = abi.encodePacked(wmatic, wethMaticFee, weth, wethWbtcFee, wbtc);
-    renbtcForOneETHPrice = IQuoter(quoter).quoteExactInput(path, 1 ether);
+    uint256 amountOut = IQuoter(quoter).quoteExactInput(path, 1 ether);
+    renbtcForOneETHPrice = ICurveInt128(renCrv).get_dy_underlying(1, 0, amountOut);
   }
 
   function renBTCtoETH(
