@@ -49,7 +49,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
   uint24 constant usdcWethFee = 500;
   uint256 public governanceFee;
   bytes32 constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
-  bytes32 constant LOCK_SLOT = keccak256("upgrade-lock-v3");
+  bytes32 constant LOCK_SLOT = keccak256("upgrade-lock-v4");
   uint256 constant GAS_COST = uint256(42e4);
   uint256 constant ETH_RESERVE = uint256(5 ether);
   uint256 internal renbtcForOneETHPrice;
@@ -61,6 +61,12 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
   bytes32 internal PERMIT_DOMAIN_SEPARATOR_WBTC;
   mapping(address => uint256) public noncesUsdt;
   bytes32 constant PERMIT_DOMAIN_SEPARATOR_USDT_SLOT = keccak256("usdt-permit");
+  mapping(address => bool) isHarvester;
+
+  modifier onlyHarvester() {
+    require(isHarvester[msg.sender], "!harvester");
+    _;
+  }
 
   function getUsdtDomainSeparator() public view returns (bytes32) {
     bytes32 separator_slot = PERMIT_DOMAIN_SEPARATOR_USDT_SLOT;
@@ -81,6 +87,11 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     governance = _governance;
   }
 
+  function setHarvester(address harvester) public {
+    require(msg.sender == governance, "!governance");
+    isHarvester[harvester] = true;
+  }
+
   function approveUpgrade(bool lock) public {
     bool isLocked;
     bytes32 lock_slot = LOCK_SLOT;
@@ -91,20 +102,10 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     }
     require(!isLocked, "cannot run upgrade function");
 
-    IERC20(usdt).safeApprove(tricrypto, ~uint256(0) >> 2);
-    bytes32 permit_usdt_separator = keccak256(
-      abi.encode(
-        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-        keccak256("USDT"),
-        keccak256("1"),
-        getChainId(),
-        usdt
-      )
-    );
+    isHarvester[0xec5D65739C722A46cd79951E069753c2FC879B27] = true;
 
     assembly {
       sstore(lock_slot, lock)
-      sstore(permit_slot, permit_usdt_separator)
     }
   }
 
@@ -154,6 +155,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     governanceFee = uint256(5e17);
     governance = _governance;
     strategist = _strategist;
+    isHarvester[msg.sender] = true;
     keeperReward = uint256(1 ether).div(1000);
     IERC20(renbtc).safeApprove(btcGateway, ~uint256(0) >> 2);
     IERC20(renbtc).safeApprove(renCrv, ~uint256(0) >> 2);
@@ -328,7 +330,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     // no-op
   }
 
-  function earn() public {
+  function earn() public onlyHarvester {
     quote();
     toWBTC(IERC20(renbtc).balanceOf(address(this)));
     toETH();
