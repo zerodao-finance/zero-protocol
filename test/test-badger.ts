@@ -116,7 +116,11 @@ const toEIP712USDC = (asset) =>
                 process.env.CHAIN == "ARBITRUM"
                   ? "USD Coin (Arb1)"
                   : "USD Coin",
-              version: process.env.CHAIN == "ETHEREUM" ? "2" : "1",
+              version:
+                process.env.CHAIN == "ETHEREUM" ||
+                process.env.CHAIN == "AVALANCHE"
+                  ? "2"
+                  : "1",
               chainId: String(this.chainId) || "1",
               verifyingContract: asset || ethers.constants.AddressZero,
             },
@@ -490,6 +494,35 @@ describe("BadgerBridgeZeroController", () => {
     const tx = await transferRequest.repay(signer);
     console.log("Gas Used:", (await tx.wait()).gasUsed.toString());
   });
+  it("should do a transfer of usdc native on avax", async () => {
+    if (process.env.CHAIN !== "AVALANCHE") return;
+    const contractAddress = (await getController()).address;
+    deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
+    const [signer] = await hre.ethers.getSigners();
+    const { chainId } = await signer.provider.getNetwork();
+    const usdc = new hre.ethers.Contract(
+      deployParameters[process.env.CHAIN].USDC_NATIVE,
+      ["function balanceOf(address owner) view returns (uint256)"],
+      signer
+    );
+    const transferRequest = new UnderwriterTransferRequest({
+      contractAddress,
+      nonce: utils.hexlify(utils.randomBytes(32)),
+      to: await signer.getAddress(),
+      pNonce: utils.hexlify(utils.randomBytes(32)),
+      module: deployParameters[process.env.CHAIN].USDC_NATIVE,
+      amount: utils.hexlify(utils.parseUnits("0.5", 8)),
+      asset: deployParameters[process.env.CHAIN].USDC_NATIVE,
+      chainId,
+      data: utils.defaultAbiCoder.encode(["uint256"], ["1"]),
+      underwriter: contractAddress,
+    });
+    transferRequest.requestType = "TRANSFER";
+    await transferRequest.sign(signer);
+    console.log("signed", transferRequest.signature);
+    const tx = await transferRequest.repay(signer);
+    console.log("Gas Used:", (await tx.wait()).gasUsed.toString());
+  });
   it("should do a transfer of eth", async () => {
     const contractAddress = (await getController()).address;
     deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
@@ -564,6 +597,42 @@ describe("BadgerBridgeZeroController", () => {
     } else {
       transferRequest.toEIP712 = toEIP712USDC(transferRequest.asset);
     }
+    transferRequest.requestType = "BURN";
+    await transferRequest.sign(signer, contractAddress);
+    console.log("signed", transferRequest.signature);
+    const tx = await transferRequest.burn(signer);
+    console.log("Gas Used:", (await tx.wait()).gasUsed.toString());
+  });
+  it("should do a usdc native burn on avax", async () => {
+    if (process.env.CHAIN !== "AVALANCHE") return;
+    const contractAddress = (await getController()).address;
+    deploymentUtils.CONTROLLER_DEPLOYMENTS.Ethereum = contractAddress;
+    const [signer] = await hre.ethers.getSigners();
+    const { chainId } = await signer.provider.getNetwork();
+    console.log(chainId);
+
+    const usdc = new ethers.Contract(
+      deployParameters[process.env.CHAIN].USDC,
+      [
+        "function approve(address, uint256)",
+        "function balanceOf(address) view returns (uint256)",
+      ],
+      signer
+    );
+    const transferRequest = new UnderwriterBurnRequest({
+      contractAddress,
+      owner: await signer.getAddress(),
+      amount: utils.hexlify(utils.parseUnits("1000", 6)),
+      asset: deployParameters[process.env.CHAIN].USDC_NATIVE,
+      chainId,
+      underwriter: contractAddress,
+      deadline: Math.floor((+new Date() + 1000 * 60 * 60 * 24) / 1000),
+      destination: utils.hexlify(utils.randomBytes(64)),
+      data: utils.defaultAbiCoder.encode(["uint256"], ["1"]),
+    });
+    const { sign, toEIP712 } = transferRequest;
+    await usdc.approve(contractAddress, transferRequest.amount);
+    transferRequest.toEIP712 = toEIP712USDC(transferRequest.asset);
     transferRequest.requestType = "BURN";
     await transferRequest.sign(signer, contractAddress);
     console.log("signed", transferRequest.signature);
