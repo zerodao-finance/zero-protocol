@@ -252,7 +252,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
   ) public payable returns (uint256 amountToBurn) {
     require(asset == wbtc || asset == usdc || asset == renbtc || asset == address(0x0), "!approved-module");
     if (asset != address(0x0)) IERC20(asset).transferFrom(msg.sender, address(this), amount);
-    amountToBurn = asset == wbtc ? toRenBTC(amount.sub(applyRatio(amount, burnFee))) : asset == usdc
+    amountToBurn = asset == wbtc ? toRenBTCWithMinout(amount.sub(applyRatio(amount, burnFee)), minOut) : asset == usdc
       ? fromUSDC(minOut, amount.sub(applyRatio(amount, burnFee)))
       : asset == renbtc
       ? amount
@@ -266,6 +266,12 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     amountOut = IERC20(renbtc).balanceOf(address(this)).sub(balanceStart);
   }
 
+  function toRenBTCWithMinout(uint256 amountIn, uint256 minOut) internal returns (uint256 amountOut) {
+    uint256 balanceStart = IERC20(renbtc).balanceOf(address(this));
+    (bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 1, 0, amountIn, minOut));
+    amountOut = IERC20(renbtc).balanceOf(address(this)).sub(balanceStart);
+  }
+
   function fromUSDC(uint256 minOut, uint256 amountIn) internal returns (uint256 amountOut) {
     bytes memory path = abi.encodePacked(usdc, usdcWethFee, weth, wethWbtcFee, wbtc);
     ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams({
@@ -276,7 +282,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
       path: path
     });
     amountOut = ISwapRouter(routerv3).exactInput(params);
-    amountOut = toRenBTC(amountOut);
+    amountOut = toRenBTCWithMinout(amountOut, minOut);
   }
 
   function fromETHToRenBTC(uint256 minOut, uint256 amountIn) internal returns (uint256 amountOut) {
@@ -292,9 +298,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
       sqrtPriceLimitX96: 0
     });
     amountOut = ISwapRouter(routerv3).exactInputSingle{ value: amountIn }(params);
-    (bool success, ) = renCrv.call(abi.encodeWithSelector(IRenCrv.exchange.selector, 1, 0, amountOut, 1));
-    require(success, "!curve");
-    amountOut = IERC20(renbtc).balanceOf(address(this)).sub(amountStart);
+    amountOut = toRenBTCWithMinout(amountOut, minOut);
   }
 
   function toETH() internal returns (uint256 amountOut) {
@@ -307,14 +311,14 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     amountOut = address(this).balance.sub(amountStart);
   }
 
-  function fromUSDT(uint256 amountIn) internal returns (uint256 amountOut) {
+  function fromUSDT(uint256 amountIn, uint256 minOut) internal returns (uint256 amountOut) {
     uint256 wbtcIn = IERC20(wbtc).balanceOf(address(this));
     (bool success, ) = tricrypto.call(
       abi.encodeWithSelector(ICurveTricrypto.exchange.selector, 0, 1, amountIn, 0, false)
     );
     require(success, "!curve");
     wbtcIn = IERC20(wbtc).balanceOf(address(this)).sub(wbtcIn);
-    amountOut = toRenBTC(wbtcIn);
+    amountOut = toRenBTCWithMinout(wbtcIn, minOut);
   }
 
   function toUSDT(uint256 amountIn) internal returns (uint256 amountOut) {
@@ -542,6 +546,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
     {
       params.gasDiff = computeCalldataGasDiff();
       if (params.data.length > 0) (params.minOut) = abi.decode(params.data, (uint256));
+      else params.minOut = 1;
     }
     require(block.timestamp < params.deadline, "!deadline");
     if (params.asset == wbtc) {
@@ -553,7 +558,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
       ); //  wbtc does not implement ERC20Permit
       {
         IERC20(params.asset).transferFrom(params.to, address(this), params.amount);
-        amountToBurn = toRenBTC(deductBurnFee(params.amount, 1));
+        amountToBurn = toRenBTCWithMinout(deductBurnFee(params.amount, 1), params.minOut);
       }
     } else if (params.asset == usdt) {
       params.nonce = noncesUsdt[to];
@@ -568,7 +573,7 @@ contract BadgerBridgeZeroController is EIP712Upgradeable {
         );
         require(success, "!usdt");
       }
-      amountToBurn = deductBurnFee(fromUSDT(params.amount), 1);
+      amountToBurn = deductBurnFee(fromUSDT(params.amount, params.minOut), 1);
     } else if (params.asset == renbtc) {
       {
         params.nonce = IERC2612Permit(params.asset).nonces(params.to);
